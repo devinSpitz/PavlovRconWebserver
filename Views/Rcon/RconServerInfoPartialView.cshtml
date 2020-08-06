@@ -1,0 +1,33 @@
+@model List<ServerInfoViewModel>
+
+<!-- Modal -->
+<div class="modal fade" id="add-contact" tabindex="-1" role="dialog" aria-labelledby="addContactLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addContactLabel">Serverinfos</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @foreach (var server in Model)
+                {
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            @server.Adress
+                        </div>
+                        <div class="panel-body">
+                            <li>Name: @server.ServerInfo.ServerName</li>
+                            <li>Round state: @server.ServerInfo.RoundState</li>
+                            <li>Game mode: @server.ServerInfo.GameMode</li>
+                            <li>Player count: @server.ServerInfo.PlayerCount</li>
+                            <li>Map id: @server.ServerInfo.MapLabel</li>
+                        </div>
+                    </div>
+                    
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,7 @@
+/Database-log.db
+/Database.bak.db
+/Database.db
+/.idea/*
+/.git/*
+/bin/*
+/obj/*

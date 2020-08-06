@@ -1,0 +1,227 @@
+﻿@using Newtonsoft.Json
+@model RconViewModel
+
+@{
+  
+    var server = ViewBag.Servers;
+    ViewData["Title"] = "Rcon Page";
+}
+
+
+@Html.LabelFor(x=>x.RconServer)
+@Html.ListBoxFor(m => m.RconServer, new MultiSelectList(server,"Id","Adress",Model.RconServer), new { @class = "form-control form-control-sm" })
+
+<br>
+<div class="panel panel-default">
+    <div class="panel-heading">
+        Signle paramter actions
+    </div>
+    <div class="panel-body">
+        <div class="col-12 row">
+            <div class="col-sm-4">
+                <button type="button" class="btn btn-success" onclick="sendSingleCommand('ServerInfo')">ServerInfo</button>
+            </div>
+            <div class="col-sm-4">
+                <button type="button" class="btn btn-success" onclick="sendSingleCommand('ResetSND')">ResetSND</button>
+            </div>
+            <div class="col-sm-4">
+                <button type="button" class="btn btn-success" onclick="sendSingleCommand('RotateMap')">RotateMap</button>
+            </div>
+        </div>
+        @*// Buttons*@
+    </div>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+        Player Actions (This part of the menu only works if you only select one server) 
+                <button type="button" class="btn btn-success btn-group" onclick="UpdatePlayers()">Update Players</button>
+    </div>
+    <div class="panel-body">
+        <div class="row">
+            <div class="col-sm-4">
+                @Html.LabelFor(x=>x.Players)
+                @Html.ListBoxFor(m => m.Players, new MultiSelectList(Model.Players,"Name","SteamId",Model.PlayersSelected), new { @class = "form-control form-control-sm" })
+            </div>
+            <div class="col-sm-4">
+                @Html.LabelFor(x=>x.PlayerCommands)
+                @Html.DropDownListFor(m => m.PlayerCommands, new SelectList(Model.PlayerCommands,"Name","Name",Model.PlayerCommands), new { @class = "form-control form-control-sm" })
+            </div>
+            <div class="col-sm-2">
+                <label asp-for="PlayerValue"></label>
+                <input asp-for="PlayerValue" class="form-control" value="@Model.PlayerValue"/>
+                <span asp-validation-for="PlayerValue" class="text-danger"></span>
+            </div>
+            <div class="col-sm-2 buttonParent">
+                <button id="Do" name="Do" type="button" class="btn btn-success btn-group center" onclick="PlayerAction()">Do</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div id="modal-placeholder"></div>
+<style>
+    .buttonParent{
+        margin-top: 40px;
+    }
+    .center {
+      margin: 0;
+      position: absolute;
+      left: 50%;
+      -ms-transform: translate(-50%, -50%);
+      transform: translate(-50%, -50%);
+    }
+</style>
+
+@section Scripts{
+    <script>
+    
+    let PlayerCommands = jQuery.parseJSON('@Html.Raw(@JsonConvert.SerializeObject(@Model.PlayerCommands))');
+    
+    $( document ).ready(function() {
+        $("#RconServer").change(function(){
+            let servers = [];
+            $("#RconServer :selected").each(function(){
+                servers.push($(this).val())
+            });
+            
+            if(servers.length===1)
+                UpdatePlayers(servers);
+        });
+        
+    });
+    
+    function UpdatePlayers(servers = null){
+        if(servers === null)
+       {
+            servers = [];
+            $("#RconServer :selected").each(function(){
+                servers.push($(this).val())
+            });   
+       }
+        if(servers.length!==1) return;
+        var dropdown = $("#Players");
+        dropdown.empty();
+        //foreach Player
+         $.ajax({
+                   type: 'POST',
+                   url: "/Rcon/GetAllPlayers",
+                   data: { serverId: servers[0] },
+                   success:  function(data) 
+                   {   //TODO: Check if Commands Work
+                        //dropdown.append($("<option />").val(this.ImageFolderID).text(this.Name));
+                      debugger;
+                   },
+                   error: function(XMLHttpRequest, textStatus, errorThrown) 
+                   {
+                       alert('Could not update players!');
+                   }
+               });
+        
+        
+    }
+    
+    function PlayerAction()
+    {
+        let command = "";
+        
+        let playersSelected = [];
+        $("#Players :selected").each(function(){
+            playersSelected.push($(this).val())
+        });
+        let playerCommand = "";
+        $("#PlayerCommands :selected").each(function(){
+            playerCommand = $(this).val();
+        });
+        command += playerCommand+" %Player% ";
+        
+        let playerValue = "";
+        playerValue = $("#PlayerCommands").val();
+        
+        let withInput = false;
+        
+        $(PlayerCommands).each(function(){
+            if($(this).Name === playerCommand)
+            {
+                withInput = $(this).InputValue;
+            }          
+        });
+        
+        if(withInput)
+        {
+           command += playerValue; 
+        }
+        
+        $(playersSelected).each(function(){
+            
+        debugger;
+            var tmpCommand = command.replace("%Player%",$(this).val());
+            sendSingleCommand(tmpCommand);
+        });
+    }
+    function sendSingleCommand(command)
+    {
+        let servers = [];
+        $("#RconServer :selected").each(function(){
+            servers.push($(this).val())
+        });
+        
+        $.ajax({
+            type: 'POST',
+            url: "/Rcon/sendCommand",
+            data: { servers: servers, command: command },
+            success:  function(result) 
+            {
+                if(result.toString()==="")
+                {
+                    debugger;
+                    alert("Did nothing!");
+                }
+                else{
+                   if(command==="ServerInfo")
+                   {
+                       RconServerInfoPartialView(result,servers);
+                   }
+                   else{
+                    alert(result.toString());
+                   }
+                }
+            },
+            error: function(XMLHttpRequest, textStatus, errorThrown) 
+            {
+                if(XMLHttpRequest.responseText!=="")
+                {
+                    debugger;
+                    alert(XMLHttpRequest.responseText);
+                }else{
+                    debugger;
+                    alert('Could not send command!');
+                }
+            }
+        });
+        
+    }
+    
+    function RconServerInfoPartialView(result,ServerIds)
+    {
+        
+        $.ajax({
+           type: 'POST',
+           url: "/Rcon/RconServerInfoPartialView",
+           data: { servers: result ,ServerIds},
+           success:  function(data) 
+           {          
+               $('#modal-placeholder').html(data);
+               $('#modal-placeholder > .modal').modal('show');
+           },
+           error: function(XMLHttpRequest, textStatus, errorThrown) 
+           {
+               alert('Could not get ServerInfoParialView!');
+           }
+           });
+    }
+    </script>
+    
+}

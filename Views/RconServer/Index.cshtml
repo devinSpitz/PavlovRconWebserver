@@ -1,0 +1,40 @@
+@model System.Collections.Generic.IEnumerable<PavlovRconWebserver.Models.RconServer>
+
+@{
+    ViewBag.Title = "Rcon Servers";
+    Layout = "_Layout";
+}
+
+<h2>Rcon servers:</h2>
+<a asp-area="" asp-controller="RconServer" asp-action="AddServer">&#10133; Add Server</a>
+<table class="table table-striped table-responsive">
+    <thead>
+        <th>
+        Id    
+        </th>
+        <th>
+        Adress    
+        </th>
+        <th>
+        password    
+        </th>
+    </thead>
+    <tbody>
+    @foreach (var rconServer in Model)
+    {
+        <tr>
+            <td>
+                <a href="@Url.Action("DeleteServer", new {rconServer.Id})"><span>&#10060;</span></a>
+                <a href="@Url.Action("UpdateServer", rconServer)"><span>&#10000;</span></a>
+                @rconServer.Id
+            </td>
+            <td>
+                @rconServer.Adress
+            </td>
+            <td>
+                @rconServer.Password
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
