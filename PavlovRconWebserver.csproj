@@ -6,6 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="KeyFiles" />
+    <Folder Include="Pictures" />
     <Folder Include="Temp" />
     <Folder Include="wwwroot\App_Data\" />
   </ItemGroup>
