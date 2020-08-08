@@ -35,8 +35,16 @@ Contra:
 
 I will make it better as soon as i have more time tit was 4 days of work.
 
+Build parameter:
+
+on windows builded with Jetbrains Rider
+on linux it need this parameter:  "--runtime linux-x64 --self-contained true --framework netcoreapp3.1" at least in my tests
 
 
+Security:
+
+Not that much testet.
+If you need to run it over the internet please use a Https conf with Cert!
 
 Credits: 
 
