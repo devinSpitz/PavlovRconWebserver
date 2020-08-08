@@ -37,12 +37,20 @@ I will make it better as soon as i have more time tit was 4 days of work.
 
 Build parameter:
 
-on windows builded with Jetbrains Rider
-on linux it need this parameter:  "--runtime linux-x64 --self-contained true --framework netcoreapp3.1" at least in my tests
+on windows builded with Jetbrains Rider but should work with: "dotnet publish -c release"
+on linux it need this parameter:  "dotnet publish -c release -o /home/pavlov/PavlovWebServerBuild/ --runtime linux-x64 --self-contained true --framework netcoreapp3.1" at least in my tests
 
 Other:
 
 Not very userfriendly right now cause of missing error handling and stuff.
+
+Hot to install:
+1. Unzip
+2. Install the full dotnet 3.1 framework
+3. For local use only "dotnet PavlovRconWebserver.dll --urls=https://127.0.0.1:5001/"
+4. Add your server
+5. Go to commands select your server an try to do stuff :D
+
 
 Security:
 
