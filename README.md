@@ -46,7 +46,7 @@ Not very userfriendly right now cause of missing error handling and stuff.
 
 Hot to install:
 1. Unzip
-2. Install the full dotnet 3.1 framework
+2. Install the dotnet runtime 3.1 should be enouth (otherwide sdk)
 3. For local use only "dotnet PavlovRconWebserver.dll --urls=https://127.0.0.1:5001/"
 4. Add your server
 5. Go to commands select your server an try to do stuff :D
