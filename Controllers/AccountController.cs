@@ -13,7 +13,7 @@ using PavlovRconWebserver.Services;
 
 namespace PavlovRconWebserver.Controllers
 {
-   [Authorize(Roles = "Admin")]
+   [Authorize]
    [Route("[controller]/[action]")]
    public class AccountController : Controller
    {
@@ -21,17 +21,20 @@ namespace PavlovRconWebserver.Controllers
       private readonly ILogger _logger;
       private readonly SignInManager<InbuildUser> _signInManager;
       private readonly UserManager<InbuildUser> _userManager;
+      private readonly UserService _userService;
 
       public AccountController(
          UserManager<InbuildUser> userManager,
          SignInManager<InbuildUser> signInManager,
          IEmailSender emailSender,
-         ILogger<AccountController> logger)
+         ILogger<AccountController> logger,
+         UserService userService)
       {
          _userManager = userManager;
          _signInManager = signInManager;
          _emailSender = emailSender;
          _logger = logger;
+         _userService = userService;
       }
 
       [TempData] public string ErrorMessage { get; set; }
@@ -57,7 +60,7 @@ namespace PavlovRconWebserver.Controllers
          {
             // This doesn't count login failures towards account lockout
             // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-            var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
+            var result = await _signInManager.PasswordSignInAsync(model.Username, model.Password, model.RememberMe, false);// again workaround for the same reason
             if (result.Succeeded)
             {
                _logger.LogInformation("User logged in.");
@@ -181,8 +184,10 @@ namespace PavlovRconWebserver.Controllers
 
       [HttpGet]
       [Authorize]
-      public IActionResult Register(string returnUrl = null)
+      public async Task<IActionResult> Register(string returnUrl = null)
       {
+         
+         if(await _userService.IsUserInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
          ViewData["ReturnUrl"] = returnUrl;
          return View();
       }
@@ -192,18 +197,19 @@ namespace PavlovRconWebserver.Controllers
       [ValidateAntiForgeryToken]
       public async Task<IActionResult> Register(RegisterViewModel model, string returnUrl = null)
       {
+         if(await _userService.IsUserInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
          ViewData["ReturnUrl"] = returnUrl;
          if (ModelState.IsValid)
          {
-            var user = new InbuildUser {UserName = model.Email, Email = model.Email};
+            var user = new InbuildUser {UserName = model.Username, Email = model.Username+"@"+model.Username};// workeround caus dont like emails as account
             var result = await _userManager.CreateAsync(user, model.Password);
             if (result.Succeeded)
             {
                _logger.LogInformation("User created a new account with password.");
 
-               var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-               var callbackUrl = Url.EmailConfirmationLink(user.Id, code, Request.Scheme);
-               await _emailSender.SendEmailConfirmationAsync(model.Email, callbackUrl);
+               //var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+               //var callbackUrl = Url.EmailConfirmationLink(user.Id, code, Request.Scheme);
+               //await _emailSender.SendEmailConfirmationAsync(model.Email, callbackUrl);
 
                //await _signInManager.SignInAsync(user, false);
                _logger.LogInformation("User created a new account with password.");

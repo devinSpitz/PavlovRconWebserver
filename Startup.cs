@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using AspNetCore.Identity.LiteDB;
 using AspNetCore.Identity.LiteDB.Data;
 using AspNetCore.Identity.LiteDB.Models;
@@ -37,6 +38,9 @@ namespace PavlovRconWebserver
 
          services.AddIdentity<InbuildUser, AspNetCore.Identity.LiteDB.IdentityRole>(options =>
             {
+               
+               options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+               options.SignIn.RequireConfirmedEmail = false;
                options.Password.RequireDigit = false;
                options.Password.RequireUppercase = false;
                options.Password.RequireLowercase = false;
@@ -63,6 +67,7 @@ namespace PavlovRconWebserver
       // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
       public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
       {
+         
          if (env.IsDevelopment())
          {
             app.UseDeveloperExceptionPage();
@@ -75,10 +80,9 @@ namespace PavlovRconWebserver
          app.UseStaticFiles();
 
          app.UseRouting();
-
          app.UseAuthentication();
          app.UseAuthorization();
-
+         app.UseHttpsRedirection();
          app.UseEndpoints(endpoints =>
          {
             endpoints.MapDefaultControllerRoute();

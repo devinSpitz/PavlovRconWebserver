@@ -62,8 +62,27 @@ namespace PavlovRconWebserver.Controllers
             return PartialView("RconServerInfoPartialView", list);
         }
         
+        public IActionResult JsonToHtmlPartialView(string json)
+        {
+            return PartialView("/Views/JsonToHtmlPartialView.cshtml", json);
+        }
+        
+        public IActionResult ValueFieldPartialView(List<Command> playerCommands,List<ExtendedCommand> twoValueCommands,string atualCommandName,bool isNormalCommand,bool firstValue)
+        {
+            
+            return PartialView("/Views/Rcon/ValueFieldPartialView.cshtml", new ValueFieldPartialViewViewModel
+            {
+                PlayerCommands = playerCommands,
+                TwoValueCommands = twoValueCommands,
+                ActualCommandName = atualCommandName,
+                IsNormalCommand = isNormalCommand,
+                firstValue = firstValue
+            });
+        }
+        
         public async Task<PlayerListClass> GetAllPlayers(int serverId)
         {
+            
             PlayerListClass playersList = new PlayerListClass();
             var server = _serverService.FindOne(serverId);
             var playersTmp = await _service.SendCommand(server, "RefreshList");

@@ -31,8 +31,7 @@ namespace PavlovRconWebserver.Controllers
             if(await _userservice.IsUserInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
             return View("AddServer");
         }
-        
-        
+
         public async Task<IActionResult> UpdateServer(RconServer server)
         {
             if(await _userservice.IsUserInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
@@ -45,7 +44,7 @@ namespace PavlovRconWebserver.Controllers
         {
             if(await _userservice.IsUserInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
             _service.Insert(server);
-            return await AddServer();
+            return await Index();
         }
         
         public async Task<IActionResult> DeleteServer([FromQuery]int id)

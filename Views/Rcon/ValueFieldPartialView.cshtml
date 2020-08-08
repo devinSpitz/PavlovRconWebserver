@@ -1,0 +1,48 @@
+@model ValueFieldPartialViewViewModel
+@*Todo: this view is ugly have to make this diffrent!*@
+@if (Model.IsNormalCommand)
+{
+   var command = Model.PlayerCommands.FirstOrDefault(x => x.Name == Model.ActualCommandName);
+   if (!string.IsNullOrEmpty(command.url))
+   {
+      <text>
+         <a href="@command.url" target="_blank">Link</a>
+      </text>
+   }
+   if (command.valuesOptions != null && command.valuesOptions.Count > 0 && command.InputValue)
+   {
+      @Html.DropDownListFor(m => new RconViewModel().PlayerValue, new SelectList(command.valuesOptions,"Name"), new { @class = "form-control form-control-sm" })
+   }
+   else if(command.InputValue)
+   {
+      <input name="PlayerValue" id="PlayerValue" class="form-control"/>
+   }
+}
+else
+{
+   var command = Model.TwoValueCommands.FirstOrDefault(x => x.Name == Model.ActualCommandName);   
+   if (!string.IsNullOrEmpty(command.url)&& ((!Model.firstValue && command.Name == "GiveTeamCash")||(Model.firstValue && command.Name == "SwitchMap")))
+   {
+      <text>
+         <a href="@command.url" target="_blank">Link</a>
+      </text>
+   }
+   if ((Model.firstValue && command.Name == "GiveTeamCash")||(!Model.firstValue && command.Name == "SwitchMap"))
+   {
+      if (Model.firstValue)
+      {
+         @Html.DropDownListFor(m => new RconViewModel().PlayerValueTwo, new SelectList(command.valuesOptions,"Name"), new { @class = "form-control form-control-sm" })
+  
+      }
+      else
+      {
+         @Html.DropDownListFor(m => new RconViewModel().PlayerValueTwo, new SelectList(command.valuesTwoOptions,"Name"), new { @class = "form-control form-control-sm" })
+  
+      }
+ }
+   else
+   {
+      <input name="PlayerValueTwo" id="" class="form-control"/>
+   }
+}
+
