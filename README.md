@@ -40,6 +40,9 @@ Build parameter:
 on windows builded with Jetbrains Rider
 on linux it need this parameter:  "--runtime linux-x64 --self-contained true --framework netcoreapp3.1" at least in my tests
 
+Other:
+
+Not very userfriendly right now cause of missing error handling and stuff.
 
 Security:
 
