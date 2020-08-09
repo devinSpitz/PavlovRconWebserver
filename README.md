@@ -7,6 +7,7 @@ Pictures:
 ![AddServerPart1](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/AddServerPart1.png?raw=true)
 ![AddServerPart1](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/AddServerPart2.png?raw=true)
 
+Important for the server the Telnet password and port are riquired cause it will at the end always connect to localhost over Telnet to execute the commands. If you set the checkbox to use Telnet it will also (with the least priority) use Telnet over the Internet.
 
 Auth logic:
 If the riquired values are set the following auth system will be tried and in this order.
