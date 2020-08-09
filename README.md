@@ -76,7 +76,7 @@ https://www.newtonsoft.com/json
 SSH.NET is a Secure Shell (SSH) library for .NET, optimized for parallelism.
 https://github.com/sshnet/SSH.NET/
 
-Thanks to all this people who worked for this projects. Without that it wouldn't be possible to do this.
+Thanks to all this people who worked for this nuget packages. Without that it wouldn't be possible to do this.
 
 
 
