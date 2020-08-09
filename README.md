@@ -48,8 +48,10 @@ Hot to install:
 1. Unzip
 2. Install the dotnet core runtime 3.1 should be enouth (otherwide sdk)
 3. For local use only "dotnet PavlovRconWebserver.dll --urls=https://127.0.0.1:5001/"
-4. Add your server
-5. Go to commands select your server an try to do stuff :D
+3.5 Goto to https://127.0.0.1:5001/
+4. Default admin to start with: admin pw: 123456
+5. Add your server
+6. Go to commands select your server an try to do stuff :D
 
 
 Security:
