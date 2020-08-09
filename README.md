@@ -33,8 +33,6 @@ Contra:
 - very less tests on linux and seems to crash a lot on my system every 10 mins? But i just testet it with dotnet run so there was maybe another problem?
 - Only testet on 2 Systems Windows 10 and Ubuntu 20.04
 
-I will make it better as soon as i have more time tit was 4 days of work.
-
 Build parameter:
 
 - On windows builded with Jetbrains Rider but should work with: "dotnet publish -c release"  
@@ -45,7 +43,8 @@ If you build it by youself be sure to add the database.db file and the other riq
 
 Other:
 
-Not very userfriendly right now cause of missing error handling and stuff.
+- It will get updates cause it need much of work and bug fixxing. Im not happy with a lot of code but it works for now.  
+- Not very userfriendly right now cause of missing error handling and stuff.
 
 Hot to install:
 1. Unzip  
