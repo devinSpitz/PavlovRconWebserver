@@ -8,8 +8,8 @@ Pictures:
 ![AddServerPart1](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/AddServerPart2.png?raw=true)
 
 
-Auth Logic:
-If the riquired values are sett the following auth system will be tried and in this order.
+Auth logic:
+If the riquired values are set the following auth system will be tried and in this order.
 
 1. ssh key + passphrase
 2. ssh key
@@ -21,16 +21,16 @@ Testet and worked for me:
 - ssh key + passphrase
 - ssh user pass
 - telnet
-- Most of the Commands stuff (Had the problem that i din't know wich ids are avaible so a entered 0,1,2)
-- Add User
-- Remove User
-- Add user to User >Group
-- User in User group can only axecute commands
-- User in Admin group can add user, add users to role, add server, send commands
+- Most of the commands stuff (Had the problem that i din't know wich ids are avaible so a entered 0,1,2)
+- Add user
+- Remove user
+- Add user to user group
+- User in user group can only execute commands
+- User in admin group can add user, add users to role, add server, send commands
 
 Contra:
 
-- very less tests on linux and seems to crash a lot on my system every 10 mins? but i just testet it with dotnet .run so there was maybe another problem?
+- very less tests on linux and seems to crash a lot on my system every 10 mins? But i just testet it with dotnet run so there was maybe another problem?
 - Only testet on 2 Systems Windows 10 and Ubuntu 20.04
 
 I will make it better as soon as i have more time tit was 4 days of work.
@@ -40,6 +40,9 @@ Build parameter:
 - On windows builded with Jetbrains Rider but should work with: "dotnet publish -c release"  
 - On linux it need this parameter:  "dotnet publish -c release -o /home/pavlov/PavlovWebServerBuild/ --runtime linux-x64 --self-contained true --framework netcoreapp3.1" at least in my tests
 
+Note: 
+If you build it by youself be sure to add the database.db file and the other riquired folders(see release) befor start the application.
+
 Other:
 
 Not very userfriendly right now cause of missing error handling and stuff.
@@ -48,16 +51,16 @@ Hot to install:
 1. Unzip  
 2. Install the dotnet core runtime 3.1 should be enouth (otherwide sdk)  
 3. For local use only "dotnet PavlovRconWebserver.dll --urls=https://127.0.0.1:5001/"  
-3.5 Goto to https://127.0.0.1:5001/  
-4. Default admin to start with: admin pw: 123456  
-5. Add your server  
-6. Go to commands select your server an try to do stuff :D  
+4. Goto to https://127.0.0.1:5001/  
+5. Default admin to start with: admin pw: 123456  
+6. Add your server  
+7. Go to commands select your server an try to do stuff :D  
 
 
 Security:
 
 Not that much testet.
-If you need to run it over the internet please use a Https conf with Cert!
+If you need to run it over the internet please use a https conf with cert!
 
 Credits: 
 
