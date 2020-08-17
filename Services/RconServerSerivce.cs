@@ -27,16 +27,27 @@ namespace PavlovRconWebserver.Services
                 .Find(x => x.Id == id).FirstOrDefault();
         }
 
-        public int Insert(RconServer forecast)
+        public int Insert(RconServer rconServer)
         {
             return _liteDb.GetCollection<RconServer>("RconServer")
-                .Insert(forecast);
+                .Insert(rconServer);
         }
 
-        public bool Update(RconServer forecast)
+        public bool Update(RconServer rconServer)
         {
+            if (string.IsNullOrEmpty(rconServer.Password) || string.IsNullOrEmpty(rconServer.SshPassphrase) || string.IsNullOrEmpty(rconServer.SshPassword))
+            {
+                var old = FindOne(rconServer.Id);
+                if (string.IsNullOrEmpty(rconServer.Password)) rconServer.Password = old.Password;
+                if (string.IsNullOrEmpty(rconServer.SshPassphrase)) rconServer.SshPassphrase = old.SshPassphrase;
+                if (string.IsNullOrEmpty(rconServer.SshPassword)) rconServer.SshPassword = old.SshPassword;
+            }
+            
+               
             return _liteDb.GetCollection<RconServer>("RconServer")
-                .Update(forecast);
+                .Update(rconServer); 
+            
+           
         }
 
         public bool Delete(int id)

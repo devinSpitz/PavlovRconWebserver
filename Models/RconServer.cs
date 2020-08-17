@@ -25,7 +25,6 @@ namespace PavlovRconWebserver.Models
         [DisplayName("Use telnet directly (not recommended!)")]
         public bool UseTelnet { get; set; }
         
-        [Required]
         [DisplayName("Rcon password (md5)")]
         public string Password { get; set; }
 

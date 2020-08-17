@@ -31,7 +31,7 @@ namespace PavlovRconWebserver.Models
                     InputValue = true,
                     valuesOptions = new List<string>()
                     {
-                        "0", "1", "2"
+                        "0", "1"
                     },
                 },
                 new Command()
@@ -68,7 +68,7 @@ namespace PavlovRconWebserver.Models
                     InputValueTwo = true,
                     valuesOptions = new List<string>()
                     {
-                        "0", "1", "2"
+                        "0", "1"
                     },
                     valuesTwoOptions = new List<string>()
                     {
@@ -84,7 +84,7 @@ namespace PavlovRconWebserver.Models
                     {
                         "SND", "TDM", "DM", "GUN"
                     },
-                    url = "https://steamcommunity.com/workshop/browse/?appid=555160&browsesort=trend&section=readytouseitems"
+                    url = "https://steamcommunity.com/workshop/browse/?appid=555160&browsesort=trend&section=readytouseitems&actualsort=trend&p=1&numperpage=30"
                 }
             };
         }

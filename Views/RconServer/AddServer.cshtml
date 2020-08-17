@@ -27,11 +27,9 @@
         <input asp-for="TelnetPort" class="form-control"/>
         <span asp-validation-for="TelnetPort" class="text-danger"></span>
     </div>
-    
-
     <div class="form-group">
         <label asp-for="Password"></label>
-        <input asp-for="Password" class="form-control"/>
+        <input asp-for="Password" class="form-control"  type="password" autocomplete="off"/>
         <span asp-validation-for="Password" class="text-danger"></span>
     </div>
     
@@ -55,7 +53,7 @@
     
     <div class="form-group">
         <label asp-for="SshPassword"></label>
-        <input asp-for="SshPassword" class="form-control"/>
+        <input asp-for="SshPassword" class="form-control" type="password" autocomplete="off"/>
         <span asp-validation-for="SshPassword" class="text-danger"></span>
     </div>
     <div class="form-group">
@@ -71,7 +69,7 @@
 
     <div class="form-group">
         <label asp-for="SshPassphrase"></label>
-        <input asp-for="SshPassphrase" class="form-control"/>
+        <input asp-for="SshPassphrase" class="form-control"  type="password" autocomplete="off"/>
         <span asp-validation-for="SshPassphrase" class="text-danger"></span>
     </div>
     <div class="form-group">

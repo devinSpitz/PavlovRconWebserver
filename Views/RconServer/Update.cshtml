@@ -27,7 +27,7 @@
     </div>
     <div class="form-group">
         <label asp-for="Password"></label>
-        <input asp-for="Password" class="form-control" value="@Model.Password"/>
+        <input asp-for="Password" class="form-control" placeholder="leave blank if you don't want to update it"  type="password" value="" autocomplete="off"/>
         <span asp-validation-for="Password" class="text-danger"></span>
     </div>
     <div class="form-group">
@@ -49,7 +49,7 @@
     </div>
     <div class="form-group">
         <label asp-for="SshPassword"></label>
-        <input asp-for="SshPassword" class="form-control" value="@Model.SshPassword"/>
+        <input asp-for="SshPassword" class="form-control"  placeholder="leave blank if you don't want to update it"  type="password" value="" autocomplete="off"/>
         <span asp-validation-for="SshPassword" class="text-danger"></span>
     </div>
     <div class="form-group">
@@ -65,7 +65,7 @@
     
     <div class="form-group">
         <label asp-for="SshPassphrase"></label>
-        <input asp-for="SshPassphrase" class="form-control" value="@Model.SshPassphrase"/>
+        <input asp-for="SshPassphrase" class="form-control"  placeholder="leave blank if you don't want to update it" value=""  type="password" autocomplete="off"/>
         <span asp-validation-for="SshPassphrase" class="text-danger"></span>
     </div>
     <div class="form-group">

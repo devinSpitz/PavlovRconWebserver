@@ -25,7 +25,7 @@
         <tr>
             <td>
                 <a href="@Url.Action("DeleteServer", new {rconServer.Id})"><span>&#10060;</span></a>
-                <a href="@Url.Action("UpdateServer", rconServer)"><span>&#10000;</span></a>
+                <a href="@Url.Action("UpdateServerId","rconServer", new {serverId = rconServer.Id})"><span>&#10000;</span></a>
                 @rconServer.Id
             </td>
             <td>

@@ -105,7 +105,6 @@ function PlayerAction()
     $(PlayerCommands).each(function(){
         if(this.Name === playerCommand)
         {
-            debugger;
             withInput = this.InputValue;
         }
     });
@@ -118,13 +117,11 @@ function PlayerAction()
     {
         $(playersSelected).each(function(){
             var tmpCommand = command.replace("%Player%",$(this).val());
-            debugger;
             sendSingleCommand(tmpCommand);
         }); 
     }
     else {
         var tmpCommand = command.replace("%Player%",playersSelected);
-        debugger;
         sendSingleCommand(tmpCommand);
     }
 
@@ -148,7 +145,6 @@ function sendSingleCommand(command)
                 {
                     alert("Please select at least one server to send to command!");
                 }else{
-                    debugger;
                     alert("Did nothing!");
                 }
             }
@@ -164,14 +160,19 @@ function sendSingleCommand(command)
         },
         error: function(XMLHttpRequest, textStatus, errorThrown)
         {
-            if(XMLHttpRequest.responseText!=="")
+            if(typeof XMLHttpRequest.status !== "undefined" && XMLHttpRequest.status === 500)
             {
-                debugger;
-                alert(XMLHttpRequest.responseText);
-            }else{
-                debugger;
-                alert('Could not send command!');
+                console.log(XMLHttpRequest.responseText);
+                alert("Command failed. To see more logs go to console.");
             }
+            else if(typeof XMLHttpRequest.responseText !== "undefined" && XMLHttpRequest.responseText!=="") {
+                alert(XMLHttpRequest.responseText);
+            }
+            else{
+                console.log(XMLHttpRequest.responseText);
+                alert("Unknown error. To see more logs go to console.");
+            }
+            
         }
     });
 
