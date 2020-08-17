@@ -40,6 +40,7 @@ namespace PavlovRconWebserver.Controllers
             return View("Update",server);
         }
 
+        [HttpPost]
         public async Task<IActionResult> UpdateServer(RconServer server)
         {
             if(await _userservice.IsUserInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
