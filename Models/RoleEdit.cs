@@ -1,6 +1,4 @@
 ﻿using System.Collections.Generic;
-using AspNetCore.Identity.LiteDB.Models;
-using Microsoft.AspNetCore.Identity;
 
 namespace PavlovRconWebserver.Models
 {

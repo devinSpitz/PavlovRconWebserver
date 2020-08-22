@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using PavlovRconWebserver.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.VisualBasic;
 using Newtonsoft.Json;
+using PavlovRconWebserver.Exceptions;
 using PavlovRconWebserver.Services;
 
 namespace PavlovRconWebserver.Controllers
@@ -28,38 +28,29 @@ namespace PavlovRconWebserver.Controllers
             return View(viewModel);
         }
 
-        public async Task<List<string>> sendCommand(List<int> servers, string command)
+        public async Task<IActionResult> SendCommand(int server, string command)
         {
-            var answers = new List<string>();
-            foreach (var server in servers)
+            var response = "";
+            var rconServer = new RconServer();
+            try
             {
-                var rconServer = _serverService.FindOne(server);
-                var response = await _service.SendCommand(rconServer, command);
-                if (response != null)
-                {
-                    answers.Add(response); 
-                }
-                else
-                {
-                    throw new Exception("Could not connect or login to: "+rconServer.Adress); 
-                }
+                rconServer = _serverService.FindOne(server);
+                response = await _service.SendCommand(rconServer, command);
+            }
+            catch (CommandException e)
+            {
+               return BadRequest(e.Message);
             }
 
-            return answers;
+            if (String.IsNullOrEmpty(response)) return BadRequest("The response was empty!");
+            return new ObjectResult(response);
         }
         
-        public IActionResult RconServerInfoPartialView(string[] servers,List<int> serverIds)
+        public IActionResult RconServerInfoPartialView(string server,int serverId)
         {
-            List<ServerInfoViewModel> list = new List<ServerInfoViewModel>();
-            var count = 0;
-            foreach (var server in servers)
-            {
-                var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(server);
-                tmp.Adress = _serverService.FindOne(serverIds[count]).Adress;
-                list.Add(tmp);
-                count++;
-            }
-            return PartialView("RconServerInfoPartialView", list);
+            var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(server);
+            tmp.Adress = _serverService.FindOne(serverId).Adress;
+            return PartialView("RconServerInfoPartialView", tmp);
         }
         
         public IActionResult JsonToHtmlPartialView(string json)
@@ -80,14 +71,22 @@ namespace PavlovRconWebserver.Controllers
             });
         }
         
-        public async Task<PlayerListClass> GetAllPlayers(int serverId)
+        public async Task<IActionResult> GetAllPlayers(int serverId)
         {
-            
+            if (serverId<=0) return BadRequest("Please choose a server!");
             PlayerListClass playersList = new PlayerListClass();
             var server = _serverService.FindOne(serverId);
-            var playersTmp = await _service.SendCommand(server, "RefreshList");
+            var playersTmp = "";
+            try
+            {
+                playersTmp = await _service.SendCommand(server, "RefreshList");
+            }
+            catch (CommandException e)
+            {
+                return BadRequest(e.Message);
+            }
             playersList = JsonConvert.DeserializeObject<PlayerListClass>(playersTmp);
-            return playersList;
+            return Ok(playersList);
         }
         
         

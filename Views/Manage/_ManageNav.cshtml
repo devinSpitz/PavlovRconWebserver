@@ -1,5 +1,4 @@
-﻿@using AspNetCore.Identity.LiteDB.Models
-@inject SignInManager<InbuildUser> SignInManager
+﻿@inject SignInManager<InbuildUser> SignInManager
 @{
     var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
 }

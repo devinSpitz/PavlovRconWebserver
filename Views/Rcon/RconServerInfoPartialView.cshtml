@@ -1,4 +1,4 @@
-@model List<ServerInfoViewModel>
+@model ServerInfoViewModel
 
 <!-- Modal -->
 <div class="modal fade" id="add-contact" tabindex="-1" role="dialog" aria-labelledby="addContactLabel" aria-hidden="true">
@@ -11,22 +11,19 @@
                 </button>
             </div>
             <div class="modal-body">
-                @foreach (var server in Model)
-                {
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            @server.Adress
-                        </div>
-                        <div class="panel-body">
-                            <li>Name: @server.ServerInfo.ServerName</li>
-                            <li>Round state: @server.ServerInfo.RoundState</li>
-                            <li>Game mode: @server.ServerInfo.GameMode</li>
-                            <li>Player count: @server.ServerInfo.PlayerCount</li>
-                            <li>Map id: @server.ServerInfo.MapLabel</li>
-                        </div>
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        @Model.Adress
                     </div>
-                    
-                }
+                    <div class="panel-body">
+                        <li>Name: @Model.ServerInfo.ServerName</li>
+                        <li>Round state: @Model.ServerInfo.RoundState</li>
+                        <li>Game mode: @Model.ServerInfo.GameMode</li>
+                        <li>Player count: @Model.ServerInfo.PlayerCount</li>
+                        <li>Map id: @Model.ServerInfo.MapLabel</li>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
             </div>
         </div>
     </div>

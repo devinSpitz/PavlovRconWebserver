@@ -4,8 +4,10 @@ Pictures:
 ![Index](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/Index.png?raw=true)
 ![Login](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/Login.png?raw=true)
 ![Commands](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/Commands.png?raw=true)
+![Commands2](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/Commands2.png?raw=true)
+![Modals](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/Modals.png?raw=true)
 ![AddServerPart1](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/AddServerPart1.png?raw=true)
-![AddServerPart1](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/AddServerPart2.png?raw=true)
+![AddServerPart2](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/AddServerPart2.png?raw=true)
 
 Important for the server the Telnet password and port are riquired cause it will at the end always connect to localhost over Telnet to execute the commands. If you set the checkbox to use Telnet it will also (with the least priority) use Telnet over the Internet.
 
@@ -64,20 +66,23 @@ If you need to run it over the internet please use a https conf with cert!
 
 Credits: 
 
-A LiteDB provider for ASP.NET Core Identity framework.
+A LiteDB provider for ASP.NET Core Identity framework.  
 https://github.com/fabian-blum/AspNetCore.Identity.LiteDB 
 
-The most simple, unambiguous, and lightweight .NET guard clause library.
+The most simple, unambiguous, and lightweight .NET guard clause library.  
 https://github.com/adamralph/liteguard
 
-Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation
+Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation  
 https://www.nuget.org/packages/Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation/3.1.6
 
-Json.NET is a popular high-performance JSON framework for .NET
+Json.NET is a popular high-performance JSON framework for .NET  
 https://www.newtonsoft.com/json
 
-SSH.NET is a Secure Shell (SSH) library for .NET, optimized for parallelism.
+SSH.NET is a Secure Shell (SSH) library for .NET, optimized for parallelism.  
 https://github.com/sshnet/SSH.NET/
+
+Boostrap: The most popular front-end framework for developing responsive, mobile first projects on the web.  
+https://getbootstrap.com
 
 Thanks to all this people who worked for this nuget packages. Without that it wouldn't be possible to do this.
 

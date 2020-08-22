@@ -1,10 +1,6 @@
-using System.Linq;
 using System.Threading.Tasks;
-using AspNetCore.Identity.LiteDB.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using PavlovRconWebserver.Models;
 using PavlovRconWebserver.Services;
 
 namespace PavlovRconWebserver.Controllers
@@ -15,7 +11,6 @@ namespace PavlovRconWebserver.Controllers
     {
         
         private readonly UserService _service;
-        private readonly RoleController _roleController;
         
         public UserController(UserService service)
         {

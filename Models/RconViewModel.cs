@@ -89,7 +89,7 @@ namespace PavlovRconWebserver.Models
             };
         }
         
-        [DisplayName("Select the servers you wana execute the command:")]
+        [DisplayName("Select the server you wanna execute the commands:")]
         public List<RconServer> RconServer { get; set; }
         public string Command { get; set; }
         public List<PlayerModel> Players { get; set; } = new List<PlayerModel>();
@@ -128,7 +128,7 @@ namespace PavlovRconWebserver.Models
     public class ExtendedCommand: Command
     {
         [DisplayName("Team/MapId")]
-        public bool InputValue { get; set; }
+        public new bool InputValue { get; set; }
         
         [DisplayName("Amount/GameMode")]
         public bool InputValueTwo { get; set; }

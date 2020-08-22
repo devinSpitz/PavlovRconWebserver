@@ -1,7 +1,5 @@
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using Renci.SshNet;
 
 namespace PavlovRconWebserver.Models
 {
@@ -16,16 +14,18 @@ namespace PavlovRconWebserver.Models
         public string Name { get; set; }
 
         [Required]
-        [DisplayName("Telnet port")]
+        [DisplayName("Rcon port")]
         public int TelnetPort { get; set; } = 9100;
 
         [DisplayName("SSH port")]
         public int SshPort { get; set; } = 22;
         
-        [DisplayName("Use telnet directly (not recommended!)")]
+        [DisplayName("Use telnet directly")]
+        [Display(Description = "Not recommended")]
         public bool UseTelnet { get; set; }
         
-        [DisplayName("Rcon password (md5)")]
+        [DisplayName("Rcon password")]
+        [Display(Description = "Will get converted if not md5 already")]
         public string Password { get; set; }
 
         
@@ -34,13 +34,16 @@ namespace PavlovRconWebserver.Models
         
         [DisplayName("SSH username")]
         public string SshUsername { get; set; } 
-        [DisplayName("SSH password (CAUTION: WILL BE SAVED BLANK)")]
+        [DisplayName("SSH password")]
+        [Display(Description = "CAUTION: WILL BE SAVED BLANK")]
         public string SshPassword { get; set; }
         
-        [DisplayName("SSH key filename (put in the name of the file in the keyfile folder)")]//Todo maybe chosable from javascript that scans the folder or even upload but that check security
+        [DisplayName("SSH key filename")]//Todo maybe chosable from javascript that scans the folder or even upload but that check security
+        [Display(Description = "Put in the name of the file in the keyfile folder")]
         public string SshKeyFileName { get; set; }
         
-        [DisplayName("SSH passphrase (CAUTION: WILL BE SAVED BLANK)")]
+        [DisplayName("SSH passphrase")]
+        [Display(Description = "CAUTION: WILL BE SAVED BLANK")]
         public string SshPassphrase { get; set; }
         
         

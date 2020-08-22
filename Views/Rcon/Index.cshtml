@@ -6,7 +6,36 @@
     var server = ViewBag.Servers;
     ViewData["Title"] = "Rcon Page";
 }
+<style>
+.overlay {
+    background: #e9e9e9; 
+    display: none;      
+    position: absolute;  
+    top: 0;                  
+    right: 0;              
+    bottom: 0;
+    left: 0;
+    opacity: 0.5;
+    z-index: 999999;
+}
 
+#loadingDiv{
+  position:absolute;
+  top:0px;
+  right:0px;
+  width:100%;
+  height:100%;
+  background-color:#666;
+  background-image:url("/images/Loadingsome.gif");
+  background-repeat:no-repeat;
+  background-position:center;
+  z-index:10000000;
+  filter: alpha(opacity=40); /* For IE8 and earlier */
+}
+.nowrap{white-space: nowrap;}
+
+ 
+</style>
 @section Scripts{
     <script>
     let PlayerCommands = jQuery.parseJSON('@Html.Raw(@JsonConvert.SerializeObject(@Model.PlayerCommands))');
@@ -14,32 +43,34 @@
     </script>
 }
 @Html.LabelFor(x=>x.RconServer)
-@Html.ListBoxFor(m => m.RconServer, new MultiSelectList(server,"Id","Name",Model.RconServer), new { @class = "form-control form-control-sm" })
-
+@Html.DropDownListFor(m => m.RconServer, new SelectList(server,"Id","Name",Model.RconServer), new { @class = "form-control form-control-sm" })
+<div class="overlay">
+    <div id="loadingDiv">
+    </div>
+</div>
 <br>
 <div class="panel panel-default">
     <div class="panel-heading">
         Signle paramter actions
     </div>
     <div class="panel-body">
-        <div class="col-12 row">
-            <div class="col-sm-4">
-                <button type="button" class="btn btn-success" onclick="sendSingleCommand('ServerInfo')">ServerInfo</button>
-            </div>
-            <div class="col-sm-4">
-                <button type="button" class="btn btn-success" onclick="sendSingleCommand('ResetSND')">ResetSND</button>
-            </div>
-            <div class="col-sm-4">
-                <button type="button" class="btn btn-success" onclick="sendSingleCommand('RotateMap')">RotateMap</button>
+        <div class="row">
+            <div class="col-md-12 responsive nowrap">
+                <button type="button" class="center-block btn btn-success btn-responsive col-md-3" onclick="sendSingleCommand('ServerInfo')">ServerInfo</button>
+                <div class="col-md-1"></div>
+                <button type="button" class="center-block btn btn-success btn-responsive  col-md-3" onclick="sendSingleCommand('ResetSND')">ResetSND</button>
+                <div class="col-md-1"></div>
+                <button type="button" class="center-block btn btn-success btn-responsive  col-md-3" onclick="sendSingleCommand('RotateMap')">RotateMap</button>
             </div>
         </div>
-        @*// Buttons*@
+        
+            @*// Buttons*@
     </div>
 </div>
 
 <div class="panel panel-default">
     <div class="panel-heading">
-        Player Actions (This part of the menu only works if you only select one server) 
+        Player Actions 
                 <button type="button" class="btn btn-success btn-group" onclick="UpdatePlayers()">Update Players</button>
     </div>
     <div class="panel-body" id="PlayerAction">

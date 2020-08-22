@@ -29,20 +29,25 @@ else
    }
    if ((Model.firstValue && command.Name == "GiveTeamCash")||(!Model.firstValue && command.Name == "SwitchMap"))
    {
-      if (Model.firstValue)
-      {
-         @Html.DropDownListFor(m => new RconViewModel().PlayerValueTwo, new SelectList(command.valuesOptions,"Name"), new { @class = "form-control form-control-sm" })
-  
+      if (Model.firstValue){
+         @Html.DropDownListFor(m => new RconViewModel().PlayerValue, new SelectList(command.valuesOptions,"Name"), new { @class = "form-control form-control-sm" })
       }
       else
       {
          @Html.DropDownListFor(m => new RconViewModel().PlayerValueTwo, new SelectList(command.valuesTwoOptions,"Name"), new { @class = "form-control form-control-sm" })
-  
       }
- }
+   }
    else
    {
-      <input name="PlayerValueTwo" id="" class="form-control"/>
+      if (command.Name == "GiveTeamCash")
+      {
+                  @Html.DropDownListFor(m => new RconViewModel().PlayerValueTwo, new SelectList(command.valuesTwoOptions,"Name"), new { @class = "form-control form-control-sm" })
+          
+      }
+      else
+      {
+         <input name="PlayerValue" id="PlayerValue" class="form-control"/>
+      }
    }
 }
 

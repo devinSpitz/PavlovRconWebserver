@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+using PavlovRconWebserver.Exceptions;
 using PavlovRconWebserver.Models;
 using PavlovRconWebserver.Services;
 
@@ -25,37 +25,43 @@ namespace PavlovRconWebserver.Controllers
             if(await _userservice.IsUserInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
             return View("Index",_service.FindAll());
         }
-
-        public async Task<IActionResult> AddServer()
+        public async Task<IActionResult> EditServer(int? serverId)
         {
             if(await _userservice.IsUserInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
-            return View("AddServer");
-        }
-        
-        public async Task<IActionResult> UpdateServerId(int serverId)
-        {
-            if(await _userservice.IsUserInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
-            var server = _service.FindOne(serverId);
-            _service.Update(server);
-            return View("Update",server);
+            var server = new RconServer();
+            if (serverId != null && serverId != 0)
+            {
+                server = _service.FindOne((int)serverId);
+            }
+            
+            return View("Server",server);
         }
 
         [HttpPost]
-        public async Task<IActionResult> UpdateServer(RconServer server)
+        public async Task<IActionResult> SaveServer(RconServer server)
         {
+            if(!ModelState.IsValid) 
+                return View("Server",server);
             if(await _userservice.IsUserInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
-            _service.Update(server);
-            return View("Update",server);
+            try
+            {
+
+                if (server.Id == 0)
+                {
+                    _service.Insert(server);
+                }
+                else
+                {
+                    _service.Update(server);
+                }
+            }
+            catch (SaveServerException e)
+            {
+                ModelState.AddModelError(e.FieldName, e.Message);
+            }
+            return View("Server",server);
         }
-        
-        [HttpPost]
-        public async Task<IActionResult> SaveNewServer(RconServer server)
-        {
-            if(await _userservice.IsUserInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
-            _service.Insert(server);
-            return await Index();
-        }
-        
+
         public async Task<IActionResult> DeleteServer([FromQuery]int id)
         {
             if(await _userservice.IsUserInRole("Admin",HttpContext.User)) return new UnauthorizedResult();

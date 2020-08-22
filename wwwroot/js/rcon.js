@@ -11,25 +11,23 @@ function init(){
     $("#TwoValueCommands").change(function(){
         setValueFields(PlayerCommands,TwoValueCommands,false);
     });
-    
-    $("#RconServer").change(function(){
-        let servers = [];
-        $("#RconServer :selected").each(function(){
-            servers.push($(this).val())
-        });
 
-        if(servers.length===1)
-            UpdatePlayers(servers);
+    UpdatePlayers();
+    $("#RconServer").change(function(){
+        let server  = $("#RconServer").val();
+
+        if(typeof server !== undefined && server !== "")
+        {
+            UpdatePlayers(server);
+        } 
     });
 
 };
 
 function TwoValuesSendCommand()
 {
-    let servers = [];
-    $("#RconServer :selected").each(function(){
-        servers.push($(this).val())
-    });
+
+    let server  = $("#RconServer").val();
 
     let command = "";
 
@@ -37,46 +35,56 @@ function TwoValuesSendCommand()
     $("#TwoValueCommands :selected").each(function(){
         playerCommand = $(this).val();
     });
-    command += playerCommand+"";
+    command += playerCommand+" ";
 
     let playerValue = "";
     playerValue = $("#TwoValueInputs").find("#PlayerValue").val();
-    command += playerValue+"";
+    command += playerValue+" ";
 
     let playerValueTwo = "";
     playerValueTwo = $("#TwoValueInputs").find("#PlayerValueTwo").val();
-    command += playerValueTwo+"";
-
-    sendSingleCommand(tmpCommand);
+    command += playerValueTwo+" ";
+    sendSingleCommand(command);
 }
 
-function UpdatePlayers(servers = null){
-    if(servers === null)
+function UpdatePlayers(server){
+
+    $(".overlay").show();
+    if(typeof server == "undefined")
     {
-        servers = [];
-        $("#RconServer :selected").each(function(){
-            servers.push($(this).val())
-        });
+        server  = $("#RconServer").val();
     }
-    if(servers.length!==1) return;
     var dropdown = $("#Players");
     dropdown.empty();
     //foreach Player
     $.ajax({
         type: 'POST',
         url: "/Rcon/GetAllPlayers",
-        data: { serverId: servers[0] },
+        data: { serverId: server },
         success:  function(data)
         {   //TODO: Check if Commands Work
             $(data).each(function (){
+                if($(this.playerList).length<=0)
+                {
+                    dropdown.append($("<option />").val("-").text("--There are no players--"));
+                }
                 $(this.playerList).each(function (){
                     dropdown.append($("<option />").val(this.uniqueId).text(this.username));
                 });
             });
+
+            $(".overlay").hide();
         },
         error: function(XMLHttpRequest, textStatus, errorThrown)
         {
-            alert('Could not update players!');
+            if(typeof XMLHttpRequest.status !== "undefined" && XMLHttpRequest.status===400&&typeof XMLHttpRequest.responseText !== "undefined" && XMLHttpRequest.responseText !== "")
+            {
+                jsonTOHtmlPartialView(JSON.stringify(XMLHttpRequest.responseText));
+            }else{
+                alert('Could not update players!');
+            }
+
+            $(".overlay").hide();
         }
     });
 
@@ -128,71 +136,54 @@ function PlayerAction()
 }
 function sendSingleCommand(command)
 {
-    let servers = [];
-    $("#RconServer :selected").each(function(){
-        servers.push($(this).val())
-    });
+    $(".overlay").show();
+    let server  = $("#RconServer").val();
 
     $.ajax({
         type: 'POST',
         url: "/Rcon/sendCommand",
-        data: { servers: servers, command: command },
+        data: { server: server, command: command },
         success:  function(result)
         {
             if(result.toString()==="")
             {
-                if(servers.length<=0)
-                {
-                    alert("Please select at least one server to send to command!");
-                }else{
-                    alert("Did nothing!");
-                }
+                alert("Did nothing!");
             }
             else{
                 if(command==="ServerInfo")
                 {
-                    RconServerInfoPartialView(result,servers);
+                    RconServerInfoPartialView(result,server);
                 }
                 else{
                     jsonTOHtmlPartialView(result.toString())
                 }
+                $(".overlay").hide();
             }
         },
-        error: function(XMLHttpRequest, textStatus, errorThrown)
+        error: function(XMLHttpRequest)
         {
-            if(typeof XMLHttpRequest.status !== "undefined" && XMLHttpRequest.status === 500)
-            {
-                console.log(XMLHttpRequest.responseText);
-                alert("Command failed. To see more logs go to console.");
-            }
-            else if(typeof XMLHttpRequest.responseText !== "undefined" && XMLHttpRequest.responseText!=="") {
-                alert(XMLHttpRequest.responseText);
-            }
-            else{
-                console.log(XMLHttpRequest.responseText);
-                alert("Unknown error. To see more logs go to console.");
-            }
-            
+            jsonTOHtmlPartialView(JSON.stringify(XMLHttpRequest))
+            $(".overlay").hide();
         }
     });
 
 }
 
-function RconServerInfoPartialView(result,ServerIds)
+function RconServerInfoPartialView(result,ServerId)
 {
 
     $.ajax({
         type: 'POST',
         url: "/Rcon/RconServerInfoPartialView",
-        data: { servers: result ,serverIds: ServerIds},
+        data: { server: result ,serverId: ServerId},
         success:  function(data)
         {
             $('#modal-placeholder').html(data);
             $('#modal-placeholder > .modal').modal('show');
         },
-        error: function(XMLHttpRequest, textStatus, errorThrown)
+        error: function(XMLHttpRequest)
         {
-            alert('Could not get ServerInfoParialView!');
+            jsonTOHtmlPartialView(JSON.stringify(XMLHttpRequest))
         }
     });
 }
@@ -206,10 +197,11 @@ function jsonTOHtmlPartialView(json)
         {
             $('#modal-placeholder').html(data);
             $('#modal-placeholder > .modal').modal('show');
+
         },
         error: function(XMLHttpRequest, textStatus, errorThrown)
         {
-            alert('Could not get ServerInfoParialView!');
+            jsonTOHtmlPartialView(JSON.stringify(XMLHttpRequest))
         }
     });
 }
@@ -226,7 +218,7 @@ function ValueFieldPartialView(playerCommands,twoValueCommands,atualCommandName,
         },
         error: function(XMLHttpRequest, textStatus, errorThrown)
         {
-            alert('Could not get ValueFieldPartialView!');
+            jsonTOHtmlPartialView(JSON.stringify(XMLHttpRequest))
         }
     });
 }
