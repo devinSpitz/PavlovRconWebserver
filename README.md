@@ -34,7 +34,7 @@ Testet and worked for me:
 
 Contra:
 
-- very less tests on linux and seems to crash a lot on my system every 10 mins? But i just testet it with dotnet run so there was maybe another problem?
+- very less tests on linux and seems to crash a lot on my system every 10 mins.   The problem seems to be the nuget: https://github.com/fabian-blum/AspNetCore.Identity.LiteDB try to change to another package so it runs nice on linux.
 - Only testet on 2 Systems Windows 10 and Ubuntu 20.04
 
 Build parameter:
