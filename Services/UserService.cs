@@ -31,12 +31,14 @@ namespace PavlovRconWebserver.Services
         }
         
         
+        public async Task<bool> IsUserNotInRole(string role,ClaimsPrincipal principal)
+        {
+            return (!await userManager.IsInRoleAsync((await userManager.GetUserAsync(principal)),role)); 
+        }
+        
         public async Task<bool> IsUserInRole(string role,ClaimsPrincipal principal)
         {
-            
-            return (!await userManager.IsInRoleAsync((await userManager.GetUserAsync(principal)),role));
-            
-            
+            return (await userManager.IsInRoleAsync((await userManager.GetUserAsync(principal)),role)); 
         }
     }
 }

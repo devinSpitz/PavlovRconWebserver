@@ -28,7 +28,7 @@ namespace PavlovRconWebserver.Controllers
 
         public async Task<IActionResult> Index()
         {
-            if(await _userService.IsUserInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
+            if(await _userService.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
             return View(roleManager.Roles);
         }
 
@@ -38,7 +38,7 @@ namespace PavlovRconWebserver.Controllers
         public async Task<IActionResult> Create([Required]string name)
         {
             
-            if(await _userService.IsUserInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
+            if(await _userService.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
             if (ModelState.IsValid)
             {
                 IdentityResult result = await roleManager.CreateAsync(new AspNetCore.Identity.LiteDB.IdentityRole(name));
@@ -69,7 +69,7 @@ namespace PavlovRconWebserver.Controllers
 
         public async Task<IActionResult> Update(string id)
         {
-            if(await _userService.IsUserInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
+            if(await _userService.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
             AspNetCore.Identity.LiteDB.IdentityRole role = await roleManager.FindByIdAsync(id);
             List<InbuildUser> members = new List<InbuildUser>();
             List<InbuildUser> nonMembers = new List<InbuildUser>();
@@ -89,7 +89,7 @@ namespace PavlovRconWebserver.Controllers
         [HttpPost]
         public async Task<IActionResult> Update(RoleModification model)
         {
-            if(await _userService.IsUserInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
+            if(await _userService.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
             IdentityResult result;
             if (ModelState.IsValid)
             {

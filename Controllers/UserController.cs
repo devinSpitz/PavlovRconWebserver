@@ -19,13 +19,13 @@ namespace PavlovRconWebserver.Controllers
         
         public async Task<IActionResult> Index()
         {
-            if(await _service.IsUserInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
+            if(await _service.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
             return View("Index",_service.FindAll());
         }
         
         public async Task<IActionResult> DeleteUser(string id)
         {
-            if(await _service.IsUserInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
+            if(await _service.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
             _service.Delete(id);
             return await Index();
         }

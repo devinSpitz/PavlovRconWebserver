@@ -186,7 +186,7 @@ namespace PavlovRconWebserver.Controllers
       public async Task<IActionResult> Register(string returnUrl = null)
       {
          
-         if(await _userService.IsUserInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
+         if(await _userService.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
          ViewData["ReturnUrl"] = returnUrl;
          return View();
       }
@@ -196,7 +196,7 @@ namespace PavlovRconWebserver.Controllers
       [ValidateAntiForgeryToken]
       public async Task<IActionResult> Register(RegisterViewModel model, string returnUrl = null)
       {
-         if(await _userService.IsUserInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
+         if(await _userService.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
          ViewData["ReturnUrl"] = returnUrl;
          if (ModelState.IsValid)
          {
