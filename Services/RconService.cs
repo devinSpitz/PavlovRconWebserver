@@ -344,6 +344,13 @@ namespace PavlovRconWebserver.Services
                            (new Regex(@"(?<=https://steamuserimages)(.*)(?=Letterbox)").Match(note.OuterHtml).Value) +
                            "Letterbox&imcolor=%23000000&letterbox=true";
 
+            if (map.ImageUrl=="https://steamuserimages"+"Letterbox&imcolor=%23000000&letterbox=true")
+            {
+                map.ImageUrl = "https://community" +
+                    (new Regex(@"(?<=https://community)(.*)(?=steam_workshop_default_image.png)").Match(note.OuterHtml).Value) +
+                    "steam_workshop_default_image.png";
+                
+            }
             var correctOuter = note.OuterHtml.Replace("\"","'");
             map.Name = new Regex(@"(?<=<div class='workshopItemTitle ellipsis'>)(.*)(?=</div></a>)").Match(correctOuter).Value;
             map.Author  = new Regex(@"(?<=/?appid=555160'>)(.*)(?=</a></div>)").Match(correctOuter).Value;

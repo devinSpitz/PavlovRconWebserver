@@ -64,11 +64,11 @@ function search(searchInput,attr)
     $( ".mapPanel" ).each(function( index ) {
         if($(this).attr(attr).toLowerCase().indexOf(searchInput)>=0)
         {
-            $(this).show();
+            $(this).parent().show();
         }
         else{
 
-            $(this).hide();
+            $(this).parent().hide();
         }
 
     });
@@ -335,6 +335,7 @@ function setValueFields(playerCommands,twoValueCommands,documentReady = false)
         $("#TwoValueInputs").find("#PlayerValueTwoParent").find("input").remove();
         $("#TwoValueInputs").find("#PlayerValueTwoParent").find("select").remove();
         $("#TwoValueInputs").find("#PlayerValueTwoParent").find("a").remove();
+        $("#TwoValueInputs").find(".valueFieldButtons").remove();
     }
     ValueFieldPartialView(playerCommands,twoValueCommands,$("#TwoValueCommands :selected").val(),false,false,function(data){
         $("#TwoValueInputs").find("#PlayerValueTwoParent").append(data);
