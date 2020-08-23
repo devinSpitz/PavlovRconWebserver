@@ -25,15 +25,12 @@ else
    var command = Model.TwoValueCommands.FirstOrDefault(x => x.Name == Model.ActualCommandName);   
    if (!string.IsNullOrEmpty(command.PartialViewName)&& ((!Model.firstValue && command.Name == "GiveTeamCash")||(Model.firstValue && command.Name == "SwitchMap")))
    {
-      @*if(@command.PartialViewName == "MapView")
-      {
          <text>
-            <button onclick="RconChooseItemPartialView()">Open selector</button>
+            <button type="button" class="btn btn-sm btn-primary valueFieldButtons"  onclick="RconChooseMapPartialView()">Open selector</button>
          </text>
-      }*@
-      <text>
+      @*<text>
          <a href="@command.PartialViewName" target="_blank">Link</a>
-      </text>
+      </text>*@
    }
    if ((Model.firstValue && command.Name == "GiveTeamCash")||(!Model.firstValue && command.Name == "SwitchMap"))
    {

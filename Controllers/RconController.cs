@@ -57,6 +57,11 @@ namespace PavlovRconWebserver.Controllers
         {
             return PartialView("RconChooseItemPartialView");
         }
+        public async Task<IActionResult> RconChooseMapPartialView()
+        {
+            var listOfMaps = await _service.CrawlSteamMaps();
+            return PartialView("~/Views/Rcon/RconChooseMapPartialView.cshtml",listOfMaps);
+        }
         
         public IActionResult JsonToHtmlPartialView(string json)
         {

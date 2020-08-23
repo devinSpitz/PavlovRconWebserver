@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Sockets;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
 using Microsoft.VisualBasic;
@@ -287,7 +289,7 @@ namespace PavlovRconWebserver.Services
             }
         }
 
-        private async Task<string> crawlSteamMaps()
+        public async Task<List<RconMapsViewModel>> CrawlSteamMaps()
         {
             HttpClient client = new HttpClient();
             var response = await client.GetAsync("https://steamcommunity.com/workshop/browse/?appid=555160&browsesort=trend&section=readytouseitems&actualsort=trend&p=1&numperpage=30");
@@ -296,10 +298,66 @@ namespace PavlovRconWebserver.Services
             HtmlDocument pageDocument = new HtmlDocument();
             pageDocument.LoadHtml(pageContents);
 
-            var headlineText = pageDocument.DocumentNode.SelectSingleNode("//div[@class='workshopBrowsePagingControls']").InnerText;
+            List<HtmlDocument> pages = new List<HtmlDocument>();
+            // get highest site number
+            var pageDiv = pageDocument.DocumentNode.SelectSingleNode("//div[@class='workshopBrowsePagingControls']").OuterHtml;
+            Regex regex = new Regex(@"(?<=>)([0-9]*)(?=</a)");
+            var matches = regex.Matches(pageDiv);
+            if(matches.Count<1) throw new Exception("There where no maps found on steam? some bigger problem maybe");
+            var highest = matches[^1];
+            
+            var seq = Enumerable.Range(1, int.Parse(highest.Value)).ToArray();
+            
+            var pageTasks = Enumerable.Range(0, seq.Count())
+                .Select(getPage);
+            pages = (await Task.WhenAll(pageTasks)).ToList();
+            
+            
+            var MapsTasks = pages.Select(GetMapsFromPage);
+            var pagesMaps = (await Task.WhenAll(MapsTasks)).ToList(); // This uses like 1 GB RAM what i think everybody should have :( But i try to parse 52 sites which each have 30 maps on it parallel so this is obvious
+            var maps = pagesMaps.SelectMany(x => x).ToList();
+            //g
+           
 
 
-            return "";
+            return maps;
+        }
+
+        
+        private async Task<List<RconMapsViewModel>> GetMapsFromPage(HtmlDocument page)
+        {
+            var notes = page.DocumentNode.SelectNodes("//div[@class='workshopItem']");
+            
+            var mapsTasks = notes.Select(getMapFromNote);
+            var maps = (await Task.WhenAll(mapsTasks)).ToList();
+
+
+            return maps;
+        }
+
+        private async Task<RconMapsViewModel> getMapFromNote(HtmlNode note)
+        {
+            var map = new RconMapsViewModel();
+            map.Id = new Regex(@"(?<=id=)([0-9]*)(?=&searchtext=)").Match(note.OuterHtml).Value;
+
+            map.ImageUrl = "https://steamuserimages" +
+                           (new Regex(@"(?<=https://steamuserimages)(.*)(?=Letterbox)").Match(note.OuterHtml).Value) +
+                           "Letterbox&imcolor=%23000000&letterbox=true";
+
+            var correctOuter = note.OuterHtml.Replace("\"","'");
+            map.Name = new Regex(@"(?<=<div class='workshopItemTitle ellipsis'>)(.*)(?=</div></a>)").Match(correctOuter).Value;
+            map.Author  = new Regex(@"(?<=/?appid=555160'>)(.*)(?=</a></div>)").Match(correctOuter).Value;
+            return map;
+        }
+        
+        private async Task<HtmlDocument> getPage(int index)
+        {
+            HttpClient client = new HttpClient();
+            var singlePage = new HtmlDocument();
+            var singleResponse = await client.GetAsync("https://steamcommunity.com/workshop/browse/?appid=555160&browsesort=trend&section=readytouseitems&actualsort=trend&p="+index+"&numperpage=30");
+            var singlePageContents = await singleResponse.Content.ReadAsStringAsync();
+            singlePage.LoadHtml(singlePageContents);
+            return singlePage;
         }
     }
 }

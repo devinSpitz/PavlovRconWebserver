@@ -29,6 +29,11 @@ function setItem(id)
     $("#PlayerAction").find("#PlayerValue").val(id);
 }
 
+function setMap(id)
+{
+    $("#TwoValueInputs").find("#PlayerValue").val("UGC"+id);
+}
+
 function TwoValuesSendCommand()
 {
 
@@ -50,6 +55,23 @@ function TwoValuesSendCommand()
     playerValueTwo = $("#TwoValueInputs").find("#PlayerValueTwo").val();
     command += playerValueTwo+" ";
     sendSingleCommand(command);
+}
+
+
+
+function search(searchInput,attr)
+{
+    $( ".mapPanel" ).each(function( index ) {
+        if($(this).attr(attr).toLowerCase().indexOf(searchInput)>=0)
+        {
+            $(this).show();
+        }
+        else{
+
+            $(this).hide();
+        }
+
+    });
 }
 
 function UpdatePlayers(server){
@@ -207,6 +229,35 @@ function RconChooseItemPartialView()
         },
         error: function(XMLHttpRequest)
         {
+            jsonTOHtmlPartialView(JSON.stringify(XMLHttpRequest))
+        }
+    });
+}
+//Todo: merge all that modal functions
+
+function RconChooseMapPartialView()
+{
+
+    $(".overlay").show();
+    $.ajax({
+        type: 'POST',
+        url: "/Rcon/RconChooseMapPartialView",
+        success:  function(data)
+        {
+            $('#modal-placeholder').html(data);
+            $('#modal-placeholder > .modal').modal('show');
+
+            $(".overlay").hide();
+            $("#searchAuthor").bind("keyup change", function (e) {
+                search($("#searchAuthor").val().toLowerCase(),"data-Author");
+            });
+            $("#searchName").bind("keyup change", function (e) {
+                search($("#searchName").val().toLowerCase(),"data-Name");
+            });
+        },
+        error: function(XMLHttpRequest)
+        {
+            $(".overlay").hide();
             jsonTOHtmlPartialView(JSON.stringify(XMLHttpRequest))
         }
     });
