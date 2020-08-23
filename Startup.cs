@@ -80,7 +80,6 @@ namespace PavlovRconWebserver
          app.UseRouting();
          app.UseAuthentication();
          app.UseAuthorization();
-         app.UseHttpsRedirection();
          app.UseEndpoints(endpoints =>
          {
             endpoints.MapDefaultControllerRoute();
