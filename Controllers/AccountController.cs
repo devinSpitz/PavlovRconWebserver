@@ -212,6 +212,7 @@ namespace PavlovRconWebserver.Controllers
 
                //await _signInManager.SignInAsync(user, false);
                _logger.LogInformation("User created a new account with password.");
+               await _userManager.AddToRoleAsync(user, "User");
                
                return RedirectToUserIndex();
                //return RedirectToLocal(returnUrl);

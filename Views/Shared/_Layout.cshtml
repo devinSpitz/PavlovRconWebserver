@@ -1,7 +1,9 @@
-﻿@using Microsoft.AspNetCore.Http
+﻿@inject SignInManager<InbuildUser> SignInManager
+@inject UserManager<InbuildUser> UserManager
 <!DOCTYPE html>
 <html>
 <head>
+
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>@ViewData["Title"] - Pavlov Rcon Webserver</title>
@@ -31,18 +33,24 @@
         </div>
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
-                <li>
-                    <a asp-area="" asp-controller="User" asp-action="Index">Users</a>
-                </li>
-                <li>
-                    <a asp-area="" asp-controller="Role" asp-action="Index">Roles</a>
-                </li>
-                <li>
-                    <a asp-area="" asp-controller="RconServer" asp-action="Index">Servers</a>
-                </li>
-                <li>
-                    <a asp-area="" asp-controller="Rcon" asp-action="Index">Commands</a>
-                </li>
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    if((await UserManager.IsInRoleAsync(await UserManager.GetUserAsync(User),"Admin")))
+                    {
+                        <li>
+                            <a asp-area="" asp-controller="User" asp-action="Index">Users</a>
+                        </li>
+                        <li>
+                            <a asp-area="" asp-controller="Role" asp-action="Index">Roles</a>
+                        </li>
+                        <li>
+                            <a asp-area="" asp-controller="RconServer" asp-action="Index">Servers</a>
+                        </li>
+                    }
+                    <li>
+                        <a asp-area="" asp-controller="Rcon" asp-action="Index">Commands</a>
+                    </li>
+                }
             </ul>
             @await Html.PartialAsync("_LoginPartial")
         </div>
