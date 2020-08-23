@@ -24,6 +24,11 @@ function init(){
 
 };
 
+function setItem(id)
+{
+    $("#PlayerAction").find("#PlayerValue").val(id);
+}
+
 function TwoValuesSendCommand()
 {
 
@@ -187,6 +192,26 @@ function RconServerInfoPartialView(result,ServerId)
         }
     });
 }
+
+
+function RconChooseItemPartialView()
+{
+
+    $.ajax({
+        type: 'POST',
+        url: "/Rcon/RconChooseItemPartialView",
+        success:  function(data)
+        {
+            $('#modal-placeholder').html(data);
+            $('#modal-placeholder > .modal').modal('show');
+        },
+        error: function(XMLHttpRequest)
+        {
+            jsonTOHtmlPartialView(JSON.stringify(XMLHttpRequest))
+        }
+    });
+}
+
 function jsonTOHtmlPartialView(json)
 {
     $.ajax({
@@ -233,6 +258,7 @@ function setValueFields(playerCommands,twoValueCommands,documentReady = false)
         $("#PlayerAction").find("#PlayerValueParent").find("input").remove();
         $("#PlayerAction").find("#PlayerValueParent").find("select").remove();
         $("#PlayerAction").find("#PlayerValueParent").find("a").remove();
+        $("#PlayerAction").find("#PlayerValueParent").find(".valueFieldButtons").remove();
     }
     ValueFieldPartialView(playerCommands,twoValueCommands,$("#PlayerCommands :selected").val(),true,true,function(data){
         $("#PlayerAction").find("#PlayerValueParent").append(data);
@@ -245,6 +271,7 @@ function setValueFields(playerCommands,twoValueCommands,documentReady = false)
         $("#TwoValueInputs").find("#PlayerValueParent").find("input").remove();
         $("#TwoValueInputs").find("#PlayerValueParent").find("select").remove();
         $("#TwoValueInputs").find("#PlayerValueParent").find("a").remove();
+        $("#PlayerAction").find("#PlayerValueParent").find(".valueFieldButtons").remove();
     }
     ValueFieldPartialView(playerCommands,twoValueCommands,$("#TwoValueCommands :selected").val(),false,true,function(data){
         $("#TwoValueInputs").find("#PlayerValueParent").append(data);

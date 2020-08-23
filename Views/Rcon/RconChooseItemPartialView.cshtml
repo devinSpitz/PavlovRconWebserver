@@ -1,0 +1,157 @@
+@model ServerInfoViewModel
+@{
+    var  items = new Dictionary<string,List<string> >();
+    
+    items.Add("Guns",new List<string>()
+    {
+        "cet9",
+        "m9",
+        "1911",
+        "sock",
+        "57",
+        "de",
+        "revolver",
+        "sawedoff",
+        "shotgun",
+        "autoshotgun",
+        "drumshotgun",
+        "lmga",
+        "uzi",
+        "mp5",
+        "smg",
+        "vanas",
+        "p90",
+        "kar98",
+        "ak47",
+        "ak12",
+        "ak",
+        "ar",
+        "aug",
+        "autosniper",
+        "awp",
+        "antitank",
+    });
+
+
+    items.Add("Granates", new List<string>()
+    {
+        "grenade",
+        "grenade_ru",
+        "flash",
+        "smoke",
+        "smoke_ru",
+    });
+
+    items.Add("Attachments", new List<string>()
+    {
+        "reddot",
+        "holo",
+        "acog",
+        "scope",
+        "supp_pistol",
+        "supp_rifle",
+        "grip_angled",
+        "grip_vertical",
+        "armour",
+        "kevlarhelmet",
+    });
+    
+    items.Add("Misc",new List<string>()
+    {
+        "defuse", 
+        "knife",
+        "painkillers",
+        "taser",
+        "syringe",
+    });
+    
+    items.Add("Ammo", new List<string>()
+    {
+        "ammo_rifle",
+        "ammo_sniper",
+        "ammo_pistol",
+        "ammo_smg",
+        "ammo_shotgun",
+        "ammo_special",
+    });
+    
+    
+    //WW2
+    items.Add("GunsWW", new List<string>()
+    {
+        "ppsh",
+        "mp40",
+        "g43",
+        "m1garand",
+        "svt40",
+        "luger",
+        "tokarev",
+        "webley",
+        "bren",
+        "bar",
+        "sten",
+        "stg44",
+        "mosin",
+        "springfield",
+        "thompson",
+        "mg42",
+        "leeenfield",  
+    });
+    
+    items.Add("GranatesWW", new List<string>()
+    {
+        "grenade_us",
+        "grenade_ger",
+        "smoke_us",
+        "smoke_ger",
+        "grenade_svt",
+        "smoke_svt",
+    });
+    
+    items.Add("LauncherWW", new List<string>()
+    {
+        "rl_piat",
+        "rl_m1a1",
+        "rl_panzer",
+    });
+    
+
+    
+    
+}
+
+
+<!-- Modal -->
+<div class="modal fade" id="add-contact" tabindex="-1" role="dialog" aria-labelledby="addContactLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addContactLabel">Choose item</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @foreach (var list in items)
+                {
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            @list.Key
+                        </div>
+                        <div class="panel-body">
+                            @foreach (var item in list.Value)
+                            {
+                                <button type="button" class="btn btn-success col-sm-3" data-dismiss="modal" onclick="setItem('@item')">@item</button>
+                                <div class="col-sm-1"></div>
+                            }
+                        </div>
+                    </div>
+                    
+
+                }
+
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

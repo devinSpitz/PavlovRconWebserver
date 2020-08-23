@@ -1,13 +1,15 @@
 @model ValueFieldPartialViewViewModel
-@*Todo: this view is ugly have to make this diffrent!*@
 @if (Model.IsNormalCommand)
 {
    var command = Model.PlayerCommands.FirstOrDefault(x => x.Name == Model.ActualCommandName);
-   if (!string.IsNullOrEmpty(command.url))
+   if (!string.IsNullOrEmpty(command.PartialViewName))
    {
-      <text>
-         <a href="@command.url" target="_blank">Link</a>
-      </text>
+      if (@command.PartialViewName == "ItemView")
+      {
+         <text>
+         <button type="button" class="btn btn-sm btn-primary valueFieldButtons" onclick="RconChooseItemPartialView()">Open selector</button>
+         </text>
+      }
    }
    if (command.valuesOptions != null && command.valuesOptions.Count > 0 && command.InputValue)
    {
@@ -21,10 +23,16 @@
 else
 {
    var command = Model.TwoValueCommands.FirstOrDefault(x => x.Name == Model.ActualCommandName);   
-   if (!string.IsNullOrEmpty(command.url)&& ((!Model.firstValue && command.Name == "GiveTeamCash")||(Model.firstValue && command.Name == "SwitchMap")))
+   if (!string.IsNullOrEmpty(command.PartialViewName)&& ((!Model.firstValue && command.Name == "GiveTeamCash")||(Model.firstValue && command.Name == "SwitchMap")))
    {
+      @*if(@command.PartialViewName == "MapView")
+      {
+         <text>
+            <button onclick="RconChooseItemPartialView()">Open selector</button>
+         </text>
+      }*@
       <text>
-         <a href="@command.url" target="_blank">Link</a>
+         <a href="@command.PartialViewName" target="_blank">Link</a>
       </text>
    }
    if ((Model.firstValue && command.Name == "GiveTeamCash")||(!Model.firstValue && command.Name == "SwitchMap"))

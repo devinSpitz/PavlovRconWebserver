@@ -2,8 +2,10 @@ using System;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using HtmlAgilityPack;
 using Microsoft.VisualBasic;
 using PavlovRconWebserver.Exceptions;
 using PavlovRconWebserver.Models;
@@ -283,6 +285,21 @@ namespace PavlovRconWebserver.Services
 
                 return result;
             }
+        }
+
+        private async Task<string> crawlSteamMaps()
+        {
+            HttpClient client = new HttpClient();
+            var response = await client.GetAsync("https://steamcommunity.com/workshop/browse/?appid=555160&browsesort=trend&section=readytouseitems&actualsort=trend&p=1&numperpage=30");
+            var pageContents = await response.Content.ReadAsStringAsync();
+
+            HtmlDocument pageDocument = new HtmlDocument();
+            pageDocument.LoadHtml(pageContents);
+
+            var headlineText = pageDocument.DocumentNode.SelectSingleNode("//div[@class='workshopBrowsePagingControls']").InnerText;
+
+
+            return "";
         }
     }
 }

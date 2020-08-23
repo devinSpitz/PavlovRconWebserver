@@ -5,7 +5,7 @@ namespace PavlovRconWebserver.Models
 {
     public class RconViewModel
     {
-        //ToDO: Need to save Baned players to make Unbane ane usfull cause will will be resetted if you restart your server when you set this option via rcon!
+        //ToDO: Need to save Baned players to make Unban ane usfull cause will will be resetted if you restart your server when you set this option via rcon!
         public RconViewModel()
         {
             PlayerCommands = new List<Command>()
@@ -38,7 +38,8 @@ namespace PavlovRconWebserver.Models
                 {
                     Name  = "GiveItem",
                     InputValue = true,
-                    url = "http://wiki.pavlov-vr.com/index.php?title=Weapons#ItemIDs"
+                    PartialViewName = "ItemView"
+                    
                 },
                 new Command()
                 {
@@ -84,7 +85,7 @@ namespace PavlovRconWebserver.Models
                     {
                         "SND", "TDM", "DM", "GUN"
                     },
-                    url = "https://steamcommunity.com/workshop/browse/?appid=555160&browsesort=trend&section=readytouseitems&actualsort=trend&p=1&numperpage=30"
+                    PartialViewName = "https://steamcommunity.com/workshop/browse/?appid=555160&browsesort=trend&section=readytouseitems&actualsort=trend&p=1&numperpage=30"
                 }
             };
         }
@@ -122,7 +123,7 @@ namespace PavlovRconWebserver.Models
         public bool InputValue { get; set; }
 
         public List<string> valuesOptions { get; set; } = new List<string>();
-        public string url { get; set; }
+        public string PartialViewName { get; set; }
     }
     
     public class ExtendedCommand: Command

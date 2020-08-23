@@ -53,6 +53,11 @@ namespace PavlovRconWebserver.Controllers
             return PartialView("RconServerInfoPartialView", tmp);
         }
         
+        public IActionResult RconChooseItemPartialView()
+        {
+            return PartialView("RconChooseItemPartialView");
+        }
+        
         public IActionResult JsonToHtmlPartialView(string json)
         {
             return PartialView("/Views/JsonToHtmlPartialView.cshtml", json);
