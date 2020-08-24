@@ -15,7 +15,7 @@
         }
         else
         {
-            @foreach (InbuildUser user in Model.NonMembers)
+            @foreach (LiteDB.Identity.Models.LiteDbUser user in Model.NonMembers)
             {
                 <tr>
                     <td>@user.UserName</td>
@@ -35,7 +35,7 @@
         }
         else
         {
-            @foreach (InbuildUser user in Model.Members)
+            @foreach (LiteDB.Identity.Models.LiteDbUser user in Model.Members)
             {
                 <tr>
                     <td>@user.UserName</td>

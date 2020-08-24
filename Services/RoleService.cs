@@ -1,15 +1,16 @@
-using AspNetCore.Identity.LiteDB.Data;
+
 using LiteDB;
+using LiteDB.Identity.Database;
 
 namespace PavlovRconWebserver.Services
 {
     public class RoleService
     {
-        private LiteDatabase _liteDb;
+        private ILiteDbIdentityContext _liteDb;
 
-        public RoleService(ILiteDbContext liteDbContext)
+        public RoleService(ILiteDbIdentityContext liteDbContext)
         {
-            _liteDb = liteDbContext.LiteDatabase;
+            _liteDb = liteDbContext;
         }
         
     }

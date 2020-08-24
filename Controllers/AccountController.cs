@@ -18,13 +18,13 @@ namespace PavlovRconWebserver.Controllers
    {
       private readonly IEmailSender _emailSender;
       private readonly ILogger _logger;
-      private readonly SignInManager<InbuildUser> _signInManager;
-      private readonly UserManager<InbuildUser> _userManager;
+      private readonly SignInManager<LiteDB.Identity.Models.LiteDbUser> _signInManager;
+      private readonly UserManager<LiteDB.Identity.Models.LiteDbUser> _userManager;
       private readonly UserService _userService;
 
       public AccountController(
-         UserManager<InbuildUser> userManager,
-         SignInManager<InbuildUser> signInManager,
+         UserManager<LiteDB.Identity.Models.LiteDbUser> userManager,
+         SignInManager<LiteDB.Identity.Models.LiteDbUser> signInManager,
          IEmailSender emailSender,
          ILogger<AccountController> logger,
          UserService userService)
@@ -182,7 +182,6 @@ namespace PavlovRconWebserver.Controllers
       public IActionResult Lockout() => View();
 
       [HttpGet]
-      [Authorize]
       public async Task<IActionResult> Register(string returnUrl = null)
       {
          
@@ -192,7 +191,6 @@ namespace PavlovRconWebserver.Controllers
       }
 
       [HttpPost]
-      [Authorize]
       [ValidateAntiForgeryToken]
       public async Task<IActionResult> Register(RegisterViewModel model, string returnUrl = null)
       {
@@ -200,7 +198,7 @@ namespace PavlovRconWebserver.Controllers
          ViewData["ReturnUrl"] = returnUrl;
          if (ModelState.IsValid)
          {
-            var user = new InbuildUser {UserName = model.Username, Email = model.Username+"@"+model.Username};// workeround caus dont like emails as account
+            var user = new LiteDB.Identity.Models.LiteDbUser {UserName = model.Username, Email = model.Username+"@"+model.Username};// workeround caus dont like emails as account
             var result = await _userManager.CreateAsync(user, model.Password);
             if (result.Succeeded)
             {
@@ -286,7 +284,7 @@ namespace PavlovRconWebserver.Controllers
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info == null)
                throw new ApplicationException("Error loading external login information during confirmation.");
-            var user = new InbuildUser {UserName = model.Email, Email = model.Email};
+            var user = new LiteDB.Identity.Models.LiteDbUser {UserName = model.Email, Email = model.Email};
             var result = await _userManager.CreateAsync(user);
             if (result.Succeeded)
             {
@@ -317,33 +315,7 @@ namespace PavlovRconWebserver.Controllers
          return View(result.Succeeded ? "ConfirmEmail" : "Error");
       }
 
-      [HttpGet]
-      [AllowAnonymous]
-      public IActionResult ForgotPassword() => View();
 
-      [HttpPost]
-      [AllowAnonymous]
-      [ValidateAntiForgeryToken]
-      public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
-      {
-         if (ModelState.IsValid)
-         {
-            var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user == null || !await _userManager.IsEmailConfirmedAsync(user))
-               return RedirectToAction(nameof(ForgotPasswordConfirmation));
-
-            // For more information on how to enable account confirmation and password reset please
-            // visit https://go.microsoft.com/fwlink/?LinkID=532713
-            var code = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var callbackUrl = Url.ResetPasswordCallbackLink(user.Id, code, Request.Scheme);
-            await _emailSender.SendEmailAsync(model.Email, "Reset Password",
-               $"Please reset your password by clicking here: <a href='{callbackUrl}'>link</a>");
-            return RedirectToAction(nameof(ForgotPasswordConfirmation));
-         }
-
-         // If we got this far, something failed, redisplay form
-         return View(model);
-      }
 
       [HttpGet]
       [AllowAnonymous]

@@ -1,5 +1,6 @@
-﻿@inject SignInManager<InbuildUser> SignInManager
-@inject UserManager<InbuildUser> UserManager
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<LiteDB.Identity.Models.LiteDbUser> SignInManager
+@inject UserManager<LiteDB.Identity.Models.LiteDbUser> UserManager
 <!DOCTYPE html>
 <html>
 <head>
@@ -35,8 +36,8 @@
             <ul class="nav navbar-nav">
                 @if (SignInManager.IsSignedIn(User))
                 {
-                    if((await UserManager.IsInRoleAsync(await UserManager.GetUserAsync(User),"Admin")))
-                    {
+                    //if((await UserManager.IsInRoleAsync(await UserManager.GetUserAsync(User),"Admin")))
+                    //{
                         <li>
                             <a asp-area="" asp-controller="User" asp-action="Index">Users</a>
                         </li>
@@ -46,7 +47,7 @@
                         <li>
                             <a asp-area="" asp-controller="RconServer" asp-action="Index">Servers</a>
                         </li>
-                    }
+                    //}
                     <li>
                         <a asp-area="" asp-controller="Rcon" asp-action="Index">Commands</a>
                     </li>

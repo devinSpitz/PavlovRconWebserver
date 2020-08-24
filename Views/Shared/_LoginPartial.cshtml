@@ -1,5 +1,6 @@
-@inject SignInManager<InbuildUser> SignInManager
-@inject UserManager<InbuildUser> UserManager
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<LiteDB.Identity.Models.LiteDbUser> SignInManager
+@inject UserManager<LiteDB.Identity.Models.LiteDbUser> UserManager
 
 @if (SignInManager.IsSignedIn(User))
 {

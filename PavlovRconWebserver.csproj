@@ -11,8 +11,8 @@
     <Folder Include="wwwroot\App_Data\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AspNetCore.Identity.LiteDB" Version="3.1.1" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.24" />
+    <PackageReference Include="LiteDB.Identity" Version="1.0.3" />
     <PackageReference Include="LiteGuard" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="3.1.6" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
@@ -33,18 +33,6 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
     <Content Update="Pages\User\Index.cshtml">
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-    <Content Update="Views\Role\Create.cshtml">
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-    <Content Update="Views\Role\Index.cshtml">
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-    <Content Update="Views\Role\Update.cshtml">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
@@ -76,6 +64,7 @@
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
+    <Content Remove="Views\Account\ForgotPassword.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <None Update="Command">
@@ -104,6 +93,38 @@
     <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\js\bootstrap.min.js" />
     <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\js\npm.js" />
     <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\LICENSE" />
+    <_ContentIncludedByDefault Remove="Views\Account\AccessDenied.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Account\ConfirmEmail.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Account\ExternalLogin.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Account\ForgotPassword.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Account\ForgotPasswordConfirmation.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Account\Lockout.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Account\Login.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Account\LoginWith2fa.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Account\LoginWithRecoveryCode.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Account\Register.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Account\ResetPassword.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Account\ResetPasswordConfirmation.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Account\SignedOut.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Manage\ChangePassword.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Manage\Disable2fa.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Manage\EnableAuthenticator.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Manage\ExternalLogins.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Manage\GenerateRecoveryCodes.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Manage\Index.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Manage\ResetAuthenticator.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Manage\SetPassword.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Manage\TwoFactorAuthentication.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Manage\_Layout.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Manage\_ManageNav.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Manage\_StatusMessage.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Manage\_ViewImports.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\User\Index.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Identity\Pages\_ViewStart.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Extensions\UrlHelperExtensions.cs" />
+    <Compile Remove="Models\InbuildUser.cs" />
   </ItemGroup>
 
 </Project>

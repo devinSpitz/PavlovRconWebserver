@@ -1,8 +1,9 @@
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using AspNetCore.Identity.LiteDB.Data;
 using LiteDB;
+using LiteDB.Identity.Database;
+using LiteDB.Identity.Models;
 using Microsoft.AspNetCore.Identity;
 using PavlovRconWebserver.Models;
 
@@ -10,35 +11,34 @@ namespace PavlovRconWebserver.Services
 {
     public class UserService
     {
-        private LiteDatabase _liteDb;
-        private UserManager<InbuildUser> userManager;
-
-        public UserService(ILiteDbContext liteDbContext,UserManager<InbuildUser> userMrg)
+        private ILiteDbIdentityContext _liteDb;
+        private UserManager<LiteDB.Identity.Models.LiteDbUser> _userManager;
+        public UserService(ILiteDbIdentityContext liteDbContext,UserManager<LiteDB.Identity.Models.LiteDbUser> userMrg)
         {
-            userManager = userMrg;
-            _liteDb = liteDbContext.LiteDatabase;
+            _userManager = userMrg;
+            _liteDb = liteDbContext;
         }
 
-        public IEnumerable<InbuildUser> FindAll()
+        public IEnumerable<LiteDbUser> FindAll()
         {
-            return _liteDb.GetCollection<InbuildUser>("Users")
+            return _liteDb.LiteDatabase.GetCollection<LiteDbUser>("LiteDbUser")
                 .FindAll();
         }
 
         public bool Delete(string id)
         {
-            return _liteDb.GetCollection<InbuildUser>("Users").Delete(id);
+            return _liteDb.LiteDatabase.GetCollection<LiteDbUser>("LiteDbUser").Delete(id);
         }
         
         
         public async Task<bool> IsUserNotInRole(string role,ClaimsPrincipal principal)
         {
-            return (!await userManager.IsInRoleAsync((await userManager.GetUserAsync(principal)),role)); 
+            return (!await _userManager.IsInRoleAsync((await _userManager.GetUserAsync(principal)),role)); 
         }
         
         public async Task<bool> IsUserInRole(string role,ClaimsPrincipal principal)
         {
-            return (await userManager.IsInRoleAsync((await userManager.GetUserAsync(principal)),role)); 
+            return (await _userManager.IsInRoleAsync((await _userManager.GetUserAsync(principal)),role)); 
         }
     }
 }
