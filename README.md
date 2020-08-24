@@ -10,6 +10,8 @@ Pictures:
 ![AddServerPart1](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/AddServerPart1.png?raw=true)
 ![AddServerPart2](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/AddServerPart2.png?raw=true)
 
+*Info: The linux branch will this week get merged in the master. It now runs stable on Linux. That means that the Database befor that merge will no langer be compatible.  Anyway after that merge a "how to install"(with https and nginx on linux and dotnet as service) and a feature video will be avaiable.  After that i will add a new release with builds as well.
+
 Important for the server the Telnet password and port are riquired cause it will at the end always connect to localhost over Telnet to execute the commands. If you set the checkbox to use Telnet it will also (with the least priority) use Telnet over the Internet.
 
 Auth logic:
