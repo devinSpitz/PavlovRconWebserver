@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
+using LiteDB.Identity.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -22,12 +23,12 @@ namespace PavlovRconWebserver.Controllers
       private readonly IEmailSender _emailSender;
       private readonly ILogger _logger;
       private readonly UrlEncoder _urlEncoder;
-      private readonly SignInManager<LiteDB.Identity.Models.LiteDbUser> _signInManager;
-      private readonly UserManager<LiteDB.Identity.Models.LiteDbUser> _userManager;
+      private readonly SignInManager<LiteDbUser> _signInManager;
+      private readonly UserManager<LiteDbUser> _userManager;
 
       public ManageController(
-         UserManager<LiteDB.Identity.Models.LiteDbUser> userManager,
-         SignInManager<LiteDB.Identity.Models.LiteDbUser> signInManager,
+         UserManager<LiteDbUser> userManager,
+         SignInManager<LiteDbUser> signInManager,
          IEmailSender emailSender,
          ILogger<ManageController> logger,
          UrlEncoder urlEncoder)

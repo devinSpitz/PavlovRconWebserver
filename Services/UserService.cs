@@ -5,15 +5,14 @@ using LiteDB;
 using LiteDB.Identity.Database;
 using LiteDB.Identity.Models;
 using Microsoft.AspNetCore.Identity;
-using PavlovRconWebserver.Models;
 
 namespace PavlovRconWebserver.Services
 {
     public class UserService
     {
         private ILiteDbIdentityContext _liteDb;
-        private UserManager<LiteDB.Identity.Models.LiteDbUser> _userManager;
-        public UserService(ILiteDbIdentityContext liteDbContext,UserManager<LiteDB.Identity.Models.LiteDbUser> userMrg)
+        private UserManager<LiteDbUser> _userManager;
+        public UserService(ILiteDbIdentityContext liteDbContext,UserManager<LiteDbUser> userMrg)
         {
             _userManager = userMrg;
             _liteDb = liteDbContext;
@@ -27,7 +26,7 @@ namespace PavlovRconWebserver.Services
 
         public bool Delete(string id)
         {
-            return _liteDb.LiteDatabase.GetCollection<LiteDbUser>("LiteDbUser").Delete(id);
+            return _liteDb.LiteDatabase.GetCollection<LiteDbUser>("LiteDbUser").Delete(new ObjectId(id));
         }
         
         

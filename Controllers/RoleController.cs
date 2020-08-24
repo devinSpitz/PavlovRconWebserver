@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
+using LiteDB.Identity.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -15,11 +16,11 @@ namespace PavlovRconWebserver.Controllers
     [Route("[controller]/[action]")]
     public class RoleController : Controller
     {
-        private readonly RoleManager<LiteDB.Identity.Models.LiteDbRole> roleManager;
-        private readonly UserManager<LiteDB.Identity.Models.LiteDbUser> userManager;
+        private readonly RoleManager<LiteDbRole> roleManager;
+        private readonly UserManager<LiteDbUser> userManager;
         private readonly UserService _userService;
 
-        public RoleController(RoleManager<LiteDB.Identity.Models.LiteDbRole> roleMgr, UserManager<LiteDB.Identity.Models.LiteDbUser> userMrg,UserService userService)
+        public RoleController(RoleManager<LiteDbRole> roleMgr, UserManager<LiteDbUser> userMrg,UserService userService)
         {
             roleManager = roleMgr;
             userManager = userMrg;
@@ -41,7 +42,7 @@ namespace PavlovRconWebserver.Controllers
             if(await _userService.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
             if (ModelState.IsValid)
             {
-                var role = new LiteDB.Identity.Models.LiteDbRole()
+                var role = new LiteDbRole()
                 {
                     Name = name
                 };
@@ -74,10 +75,10 @@ namespace PavlovRconWebserver.Controllers
         public async Task<IActionResult> Update(string id)
         {
             if(await _userService.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
-            LiteDB.Identity.Models.LiteDbRole role = await roleManager.FindByIdAsync(id);
-            List<LiteDB.Identity.Models.LiteDbUser> members = new List<LiteDB.Identity.Models.LiteDbUser>();
-            List<LiteDB.Identity.Models.LiteDbUser> nonMembers = new List<LiteDB.Identity.Models.LiteDbUser>();
-            foreach (LiteDB.Identity.Models.LiteDbUser user in _userService.FindAll())
+            LiteDbRole role = await roleManager.FindByIdAsync(id);
+            List<LiteDbUser> members = new List<LiteDbUser>();
+            List<LiteDbUser> nonMembers = new List<LiteDbUser>();
+            foreach (LiteDbUser user in _userService.FindAll())
             {
                 var list = await userManager.IsInRoleAsync(user, role.Name) ? members : nonMembers;
                 list.Add(user);

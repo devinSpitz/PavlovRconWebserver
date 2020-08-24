@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using LiteDB.Identity.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -18,13 +19,13 @@ namespace PavlovRconWebserver.Controllers
    {
       private readonly IEmailSender _emailSender;
       private readonly ILogger _logger;
-      private readonly SignInManager<LiteDB.Identity.Models.LiteDbUser> _signInManager;
-      private readonly UserManager<LiteDB.Identity.Models.LiteDbUser> _userManager;
+      private readonly SignInManager<LiteDbUser> _signInManager;
+      private readonly UserManager<LiteDbUser> _userManager;
       private readonly UserService _userService;
 
       public AccountController(
-         UserManager<LiteDB.Identity.Models.LiteDbUser> userManager,
-         SignInManager<LiteDB.Identity.Models.LiteDbUser> signInManager,
+         UserManager<LiteDbUser> userManager,
+         SignInManager<LiteDbUser> signInManager,
          IEmailSender emailSender,
          ILogger<AccountController> logger,
          UserService userService)
@@ -198,7 +199,7 @@ namespace PavlovRconWebserver.Controllers
          ViewData["ReturnUrl"] = returnUrl;
          if (ModelState.IsValid)
          {
-            var user = new LiteDB.Identity.Models.LiteDbUser {UserName = model.Username, Email = model.Username+"@"+model.Username};// workeround caus dont like emails as account
+            var user = new LiteDbUser {UserName = model.Username, Email = model.Username+"@"+model.Username};// workeround caus dont like emails as account
             var result = await _userManager.CreateAsync(user, model.Password);
             if (result.Succeeded)
             {
@@ -284,7 +285,7 @@ namespace PavlovRconWebserver.Controllers
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info == null)
                throw new ApplicationException("Error loading external login information during confirmation.");
-            var user = new LiteDB.Identity.Models.LiteDbUser {UserName = model.Email, Email = model.Email};
+            var user = new LiteDbUser {UserName = model.Email, Email = model.Email};
             var result = await _userManager.CreateAsync(user);
             if (result.Succeeded)
             {

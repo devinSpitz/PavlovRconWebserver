@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
+using LiteDB.Identity.Models;
 
 namespace PavlovRconWebserver.Models
 {
     public class RoleEdit
     {
-        public LiteDB.Identity.Models.LiteDbRole Role { get; set; }
-        public IEnumerable<LiteDB.Identity.Models.LiteDbUser> Members { get; set; }
-        public IEnumerable<LiteDB.Identity.Models.LiteDbUser> NonMembers { get; set; }
+        public LiteDbRole Role { get; set; }
+        public IEnumerable<LiteDbUser> Members { get; set; }
+        public IEnumerable<LiteDbUser> NonMembers { get; set; }
     }
 }

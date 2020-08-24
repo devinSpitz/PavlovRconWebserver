@@ -1,6 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Identity
+@using LiteDB.Identity.Models
 @model PavlovRconWebserver.Models.AccountViewModels.LoginViewModel
-@inject SignInManager<LiteDB.Identity.Models.LiteDbUser> SignInManager
+@inject SignInManager<LiteDbUser> SignInManager
 
 @{
     ViewData["Title"] = "Log in";
