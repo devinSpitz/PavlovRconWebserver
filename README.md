@@ -38,9 +38,9 @@ What are the features?
 
 [Feature Guide](https://youtu.be/iSmAP6_DAyM)
 
-Note: 
-If you build it by yourself be sure to add the database.db file and the other riquired folders(see release) befor start the application.
-The old user and roles system ist not compatible to the new one. So you have to restart with a new database, if you are from the version 0.0.1!
+Note:   
+If you build it by yourself be sure to add the database.db file and the other riquired folders(see release) befor start the application.  
+The old user and roles system ist not compatible to the new one. So you have to restart with a new database, if you are from the version 0.0.1!  
 
 
 Credits: 
