@@ -29,8 +29,12 @@ Auth logic with priority(with added multiple options):
 4. telnet
 
 How to install:  
-[Install Part 1](https://youtu.be/JG8SJFjqbUY)     
+[Install Part 1](https://youtu.be/JG8SJFjqbUY)  
 [Install Part 2](https://youtu.be/whlw1yD09Rw) 
+
+Also may take a look at this tutorial:
+https://dev.to/ianknighton/hosting-a-net-core-app-with-nginx-and-let-s-encrypt-1m50
+but be sure to install dotnet runtime 3.1
 
 [Commands](https://pastebin.com/dbGUsvUn)
 
