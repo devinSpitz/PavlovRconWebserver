@@ -10,65 +10,43 @@ Pictures:
 ![AddServerPart1](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/AddServerPart1.png?raw=true)
 ![AddServerPart2](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/AddServerPart2.png?raw=true)
 
-Important for the server the Telnet password and port are riquired cause it will at the end always connect to localhost over Telnet to execute the commands. If you set the checkbox to use Telnet it will also (with the least priority) use Telnet over the Internet.
 
-Auth logic:
-If the riquired values are set the following auth system will be tried and in this order.
+Videos:  
+[Feature Guide](https://youtu.be/iSmAP6_DAyM)  
+[Install Part 1](https://youtu.be/JG8SJFjqbUY)   
+[Install Part 2](https://youtu.be/whlw1yD09Rw) 
 
-1. ssh key + passphrase
-2. ssh key
-3. ssh user pass
+
+
+Important for the server the Telnet password and port are riquired cause it will at the end always connect to localhost over Telnet to execute the commands. 
+If you set the checkbox to use Telnet it will also (with the least priority) use Telnet over the Internet.
+
+Auth logic with priority(with added multiple options):
+
+1. ssh key + username + passphrase
+2. ssh key + username
+3. ssh username pass
 4. telnet
 
-Testet and worked for me:
+How to install:  
+[Install Part 1](https://youtu.be/JG8SJFjqbUY)     
+[Install Part 2](https://youtu.be/whlw1yD09Rw) 
 
-- ssh key + passphrase
-- ssh user pass
-- telnet
-- Most of the commands stuff (Had the problem that i din't know wich ids are avaible so a entered 0,1,2)
-- Add user
-- Remove user
-- Add user to user group
-- User in user group can only execute commands
-- User in admin group can add user, add users to role, add server, send commands
+[Commands](https://pastebin.com/dbGUsvUn)
 
-Contra:
+What are the features?
 
-- very less tests on linux and seems to crash a lot on my system every 10 mins? But i just testet it with dotnet run so there was maybe another problem?
-- Only testet on 2 Systems Windows 10 and Ubuntu 20.04
-
-Build parameter:
-
-- On windows builded with Jetbrains Rider but should work with: "dotnet publish -c release"  
-- On linux it need this parameter:  "dotnet publish -c release -o /home/pavlov/PavlovWebServerBuild/ --runtime linux-x64 --self-contained true --framework netcoreapp3.1" at least in my tests
+[Feature Guide](https://youtu.be/iSmAP6_DAyM)
 
 Note: 
-If you build it by youself be sure to add the database.db file and the other riquired folders(see release) befor start the application.
+If you build it by yourself be sure to add the database.db file and the other riquired folders(see release) befor start the application.
+The old user and roles system ist not compatible to the new one. So you have to restart with a new database, if you are from the version 0.0.1!
 
-Other:
-
-- It will get updates cause it need much of work and bug fixxing. Im not happy with a lot of code but it works for now.  
-- Not very userfriendly right now cause of missing error handling and stuff.
-
-Hot to install:
-1. Unzip  
-2. Install the dotnet core runtime 3.1 should be enouth (otherwide sdk)  
-3. For local use only "dotnet PavlovRconWebserver.dll --urls=https://127.0.0.1:5001/"  
-4. Goto to https://127.0.0.1:5001/  
-5. Default admin to start with: admin pw: 123456  
-6. Add your server  
-7. Go to commands select your server an try to do stuff :D  
-
-
-Security:
-
-Not that much testet.
-If you need to run it over the internet please use a https conf with cert!
 
 Credits: 
 
-A LiteDB provider for ASP.NET Core Identity framework.  
-https://github.com/fabian-blum/AspNetCore.Identity.LiteDB 
+Implementation of AspNetCore.Identity for LiteDB database engine.   
+https://github.com/quicksln/LiteDB.Identity
 
 The most simple, unambiguous, and lightweight .NET guard clause library.  
 https://github.com/adamralph/liteguard
