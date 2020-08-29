@@ -26,6 +26,10 @@ Auth logic with priority(with added multiple options):
 3. ssh username pass
 4. telnet
 
+Default users:
+User: admin
+pw: A2345a$
+
 How to install:  
 [How To Install/Build](https://youtu.be/GBgW4mP2zgI)   
   
