@@ -1,5 +1,7 @@
-@inject SignInManager<InbuildUser> SignInManager
-@inject UserManager<InbuildUser> UserManager
+@using Microsoft.AspNetCore.Identity
+@using LiteDB.Identity.Models
+@inject SignInManager<LiteDbUser> SignInManager
+@inject UserManager<LiteDbUser> UserManager
 
 @if (SignInManager.IsSignedIn(User))
 {
@@ -17,9 +19,6 @@
 else
 {
     <ul class="nav navbar-nav navbar-right">
-        <li>
-            <a asp-area="" asp-controller="Account" asp-action="Register">Register</a>
-        </li>
         <li>
             <a asp-area="" asp-controller="Account" asp-action="Login">Log in</a>
         </li>

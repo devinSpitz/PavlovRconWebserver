@@ -1,4 +1,5 @@
-﻿@model RoleEdit
+﻿@using LiteDB.Identity.Models
+@model RoleEdit
 <h1 class="bg-info text-white">Update Role</h1>
 <a asp-action="Index" class="btn btn-secondary">Back</a>
 <div asp-validation-summary="All" class="text-danger"></div>
@@ -15,7 +16,7 @@
         }
         else
         {
-            @foreach (InbuildUser user in Model.NonMembers)
+            @foreach (LiteDbUser user in Model.NonMembers)
             {
                 <tr>
                     <td>@user.UserName</td>
@@ -35,7 +36,7 @@
         }
         else
         {
-            @foreach (InbuildUser user in Model.Members)
+            @foreach (LiteDbUser user in Model.Members)
             {
                 <tr>
                     <td>@user.UserName</td>

@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AspNetCore.Identity.LiteDB.Data;
 using LiteDB;
+using LiteDB.Identity.Database;
 using Microsoft.AspNetCore.Razor.Language.Extensions;
 using PavlovRconWebserver.Exceptions;
 using PavlovRconWebserver.Extensions;
@@ -12,22 +12,22 @@ namespace PavlovRconWebserver.Services
 {
     public class RconServerSerivce
     {
-        private LiteDatabase _liteDb;
+        private ILiteDbIdentityContext _liteDb;
 
-        public RconServerSerivce(ILiteDbContext liteDbContext)
+        public RconServerSerivce(ILiteDbIdentityContext liteDbContext)
         {
-            _liteDb = liteDbContext.LiteDatabase;
+            _liteDb = liteDbContext;
         }
 
         public IEnumerable<RconServer> FindAll()
         {
-            return _liteDb.GetCollection<RconServer>("RconServer")
+            return _liteDb.LiteDatabase.GetCollection<RconServer>("RconServer")
                 .FindAll();
         }
 
         public RconServer FindOne(int id)
         {
-            return _liteDb.GetCollection<RconServer>("RconServer")
+            return _liteDb.LiteDatabase.GetCollection<RconServer>("RconServer")
                 .Find(x => x.Id == id).FirstOrDefault();
         }
 
@@ -38,7 +38,7 @@ namespace PavlovRconWebserver.Services
             rconServer = validateRconServer(rconServer);
             
             
-            return _liteDb.GetCollection<RconServer>("RconServer")
+            return _liteDb.LiteDatabase.GetCollection<RconServer>("RconServer")
                 .Insert(rconServer);
         }
 
@@ -99,7 +99,7 @@ namespace PavlovRconWebserver.Services
 
             
                
-            return _liteDb.GetCollection<RconServer>("RconServer")
+            return _liteDb.LiteDatabase.GetCollection<RconServer>("RconServer")
                 .Update(rconServer); 
             
            
@@ -107,7 +107,7 @@ namespace PavlovRconWebserver.Services
 
         public bool Delete(int id)
         {
-            return _liteDb.GetCollection<RconServer>("RconServer").Delete(id);
+            return _liteDb.LiteDatabase.GetCollection<RconServer>("RconServer").Delete(id);
         }
     }
 }

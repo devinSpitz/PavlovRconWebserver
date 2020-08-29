@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
+using LiteDB.Identity.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -21,13 +22,13 @@ namespace PavlovRconWebserver.Controllers
       private const string AuthenicatorUriFormat = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6";
       private readonly IEmailSender _emailSender;
       private readonly ILogger _logger;
-      private readonly SignInManager<InbuildUser> _signInManager;
       private readonly UrlEncoder _urlEncoder;
-      private readonly UserManager<InbuildUser> _userManager;
+      private readonly SignInManager<LiteDbUser> _signInManager;
+      private readonly UserManager<LiteDbUser> _userManager;
 
       public ManageController(
-         UserManager<InbuildUser> userManager,
-         SignInManager<InbuildUser> signInManager,
+         UserManager<LiteDbUser> userManager,
+         SignInManager<LiteDbUser> signInManager,
          IEmailSender emailSender,
          ILogger<ManageController> logger,
          UrlEncoder urlEncoder)
@@ -51,7 +52,7 @@ namespace PavlovRconWebserver.Controllers
          var model = new IndexViewModel
          {
             Username = user.UserName,
-            Email = user.Email.Address,
+            Email = user.Email,
             PhoneNumber = user.PhoneNumber,
             IsEmailConfirmed = user.EmailConfirmed,
             StatusMessage = StatusMessage
@@ -71,7 +72,7 @@ namespace PavlovRconWebserver.Controllers
             throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
 
          var email = user.Email;
-         if (model.Email != email.Address)
+         if (model.Email != email)
          {
             var setEmailResult = await _userManager.SetEmailAsync(user, model.Email);
             if (!setEmailResult.Succeeded)
@@ -91,24 +92,7 @@ namespace PavlovRconWebserver.Controllers
          return RedirectToAction(nameof(Index));
       }
 
-      [HttpPost]
-      [ValidateAntiForgeryToken]
-      public async Task<IActionResult> SendVerificationEmail(IndexViewModel model)
-      {
-         if (!ModelState.IsValid) return View(model);
 
-         var user = await _userManager.GetUserAsync(User);
-         if (user == null)
-            throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-
-         var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-         var callbackUrl = Url.EmailConfirmationLink(user.Id, code, Request.Scheme);
-         var email = user.Email;
-         await _emailSender.SendEmailConfirmationAsync(email.Address, callbackUrl);
-
-         StatusMessage = "Verification email sent. Please check your email.";
-         return RedirectToAction(nameof(Index));
-      }
 
       [HttpGet]
       public async Task<IActionResult> ChangePassword()
@@ -225,7 +209,7 @@ namespace PavlovRconWebserver.Controllers
          if (user == null)
             throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
 
-         var info = await _signInManager.GetExternalLoginInfoAsync(user.Id);
+         var info = await _signInManager.GetExternalLoginInfoAsync(user.Id.ToString());
          if (info == null)
             throw new ApplicationException(
                $"Unexpected error occurred loading external login info for user with ID '{user.Id}'.");
@@ -323,7 +307,7 @@ namespace PavlovRconWebserver.Controllers
          var model = new EnableAuthenticatorViewModel
          {
             SharedKey = FormatKey(unformattedKey),
-            AuthenticatorUri = GenerateQrCodeUri(user.Email.Address, unformattedKey)
+            AuthenticatorUri = GenerateQrCodeUri(user.Email, unformattedKey)
          };
 
          return View(model);

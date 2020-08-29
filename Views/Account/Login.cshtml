@@ -1,5 +1,7 @@
-﻿@model LoginViewModel
-@inject SignInManager<InbuildUser> SignInManager
+﻿@using Microsoft.AspNetCore.Identity
+@using LiteDB.Identity.Models
+@model PavlovRconWebserver.Models.AccountViewModels.LoginViewModel
+@inject SignInManager<LiteDbUser> SignInManager
 
 @{
     ViewData["Title"] = "Log in";
@@ -35,9 +37,7 @@
                     <button type="submit" class="btn btn-default">Log in</button>
                 </div>
                 <div class="form-group">
-                    <p>
-                        <a asp-action="ForgotPassword">Forgot your password?</a>
-                    </p>
+
                     <p>
                         <a asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]">Register as a new user?</a>
                     </p>

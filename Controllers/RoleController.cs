@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
+using LiteDB.Identity.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -15,11 +16,11 @@ namespace PavlovRconWebserver.Controllers
     [Route("[controller]/[action]")]
     public class RoleController : Controller
     {
-        private RoleManager<AspNetCore.Identity.LiteDB.IdentityRole> roleManager;
-        private UserManager<InbuildUser> userManager;
-        private UserService _userService;
+        private readonly RoleManager<LiteDbRole> roleManager;
+        private readonly UserManager<LiteDbUser> userManager;
+        private readonly UserService _userService;
 
-        public RoleController(RoleManager<AspNetCore.Identity.LiteDB.IdentityRole> roleMgr, UserManager<InbuildUser> userMrg,UserService userService)
+        public RoleController(RoleManager<LiteDbRole> roleMgr, UserManager<LiteDbUser> userMrg,UserService userService)
         {
             roleManager = roleMgr;
             userManager = userMrg;
@@ -32,7 +33,7 @@ namespace PavlovRconWebserver.Controllers
             return View(roleManager.Roles);
         }
 
-        //public IActionResult Create() => View();
+        public IActionResult Create() => View();
 
         [HttpPost]
         public async Task<IActionResult> Create([Required]string name)
@@ -41,7 +42,11 @@ namespace PavlovRconWebserver.Controllers
             if(await _userService.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
             if (ModelState.IsValid)
             {
-                IdentityResult result = await roleManager.CreateAsync(new AspNetCore.Identity.LiteDB.IdentityRole(name));
+                var role = new LiteDbRole()
+                {
+                    Name = name
+                };
+                IdentityResult result = await roleManager.CreateAsync(role);
                 if (result.Succeeded)
                     return RedirectToAction("Index");
                 else
@@ -70,10 +75,10 @@ namespace PavlovRconWebserver.Controllers
         public async Task<IActionResult> Update(string id)
         {
             if(await _userService.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
-            AspNetCore.Identity.LiteDB.IdentityRole role = await roleManager.FindByIdAsync(id);
-            List<InbuildUser> members = new List<InbuildUser>();
-            List<InbuildUser> nonMembers = new List<InbuildUser>();
-            foreach (InbuildUser user in _userService.FindAll())
+            LiteDbRole role = await roleManager.FindByIdAsync(id);
+            List<LiteDbUser> members = new List<LiteDbUser>();
+            List<LiteDbUser> nonMembers = new List<LiteDbUser>();
+            foreach (LiteDbUser user in _userService.FindAll())
             {
                 var list = await userManager.IsInRoleAsync(user, role.Name) ? members : nonMembers;
                 list.Add(user);
@@ -95,7 +100,7 @@ namespace PavlovRconWebserver.Controllers
             {
                 foreach (string userId in model.AddIds ?? new string[] { })
                 {
-                    InbuildUser user = await userManager.FindByIdAsync(userId);
+                    var user = await userManager.FindByIdAsync(userId);
                     if (user != null)
                     {
                         result = await userManager.AddToRoleAsync(user, model.RoleName);
@@ -105,7 +110,7 @@ namespace PavlovRconWebserver.Controllers
                 }
                 foreach (string userId in model.DeleteIds ?? new string[] { })
                 {
-                    InbuildUser user = await userManager.FindByIdAsync(userId);
+                    var user = await userManager.FindByIdAsync(userId);
                     if (user != null)
                     {
                         result = await userManager.RemoveFromRoleAsync(user, model.RoleName);

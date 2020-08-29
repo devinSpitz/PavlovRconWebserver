@@ -21,7 +21,7 @@ namespace PavlovRconWebserver.Extensions
                 StringBuilder sb = new StringBuilder();
                 for (int i = 0; i < hashBytes.Length; i++)
                 {
-                    sb.Append(hashBytes[i].ToString("X2"));
+                    sb.Append(hashBytes[i].ToString("x2"));
                 }
                 return sb.ToString();
             }
