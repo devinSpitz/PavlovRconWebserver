@@ -16,7 +16,6 @@ Videos:
 [How To Install/Build](https://youtu.be/GBgW4mP2zgI)    
 
 
-
 Important for the server the Telnet password and port are riquired cause it will at the end always connect to localhost over Telnet to execute the commands. 
 If you set the checkbox to use Telnet it will also (with the least priority) use Telnet over the Internet.
 
