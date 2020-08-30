@@ -67,6 +67,9 @@ https://github.com/sshnet/SSH.NET/
 Boostrap: The most popular front-end framework for developing responsive, mobile first projects on the web.  
 https://getbootstrap.com
 
+Html Agility Pack (HAP)
+https://github.com/zzzprojects/html-agility-pack
+
 Thanks to all this people who worked for this nuget packages. Without that it wouldn't be possible to do this.
 
 
