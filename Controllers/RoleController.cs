@@ -27,12 +27,15 @@ namespace PavlovRconWebserver.Controllers
             _userService = userService;
         }
 
+        
+        [HttpGet("[controller]/")]
         public async Task<IActionResult> Index()
         {
             if(await _userService.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
             return View(roleManager.Roles);
         }
 
+        [HttpGet("[controller]/")]
         public IActionResult Create() => View();
 
         [HttpPost]
@@ -72,6 +75,7 @@ namespace PavlovRconWebserver.Controllers
         //    return View("Index", roleManager.Roles);
         //}
 
+        [HttpGet]
         public async Task<IActionResult> Update(string id)
         {
             if(await _userService.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();

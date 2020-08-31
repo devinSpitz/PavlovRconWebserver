@@ -41,7 +41,14 @@ function setItem(id)
 
 function setMap(id)
 {
-    $("#TwoValueInputs").find("#PlayerValue").val("UGC"+id);
+    var mapId = "UGC";
+    if(isNaN(id))
+    {
+        mapId = "";
+    }
+
+
+    $("#TwoValueInputs").find("#PlayerValue").val(mapId+id);
 }
 
 function TwoValuesSendCommand()
@@ -249,7 +256,7 @@ function RconServerInfoPartialView(result,ServerIds)
 
 function RconChooseItemPartialView()
 {
-
+debugger;
     $.ajax({
         type: 'POST',
         url: "/Rcon/RconChooseItemPartialView",
@@ -315,6 +322,7 @@ function jsonTOHtmlPartialView(json)
 
 function ValueFieldPartialView(playerCommands,twoValueCommands,atualCommandName,isNormalCommand,firstValue,callbackPositive)
 {
+    debugger;
     $.ajax({
         type: 'POST',
         url: "/Rcon/ValueFieldPartialView",
@@ -332,6 +340,7 @@ function ValueFieldPartialView(playerCommands,twoValueCommands,atualCommandName,
 
 function setValueFields(playerCommands,twoValueCommands,documentReady = false)
 {
+    debugger;
     if(!MultiRcon) {
         // PlayerValue
         // Make Object

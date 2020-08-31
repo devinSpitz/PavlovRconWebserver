@@ -19,12 +19,13 @@ namespace PavlovRconWebserver.Controllers
             _service = service;
             _userservice = userService;
         }
-        
+        [HttpGet("[controller]/")]
         public async Task<IActionResult> Index()
         {
             if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
             return View("Index",_service.FindAll());
         }
+        [HttpGet("[controller]/EditServer/{serverId?}")]
         public async Task<IActionResult> EditServer(int? serverId)
         {
             if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
@@ -37,7 +38,8 @@ namespace PavlovRconWebserver.Controllers
             return View("Server",server);
         }
 
-        [HttpPost]
+        
+        [HttpPost("[controller]/SaveServer")]
         public async Task<IActionResult> SaveServer(RconServer server)
         {
             if(!ModelState.IsValid) 
@@ -62,6 +64,7 @@ namespace PavlovRconWebserver.Controllers
             return View("Server",server);
         }
 
+        [HttpPost("[controller]/DeleteServer/{id}")]
         public async Task<IActionResult> DeleteServer([FromQuery]int id)
         {
             if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();

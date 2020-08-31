@@ -24,7 +24,20 @@ namespace PavlovRconWebserver.Controllers
             _serverService = serverService;
             _userservice = userService;
         }
-        public async Task<IActionResult> Index(RconViewModel viewModel = null)
+        
+   
+        [HttpGet("[controller]/")]
+        public async Task<IActionResult> Index()
+        {
+            if(!await CheckRights())  return new UnauthorizedResult();
+            RconViewModel viewModel = new RconViewModel();
+            viewModel.MultiRcon = false;
+            ViewBag.Servers = _serverService.FindAll();
+            return View(viewModel);
+        }
+        
+        [HttpPost("[controller]/{viewModel}")]
+        public async Task<IActionResult> Index(RconViewModel viewModel)
         {
             if(!await CheckRights())  return new UnauthorizedResult();
             viewModel.MultiRcon = false;
@@ -32,11 +45,12 @@ namespace PavlovRconWebserver.Controllers
             return View(viewModel);
         }
 
-        public async Task<bool> CheckRights()
+        private async Task<bool> CheckRights()
         {
             return await _userservice.IsUserInRole("Admin", HttpContext.User) || await _userservice.IsUserInRole("User", HttpContext.User);
         }
 
+        [HttpPost("[controller]/SendCommand")]
         public async Task<IActionResult> SendCommand(int server, string command)
         {
             if(!await CheckRights())  return new UnauthorizedResult();
@@ -56,6 +70,7 @@ namespace PavlovRconWebserver.Controllers
             return new ObjectResult(response);
         }
         
+        [HttpPost("[controller]/RconServerInfoPartialView")]
         public async Task<IActionResult> RconServerInfoPartialView(string server,int serverId)
         {
             if(!await CheckRights())  return new UnauthorizedResult();
@@ -64,11 +79,14 @@ namespace PavlovRconWebserver.Controllers
             return PartialView("RconServerInfoPartialView", tmp);
         }
         
+        [HttpPost("[controller]/RconChooseItemPartialView")]
         public async Task<IActionResult> RconChooseItemPartialView()
         {
             if(!await CheckRights())  return new UnauthorizedResult();
             return PartialView("RconChooseItemPartialView");
         }
+        
+        [HttpPost("[controller]/RconChooseMapPartialView")]
         public async Task<IActionResult> RconChooseMapPartialView()
         {
             if(!await CheckRights())  return new UnauthorizedResult();
@@ -76,12 +94,14 @@ namespace PavlovRconWebserver.Controllers
             return PartialView("~/Views/Rcon/RconChooseMapPartialView.cshtml",listOfMaps);
         }
         
+        [HttpPost("[controller]/JsonToHtmlPartialView")]
         public async Task<IActionResult> JsonToHtmlPartialView(string json)
         {
             if(!await CheckRights())  return new UnauthorizedResult();
             return PartialView("/Views/JsonToHtmlPartialView.cshtml", json);
         }
         
+        [HttpPost("[controller]/ValueFieldPartialView")]
         public async Task<IActionResult> ValueFieldPartialView(List<Command> playerCommands,List<ExtendedCommand> twoValueCommands,string atualCommandName,bool isNormalCommand,bool firstValue)
         {
             if(!await CheckRights())  return new UnauthorizedResult();
@@ -95,6 +115,7 @@ namespace PavlovRconWebserver.Controllers
             });
         }
         
+        [HttpPost("[controller]/GetAllPlayers")]
         public async Task<IActionResult> GetAllPlayers(int serverId)
         {
             if(!await CheckRights())  return new UnauthorizedResult();

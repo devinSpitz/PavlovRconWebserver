@@ -1,19 +1,13 @@
-﻿using System;
-using LiteDB;
-using LiteDB.Identity.Models;
-using LiteDB.Identity.Stores;
+﻿
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using PavlovRconWebserver.Models;
 using PavlovRconWebserver.Services;
 using LiteDB.Identity.Extensions;
 using Microsoft.AspNetCore.Identity;
-using LiteDB.Identity.Extensions;
-using Microsoft.AspNetCore.Authorization;
-using PavlovRconWebserver.Extensions;
+using Microsoft.OpenApi.Models;
 
 namespace PavlovRconWebserver
 {
@@ -36,7 +30,14 @@ namespace PavlovRconWebserver
          
          // Add application services.
          services.AddTransient<IEmailSender, EmailSender>();
-         
+         services.AddSwaggerGen(c =>
+         {
+            c.SwaggerDoc("v0.0.1", new OpenApiInfo { 
+               Title = "Pavlov Rcon Webserver API", 
+               Version = "v0.0.1",
+               Description ="Here you can see all function of the PavlovRconWebserver"
+            });
+         });
          services.AddMvc().AddRazorRuntimeCompilation();
       }
 
@@ -53,6 +54,19 @@ namespace PavlovRconWebserver
             app.UseExceptionHandler("/Home/Error");
          }
 
+         if (env.EnvironmentName == "Development")
+         {
+            // Enable middleware to serve generated Swagger as a JSON endpoint.
+            app.UseSwagger();
+
+            // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.),
+            // specifying the Swagger JSON endpoint.
+            app.UseSwaggerUI(c =>
+            {
+               c.SwaggerEndpoint("/swagger/v0.0.1/swagger.json", "Pavlov Rcon Webserver V0.0.1");
+          
+            });
+         }
          app.UseStaticFiles();
 
          app.UseRouting();

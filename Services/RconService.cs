@@ -316,11 +316,60 @@ namespace PavlovRconWebserver.Services
             var MapsTasks = pages.Select(GetMapsFromPage);
             var pagesMaps = (await Task.WhenAll(MapsTasks)).ToList(); // This uses like 1 GB RAM what i think everybody should have :( But i try to parse 52 sites which each have 30 maps on it parallel so this is obvious
             var maps = pagesMaps.SelectMany(x => x).ToList();
+            var rconMapsViewModels = maps.Prepend(new RconMapsViewModel()
+            {
+                Id = "datacenter",
+                Name = "datacenter",
+                ImageUrl = "http://wiki.pavlov-vr.com/images/thumb/c/c0/Datacenter_middle.jpg/600px-Datacenter_middle.jpg",
+                Author = "Vankrupt Games"
+            });
+            rconMapsViewModels = rconMapsViewModels.Prepend(new RconMapsViewModel()
+            {
+                Id = "sand",
+                Name = "sand",
+                ImageUrl = "http://wiki.pavlov-vr.com/images/thumb/d/d9/Sand_B_site.jpg/600px-Sand_B_site.jpg",
+                Author = "Vankrupt Games"
+            });
+            rconMapsViewModels = rconMapsViewModels.Prepend(new RconMapsViewModel()
+            {
+                Id = "bridge",
+                Name = "bridge",
+                ImageUrl = "",
+                Author = "Vankrupt Games"
+            });
+            rconMapsViewModels = rconMapsViewModels.Prepend(new RconMapsViewModel()
+            {
+                Id = "containeryard",
+                Name = "containeryard",
+                ImageUrl = "",
+                Author = "Vankrupt Games"
+            });
+            rconMapsViewModels = rconMapsViewModels.Prepend(new RconMapsViewModel()
+            {
+                Id = "prisonbreak",
+                Name = "prisonbreak",
+                ImageUrl = "",
+                Author = "Vankrupt Games"
+            });
+            rconMapsViewModels = rconMapsViewModels.Prepend(new RconMapsViewModel()
+            {
+                Id = "bridge",
+                Name = "bridge",
+                ImageUrl = "",
+                Author = "Vankrupt Games"
+            });
+            rconMapsViewModels = rconMapsViewModels.Prepend(new RconMapsViewModel()
+            {
+                Id = "hospital",
+                Name = "hospital",
+                ImageUrl = "",
+                Author = "Vankrupt Games"
+            });
             //g
            
 
 
-            return maps;
+            return rconMapsViewModels.ToList();
         }
 
         

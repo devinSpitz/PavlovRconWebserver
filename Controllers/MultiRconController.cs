@@ -11,21 +11,35 @@ using PavlovRconWebserver.Services;
 namespace PavlovRconWebserver.Controllers
 {   
     [Authorize]
-    public class MultiRconController : RconController
+    public class MultiRconController : Controller
     {
         private readonly RconService _service;
         private readonly RconServerSerivce _serverService;
         private readonly UserService _userservice;
         
-        public MultiRconController(RconService service,RconServerSerivce serverService,UserService userService) : base(service,serverService,userService)
+        public MultiRconController(RconService service,RconServerSerivce serverService,UserService userService)
         {
             _service = service;
             _serverService = serverService;
             _userservice = userService;
         }
 
-        [Route("[controller]/")]
-        public async Task<IActionResult> Index(RconViewModel viewModel = null)
+        private async Task<bool> CheckRights()
+        {
+            return await _userservice.IsUserInRole("Admin", HttpContext.User) || await _userservice.IsUserInRole("User", HttpContext.User);
+        }
+        [HttpGet("[controller]/")]
+        public async Task<IActionResult> Index()
+        {
+            if(!await CheckRights())  return new UnauthorizedResult();
+            RconViewModel viewModel = new RconViewModel();
+            viewModel.MultiRcon = true;
+            ViewBag.Servers = _serverService.FindAll();
+            return View("/Views/Rcon/Index.cshtml",viewModel);
+        }
+
+        [HttpPost("[controller]/{viewModel}")]
+        public async Task<IActionResult> Index(RconViewModel viewModel)
         {
             if(!await CheckRights())  return new UnauthorizedResult();
             viewModel.MultiRcon = true;
@@ -33,8 +47,7 @@ namespace PavlovRconWebserver.Controllers
             return View("/Views/Rcon/Index.cshtml",viewModel);
         }
 
-
-        [Route("[controller]/sendCommand")]
+        [HttpPost("[controller]/sendCommand/")]
         public async Task<IActionResult> SendCommand(int[] servers, string command)
         {
             var results = new List<string>();
@@ -76,7 +89,7 @@ namespace PavlovRconWebserver.Controllers
             }
         }
         
-        [Route("[controller]/RconServerInfoPartialView")]
+        [HttpPost("[controller]/RconServerInfoPartialView")]
         public async Task<IActionResult> RconServerInfoPartialView(string[] servers,int[] serverIds)
         {
             if(!await CheckRights())  return new UnauthorizedResult();
