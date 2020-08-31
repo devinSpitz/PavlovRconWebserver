@@ -2,16 +2,24 @@
 @using Newtonsoft.Json.Linq
 @model string
 @{
-    var converted = JsonConvert.DeserializeObject(Model);
+    
     var isMultiLevel = false; 
-    var isSingleLevel = false; 
-    if (converted is JObject)
+    var isSingleLevel = false;
+    try
     {
-        isMultiLevel = true;
+        var converted = JsonConvert.DeserializeObject(Model);
+        if (converted is JObject)
+        {
+            isMultiLevel = true;
+        }
+        else if (converted is JArray)
+        {
+            isSingleLevel = true;
+        }
     }
-    else if (converted is JArray)
+    catch (Exception e)
     {
-        isSingleLevel = true;
+        //ignore
     }
 }
 <!-- Modal -->

@@ -8,6 +8,7 @@ namespace PavlovRconWebserver.Models
         //ToDO: Need to save Baned players to make Unban ane usfull cause will will be resetted if you restart your server when you set this option via rcon!
         public RconViewModel()
         {
+            
             PlayerCommands = new List<Command>()
             {
                 new Command()
@@ -93,6 +94,7 @@ namespace PavlovRconWebserver.Models
         [DisplayName("Select the server you wanna execute the commands:")]
         public List<RconServer> RconServer { get; set; }
         public string Command { get; set; }
+        public bool MultiRcon = false;
         public List<PlayerModel> Players { get; set; } = new List<PlayerModel>();
         public List<PlayerModel> PlayersSelected { get; set; } = new List<PlayerModel>();
 
