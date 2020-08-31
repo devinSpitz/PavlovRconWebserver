@@ -59,6 +59,15 @@ namespace PavlovRconWebserver.Models
                     {
                         "500", "1000", "1500", "2000", "5000", "10000", "20000"
                     }
+                },
+                new Command()
+                {
+                    Name  = "SetLimitedAmmoType",
+                    InputValue = true,
+                    valuesOptions = new List<string>()
+                    {
+                        "0","1","2"
+                    }
                 }
             };
             TwoValueCommands = new List<ExtendedCommand>()

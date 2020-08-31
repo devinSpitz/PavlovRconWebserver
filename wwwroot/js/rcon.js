@@ -18,10 +18,19 @@ function init(){
         $("#RconServer :selected").each(function(){
             servers.push($(this).val())
         });
-
         if(servers.length===1 &&typeof servers[0] !== undefined && servers[0] !== "" && !MultiRcon)
-            UpdatePlayers(servers);
+        {
+            UpdatePlayers(servers[0]);
+        }
     });
+    let servers = [];
+    $("#RconServer :selected").each(function(){
+        servers.push($(this).val())
+    });
+    if(servers.length===1 &&typeof servers[0] !== undefined && servers[0] !== "" && !MultiRcon)
+    {
+        UpdatePlayers(servers[0]);
+    }
 
 };
 
