@@ -27,11 +27,12 @@ namespace PavlovRconWebserver.Controllers
         public async Task<IActionResult> Index(RconViewModel viewModel = null)
         {
             if(!await CheckRights())  return new UnauthorizedResult();
+            viewModel.MultiRcon = false;
             ViewBag.Servers = _serverService.FindAll();
             return View(viewModel);
         }
 
-        private async Task<bool> CheckRights()
+        public async Task<bool> CheckRights()
         {
             return await _userservice.IsUserInRole("Admin", HttpContext.User) || await _userservice.IsUserInRole("User", HttpContext.User);
         }
@@ -59,7 +60,7 @@ namespace PavlovRconWebserver.Controllers
         {
             if(!await CheckRights())  return new UnauthorizedResult();
             var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(server);
-            tmp.Adress = _serverService.FindOne(serverId).Adress;
+            tmp.Name = _serverService.FindOne(serverId).Name;
             return PartialView("RconServerInfoPartialView", tmp);
         }
         

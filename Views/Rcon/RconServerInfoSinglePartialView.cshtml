@@ -1,0 +1,14 @@
+@model ServerInfoViewModel
+
+<div class="panel panel-default">
+        <div class="panel-heading">
+            @Model.Name
+        </div>
+        <div class="panel-body">
+            <li>Name: @Model.ServerInfo.ServerName</li>
+            <li>Round state: @Model.ServerInfo.RoundState</li>
+            <li>Game mode: @Model.ServerInfo.GameMode</li>
+            <li>Player count: @Model.ServerInfo.PlayerCount</li>
+            <li>Map id: @Model.ServerInfo.MapLabel</li>
+        </div>
+</div>

@@ -35,40 +35,33 @@
     <tbody>
         @foreach (JObject item in classes)
         {
-            <tr>
-                @foreach (var property in item.Properties())
-                {
-                    if (property.Value.Type == JTokenType.Array)
-                    {
-                        <td>
-                            @{
-                                await Html.RenderPartialAsync("JsonToHtmlSingleLevelPartialView.cshtml", property.Value.ToString());
-                            }
-                        </td>
-                    }
-                    else if (property.Value.Type == JTokenType.Object)
-                    {
-                        var inlineClass = ((JObject)property.Value).Properties();
-                        var resultado = inlineClass.Select(x => string.Format("<div><b>{0}</b> <span>: {1}</span></div>", x.Name, x.Value)).ToList();
-                        string resultadoUnido = string.Join("", resultado);
-                        <td>
-                            <div>
-                                @Html.Raw(resultadoUnido)
-                            </div>
-                        </td>
-                    }
-                    else
-                    {
-                        <td>@property.Value</td>
-                    }
-                }
-            </tr>
+            
+            await Html.RenderPartialAsync("JsonToHtmlSinglelevelChildPartialViewcshtml.cshtml", item);
+            
         }
         @foreach (JValue item in nonClasses)
         {
-            <tr>
-                <td>@item.Value</td>
-            </tr>
+            try
+            {
+                var tmp = JsonConvert.DeserializeObject(item.Value.ToString());
+                if (tmp != null)
+                {
+                    await Html.RenderPartialAsync("JsonToHtmlSinglelevelChildPartialViewcshtml.cshtml", tmp);
+                }
+                else
+                {
+                    <tr>
+                        <td>@item.Value</td>
+                    </tr>
+                }
+            }
+            catch (Exception e)
+            {
+                <tr>
+                    <td>@item.Value</td>
+                </tr>
+            }
+               
         }
     </tbody>
 </table>

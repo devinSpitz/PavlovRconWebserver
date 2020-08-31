@@ -1,26 +1,36 @@
 
 //Will be called on document ready
 function init(){
-
-    setValueFields(PlayerCommands,TwoValueCommands,true);
     
-    $("#PlayerCommands").change(function(){
-        setValueFields(PlayerCommands,TwoValueCommands,false);
-    });    
+    setValueFields(PlayerCommands,TwoValueCommands,true);
+
+    if(!MultiRcon)
+        $("#PlayerCommands").change(function(){
+            setValueFields(PlayerCommands,TwoValueCommands,false);
+        });    
     
     $("#TwoValueCommands").change(function(){
         setValueFields(PlayerCommands,TwoValueCommands,false);
     });
 
-    UpdatePlayers();
     $("#RconServer").change(function(){
-        let server  = $("#RconServer").val();
-
-        if(typeof server !== undefined && server !== "")
+        let servers = [];
+        $("#RconServer :selected").each(function(){
+            servers.push($(this).val())
+        });
+        if(servers.length===1 &&typeof servers[0] !== undefined && servers[0] !== "" && !MultiRcon)
         {
-            UpdatePlayers(server);
-        } 
+            UpdatePlayers(servers[0]);
+        }
     });
+    let servers = [];
+    $("#RconServer :selected").each(function(){
+        servers.push($(this).val())
+    });
+    if(servers.length===1 &&typeof servers[0] !== undefined && servers[0] !== "" && !MultiRcon)
+    {
+        UpdatePlayers(servers[0]);
+    }
 
 };
 
@@ -35,10 +45,7 @@ function setMap(id)
 }
 
 function TwoValuesSendCommand()
-{
-
-    let server  = $("#RconServer").val();
-
+{    
     let command = "";
 
     let playerCommand = "";
@@ -164,12 +171,22 @@ function PlayerAction()
 function sendSingleCommand(command)
 {
     $(".overlay").show();
-    let server  = $("#RconServer").val();
-
+    let data = {};
+    let servers = [];
+    $("#RconServer :selected").each(function(){
+        servers.push($(this).val())
+    });
+    let controller = "Rcon";
+    if(MultiRcon) {
+        controller = "MultiRcon";
+        data =  { servers: servers, command: command };
+    }else{
+        data =  { server: servers[0], command: command };
+    }
     $.ajax({
         type: 'POST',
-        url: "/Rcon/sendCommand",
-        data: { server: server, command: command },
+        url: "/"+controller+"/sendCommand",
+        data: data,
         success:  function(result)
         {
             if(result.toString()==="")
@@ -179,10 +196,15 @@ function sendSingleCommand(command)
             else{
                 if(command==="ServerInfo")
                 {
-                    RconServerInfoPartialView(result,server);
+                    RconServerInfoPartialView(result,servers);
                 }
-                else{
-                    jsonTOHtmlPartialView(result.toString())
+                else {
+                    if(MultiRcon)
+                    {
+                        jsonTOHtmlPartialView(result.toString());
+                    }else{
+                        jsonTOHtmlPartialView(result.toString());
+                    }
                 }
                 $(".overlay").hide();
             }
@@ -193,16 +215,25 @@ function sendSingleCommand(command)
             $(".overlay").hide();
         }
     });
+   
 
 }
 
-function RconServerInfoPartialView(result,ServerId)
+function RconServerInfoPartialView(result,ServerIds)
 {
+    let controller = "Rcon";
+    let data = {};
+    if(MultiRcon) {
+        controller = "MultiRcon";
+        data = { servers: result ,serverIds: ServerIds};
+    }else{
+        data = { server: result ,serverId: ServerIds[0]};
+    }
 
     $.ajax({
         type: 'POST',
-        url: "/Rcon/RconServerInfoPartialView",
-        data: { server: result ,serverId: ServerId},
+        url: "/"+controller+"/RconServerInfoPartialView",
+        data: data,
         success:  function(data)
         {
             $('#modal-placeholder').html(data);
@@ -301,33 +332,32 @@ function ValueFieldPartialView(playerCommands,twoValueCommands,atualCommandName,
 
 function setValueFields(playerCommands,twoValueCommands,documentReady = false)
 {
-    // PlayerValue
-    // Make Object
-    // get actual Command = 
-    if(!documentReady)
-    {
-        $("#PlayerAction").find("#PlayerValueParent").find("input").remove();
-        $("#PlayerAction").find("#PlayerValueParent").find("select").remove();
-        $("#PlayerAction").find("#PlayerValueParent").find("a").remove();
-        $("#PlayerAction").find("#PlayerValueParent").find(".valueFieldButtons").remove();
+    if(!MultiRcon) {
+        // PlayerValue
+        // Make Object
+        // get actual Command = 
+        if (!documentReady) {
+            $("#PlayerAction").find("#PlayerValueParent").find("input").remove();
+            $("#PlayerAction").find("#PlayerValueParent").find("select").remove();
+            $("#PlayerAction").find("#PlayerValueParent").find("a").remove();
+            $("#PlayerAction").find("#PlayerValueParent").find(".valueFieldButtons").remove();
+        }
+        ValueFieldPartialView(playerCommands, twoValueCommands, $("#PlayerCommands :selected").val(), true, true, function (data) {
+            $("#PlayerAction").find("#PlayerValueParent").append(data);
+        })
+
     }
-    ValueFieldPartialView(playerCommands,twoValueCommands,$("#PlayerCommands :selected").val(),true,true,function(data){
-        $("#PlayerAction").find("#PlayerValueParent").append(data);
-    })
-    
     // ActionsWithTwovalues
     // Make Object
-    if(!documentReady)
-    {
+    if (!documentReady) {
         $("#TwoValueInputs").find("#PlayerValueParent").find("input").remove();
         $("#TwoValueInputs").find("#PlayerValueParent").find("select").remove();
         $("#TwoValueInputs").find("#PlayerValueParent").find("a").remove();
         $("#PlayerAction").find("#PlayerValueParent").find(".valueFieldButtons").remove();
     }
-    ValueFieldPartialView(playerCommands,twoValueCommands,$("#TwoValueCommands :selected").val(),false,true,function(data){
+    ValueFieldPartialView(playerCommands, twoValueCommands, $("#TwoValueCommands :selected").val(), false, true, function (data) {
         $("#TwoValueInputs").find("#PlayerValueParent").append(data);
     })
-    
     // ActionsWithTwovalues
     // Make Object
     if(!documentReady)

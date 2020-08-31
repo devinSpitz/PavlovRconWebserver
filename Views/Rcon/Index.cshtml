@@ -40,10 +40,27 @@
     <script>
     let PlayerCommands = jQuery.parseJSON('@Html.Raw(@JsonConvert.SerializeObject(@Model.PlayerCommands))');
     let TwoValueCommands = jQuery.parseJSON('@Html.Raw(@JsonConvert.SerializeObject(@Model.TwoValueCommands))');
+    @if (Model.MultiRcon)
+    {  
+        <text>
+        let MultiRcon = true;  
+        </text>
+    }else{
+        <text>
+        let MultiRcon = false;  
+        </text>
+    }
     </script>
 }
 @Html.LabelFor(x=>x.RconServer)
-@Html.DropDownListFor(m => m.RconServer, new SelectList(server,"Id","Name",Model.RconServer), new { @class = "form-control form-control-sm" })
+@if (Model.MultiRcon)
+{
+    @Html.ListBoxFor(m => m.RconServer, new MultiSelectList(server,"Id","Name",Model.RconServer), new { @class = "form-control form-control-sm" })
+}
+else
+{
+    @Html.DropDownListFor(m => m.RconServer, new SelectList(server,"Id","Name",Model.RconServer), new { @class = "form-control form-control-sm" })
+}
 <div class="overlay">
     <div id="loadingDiv">
     </div>
@@ -67,32 +84,36 @@
             @*// Buttons*@
     </div>
 </div>
-
-<div class="panel panel-default">
-    <div class="panel-heading">
-        Player Actions 
-                <button type="button" class="btn btn-success btn-group" onclick="UpdatePlayers()">Update Players</button>
-    </div>
-    <div class="panel-body" id="PlayerAction">
-        <div class="row">
-            <div class="col-sm-4">
-                @Html.LabelFor(x=>x.Players)
-                @Html.ListBoxFor(m => m.Players, new MultiSelectList(Model.Players,"Name","SteamId",Model.PlayersSelected), new { @class = "form-control form-control-sm" })
-            </div>
-            <div class="col-sm-4">
-                @Html.LabelFor(x=>x.PlayerCommands)
-                @Html.DropDownListFor(m => m.PlayerCommands, new SelectList(Model.PlayerCommands,"Name","Name",Model.PlayerCommands), new { @class = "form-control form-control-sm" })
-            </div>
-            <div class="col-sm-2" id="PlayerValueParent">
-                <label asp-for="PlayerValue"></label>
-                @* Gets autopopulated *@
-            </div>
-            <div class="col-sm-2 buttonParent">
-                <button id="Do" name="Do" type="button" class="btn btn-success btn-group center" onclick="PlayerAction()">Do</button>
+@if (!Model.MultiRcon)
+{
+   
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            Player Actions 
+            <button type="button" class="btn btn-success btn-group" onclick="UpdatePlayers()">Update Players</button>
+        </div>
+        <div class="panel-body" id="PlayerAction">
+            <div class="row">
+                <div class="col-sm-4">
+                    @Html.LabelFor(x=>x.Players)
+                    @Html.ListBoxFor(m => m.Players, new MultiSelectList(Model.Players,"Name","SteamId",Model.PlayersSelected), new { @class = "form-control form-control-sm" })
+                </div>
+                <div class="col-sm-4">
+                    @Html.LabelFor(x=>x.PlayerCommands)
+                    @Html.DropDownListFor(m => m.PlayerCommands, new SelectList(Model.PlayerCommands,"Name","Name",Model.PlayerCommands), new { @class = "form-control form-control-sm" })
+                </div>
+                <div class="col-sm-2" id="PlayerValueParent">
+                    <label asp-for="PlayerValue"></label>
+                    @* Gets autopopulated *@
+                </div>
+                <div class="col-sm-2 buttonParent">
+                    <button id="Do" name="Do" type="button" class="btn btn-success btn-group center" onclick="PlayerAction()">Do</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
+     
+}
 @{
     //Give Team Cach // switch Map
 }
