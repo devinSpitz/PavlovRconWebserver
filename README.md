@@ -1,5 +1,8 @@
 # PavlovRconWebserver
 
+![GitHub All Releases](https://img.shields.io/github/downloads/devinspitz/PavlovRconWebserver/total)
+![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/devinspitz/PavlovRconWebserver?label=release)
+![Plaforms](https://img.shields.io/static/v1?label=platform:&message=windows10%20|%20linux&color=green)  
 Pictures:
 ![Index](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/Index.png?raw=true)
 ![Login](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/Login.png?raw=true)
