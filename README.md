@@ -1,5 +1,8 @@
 # PavlovRconWebserver
 
+![GitHub All Releases](https://img.shields.io/github/downloads/devinspitz/PavlovRconWebserver/total)
+![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/devinspitz/PavlovRconWebserver?label=release)
+![Plaforms](https://img.shields.io/static/v1?label=platform:&message=windows10%20|%20linux&color=green)  
 Pictures:
 ![Index](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/Index.png?raw=true)
 ![Login](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/Login.png?raw=true)
@@ -13,9 +16,7 @@ Pictures:
 
 Videos:  
 [Feature Guide](https://youtu.be/iSmAP6_DAyM)  
-[Install Part 1](https://youtu.be/JG8SJFjqbUY)   
-[Install Part 2](https://youtu.be/whlw1yD09Rw) 
-
+[How To Install/Build](https://youtu.be/GBgW4mP2zgI)    
 
 
 Important for the server the Telnet password and port are riquired cause it will at the end always connect to localhost over Telnet to execute the commands. 
@@ -28,9 +29,15 @@ Auth logic with priority(with added multiple options):
 3. ssh username pass
 4. telnet
 
+Default users:  
+User: admin  
+pw: A2345a$  
+
 How to install:  
-[Install Part 1](https://youtu.be/JG8SJFjqbUY)     
-[Install Part 2](https://youtu.be/whlw1yD09Rw) 
+[How To Install/Build](https://youtu.be/GBgW4mP2zgI)   
+  
+Also may take a look at this tutorial (But be also aware the the builds are standalone so you dont need any sdk or runtime if you just take the build):  
+https://dev.to/ianknighton/hosting-a-net-core-app-with-nginx-and-let-s-encrypt-1m50  
 
 [Commands](https://pastebin.com/dbGUsvUn)
 
@@ -39,9 +46,13 @@ What are the features?
 [Feature Guide](https://youtu.be/iSmAP6_DAyM)
 
 Note:   
-If you build it by yourself be sure to add the database.db file and the other riquired folders(see release) befor start the application.  
-The old user and roles system ist not compatible to the new one. So you have to restart with a new database, if you are from the version 0.0.1!  
+- If you build it by yourself be sure to add the database.db file and the other riquired folders(see release) befor start the application.  
+- The old user and roles system ist not compatible to the new one. So you have to restart with a new database, if you are from the version 0.0.1!  
 
+Help:
+
+1. If you expirience any problem first press "CTRL"+"F5" to reload JavaScript.  
+2. Known issues found by makupi/pavlov-bot: https://github.com/makupi/pavlov-bot#known-issues-with-rcon-that-bot-cant-fix
 
 Credits: 
 
@@ -63,8 +74,10 @@ https://github.com/sshnet/SSH.NET/
 Boostrap: The most popular front-end framework for developing responsive, mobile first projects on the web.  
 https://getbootstrap.com
 
-Thanks to all this people who worked for this nuget packages. Without that it wouldn't be possible to do this.
+Html Agility Pack (HAP)
+https://github.com/zzzprojects/html-agility-pack
 
+Thanks to all this people who worked for this nuget packages. Without that it wouldn't be possible to do this.
 
 
 
