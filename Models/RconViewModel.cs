@@ -8,23 +8,53 @@ namespace PavlovRconWebserver.Models
         //ToDO: Need to save Baned players to make Unban ane usfull cause will will be resetted if you restart your server when you set this option via rcon!
         public RconViewModel()
         {
-            
+            SpecialCommands = new List<Command>()
+            {
+                new Command()
+                {
+                    Name  = "ServerInfo",
+                    InputValue = false,
+                    MinRole = "User"
+                },
+                new Command()
+                {
+                    Name  = "RefreshList",
+                    InputValue = false,
+                    MinRole = "User"
+                },
+                new Command()
+                {
+                    Name  = "ResetSND",
+                    InputValue = false,
+                    MinRole = "Captain"
+                },
+                new Command()
+                {
+                    Name  = "RotateMap",
+                    InputValue = false,
+                    MinRole = "Captain"
+                }
+
+            };
             PlayerCommands = new List<Command>()
             {
                 new Command()
                 {
                   Name  = "Ban",
-                  InputValue = false
+                  InputValue = false,
+                  MinRole = "Mod"
                 },
                 new Command()
                 {
                     Name  = "Kick",
-                    InputValue = false
+                    InputValue = false,
+                    MinRole = "Mod"
                 },
                 new Command()
                 {
                     Name  = "InspectPlayer",
-                    InputValue = false
+                    InputValue = false,
+                    MinRole = "User"
                 },
                 new Command()
                 {
@@ -34,12 +64,14 @@ namespace PavlovRconWebserver.Models
                     {
                         "0", "1"
                     },
+                    MinRole = "Captain"
                 },
                 new Command()
                 {
                     Name  = "GiveItem",
                     InputValue = true,
-                    PartialViewName = "ItemView"
+                    PartialViewName = "ItemView",
+                    MinRole = "Admin"
                     
                 },
                 new Command()
@@ -49,7 +81,8 @@ namespace PavlovRconWebserver.Models
                     valuesOptions = new List<string>()
                     {
                         "clown", "prisoner", "naked", "farmer", "russian", "nato"
-                    }
+                    },
+                    MinRole = "Admin"
                 },
                 new Command()
                 {
@@ -58,7 +91,8 @@ namespace PavlovRconWebserver.Models
                     valuesOptions = new List<string>()
                     {
                         "500", "1000", "1500", "2000", "5000", "10000", "20000"
-                    }
+                    },
+                    MinRole = "Admin"
                 },
                 new Command()
                 {
@@ -67,7 +101,8 @@ namespace PavlovRconWebserver.Models
                     valuesOptions = new List<string>()
                     {
                         "0","1","2"
-                    }
+                    },
+                    MinRole = "Admin"
                 }
             };
             TwoValueCommands = new List<ExtendedCommand>()
@@ -84,7 +119,8 @@ namespace PavlovRconWebserver.Models
                     valuesTwoOptions = new List<string>()
                     {
                         "500", "1000", "1500", "2000", "5000", "10000", "20000"
-                    }
+                    },
+                    MinRole = "Admin"
                 },
                 new ExtendedCommand()
                 {
@@ -95,7 +131,8 @@ namespace PavlovRconWebserver.Models
                     {
                         "SND", "TDM", "DM", "GUN"
                     },
-                    PartialViewName = "https://steamcommunity.com/workshop/browse/?appid=555160&browsesort=trend&section=readytouseitems&actualsort=trend&p=1&numperpage=30"
+                    PartialViewName = "https://steamcommunity.com/workshop/browse/?appid=555160&browsesort=trend&section=readytouseitems&actualsort=trend&p=1&numperpage=30",
+                    MinRole = "Captain"
                 }
             };
         }
@@ -108,6 +145,7 @@ namespace PavlovRconWebserver.Models
         public List<PlayerModel> PlayersSelected { get; set; } = new List<PlayerModel>();
 
         public List<Command> PlayerCommands { get; } = new List<Command>();
+        public List<Command> SpecialCommands { get; } = new List<Command>();
         public List<ExtendedCommand> TwoValueCommands { get; } = new List<ExtendedCommand>();
         
         [DisplayName("Value")]
@@ -135,6 +173,8 @@ namespace PavlovRconWebserver.Models
 
         public List<string> valuesOptions { get; set; } = new List<string>();
         public string PartialViewName { get; set; }
+        
+        public string MinRole { get; set; }
     }
     
     public class ExtendedCommand: Command

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using PavlovRconWebserver.Exceptions;
+using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Services;
 
 namespace PavlovRconWebserver.Controllers
@@ -24,34 +25,26 @@ namespace PavlovRconWebserver.Controllers
             _userservice = userService;
         }
 
-        private async Task<bool> CheckRights()
-        {
-            return await _userservice.IsUserInRole("Admin", HttpContext.User) || await _userservice.IsUserInRole("User", HttpContext.User);
-        }
         [HttpGet("[controller]/")]
         public async Task<IActionResult> Index()
         {
-            if(!await CheckRights())  return new UnauthorizedResult();
+            if(!await  RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return new UnauthorizedResult();
             RconViewModel viewModel = new RconViewModel();
             viewModel.MultiRcon = true;
             ViewBag.Servers = _serverService.FindAll();
-            return View("/Views/Rcon/Index.cshtml",viewModel);
-        }
-
-        [HttpPost("[controller]/{viewModel}")]
-        public async Task<IActionResult> Index(RconViewModel viewModel)
-        {
-            if(!await CheckRights())  return new UnauthorizedResult();
-            viewModel.MultiRcon = true;
-            ViewBag.Servers = _serverService.FindAll();
+            ViewBag.commandsAllow = await RightsHandler.GetAllowCommands(viewModel, HttpContext.User, _userservice);
             return View("/Views/Rcon/Index.cshtml",viewModel);
         }
 
         [HttpPost("[controller]/sendCommand/")]
         public async Task<IActionResult> SendCommand(int[] servers, string command)
         {
+            
             var results = new List<string>();
-            if(!await CheckRights())  return Unauthorized();
+            
+            if(!await  RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return Unauthorized();
+            if(!await RightsHandler.IsUserAtLeastInRoleForCommand(command, HttpContext.User, _userservice)) return Unauthorized();
+            
             foreach (var server in servers)
             {
                 var response = "";
@@ -92,7 +85,7 @@ namespace PavlovRconWebserver.Controllers
         [HttpPost("[controller]/RconServerInfoPartialView")]
         public async Task<IActionResult> RconServerInfoPartialView(string[] servers,int[] serverIds)
         {
-            if(!await CheckRights())  return new UnauthorizedResult();
+            if(!await  RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return new UnauthorizedResult();
             var count = 0;
             var serverList = new List<ServerInfoViewModel>();
             foreach (var server in servers)

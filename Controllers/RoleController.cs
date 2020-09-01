@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Threading.Tasks;
 using LiteDB.Identity.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -19,27 +19,45 @@ namespace PavlovRconWebserver.Controllers
         private readonly RoleManager<LiteDbRole> roleManager;
         private readonly UserManager<LiteDbUser> userManager;
         private readonly UserService _userService;
-
+        private readonly Dictionary<int, string> Roles;
         public RoleController(RoleManager<LiteDbRole> roleMgr, UserManager<LiteDbUser> userMrg,UserService userService)
         {
             roleManager = roleMgr;
             userManager = userMrg;
             _userService = userService;
+            // for updaters add roles which are should be there
+            if (roleManager.Roles.FirstOrDefault(x => x.Name == "Mod") == null)
+            {
+                roleManager.CreateAsync(new LiteDbRole()
+                {
+                    Name = "Mod"
+                });
+            }
+            if (roleManager.Roles.FirstOrDefault(x => x.Name == "Captain") == null)
+            {
+                roleManager.CreateAsync(new LiteDbRole()
+                {
+                    Name = "Captain"
+                });
+            }
+
         }
 
         
-        [HttpGet("[controller]/")]
+        
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
             if(await _userService.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
             return View(roleManager.Roles);
         }
 
-        [HttpGet("[controller]/")]
+        [HttpGet]
         public IActionResult Create() => View();
 
+       
         [HttpPost]
-        public async Task<IActionResult> Create([Required]string name)
+        public async Task<IActionResult> Create(string name)
         {
             
             if(await _userService.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();

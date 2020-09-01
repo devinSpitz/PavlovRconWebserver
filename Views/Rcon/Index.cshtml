@@ -2,7 +2,9 @@
 @model RconViewModel
 
 @{
-  
+    List<string> commandsAllow = ViewBag.commandsAllow;
+    var twoValueCommands = Model.TwoValueCommands.Where(x => commandsAllow.Contains(x.Name)).ToList();
+    var playerCommands = Model.PlayerCommands.Where(x => commandsAllow.Contains(x.Name)).ToList();
     var server = ViewBag.Servers;
     ViewData["Title"] = "Rcon Page";
 }
@@ -73,18 +75,27 @@ else
     <div class="panel-body">
         <div class="row">
             <div class="col-md-12 responsive nowrap">
-                <button type="button" class="center-block btn btn-success btn-responsive col-md-3" onclick="sendSingleCommand('ServerInfo')">ServerInfo</button>
+                @if (commandsAllow.Contains("ServerInfo"))
+                {
+                    <button type="button" class="center-block btn btn-success btn-responsive col-md-3" onclick="sendSingleCommand('ServerInfo')">ServerInfo</button>
+                }
                 <div class="col-md-1"></div>
-                <button type="button" class="center-block btn btn-success btn-responsive  col-md-3" onclick="sendSingleCommand('ResetSND')">ResetSND</button>
+                @if (commandsAllow.Contains("ResetSND"))
+                {
+                    <button type="button" class="center-block btn btn-success btn-responsive  col-md-3" onclick="sendSingleCommand('ResetSND')">ResetSND</button>
+                }
                 <div class="col-md-1"></div>
-                <button type="button" class="center-block btn btn-success btn-responsive  col-md-3" onclick="sendSingleCommand('RotateMap')">RotateMap</button>
+                @if (commandsAllow.Contains("RotateMap"))
+                {
+                    <button type="button" class="center-block btn btn-success btn-responsive  col-md-3" onclick="sendSingleCommand('RotateMap')">RotateMap</button>
+                }
             </div>
         </div>
         
             @*// Buttons*@
     </div>
 </div>
-@if (!Model.MultiRcon)
+@if (!Model.MultiRcon && playerCommands.Count > 0)
 {
    
     <div class="panel panel-default">
@@ -100,7 +111,7 @@ else
                 </div>
                 <div class="col-sm-4">
                     @Html.LabelFor(x=>x.PlayerCommands)
-                    @Html.DropDownListFor(m => m.PlayerCommands, new SelectList(Model.PlayerCommands,"Name","Name",Model.PlayerCommands), new { @class = "form-control form-control-sm" })
+                    @Html.DropDownListFor(m => playerCommands, new SelectList(playerCommands,"Name","Name",playerCommands), new { @class = "form-control form-control-sm" })
                 </div>
                 <div class="col-sm-2" id="PlayerValueParent">
                     <label asp-for="PlayerValue"></label>
@@ -117,32 +128,34 @@ else
 @{
     //Give Team Cach // switch Map
 }
-<div class="panel panel-default">
-    <div class="panel-heading">
-        Actions with two values
-    </div>
-    <div class="panel-body" id="TwoValueInputs">
-        <div class="row">
-            <div class="col-sm-4">
-                @Html.LabelFor(x=>x.TwoValueCommands)
-                @Html.DropDownListFor(m => m.TwoValueCommands, new SelectList(Model.TwoValueCommands,"Name","Name",Model.TwoValueCommands), new { @class = "form-control form-control-sm" })
-            </div>
-            <div class="col-sm-4" id="PlayerValueParent">
-                <label asp-for="PlayerValue"></label>
-                @* Gets autopopulated *@
-            </div>
-            <div class="col-sm-2" id="PlayerValueTwoParent">
-                <label asp-for="PlayerValueTwo"></label>
-                @* Gets autopopulated *@
-            </div>
-            <div class="col-sm-2 buttonParent">
-                <button id="Do" name="Do" type="button" class="btn btn-success btn-group center" onclick="TwoValuesSendCommand()">Do</button>
+@if (twoValueCommands.Count > 0)
+{
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            Actions with two values
+        </div>
+        <div class="panel-body" id="TwoValueInputs">
+            <div class="row">
+                <div class="col-sm-4">
+                    @Html.LabelFor(x => x.TwoValueCommands)
+                    @Html.DropDownListFor(m => twoValueCommands, new SelectList(twoValueCommands, "Name", "Name", twoValueCommands), new {@class = "form-control form-control-sm"})
+                </div>
+                <div class="col-sm-4" id="PlayerValueParent">
+                    <label asp-for="PlayerValue"></label>
+                    @* Gets autopopulated *@
+                </div>
+                <div class="col-sm-2" id="PlayerValueTwoParent">
+                    <label asp-for="PlayerValueTwo"></label>
+                    @* Gets autopopulated *@
+                </div>
+                <div class="col-sm-2 buttonParent">
+                    <button id="Do" name="Do" type="button" class="btn btn-success btn-group center" onclick="TwoValuesSendCommand()">Do</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-
+}
 <div id="modal-placeholder"></div>
 <style>
     .buttonParent{
