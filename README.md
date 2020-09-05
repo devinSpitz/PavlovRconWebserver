@@ -18,16 +18,13 @@ Videos:
 [Feature Guide](https://youtu.be/iSmAP6_DAyM)  
 [How To Install/Build](https://youtu.be/GBgW4mP2zgI)    
 
-
-Important for the server the Telnet password and port are riquired cause it will at the end always connect to localhost over Telnet to execute the commands. 
-If you set the checkbox to use Telnet it will also (with the least priority) use Telnet over the Internet.
+* Telnet direct connections are not supported anymore cause i have to clean the maps from the cache!  
 
 Auth logic with priority(with added multiple options):
 
 1. ssh key + username + passphrase
 2. ssh key + username
 3. ssh username pass
-4. telnet
 
 Default users:  
 User: admin  
@@ -36,18 +33,35 @@ pw: A2345a$
 How to install:  
 [How To Install/Build](https://youtu.be/GBgW4mP2zgI)   
   
+  You now also will need to set the premissions for the pavlov rcon server to Delete the maps that are not in use: 
+  if you installed it like the wiki says you should have the same installation and can just use this Command: 
+  `sudo groupadd pavlovRconWebserver && 
+  sudo usermod -a -G pavlovRconWebserver steam &&
+  sudo usermod -a -G pavlovRconWebserver pavlov &&
+  sudo chgrp -R pavlovRconWebserver /tmp/workshop/7777/content/555160/ &&
+  sudo chmod -R g+rw /tmp/workshop/7777/content/555160/`  
+otherwise just be sure that the SSH user that you have added to the rconserver has rights to remove the maps in the folder: /tmp/workshop/7777/content/555160/  
+  
 Also may take a look at this tutorial (But be also aware the the builds are standalone so you dont need any sdk or runtime if you just take the build):  
 https://dev.to/ianknighton/hosting-a-net-core-app-with-nginx-and-let-s-encrypt-1m50  
 
 [Commands](https://pastebin.com/dbGUsvUn)
 
 What are the features?
+newly added:  
+* You can select maps that will not get deleted, when the cache will get cleaned.
+* Maps will be deleted every day on 3 o clock in the morning(so the cache will not overflow on your server)
+* the selected maps from the server will be first in the map selector
+* Telnet direct connections are not supported anymore cause i have to clean the maps from the cache!  
+* Swagger is only available in development mode: http://localhost:5001/swagger and without registration / Thats why its disabled on production  
+* Hangfire dashboard is only available in development mode: http://localhost:5001/hangfire and without registration/ Thats why its disabled on production  
 
 [Feature Guide](https://youtu.be/iSmAP6_DAyM)
 
 Note:   
 - If you build it by yourself be sure to add the database.db file and the other riquired folders(see release) befor start the application.  
 - The old user and roles system ist not compatible to the new one. So you have to restart with a new database, if you are from the version 0.0.1!  
+* Telnet direct connections are not supported anymore cause i have to clean the maps from the cache!  
 
 Help:
 
@@ -76,6 +90,12 @@ https://getbootstrap.com
 
 Html Agility Pack (HAP)
 https://github.com/zzzprojects/html-agility-pack
+
+An easy and reliable way to perform fire-and-forget, delayed and recurring, long-running, short-running, CPU or I/O intensive tasks inside ASP.NET applications. No Windows Service / Task Scheduler required. Even ASP.NET is not required. Backed by Redis, SQL Server, SQL Azure or MSMQ. This is a .NET alternative to Sidekiq, Resque and Celery. https://www.hangfire.io/  
+https://www.hangfire.io/
+
+Swagger tools for documenting APIs built on ASP.NET Core
+https://github.com/domaindrivendev/Swashbuckle.AspNetCore
 
 Thanks to all this people who worked for this nuget packages. Without that it wouldn't be possible to do this.
 

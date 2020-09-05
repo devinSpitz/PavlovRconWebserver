@@ -5,11 +5,13 @@ function init(){
     setValueFields(PlayerCommands,TwoValueCommands,true);
 
     if(!MultiRcon)
-        $("#PlayerCommands").change(function(){
+        $("#playerCommands").change(function(){
+            
             setValueFields(PlayerCommands,TwoValueCommands,false);
         });    
     
-    $("#TwoValueCommands").change(function(){
+    $("#twoValueCommands").change(function(){
+        
         setValueFields(PlayerCommands,TwoValueCommands,false);
     });
 
@@ -56,7 +58,7 @@ function TwoValuesSendCommand()
     let command = "";
 
     let playerCommand = "";
-    $("#TwoValueCommands :selected").each(function(){
+    $("#twoValueCommands :selected").each(function(){
         playerCommand = $(this).val();
     });
     command += playerCommand+" ";
@@ -113,7 +115,6 @@ function UpdatePlayers(server){
                     dropdown.append($("<option />").val(this.uniqueId).text(this.username));
                 });
             });
-
             $(".overlay").hide();
         },
         error: function(XMLHttpRequest, textStatus, errorThrown)
@@ -141,7 +142,7 @@ function PlayerAction()
         playersSelected.push($(this).val())
     });
     let playerCommand = "";
-    $("#PlayerCommands :selected").each(function(){
+    $("#playerCommands :selected").each(function(){
         playerCommand = $(this).val();
     });
     command += playerCommand+" %Player% ";
@@ -256,7 +257,7 @@ function RconServerInfoPartialView(result,ServerIds)
 
 function RconChooseItemPartialView()
 {
-debugger;
+
     $.ajax({
         type: 'POST',
         url: "/Rcon/RconChooseItemPartialView",
@@ -275,11 +276,20 @@ debugger;
 
 function RconChooseMapPartialView()
 {
+    var data = {};
+    let servers = [];
+    $("#RconServer :selected").each(function(){
+        servers.push($(this).val())
+    });
 
+    if(!MultiRcon) {
+        data = { serverId: servers[0]};
+    }
     $(".overlay").show();
     $.ajax({
         type: 'POST',
         url: "/Rcon/RconChooseMapPartialView",
+        data : data,
         success:  function(data)
         {
             $('#modal-placeholder').html(data);
@@ -322,13 +332,14 @@ function jsonTOHtmlPartialView(json)
 
 function ValueFieldPartialView(playerCommands,twoValueCommands,atualCommandName,isNormalCommand,firstValue,callbackPositive)
 {
-    debugger;
+    
     $.ajax({
         type: 'POST',
         url: "/Rcon/ValueFieldPartialView",
         data: {playerCommands: playerCommands, twoValueCommands: twoValueCommands, atualCommandName: atualCommandName, isNormalCommand: isNormalCommand,firstValue: firstValue },
         success:  function(data)
         {
+            
             callbackPositive(data);
         },
         error: function(XMLHttpRequest, textStatus, errorThrown)
@@ -340,7 +351,7 @@ function ValueFieldPartialView(playerCommands,twoValueCommands,atualCommandName,
 
 function setValueFields(playerCommands,twoValueCommands,documentReady = false)
 {
-    debugger;
+    
     if(!MultiRcon) {
         // PlayerValue
         // Make Object
@@ -351,7 +362,7 @@ function setValueFields(playerCommands,twoValueCommands,documentReady = false)
             $("#PlayerAction").find("#PlayerValueParent").find("a").remove();
             $("#PlayerAction").find("#PlayerValueParent").find(".valueFieldButtons").remove();
         }
-        ValueFieldPartialView(playerCommands, twoValueCommands, $("#PlayerCommands :selected").val(), true, true, function (data) {
+        ValueFieldPartialView(playerCommands, twoValueCommands, $("#playerCommands :selected").val(), true, true, function (data) {
             $("#PlayerAction").find("#PlayerValueParent").append(data);
         })
 
@@ -364,7 +375,7 @@ function setValueFields(playerCommands,twoValueCommands,documentReady = false)
         $("#TwoValueInputs").find("#PlayerValueParent").find("a").remove();
         $("#PlayerAction").find("#PlayerValueParent").find(".valueFieldButtons").remove();
     }
-    ValueFieldPartialView(playerCommands, twoValueCommands, $("#TwoValueCommands :selected").val(), false, true, function (data) {
+    ValueFieldPartialView(playerCommands, twoValueCommands, $("#twoValueCommands :selected").val(), false, true, function (data) {
         $("#TwoValueInputs").find("#PlayerValueParent").append(data);
     })
     // ActionsWithTwovalues
@@ -376,7 +387,7 @@ function setValueFields(playerCommands,twoValueCommands,documentReady = false)
         $("#TwoValueInputs").find("#PlayerValueTwoParent").find("a").remove();
         $("#TwoValueInputs").find(".valueFieldButtons").remove();
     }
-    ValueFieldPartialView(playerCommands,twoValueCommands,$("#TwoValueCommands :selected").val(),false,false,function(data){
+    ValueFieldPartialView(playerCommands,twoValueCommands,$("#twoValueCommands :selected").val(),false,false,function(data){
         $("#TwoValueInputs").find("#PlayerValueTwoParent").append(data);
     })
     

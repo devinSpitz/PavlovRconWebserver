@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using LiteDB;
+using System.Threading.Tasks;
 using LiteDB.Identity.Database;
-using Microsoft.AspNetCore.Razor.Language.Extensions;
 using PavlovRconWebserver.Exceptions;
 using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
@@ -13,7 +12,6 @@ namespace PavlovRconWebserver.Services
     public class RconServerSerivce
     {
         private ILiteDbIdentityContext _liteDb;
-
         public RconServerSerivce(ILiteDbIdentityContext liteDbContext)
         {
             _liteDb = liteDbContext;
@@ -31,24 +29,20 @@ namespace PavlovRconWebserver.Services
                 .Find(x => x.Id == id).FirstOrDefault();
         }
 
-        public int Insert(RconServer rconServer)
+        public async Task<int> Insert(RconServer rconServer,RconService service)
         {
 
             
-            rconServer = validateRconServer(rconServer);
+            rconServer = await validateRconServer(rconServer,service);
             
             
             return _liteDb.LiteDatabase.GetCollection<RconServer>("RconServer")
                 .Insert(rconServer);
         }
 
-        private RconServer validateRconServer(RconServer rconServer)
+        private async Task<RconServer> validateRconServer(RconServer rconServer,RconService rconService)
         {
-            if (!rconServer.UseSsh && !rconServer.UseTelnet)
-            {
-                throw new SaveServerException("UseSsh","You need at least one connection type! Please choose SSH or Telnet.");
-            }
-            
+
             if (!RconHelper.IsMD5(rconServer.Password))
             {
                 if (String.IsNullOrEmpty(rconServer.Password))
@@ -57,30 +51,45 @@ namespace PavlovRconWebserver.Services
                 }
                 rconServer.Password = RconHelper.CreateMD5(rconServer.Password);
             }
-            
-            if (rconServer.UseSsh)
-            {
-                if (rconServer.SshPort<=0)
-                {
-                    throw new SaveServerException("SshPort","If you use SSH you will need a SSH port!");
-                }
 
-                if (String.IsNullOrEmpty(rconServer.SshUsername))
-                {
-                    throw new SaveServerException("SshUsername","If you use SSH you will need a username!");
-                }
-                
-                if (String.IsNullOrEmpty(rconServer.SshPassword)&&String.IsNullOrEmpty(rconServer.SshKeyFileName))
-                {
-                    throw new SaveServerException("SshPassword","If you use SSH you will need at least a password or a key file!");
-                }
+            if (rconServer.SshPort<=0)
+            {
+                throw new SaveServerException("SshPort","If you use SSH you will need a SSH port!");
             }
 
+            if (String.IsNullOrEmpty(rconServer.SshUsername))
+            {
+                throw new SaveServerException("SshUsername","If you use SSH you will need a username!");
+            }
+            
+            if (String.IsNullOrEmpty(rconServer.SshPassword)&&String.IsNullOrEmpty(rconServer.SshKeyFileName))
+            {
+                throw new SaveServerException("SshPassword","If you use SSH you will need at least a password or a key file!");
+            }
+            //try to send Command ServerInfo
+            try
+            {
+                var response = await rconService.SendCommand(rconServer, "ServerInfo");
+            }
+            catch (CommandException e)
+            {
+                throw new SaveServerException("",e.Message);
+            }
+            //try if the user have rights to delete maps cache
+            try
+            {
+                await rconService.SendCommand(rconServer, "", true);
+            }
+            catch (CommandException e)
+            {
+                throw new SaveServerException("",e.Message);
+            }
+            // test Command ServerInfo
             return rconServer;
 
         }
 
-        public bool Update(RconServer rconServer)
+        public async Task<bool> Update(RconServer rconServer,RconService rconService)
         {
             RconServer old = null;
             if (string.IsNullOrEmpty(rconServer.Password) || string.IsNullOrEmpty(rconServer.SshPassphrase) || string.IsNullOrEmpty(rconServer.SshPassword))
@@ -94,7 +103,7 @@ namespace PavlovRconWebserver.Services
                 }
             }
 
-            rconServer = validateRconServer(rconServer);
+            rconServer = await validateRconServer(rconServer,rconService);
             //Check for needed combinations
 
             

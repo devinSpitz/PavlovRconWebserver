@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using PavlovRconWebserver.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -17,11 +18,13 @@ namespace PavlovRconWebserver.Controllers
         private readonly RconService _service;
         private readonly RconServerSerivce _serverService;
         private readonly UserService _userservice;
-        public RconController(RconService service,RconServerSerivce serverService,UserService userService)
+        private readonly ServerSelectedMapService _serverSelectedMapService;
+        public RconController(RconService service,RconServerSerivce serverService,UserService userService,ServerSelectedMapService serverSelectedMapService)
         {
             _service = service;
             _serverService = serverService;
             _userservice = userService;
+            _serverSelectedMapService = serverSelectedMapService;
         }
         
    
@@ -79,12 +82,24 @@ namespace PavlovRconWebserver.Controllers
         }
         
         [HttpPost("[controller]/RconChooseMapPartialView")]
-        public async Task<IActionResult> RconChooseMapPartialView()
+        public async Task<IActionResult> RconChooseMapPartialView(int? serverId)
         {
+            //onMutliRcon do not handle the selected maps
             if(!await RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return Unauthorized();
-            var listOfMaps = await _service.CrawlSteamMaps();
+            List<RconMapViewModel> listOfMaps;
+            if (serverId != null)
+            {
+                var server = _serverService.FindOne((int)serverId);
+                listOfMaps = await Steam.CrawlSteamMaps(_serverSelectedMapService.FindAllFrom(server).ToList());
+            }
+            else
+            {
+                listOfMaps = await Steam.CrawlSteamMaps();
+            }
             return PartialView("~/Views/Rcon/RconChooseMapPartialView.cshtml",listOfMaps);
         }
+
+
         
         [HttpPost("[controller]/JsonToHtmlPartialView")]
         public async Task<IActionResult> JsonToHtmlPartialView(string json)

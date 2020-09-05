@@ -11,6 +11,8 @@
     <Folder Include="wwwroot\App_Data\" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Hangfire" Version="1.7.12" />
+    <PackageReference Include="Hangfire.MemoryStorage" Version="1.7.0" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.24" />
     <PackageReference Include="LiteDB.Identity" Version="1.0.3" />
     <PackageReference Include="LiteGuard" Version="2.2.0" />
@@ -18,7 +20,6 @@
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="SSH.NET" Version="2016.1.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="5.5.1" />
-    <PackageReference Include="Telnet" Version="0.8.4" />
   </ItemGroup>
   <ItemGroup>
     <Content Update="Views\Rcon\Index.cshtml">

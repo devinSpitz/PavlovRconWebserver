@@ -20,18 +20,11 @@ namespace PavlovRconWebserver.Models
         [DisplayName("SSH port")]
         public int SshPort { get; set; } = 22;
         
-        [DisplayName("Use telnet directly")]
-        [Display(Description = "Not recommended")]
-        public bool UseTelnet { get; set; }
         
         [DisplayName("Rcon password")]
         [Display(Description = "Will get converted if not md5 already")]
         public string Password { get; set; }
 
-        
-        [DisplayName("Use SSH")]
-        public bool UseSsh { get; set; }
-        
         [DisplayName("SSH username")]
         public string SshUsername { get; set; } 
         [DisplayName("SSH password")]
@@ -45,7 +38,6 @@ namespace PavlovRconWebserver.Models
         [DisplayName("SSH passphrase")]
         [Display(Description = "CAUTION: WILL BE SAVED BLANK")]
         public string SshPassphrase { get; set; }
-        
         
     }
 }

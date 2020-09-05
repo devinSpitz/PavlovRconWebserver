@@ -1,23 +1,28 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PavlovRconWebserver.Exceptions;
+using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
 using PavlovRconWebserver.Services;
 
 namespace PavlovRconWebserver.Controllers
 {
     [Authorize]
-    
-    [Route("[controller]/[action]")]
     public class RconServerController : Controller
     {
         private readonly RconServerSerivce _service;
         private readonly UserService _userservice;
-        public RconServerController(RconServerSerivce service,UserService userService)
+        private readonly ServerSelectedMapService _serverSelectedMapService;
+        private readonly RconService _rconService;
+        public RconServerController(RconServerSerivce service,UserService userService,ServerSelectedMapService serverSelectedMapService,RconService rconService)
         {
             _service = service;
             _userservice = userService;
+            _serverSelectedMapService = serverSelectedMapService;
+            _rconService = rconService;
         }
         [HttpGet("[controller]/")]
         public async Task<IActionResult> Index()
@@ -34,6 +39,7 @@ namespace PavlovRconWebserver.Controllers
             {
                 server = _service.FindOne((int)serverId);
             }
+
             
             return View("Server",server);
         }
@@ -42,6 +48,7 @@ namespace PavlovRconWebserver.Controllers
         [HttpPost("[controller]/SaveServer")]
         public async Task<IActionResult> SaveServer(RconServer server)
         {
+            var newServer = false;
             if(!ModelState.IsValid) 
                 return View("Server",server);
             if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
@@ -50,27 +57,102 @@ namespace PavlovRconWebserver.Controllers
 
                 if (server.Id == 0)
                 {
-                    _service.Insert(server);
+                    newServer = true;
+                    server.Id =  await _service.Insert(server,_rconService);
                 }
                 else
                 {
-                    _service.Update(server);
+                    await _service.Update(server,_rconService);
                 }
             }
             catch (SaveServerException e)
             {
-                ModelState.AddModelError(e.FieldName, e.Message);
+                if (e.FieldName == "" && e.Message.ToLower().Contains("telnet"))
+                {
+                    ModelState.AddModelError("Password", e.Message);
+                }
+                else if (e.FieldName == "" && e.Message.ToLower().Contains("ssh"))
+                {
+                    ModelState.AddModelError("SshPassword", e.Message);
+                }
+                else if (e.FieldName == "")
+                {
+                    ModelState.AddModelError("Id", e.Message);
+                }else 
+                {
+                    ModelState.AddModelError(e.FieldName, e.Message);
+                }
+                    
             }
-            return View("Server",server);
+
+            if (ModelState.ErrorCount > 0)
+            {
+                if (newServer)
+                {
+                    return await EditServer(0);
+                }
+                else
+                {
+                    return await EditServer(server.Id);
+                }
+            }
+            
+
+            if (newServer) return await EditServerSelectedMaps(server.Id);
+            
+            return await Index();
         }
 
-        [HttpPost("[controller]/DeleteServer/{id}")]
-        public async Task<IActionResult> DeleteServer([FromQuery]int id)
+        [HttpGet]
+        public async Task<bool> SaveServerSelectedMap(int serverId, string mapId)
+        {
+            var map = _serverSelectedMapService.FindSelectedMap(serverId, mapId);
+            if (map != null) return true;
+            var NewMap = new ServerSelectedMap()
+            {
+                MapId = mapId,
+                RconServerId = serverId
+            };
+            _serverSelectedMapService.Insert(NewMap);
+            return true;
+        }
+        [HttpGet]
+        public async Task<bool> DeleteServerSelectedMap(int serverId, string mapId)
+        {
+            var map = _serverSelectedMapService.FindSelectedMap(serverId, mapId);
+            if (map == null) return true;
+            _serverSelectedMapService.Delete(map.Id);
+            return true;
+        }
+        
+        [HttpGet("[controller]/EditServerSelectedMaps/{serverId}")]
+        public async Task<IActionResult> EditServerSelectedMaps(int serverId)
+        {
+            if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
+            var serverSelectedMap = new List<ServerSelectedMap>();
+            var server = _service.FindOne(serverId);
+            serverSelectedMap = _serverSelectedMapService.FindAllFrom(server).ToList();
+
+            var tmp = await Steam.CrawlSteamMaps(serverSelectedMap);
+
+            var viewModel = new SelectedServerMapsViewModel()
+            {
+                AllMaps = tmp,
+                SelectedMaps = serverSelectedMap,
+                ServerId = serverId
+            };
+            return View("ServerMaps",viewModel);
+        }
+        
+        
+        [HttpGet("[controller]/DeleteServer/{id}")]
+        public async Task<IActionResult> DeleteServer(int id)
         {
             if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
             _service.Delete(id);
             return await Index();
         }
+        
         
     }
 }

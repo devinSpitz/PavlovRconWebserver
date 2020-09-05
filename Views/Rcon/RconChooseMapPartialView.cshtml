@@ -1,4 +1,4 @@
-@model List<RconMapsViewModel>
+@model List<RconMapViewModel>
 
 @{
     var maxLength = 20;
@@ -24,7 +24,11 @@
                     <div class="col-sm-4">
                         <div class="panel panel-default mapPanel" data-Author="@map.Author" data-Name="@map.Name">
                             <div class="panel-heading">
-                                @map.Id
+                                @map.Id 
+                                @if (map.sort == 1)
+                                {
+                                    <text>&#11088;</text>
+                                }
                             </div>
                             <div class="panel-body">
                                 @if (@map.Name.Length > maxLength)

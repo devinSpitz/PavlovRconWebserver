@@ -12,8 +12,6 @@ namespace PavlovRconWebserver.Controllers
 {
     
     [Authorize]
-    
-    [Route("[controller]/[action]")]
     public class RoleController : Controller
     {
         private readonly RoleManager<LiteDbRole> roleManager;

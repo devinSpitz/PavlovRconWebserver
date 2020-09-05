@@ -1,4 +1,7 @@
 ﻿
+using Hangfire;
+using Hangfire.MemoryStorage;
+using LiteDB.Identity.Database;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -20,6 +23,7 @@ namespace PavlovRconWebserver
       // This method gets called by the runtime. Use this method to add services to the container.
       public void ConfigureServices(IServiceCollection services)
       {
+         services.AddHangfire(x => x.UseMemoryStorage());
          string connectionString = Configuration.GetConnectionString("DefaultConnection");
          services.AddLiteDBIdentity(connectionString).AddDefaultTokenProviders();
          // Add LiteDB Dependency. Thare are three ways to set database:
@@ -27,6 +31,7 @@ namespace PavlovRconWebserver
          services.AddTransient<RconServerSerivce>();
          services.AddTransient<UserService>();
          services.AddTransient<RconService>();
+         services.AddTransient<ServerSelectedMapService>();
          
          // Add application services.
          services.AddTransient<IEmailSender, EmailSender>();
@@ -53,7 +58,14 @@ namespace PavlovRconWebserver
          {
             app.UseExceptionHandler("/Home/Error");
          }
+         var options = new BackgroundJobServerOptions
+         {
+            WorkerCount = 10
+                
+         };
+         
 
+         app.UseHangfireServer(options);
          if (env.EnvironmentName == "Development")
          {
             // Enable middleware to serve generated Swagger as a JSON endpoint.
@@ -66,9 +78,19 @@ namespace PavlovRconWebserver
                c.SwaggerEndpoint("/swagger/v0.0.1/swagger.json", "Pavlov Rcon Webserver V0.0.1");
           
             });
+            app.UseHangfireDashboard();
+            
          }
          app.UseStaticFiles();
 
+
+         
+         
+         string connectionString = Configuration.GetConnectionString("DefaultConnection");
+         RecurringJob.AddOrUpdate( 
+            () => new RconService(new ServerSelectedMapService(new LiteDbIdentityContext(connectionString)), new RconServerSerivce(new LiteDbIdentityContext(connectionString))).DeleteAllUnsedMapsFromAllServers(),
+            Cron.Daily(3)); // Delete all unusedMaps every day on 3 in the morning
+         
          app.UseRouting();
          app.UseAuthentication();
          app.UseAuthorization();
