@@ -16,12 +16,12 @@
             </div>
             <div class="modal-body">
                 <div class='search' style="margin-bottom: 15px;padding-bottom: 15px;">
-                    <input  class="col-sm-6" id='searchAuthor' type="text" placeholder='Search for authors' name="search"> 
-                    <input class="col-sm-6" id='searchName' type="text" placeholder='Search for map name' name="search"> 
+                    <input  class="col-xs-6" id='searchAuthor' type="text" placeholder='Search for authors' name="search"> 
+                    <input class="col-xs-6" id='searchName' type="text" placeholder='Search for map name' name="search"> 
                 </div>
                 @foreach (var map in @Model)
                 {
-                    <div class="col-sm-4">
+                    <div class="col-md-4">
                         <div class="panel panel-default mapPanel" data-Author="@map.Author" data-Name="@map.Name">
                             <div class="panel-heading">
                                 @map.Id 
@@ -39,6 +39,7 @@
                                 {
                                     <b>@map.Name</b>
                                 }
+                                <br>
                                 <button data-dismiss="modal" onclick="setMap('@map.Id')"><img style="width: 200px;height: 200px" src="@map.ImageUrl"></button>
                                 @if (@map.Author?.Length > maxLength)
                                 {
