@@ -54,17 +54,17 @@ namespace PavlovRconWebserver.Services
 
             if (rconServer.SshPort<=0)
             {
-                throw new SaveServerException("SshPort","If you use SSH you will need a SSH port!");
+                throw new SaveServerException("SshPort","You need a SSH port!");
             }
 
             if (String.IsNullOrEmpty(rconServer.SshUsername))
             {
-                throw new SaveServerException("SshUsername","If you use SSH you will need a username!");
+                throw new SaveServerException("SshUsername","You need a username!");
             }
             
             if (String.IsNullOrEmpty(rconServer.SshPassword)&&String.IsNullOrEmpty(rconServer.SshKeyFileName))
             {
-                throw new SaveServerException("SshPassword","If you use SSH you will need at least a password or a key file!");
+                throw new SaveServerException("SshPassword","You need at least a password or a key file!");
             }
             //try to send Command ServerInfo
             try

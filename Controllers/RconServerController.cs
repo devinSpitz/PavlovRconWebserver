@@ -45,6 +45,12 @@ namespace PavlovRconWebserver.Controllers
             return View("Server",server);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> EditServer(RconServer server)
+        {
+            if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
+            return View("Server",server);
+        }
         
         [HttpPost("[controller]/SaveServer")]
         public async Task<IActionResult> SaveServer(RconServer server)
@@ -90,11 +96,11 @@ namespace PavlovRconWebserver.Controllers
             {
                 if (newServer)
                 {
-                    return await EditServer(0);
+                    return await EditServer(server);
                 }
                 else
                 {
-                    return await EditServer(server.Id);
+                    return await EditServer(server);
                 }
             }
             
