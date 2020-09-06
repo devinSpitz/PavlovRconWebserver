@@ -51,6 +51,7 @@ What are the features?
 newly added:  
 * You can select maps that will not get deleted, when the cache will get cleaned.
 * Maps will be deleted every day on 3 o clock in the morning(so the cache will not overflow on your server)
+* Maps from steam will be crawled every day on 2 o clock in the morning(While this  is happening the server may have a lot to do and will answer with some delay)
 * the selected maps from the server will be first in the map selector
 * Telnet direct connections are not supported anymore cause i have to clean the maps from the cache!  
 * Swagger is only available in development mode: http://localhost:5001/swagger and without registration / Thats why its disabled on production  
