@@ -17,7 +17,7 @@
 The Pavlov Rcon Server will clean your cache of the maps you haved installed of the server. <br>
 So all maps you choose here will not be removed wile cleaning the cache which happens every time you swtich a map over the Pavlov Rcon Webserver.<br>
 <a class="bigFont" href="@Url.Action("Index","rconServer")"><span> &#128281;</span></a><br>
-<div class="col-xs-6" id="Save">
+<div class="col-sm-6" id="Save">
     <div class="panel panel-default mapPanel" >
         <div class="panel-heading">
             Select the maps you wanne play on the server
@@ -34,7 +34,7 @@ So all maps you choose here will not be removed wile cleaning the cache which ha
                 {
                     continue; // This map is selected
                 }
-                <div class="col-md-6">
+                <div class="col-xs-6">
                     <div class="panel panel-default mapPanel" data-Author="@map.Author" data-Name="@map.Name">
                         <div class="panel-heading">
                             @map.Id
@@ -65,7 +65,7 @@ So all maps you choose here will not be removed wile cleaning the cache which ha
         </div>
     </div>
 </div>
-<div class="col-xs-6" id="Delete">
+<div class="col-sm-6" id="Delete">
     <div class="panel panel-default" >
         <div class="panel-heading">
             Here are all selected maps for the server
@@ -78,7 +78,7 @@ So all maps you choose here will not be removed wile cleaning the cache which ha
                     {
                         continue; // have to delete the map some when cause its no longer on steam workskhops :(
                     }
-            <div class="col-md-6">
+            <div class="col-xs-6">
                     <div class="panel panel-default mapPanel" data-Author="@map.Map.Author" data-Name="@map.Map.Name">
                         <div class="panel-heading">
                             @map.MapId

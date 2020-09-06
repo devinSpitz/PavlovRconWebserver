@@ -41,20 +41,20 @@ else
     </div>
     <div class="panel-body">
         <div class="row">
-            <div class="col-md-12 responsive nowrap">
+            <div class="col-xs-12 responsive nowrap">
                 @if (commandsAllow.Contains("ServerInfo"))
                 {
-                    <button type="button" class="center-block btn btn-success btn-responsive col-md-3" onclick="sendSingleCommand('ServerInfo')">ServerInfo</button>
+                    <button type="button" class="center-block btn btn-success btn-responsive col-xs-3" onclick="sendSingleCommand('ServerInfo')">ServerInfo</button>
                 }
-                <div class="col-md-1"></div>
+                <div class="col-xs-1"></div>
                 @if (commandsAllow.Contains("ResetSND"))
                 {
-                    <button type="button" class="center-block btn btn-success btn-responsive  col-md-3" onclick="sendSingleCommand('ResetSND')">ResetSND</button>
+                    <button type="button" class="center-block btn btn-success btn-responsive  col-xs-3" onclick="sendSingleCommand('ResetSND')">ResetSND</button>
                 }
-                <div class="col-md-1"></div>
+                <div class="col-xs-1"></div>
                 @if (commandsAllow.Contains("RotateMap"))
                 {
-                    <button type="button" class="center-block btn btn-success btn-responsive  col-md-3" onclick="sendSingleCommand('RotateMap')">RotateMap</button>
+                    <button type="button" class="center-block btn btn-success btn-responsive  col-xs-3" onclick="sendSingleCommand('RotateMap')">RotateMap</button>
                 }
             </div>
         </div>
