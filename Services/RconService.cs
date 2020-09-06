@@ -195,7 +195,7 @@ namespace PavlovRconWebserver.Services
         }
 
 
-        private ConnectionResult DeleteUnusedMaps(RconServer server, AuthType type)
+        private async Task<ConnectionResult> DeleteUnusedMaps(RconServer server, AuthType type)
         {
             var ConnectionResult = new ConnectionResult();
             var connectionInfo = ConnectionInfo(server, type, out var result);
@@ -263,21 +263,21 @@ namespace PavlovRconWebserver.Services
                 !string.IsNullOrEmpty(server.SshKeyFileName) && File.Exists("KeyFiles/" + server.SshKeyFileName) &&
                 !string.IsNullOrEmpty(server.SshUsername))
             {
-                if (deleteUnusedMaps) connectionResult = DeleteUnusedMaps(server, AuthType.PrivateKeyPassphrase);
+                if (deleteUnusedMaps) connectionResult = await DeleteUnusedMaps(server, AuthType.PrivateKeyPassphrase);
                 else connectionResult = await SShTunnel(server, AuthType.PrivateKeyPassphrase, command);
             }
 
             if (!connectionResult.Seccuess && !string.IsNullOrEmpty(server.SshKeyFileName) &&
                 File.Exists("KeyFiles/" + server.SshKeyFileName) && !string.IsNullOrEmpty(server.SshUsername))
             {
-                if (deleteUnusedMaps) connectionResult = DeleteUnusedMaps(server, AuthType.PrivateKey);
+                if (deleteUnusedMaps) connectionResult = await DeleteUnusedMaps(server, AuthType.PrivateKey);
                 else connectionResult = await SShTunnel(server, AuthType.PrivateKey, command);
             }
 
             if (!connectionResult.Seccuess && !string.IsNullOrEmpty(server.SshUsername) &&
                 !string.IsNullOrEmpty(server.SshPassword))
             {
-                if (deleteUnusedMaps) connectionResult = DeleteUnusedMaps(server, AuthType.UserPass);
+                if (deleteUnusedMaps) connectionResult = await DeleteUnusedMaps(server, AuthType.UserPass);
                 else connectionResult = await SShTunnel(server, AuthType.UserPass, command);
             }
 

@@ -36,7 +36,7 @@ namespace PavlovRconWebserver.Controllers
             if(!await RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return Unauthorized();
             var viewModel = new RconViewModel();
             viewModel.MultiRcon = false;
-            ViewBag.Servers = _serverService.FindAll();
+            ViewBag.Servers = await _serverService.FindAll();
             //set allowed Commands
             List<string> allowCommands = new List<string>();
             ViewBag.commandsAllow = await RightsHandler.GetAllowCommands(viewModel, HttpContext.User, _userservice);
@@ -55,7 +55,7 @@ namespace PavlovRconWebserver.Controllers
             var rconServer = new RconServer();
             try
             {
-                rconServer = _serverService.FindOne(server);
+                rconServer = await _serverService.FindOne(server);
                 response = await _service.SendCommand(rconServer, command);
             }
             catch (CommandException e)
@@ -72,7 +72,7 @@ namespace PavlovRconWebserver.Controllers
         {
             if(!await RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return Unauthorized();
             var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(server);
-            tmp.Name = _serverService.FindOne(serverId).Name;
+            tmp.Name = (await _serverService.FindOne(serverId)).Name;
             return PartialView("RconServerInfoPartialView", tmp);
         }
         
@@ -90,11 +90,11 @@ namespace PavlovRconWebserver.Controllers
             if(!await RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return Unauthorized();
             List<Map> listOfMaps;
             
-            listOfMaps = _mapsService.FindAll().ToList();
+            listOfMaps = (await _mapsService.FindAll()).ToList();
             if (serverId != null)
             {
-                var server = _serverService.FindOne((int)serverId);
-                var mapsSelected = _serverSelectedMapService.FindAllFrom(server);
+                var server = await _serverService.FindOne((int)serverId);
+                var mapsSelected = await  _serverSelectedMapService.FindAllFrom(server);
                 if (mapsSelected != null)
                 {
                
@@ -141,7 +141,7 @@ namespace PavlovRconWebserver.Controllers
             if(!await RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return Unauthorized();
             if (serverId<=0) return BadRequest("Please choose a server!");
             PlayerListClass playersList = new PlayerListClass();
-            var server = _serverService.FindOne(serverId);
+            var server = await _serverService.FindOne(serverId);
             var playersTmp = "";
             try
             {

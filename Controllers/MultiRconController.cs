@@ -51,7 +51,7 @@ namespace PavlovRconWebserver.Controllers
                 var rconServer = new RconServer();
                 try
                 {
-                    rconServer = _serverService.FindOne(server);
+                    rconServer = await _serverService.FindOne(server);
                     response = await _service.SendCommand(rconServer, command);
                 }
                 catch (CommandException e)
@@ -91,7 +91,7 @@ namespace PavlovRconWebserver.Controllers
             foreach (var server in servers)
             {
                 var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(server);
-                var rconServer = _serverService.FindOne(serverIds[count]);
+                var rconServer = await _serverService.FindOne(serverIds[count]);
                 tmp.Name = rconServer.Name;
                 serverList.Add(tmp);
                 

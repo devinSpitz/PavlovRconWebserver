@@ -19,7 +19,7 @@ namespace PavlovRconWebserver.Extensions
             var serverSelectedMapService = new ServerSelectedMapService(new LiteDbIdentityContext(connectionString));
             var rconServerSerivce = new RconServerSerivce(new LiteDbIdentityContext(connectionString));
             var rconSerivce = new RconService(serverSelectedMapService,rconServerSerivce);
-            var servers = rconServerSerivce.FindAll();
+            var servers = await rconServerSerivce.FindAll();
             foreach (var server in servers)
             {
                 try
@@ -121,7 +121,7 @@ namespace PavlovRconWebserver.Extensions
                mapsService.Upsert(tmpMap);
             }
 
-            foreach (var map in mapsService.FindAll())
+            foreach (var map in await mapsService.FindAll())
             {
                 var tmp = tmpRconMaps.FirstOrDefault(x => x.Id == map.Id);
                 var isNumeric = int.TryParse( map.Id, out _);

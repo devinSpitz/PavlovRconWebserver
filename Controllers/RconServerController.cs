@@ -29,7 +29,7 @@ namespace PavlovRconWebserver.Controllers
         public async Task<IActionResult> Index()
         {
             if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
-            return View("Index",_service.FindAll());
+            return View("Index",await _service.FindAll());
         }
         [HttpGet("[controller]/EditServer/{serverId?}")]
         public async Task<IActionResult> EditServer(int? serverId)
@@ -38,7 +38,7 @@ namespace PavlovRconWebserver.Controllers
             var server = new RconServer();
             if (serverId != null && serverId != 0)
             {
-                server = _service.FindOne((int)serverId);
+                server = await _service.FindOne((int)serverId);
             }
 
             
@@ -131,10 +131,10 @@ namespace PavlovRconWebserver.Controllers
         {
             if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
             var serverSelectedMap = new List<ServerSelectedMap>();
-            var server = _service.FindOne(serverId);
-            serverSelectedMap = _serverSelectedMapService.FindAllFrom(server).ToList();
+            var server = await _service.FindOne(serverId);
+            serverSelectedMap = (await _serverSelectedMapService.FindAllFrom(server)).ToList();
 
-            var tmp = _mapsService.FindAll();
+            var tmp = await _mapsService.FindAll();
 
             var viewModel = new SelectedServerMapsViewModel()
             {

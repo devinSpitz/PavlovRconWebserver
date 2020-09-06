@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using LiteDB.Identity.Database;
 using PavlovRconWebserver.Models;
 
@@ -15,38 +16,38 @@ namespace PavlovRconWebserver.Services
             _liteDb = liteDbContext;
         }
 
-        public IEnumerable<ServerSelectedMap> FindAll()
+        public async Task<IEnumerable<ServerSelectedMap>> FindAll()
         {
             return _liteDb.LiteDatabase.GetCollection<ServerSelectedMap>("ServerSelectedMap")
                 .FindAll();
         }
 
-        public IEnumerable<ServerSelectedMap> FindAllFrom(RconServer rconServer)
+        public async Task<IEnumerable<ServerSelectedMap>> FindAllFrom(RconServer rconServer)
         {
             return _liteDb.LiteDatabase.GetCollection<ServerSelectedMap>("ServerSelectedMap")
                 .Include(x=>x.RconServer)
                 .Find(x=>x.RconServerId == rconServer.Id);
         }
         
-        public IEnumerable<ServerSelectedMap> FindAllFrom(Map map)
+        public async Task<IEnumerable<ServerSelectedMap>> FindAllFrom(Map map)
         {
             return _liteDb.LiteDatabase.GetCollection<ServerSelectedMap>("ServerSelectedMap")
                 .Find(x=>x.MapId == map.Id);
         }
 
-        public ServerSelectedMap FindOne(int id)
+        public async Task<ServerSelectedMap> FindOne(int id)
         {
             return _liteDb.LiteDatabase.GetCollection<ServerSelectedMap>("ServerSelectedMap")
                 .Find(x => x.Id == id).FirstOrDefault();
         }
 
-        public ServerSelectedMap FindSelectedMap(int serverId,string mapId )
+        public async Task<ServerSelectedMap> FindSelectedMap(int serverId,string mapId )
         {
             return _liteDb.LiteDatabase.GetCollection<ServerSelectedMap>("ServerSelectedMap")
                 .Find(x => x.MapId == mapId && x.RconServerId == serverId).FirstOrDefault();
         }
         
-        public int Insert(ServerSelectedMap serverSelectedMap)
+        public async Task<int> Insert(ServerSelectedMap serverSelectedMap)
         {
 
             
@@ -56,7 +57,7 @@ namespace PavlovRconWebserver.Services
             return _liteDb.LiteDatabase.GetCollection<ServerSelectedMap>("ServerSelectedMap")
                 .Insert(serverSelectedMap);
         }
-        public int Upsert(List<ServerSelectedMap> serverSelectedMaps)
+        public async Task<int> Upsert(List<ServerSelectedMap> serverSelectedMaps)
         {
 
             
@@ -67,7 +68,7 @@ namespace PavlovRconWebserver.Services
                 .Upsert(serverSelectedMaps);
         }
 
-        public bool Update(ServerSelectedMap serverSelectedMap)
+        public async Task<bool> Update(ServerSelectedMap serverSelectedMap)
         {
 
             return _liteDb.LiteDatabase.GetCollection<ServerSelectedMap>("ServerSelectedMap")
@@ -76,7 +77,7 @@ namespace PavlovRconWebserver.Services
            
         }
 
-        public bool Delete(int id)
+        public async Task<bool> Delete(int id)
         {
             return _liteDb.LiteDatabase.GetCollection<ServerSelectedMap>("ServerSelectedMap").Delete(id);
         }

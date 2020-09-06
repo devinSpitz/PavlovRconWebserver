@@ -16,25 +16,25 @@ namespace PavlovRconWebserver.Services
             _liteDb = liteDbContext;
         }
 
-        public IEnumerable<Map> FindAll()
+        public async Task<IEnumerable<Map>> FindAll()
         {
             return _liteDb.LiteDatabase.GetCollection<Map>("Map")
                 .FindAll().OrderByDescending(x=>x.Id);
         }
 
-        public Map FindOne(string id)
+        public async Task<Map> FindOne(string id)
         {
             return _liteDb.LiteDatabase.GetCollection<Map>("Map")
                 .Find(x => x.Id == id).FirstOrDefault();
         }
 
-        public bool Upsert(Map map)
+        public async Task<bool> Upsert(Map map)
         {
             return _liteDb.LiteDatabase.GetCollection<Map>("Map")
                 .Upsert(map);
         }
 
-        public bool Delete(string id)
+        public async Task<bool> Delete(string id)
         {
             return _liteDb.LiteDatabase.GetCollection<Map>("Map").Delete(id);
         }

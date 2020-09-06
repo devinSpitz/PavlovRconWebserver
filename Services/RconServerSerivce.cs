@@ -17,13 +17,13 @@ namespace PavlovRconWebserver.Services
             _liteDb = liteDbContext;
         }
 
-        public IEnumerable<RconServer> FindAll()
+        public async Task<IEnumerable<RconServer>> FindAll()
         {
             return _liteDb.LiteDatabase.GetCollection<RconServer>("RconServer")
                 .FindAll();
         }
 
-        public RconServer FindOne(int id)
+        public async Task<RconServer> FindOne(int id)
         {
             return _liteDb.LiteDatabase.GetCollection<RconServer>("RconServer")
                 .Find(x => x.Id == id).FirstOrDefault();
@@ -94,7 +94,7 @@ namespace PavlovRconWebserver.Services
             RconServer old = null;
             if (string.IsNullOrEmpty(rconServer.Password) || string.IsNullOrEmpty(rconServer.SshPassphrase) || string.IsNullOrEmpty(rconServer.SshPassword))
             {
-                old = FindOne(rconServer.Id);
+                old = await FindOne(rconServer.Id);
                 if (old != null)
                 {
                     if (string.IsNullOrEmpty(rconServer.Password)) {rconServer.Password = old.Password;}
@@ -114,7 +114,7 @@ namespace PavlovRconWebserver.Services
            
         }
 
-        public bool Delete(int id)
+        public async Task<bool> Delete(int id)
         {
             return _liteDb.LiteDatabase.GetCollection<RconServer>("RconServer").Delete(id);
         }
