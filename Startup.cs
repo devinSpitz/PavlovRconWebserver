@@ -90,9 +90,7 @@ namespace PavlovRconWebserver
          RecurringJob.AddOrUpdate( 
             () => Steam.CrawlSteamMaps(connectionString),
             Cron.Daily(2)); // Delete all unusedMaps every day on 2 in the morning
-         
-         BackgroundJob.Enqueue(
-            () => Steam.CrawlSteamMaps(connectionString));
+
             
          app.UseRouting();
          app.UseAuthentication();
