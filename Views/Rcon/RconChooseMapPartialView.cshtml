@@ -1,4 +1,4 @@
-@model List<RconMapViewModel>
+@model List<Map>
 
 @{
     var maxLength = 20;
@@ -31,7 +31,7 @@
                                 }
                             </div>
                             <div class="panel-body">
-                                @if (@map.Name.Length > maxLength)
+                                @if (map.Name?.Length > maxLength)
                                 {
                                     <b>@map.Name.Substring(0, maxLength) ...</b>
                                 }
@@ -40,7 +40,14 @@
                                     <b>@map.Name</b>
                                 }
                                 <button data-dismiss="modal" onclick="setMap('@map.Id')"><img style="width: 200px;height: 200px" src="@map.ImageUrl"></button>
-                                by @map.Author
+                                @if (@map.Author?.Length > maxLength)
+                                {
+                                    <br><b>by @map.Author.Substring(0, maxLength) ...</b>
+                                }
+                                else
+                                {
+                                    <br><b>by @map.Author</b>
+                                }
                             </div>
                         </div>
                     </div>

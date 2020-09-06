@@ -1,7 +1,6 @@
 ﻿
 using Hangfire;
 using Hangfire.MemoryStorage;
-using LiteDB.Identity.Database;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -11,6 +10,7 @@ using PavlovRconWebserver.Services;
 using LiteDB.Identity.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi.Models;
+using PavlovRconWebserver.Extensions;
 
 namespace PavlovRconWebserver
 {
@@ -32,7 +32,7 @@ namespace PavlovRconWebserver
          services.AddTransient<UserService>();
          services.AddTransient<RconService>();
          services.AddTransient<ServerSelectedMapService>();
-         
+         services.AddTransient<MapsService>();
          // Add application services.
          services.AddTransient<IEmailSender, EmailSender>();
          services.AddSwaggerGen(c =>
@@ -83,14 +83,17 @@ namespace PavlovRconWebserver
          }
          app.UseStaticFiles();
 
-
-         
-         
          string connectionString = Configuration.GetConnectionString("DefaultConnection");
          RecurringJob.AddOrUpdate( 
-            () => new RconService(new ServerSelectedMapService(new LiteDbIdentityContext(connectionString)), new RconServerSerivce(new LiteDbIdentityContext(connectionString))).DeleteAllUnsedMapsFromAllServers(),
+            () => Steam.DeleteAllUnsedMapsFromAllServers(connectionString),
             Cron.Daily(3)); // Delete all unusedMaps every day on 3 in the morning
+         RecurringJob.AddOrUpdate( 
+            () => Steam.CrawlSteamMaps(connectionString),
+            Cron.Daily(2)); // Delete all unusedMaps every day on 2 in the morning
          
+         BackgroundJob.Enqueue(
+            () => Steam.CrawlSteamMaps(connectionString));
+            
          app.UseRouting();
          app.UseAuthentication();
          app.UseAuthorization();
@@ -99,6 +102,8 @@ namespace PavlovRconWebserver
          {
             endpoints.MapDefaultControllerRoute();
          });
+         
       }
    }
+
 }

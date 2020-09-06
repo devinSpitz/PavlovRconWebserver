@@ -19,12 +19,14 @@ namespace PavlovRconWebserver.Controllers
         private readonly RconServerSerivce _serverService;
         private readonly UserService _userservice;
         private readonly ServerSelectedMapService _serverSelectedMapService;
-        public RconController(RconService service,RconServerSerivce serverService,UserService userService,ServerSelectedMapService serverSelectedMapService)
+        private readonly MapsService _mapsService;
+        public RconController(RconService service,RconServerSerivce serverService,UserService userService,ServerSelectedMapService serverSelectedMapService,MapsService mapsService)
         {
             _service = service;
             _serverService = serverService;
             _userservice = userService;
             _serverSelectedMapService = serverSelectedMapService;
+            _mapsService = mapsService;
         }
         
    
@@ -86,15 +88,26 @@ namespace PavlovRconWebserver.Controllers
         {
             //onMutliRcon do not handle the selected maps
             if(!await RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return Unauthorized();
-            List<RconMapViewModel> listOfMaps;
+            List<Map> listOfMaps;
+            
+            listOfMaps = _mapsService.FindAll().ToList();
             if (serverId != null)
             {
                 var server = _serverService.FindOne((int)serverId);
-                listOfMaps = await Steam.CrawlSteamMaps(_serverSelectedMapService.FindAllFrom(server).ToList());
-            }
-            else
-            {
-                listOfMaps = await Steam.CrawlSteamMaps();
+                var mapsSelected = _serverSelectedMapService.FindAllFrom(server);
+                if (mapsSelected != null)
+                {
+               
+                    foreach (var map in listOfMaps)
+                    {
+                        if (mapsSelected.FirstOrDefault(x => x.MapId == map.Id) != null)
+                        {
+                            map.sort = 1;
+                        }
+                    } 
+                    listOfMaps = listOfMaps.OrderByDescending(x=>x.sort).ToList();
+                }
+                
             }
             return PartialView("~/Views/Rcon/RconChooseMapPartialView.cshtml",listOfMaps);
         }

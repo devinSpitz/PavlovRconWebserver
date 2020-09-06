@@ -19,6 +19,7 @@ namespace PavlovRconWebserver.Controllers
         
         public async Task<IActionResult> Index()
         {
+            await _service.CreateDefaultRoles();
             if(await _service.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
             return View("Index",_service.FindAll());
         }

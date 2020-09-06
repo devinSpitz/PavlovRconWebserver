@@ -5,16 +5,38 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
+using LiteDB.Identity.Database;
 using PavlovRconWebserver.Models;
+using PavlovRconWebserver.Services;
 
 namespace PavlovRconWebserver.Extensions
 {
     public static class Steam
     { 
         
-        
-        public static async Task<List<RconMapViewModel>> CrawlSteamMaps(List<ServerSelectedMap> mapsSelected = null)
+        public static async Task DeleteAllUnsedMapsFromAllServers(string connectionString)
         {
+            var serverSelectedMapService = new ServerSelectedMapService(new LiteDbIdentityContext(connectionString));
+            var rconServerSerivce = new RconServerSerivce(new LiteDbIdentityContext(connectionString));
+            var rconSerivce = new RconService(serverSelectedMapService,rconServerSerivce);
+            var servers = rconServerSerivce.FindAll();
+            foreach (var server in servers)
+            {
+                try
+                {
+                    await rconSerivce.SendCommand(server, "", true);
+                }
+                catch (Exception e)
+                {
+                    // ingore for now
+                }
+            }
+        }
+        
+        public static async Task<bool> CrawlSteamMaps(string connectionString)
+        {
+            var mapsService = new MapsService(new LiteDbIdentityContext(connectionString));
+            
             HttpClient client = new HttpClient();
             var response = await client.GetAsync("https://steamcommunity.com/workshop/browse/?appid=555160&browsesort=trend&section=readytouseitems&actualsort=trend&p=1&numperpage=30");
             var pageContents = await response.Content.ReadAsStringAsync();
@@ -40,42 +62,42 @@ namespace PavlovRconWebserver.Extensions
             var MapsTasks = pages.Select(GetMapsFromPage);
             var pagesMaps = (await Task.WhenAll(MapsTasks)).ToList(); // This uses like 1 GB RAM what i think everybody should have :( But i try to parse 52 sites which each have 30 maps on it parallel so this is obvious
             var maps = pagesMaps.SelectMany(x => x).ToList();
-            var rconMapsViewModels = maps.Prepend(new RconMapViewModel()
+            var rconMapsViewModels = maps.Prepend(new Map()
             {
                 Id = "datacenter",
                 Name = "datacenter",
                 ImageUrl = "http://wiki.pavlov-vr.com/images/thumb/c/c0/Datacenter_middle.jpg/600px-Datacenter_middle.jpg",
                 Author = "Vankrupt Games"
             }).ToList();
-            rconMapsViewModels = rconMapsViewModels.Prepend(new RconMapViewModel()
+            rconMapsViewModels = rconMapsViewModels.Prepend(new Map()
             {
                 Id = "sand",
                 Name = "sand",
                 ImageUrl = "http://wiki.pavlov-vr.com/images/thumb/d/d9/Sand_B_site.jpg/600px-Sand_B_site.jpg",
                 Author = "Vankrupt Games"
             }).ToList();
-            rconMapsViewModels = rconMapsViewModels.Prepend(new RconMapViewModel()
+            rconMapsViewModels = rconMapsViewModels.Prepend(new Map()
             {
                 Id = "bridge",
                 Name = "bridge",
                 ImageUrl = "",
                 Author = "Vankrupt Games"
             }).ToList();
-            rconMapsViewModels = rconMapsViewModels.Prepend(new RconMapViewModel()
+            rconMapsViewModels = rconMapsViewModels.Prepend(new Map()
             {
                 Id = "containeryard",
                 Name = "containeryard",
                 ImageUrl = "",
                 Author = "Vankrupt Games"
             }).ToList();
-            rconMapsViewModels = rconMapsViewModels.Prepend(new RconMapViewModel()
+            rconMapsViewModels = rconMapsViewModels.Prepend(new Map()
             {
                 Id = "prisonbreak",
                 Name = "prisonbreak",
                 ImageUrl = "",
                 Author = "Vankrupt Games"
             }).ToList();
-            rconMapsViewModels = rconMapsViewModels.Prepend(new RconMapViewModel()
+            rconMapsViewModels = rconMapsViewModels.Prepend(new Map()
             {
                 Id = "hospital",
                 Name = "hospital",
@@ -83,20 +105,8 @@ namespace PavlovRconWebserver.Extensions
                 Author = "Vankrupt Games"
             }).ToList();
             //g
-            if (mapsSelected != null)
-            {
-               
-                foreach (var rconMapsViewModel in rconMapsViewModels)
-                {
-                    if (mapsSelected.FirstOrDefault(x => x.MapId == rconMapsViewModel.Id) != null)
-                    {
-                        rconMapsViewModel.sort = 1;
-                    }
-                } 
-                rconMapsViewModels = rconMapsViewModels.OrderByDescending(x=>x.sort).ToList();
-            }
 
-            var tmpRconMaps = new List<RconMapViewModel>();
+            var tmpRconMaps = new List<Map>();
             foreach (var map in rconMapsViewModels) // got double entry from maps dont know from where have to check
             {
                 var mapsTmp = tmpRconMaps.FirstOrDefault(x => x.Id == map.Id);
@@ -105,11 +115,27 @@ namespace PavlovRconWebserver.Extensions
                     tmpRconMaps.Add(map);
                 }
             }
-            return tmpRconMaps;
+
+            foreach (var tmpMap in tmpRconMaps)
+            {
+               mapsService.Upsert(tmpMap);
+            }
+
+            foreach (var map in mapsService.FindAll())
+            {
+                var tmp = tmpRconMaps.FirstOrDefault(x => x.Id == map.Id);
+                var isNumeric = int.TryParse( map.Id, out _);
+                if (tmp == null&&isNumeric)
+                {
+                    mapsService.Delete(tmp.Id);
+                    // i should my here delete them from the serverSelectedMaps as well
+                }
+            }
+            return true;
         }
         
         
-        private static async Task<List<RconMapViewModel>> GetMapsFromPage(HtmlDocument page)
+        private static async Task<List<Map>> GetMapsFromPage(HtmlDocument page)
         {
             var notes = page.DocumentNode.SelectNodes("//div[@class='workshopItem']");
             
@@ -120,9 +146,9 @@ namespace PavlovRconWebserver.Extensions
             return maps;
         }
 
-        private static async Task<RconMapViewModel> getMapFromNote(HtmlNode note)
+        private static async Task<Map> getMapFromNote(HtmlNode note)
         {
-            var map = new RconMapViewModel();
+            var map = new Map();
             map.Id = new Regex(@"(?<=id=)([0-9]*)(?=&searchtext=)").Match(note.OuterHtml).Value;
 
             map.ImageUrl = "https://steamuserimages" +

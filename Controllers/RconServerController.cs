@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PavlovRconWebserver.Exceptions;
-using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
 using PavlovRconWebserver.Services;
 
@@ -17,12 +16,14 @@ namespace PavlovRconWebserver.Controllers
         private readonly UserService _userservice;
         private readonly ServerSelectedMapService _serverSelectedMapService;
         private readonly RconService _rconService;
-        public RconServerController(RconServerSerivce service,UserService userService,ServerSelectedMapService serverSelectedMapService,RconService rconService)
+        private readonly MapsService _mapsService;
+        public RconServerController(RconServerSerivce service,UserService userService,ServerSelectedMapService serverSelectedMapService,RconService rconService,MapsService mapsService)
         {
             _service = service;
             _userservice = userService;
             _serverSelectedMapService = serverSelectedMapService;
             _rconService = rconService;
+            _mapsService = mapsService;
         }
         [HttpGet("[controller]/")]
         public async Task<IActionResult> Index()
@@ -104,7 +105,7 @@ namespace PavlovRconWebserver.Controllers
         }
 
         [HttpGet]
-        public async Task<bool> SaveServerSelectedMap(int serverId, string mapId)
+        public bool SaveServerSelectedMap(int serverId, string mapId)
         {
             var map = _serverSelectedMapService.FindSelectedMap(serverId, mapId);
             if (map != null) return true;
@@ -117,7 +118,7 @@ namespace PavlovRconWebserver.Controllers
             return true;
         }
         [HttpGet]
-        public async Task<bool> DeleteServerSelectedMap(int serverId, string mapId)
+        public bool DeleteServerSelectedMap(int serverId, string mapId)
         {
             var map = _serverSelectedMapService.FindSelectedMap(serverId, mapId);
             if (map == null) return true;
@@ -133,11 +134,11 @@ namespace PavlovRconWebserver.Controllers
             var server = _service.FindOne(serverId);
             serverSelectedMap = _serverSelectedMapService.FindAllFrom(server).ToList();
 
-            var tmp = await Steam.CrawlSteamMaps(serverSelectedMap);
+            var tmp = _mapsService.FindAll();
 
             var viewModel = new SelectedServerMapsViewModel()
             {
-                AllMaps = tmp,
+                AllMaps = tmp.ToList(),
                 SelectedMaps = serverSelectedMap,
                 ServerId = serverId
             };
