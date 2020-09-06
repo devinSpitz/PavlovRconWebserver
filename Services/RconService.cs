@@ -254,7 +254,6 @@ namespace PavlovRconWebserver.Services
 
         //Use every type of auth as a backupway to get the result
         // that can cause long waiting times but i think its better than just do one thing.
-        //Todo: a system to choose if the user wants it to run this way ore only one specifig type of auth
         public async Task<string> SendCommand(RconServer server, string command,bool deleteUnusedMaps = false)
         {
             var connectionResult = new ConnectionResult();

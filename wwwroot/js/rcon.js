@@ -105,7 +105,7 @@ function UpdatePlayers(server){
         url: "/Rcon/GetAllPlayers",
         data: { serverId: server },
         success:  function(data)
-        {   //TODO: Check if Commands Work
+        { 
             $(data).each(function (){
                 if($(this.playerList).length<=0)
                 {

@@ -1,5 +1,6 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using LiteDB.Identity.Models
+@using PavlovRconWebserver.Extensions
 @inject SignInManager<LiteDbUser> SignInManager
 @inject UserManager<LiteDbUser> UserManager
 <!DOCTYPE html>
@@ -47,6 +48,13 @@
                         </li>
                         <li>
                             <a asp-area="" asp-controller="RconServer" asp-action="Index">Servers</a>
+                        </li>
+                        ////ToDo:Add SteamIdentity View Index To Delete and edit SteamIdentitys
+                    }
+                    //if (RightsHandler.IsUserAtLeastInTeamRole())////ToDo: at least on one server a captain or Admin
+                    {
+                        <li>
+                            <a asp-area="" asp-controller="Team" asp-action="Index">Teams</a>
                         </li>
                     }
                     <li>

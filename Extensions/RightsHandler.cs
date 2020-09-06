@@ -9,7 +9,7 @@ namespace PavlovRconWebserver.Extensions
 {
     public static class RightsHandler
     {
-        private static Dictionary<int, string> Roles = new Dictionary<int, string>()
+        public static readonly Dictionary<int, string> Roles = new Dictionary<int, string>()
         {
             {4,"Admin"},
             {3,"Mod"},
@@ -63,7 +63,20 @@ namespace PavlovRconWebserver.Extensions
                 if(checkRole.Value==role) return result;
             }
             return result;
-        }            
+        }       
+        public static async Task<bool> IsUserAtLeastInTeamRole(string role,string TeamRole)
+        {
+            var result = false;
+            
+            foreach (var checkRole in Roles)
+            {
+               
+                if(result) return result;
+                if(checkRole.Value==TeamRole) result = true;
+                if(checkRole.Value==role) return result;
+            }
+            return result;
+        }   
         public static async Task<List<string>> GetAllowCommands(RconViewModel viewModel,ClaimsPrincipal cp,UserService userService)
         {
             List<string> allowCommands = new List<string>();
