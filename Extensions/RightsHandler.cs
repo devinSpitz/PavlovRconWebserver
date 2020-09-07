@@ -77,6 +77,7 @@ namespace PavlovRconWebserver.Extensions
             }
             return result;
         }   
+        
         public static async Task<List<string>> GetAllowCommands(RconViewModel viewModel,ClaimsPrincipal cp,UserService userService)
         {
             List<string> allowCommands = new List<string>();

@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PavlovRconWebserver.Models
 {
@@ -31,9 +33,11 @@ namespace PavlovRconWebserver.Models
         [Display(Description = "CAUTION: WILL BE SAVED BLANK")]
         public string SshPassword { get; set; }
         
-        [DisplayName("SSH key filename")]//Todo maybe chosable from javascript that scans the folder or even upload but that check security
-        [Display(Description = "Put in the name of the file in the keyfile folder")]
+        [DisplayName("SSH key filename")]
+        [Display(Description = "Select a filename")]
         public string SshKeyFileName { get; set; }
+        [NotMapped]
+        public List<string> SshKeyFileNames { get; set; } = new List<string>();
         
         [DisplayName("SSH passphrase")]
         [Display(Description = "CAUTION: WILL BE SAVED BLANK")]

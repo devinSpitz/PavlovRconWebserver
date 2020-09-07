@@ -92,11 +92,11 @@
                                 {
                                     if (String.IsNullOrEmpty(teamSelectedSteamIdentity.RoleOverwrite))
                                     {
-                                        <a href="@Url.Action("EditTeamSelectedSteamIdentity", "Team", new {teamId = teamSelectedSteamIdentity.TeamId, steamIdentityId = teamSelectedSteamIdentity.SteamIdentityId})"><span>&#8505;</span></a>
+                                        <a href="@Url.Action("EditTeamSelectedSteamIdentity", "Team", new {teamId = teamSelectedSteamIdentity.TeamId, steamIdentityId = teamSelectedSteamIdentity.SteamIdentityId})"><span>&#9998;</span></a>
                                     }
                                     else
                                     {
-                                        <a href="@Url.Action("EditTeamSelectedSteamIdentity", "Team", new {teamId = teamSelectedSteamIdentity.TeamId, steamIdentityId = teamSelectedSteamIdentity.SteamIdentityId,overWriteRole = teamSelectedSteamIdentity.RoleOverwrite})"><span>&#8505;</span></a>
+                                        <a href="@Url.Action("EditTeamSelectedSteamIdentity", "Team", new {teamId = teamSelectedSteamIdentity.TeamId, steamIdentityId = teamSelectedSteamIdentity.SteamIdentityId,overWriteRole = teamSelectedSteamIdentity.RoleOverwrite})"><span>&#9998;</span></a>
                                     }
                                 }
                                 <a href="@Url.Action("DeleteTeamSelectedSteamIdentity", "Team", new {teamId = teamSelectedSteamIdentity.TeamId, steamIdentityId = teamSelectedSteamIdentity.SteamIdentityId})"><span>&#10060;</span></a>

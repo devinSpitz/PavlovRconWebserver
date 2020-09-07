@@ -9,6 +9,7 @@
     {
         placeholder = "Leave blank if you don't want to update it";
     }
+    var keyFiles = Model.SshKeyFileNames.Prepend("");
 
 }
 
@@ -71,7 +72,7 @@
                 </div>
                 <div class="form-group col-md-6">
                     <label asp-for="SshKeyFileName"></label>
-                    <input asp-for="SshKeyFileName" class="form-control" value="@Model.SshKeyFileName"/>
+                    @Html.DropDownListFor(m => m.SshKeyFileName, new SelectList(keyFiles,"","",Model.SshKeyFileName), new { @class = "form-control form-control-sm" })
                     <p class="help-block">
                         @ViewData.ModelMetadata.Properties.Where(m => m.PropertyName == "SshKeyFileName").FirstOrDefault().Description
                     </p>
