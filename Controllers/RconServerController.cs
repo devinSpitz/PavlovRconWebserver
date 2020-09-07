@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -41,14 +43,31 @@ namespace PavlovRconWebserver.Controllers
                 server = await _service.FindOne((int)serverId);
             }
 
-            
+            try
+            {
+                server.SshKeyFileNames = Directory.EnumerateFiles("KeyFiles/", "*", SearchOption.AllDirectories)
+                    .Select(x => x.Replace("KeyFiles/", "")).ToList();
+            }
+            catch (Exception e)
+            {
+                // ignore there is maybe no folder or the folder is empty 
+            }
             return View("Server",server);
         }
 
-        [HttpGet]
+        [HttpPost]
         public async Task<IActionResult> EditServer(RconServer server)
         {
             if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
+            try
+            {
+                server.SshKeyFileNames = Directory.EnumerateFiles("KeyFiles/", "*", SearchOption.AllDirectories)
+                    .Select(x => x.Replace("KeyFiles/", "")).ToList();
+            }
+            catch (Exception e)
+            {
+                // ignore there is maybe no folder or the folder is empty 
+            }
             return View("Server",server);
         }
         
@@ -156,7 +175,7 @@ namespace PavlovRconWebserver.Controllers
         public async Task<IActionResult> DeleteServer(int id)
         {
             if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
-            _service.Delete(id);
+            await _service.Delete(id);
             return await Index();
         }
         

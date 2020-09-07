@@ -33,6 +33,9 @@ namespace PavlovRconWebserver
          services.AddTransient<RconService>();
          services.AddTransient<ServerSelectedMapService>();
          services.AddTransient<MapsService>();
+         services.AddTransient<TeamService>();
+         services.AddTransient<SteamIdentityService>();
+         services.AddTransient<TeamSelectedSteamIdentityService>();
          // Add application services.
          services.AddTransient<IEmailSender, EmailSender>();
          services.AddSwaggerGen(c =>
