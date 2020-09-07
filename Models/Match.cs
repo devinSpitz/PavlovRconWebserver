@@ -18,5 +18,7 @@ namespace PavlovRconWebserver.Models
         public virtual ICollection<MatchSelectedSteamIdentity> MatchSelectedSteamIdentities { get; set; }
         public virtual ICollection<MatchRound> MatchRound { get; set; }
         public GameMode GameMode { get; set; }
+        public int RconServerId { get; set; }
+        public virtual RconServer RconServer { get; set; }
     }
 }
