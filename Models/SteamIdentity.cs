@@ -25,6 +25,6 @@ namespace PavlovRconWebserver.Models
         public virtual LiteDbUser LiteDbUser { get; set; }
         
         [NotMapped]
-        public List<LiteDbUser> LiteDbUsers { get; set; }
+        public ICollection<LiteDbUser> LiteDbUsers { get; set; }
     }
 }

@@ -43,5 +43,10 @@ namespace PavlovRconWebserver.Models
         [Display(Description = "CAUTION: WILL BE SAVED BLANK")]
         public string SshPassphrase { get; set; }
         
+        [DisplayName("Pavlov server path on server")]
+        public string PavlovServerPath { get; set; }
+
+
+        
     }
 }

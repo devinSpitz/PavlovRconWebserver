@@ -4,8 +4,8 @@ namespace PavlovRconWebserver.Models
 {
     public class TeamSelectedSteamIdentitiesViewModel
     {
-        public List<TeamSelectedSteamIdentity> SelectedSteamIdentities { get; set; }
-        public List<SteamIdentity> AllSteamIdentities { get; set; }
+        public ICollection<TeamSelectedSteamIdentity> SelectedSteamIdentities { get; set; }
+        public ICollection<SteamIdentity> AllSteamIdentities { get; set; }
         public int TeamId { get; set; }
     }
 }
