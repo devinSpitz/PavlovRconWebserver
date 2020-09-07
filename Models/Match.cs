@@ -15,7 +15,7 @@ namespace PavlovRconWebserver.Models
         public int Rounds { get; set; }
         public Team TeamA { get; set; }
         public Team TeamB { get; set; }
-        public ICollection<MatchSelectedSteamIdentity> MatchSelectedSteamIdentities { get; set; }
+        public virtual ICollection<MatchSelectedSteamIdentity> MatchSelectedSteamIdentities { get; set; }
         public virtual ICollection<MatchRound> MatchRound { get; set; }
         public GameMode GameMode { get; set; }
     }
