@@ -130,24 +130,24 @@ namespace PavlovRconWebserver.Controllers
         }
 
         [HttpGet]
-        public bool SaveServerSelectedMap(int serverId, string mapId)
+        public async Task<bool> SaveServerSelectedMap(int serverId, string mapId)
         {
-            var map = _serverSelectedMapService.FindSelectedMap(serverId, mapId);
+            var map = await _serverSelectedMapService.FindSelectedMap(serverId, mapId);
             if (map != null) return true;
             var NewMap = new ServerSelectedMap()
             {
                 MapId = mapId,
                 RconServerId = serverId
             };
-            _serverSelectedMapService.Insert(NewMap);
+            await _serverSelectedMapService.Insert(NewMap);
             return true;
         }
         [HttpGet]
-        public bool DeleteServerSelectedMap(int serverId, string mapId)
+        public async Task<bool>  DeleteServerSelectedMap(int serverId, string mapId)
         {
-            var map = _serverSelectedMapService.FindSelectedMap(serverId, mapId);
+            var map = await _serverSelectedMapService.FindSelectedMap(serverId, mapId);
             if (map == null) return true;
-            _serverSelectedMapService.Delete(map.Id);
+            await _serverSelectedMapService.Delete(map.Id);
             return true;
         }
         
