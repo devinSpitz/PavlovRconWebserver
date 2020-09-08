@@ -19,7 +19,8 @@ namespace PavlovRconWebserver.Extensions
             var serverSelectedMapService = new ServerSelectedMapService(new LiteDbIdentityContext(connectionString));
             var rconServerSerivce = new RconServerSerivce(new LiteDbIdentityContext(connectionString));
             var rconSerivce = new RconService(serverSelectedMapService,rconServerSerivce);
-            var servers = await rconServerSerivce.FindAll();
+            var pavlovServerService = new PavlovServerService(new LiteDbIdentityContext(connectionString));
+            var servers = await rconServerSerivce.FindAll(pavlovServerService);
             foreach (var server in servers)
             {
                 foreach (var signleServer in server.PavlovServers)

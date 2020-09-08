@@ -19,19 +19,21 @@ namespace PavlovRconWebserver.Controllers
         private readonly ServerSelectedMapService _serverSelectedMapService;
         private readonly RconService _rconService;
         private readonly MapsService _mapsService;
-        public RconServerController(RconServerSerivce service,UserService userService,ServerSelectedMapService serverSelectedMapService,RconService rconService,MapsService mapsService)
+        private readonly PavlovServerService _pavlovServerService;
+        public RconServerController(RconServerSerivce service,UserService userService,ServerSelectedMapService serverSelectedMapService,RconService rconService,MapsService mapsService,PavlovServerService pavlovServerService)
         {
             _service = service;
             _userservice = userService;
             _serverSelectedMapService = serverSelectedMapService;
             _rconService = rconService;
             _mapsService = mapsService;
+            _pavlovServerService = pavlovServerService;
         }
         [HttpGet("[controller]/")]
         public async Task<IActionResult> Index()
         {
             if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
-            return View("Index",await _service.FindAll());
+            return View("Index",await _service.FindAll(_pavlovServerService));
         }
         [HttpGet("[controller]/EditServer/{serverId?}")]
         public async Task<IActionResult> EditServer(int? serverId)

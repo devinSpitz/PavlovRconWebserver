@@ -50,7 +50,8 @@
                     <li><a href="@Url.Action("EditServer", "PavlovServer", new {serverId = 0,rconServerId = rconServer.Id})"><span>&#10133;</span></a></li>
                     @foreach (var pavlovServer in rconServer.PavlovServers)
                     {
-                        <li>@pavlovServer.Name<a href="@Url.Action("EditServer", "PavlovServer", new {serverId = pavlovServer.Id, rconServerId = rconServer.Id})"><span>&#8505;</span></a></li>
+                        <li>
+                            <a href="@Url.Action("DeleteServer","PavlovServer", new {pavlovServer.Id})"><span>&#10060;</span></a>@pavlovServer.Name<a href="@Url.Action("EditServer", "PavlovServer", new {serverId = pavlovServer.Id, rconServerId = rconServer.Id})"><span>&#8505;</span></a></li>
                     }
                 </ul>
             </td>

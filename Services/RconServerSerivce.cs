@@ -17,11 +17,17 @@ namespace PavlovRconWebserver.Services
             _liteDb = liteDbContext;
         }
 
-        public async Task<IEnumerable<RconServer>> FindAll()
+        public async Task<IEnumerable<RconServer>> FindAll(PavlovServerService pavlovServerService)
         {
-            return _liteDb.LiteDatabase.GetCollection<RconServer>("RconServer")
-                .Include(x=>x.PavlovServers)
-                .FindAll();
+            var list =  _liteDb.LiteDatabase.GetCollection<RconServer>("RconServer")
+                .FindAll().ToList();
+            
+            foreach (var rconServer in list)
+            {
+                rconServer.PavlovServers = (await pavlovServerService.FindAllFrom(rconServer.Id)).ToList();
+            }
+
+            return list;
         }
 
         public async Task<RconServer> FindOne(int id)

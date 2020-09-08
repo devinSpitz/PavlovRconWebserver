@@ -86,9 +86,15 @@ namespace PavlovRconWebserver.Controllers
             {
                     return await EditServer(server);
             }
-            
-            return await(new RconServerController(_service,_userservice,_serverSelectedMapService,_rconService,_mapsService).Index());
-        }
 
+            return RedirectToAction("Index","RconServer");
+        }
+        [HttpGet("[controller]/DeleteServer/{id}")]
+        public async Task<IActionResult> DeleteServer(int id)
+        {
+            if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
+            await _pavlovServerService.Delete(id);
+            return RedirectToAction("Index","RconServer");
+        }
     }
 }

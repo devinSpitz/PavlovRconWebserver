@@ -24,7 +24,11 @@ namespace PavlovRconWebserver.Services
                 .FindAll().OrderByDescending(x=>x.Id);
         }
         
-
+        public async Task<IEnumerable<PavlovServer>> FindAllFrom(int rconServerId)
+        {
+            return _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer")
+                .FindAll().Where(x=>x.RconServerId == rconServerId);
+        }
         public async Task<PavlovServer> FindOne(long id)
         {
             return _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer")

@@ -33,7 +33,7 @@ namespace PavlovRconWebserver.Controllers
             if(!await  RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return new UnauthorizedResult();
             RconViewModel viewModel = new RconViewModel();
             viewModel.MultiRcon = true;
-            ViewBag.Servers = await _serverService.FindAll();
+            ViewBag.Servers = await _serverService.FindAll(_pavlovServerService);
             ViewBag.commandsAllow = await RightsHandler.GetAllowCommands(viewModel, HttpContext.User, _userservice);
             return View("/Views/Rcon/Index.cshtml",viewModel);
         }
