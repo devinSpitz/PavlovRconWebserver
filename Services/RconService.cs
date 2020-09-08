@@ -197,7 +197,11 @@ namespace PavlovRconWebserver.Services
 
         private async Task<ConnectionResult> DeleteUnusedMaps(RconServer server, AuthType type)
         {
-            return new ConnectionResult();
+            return new ConnectionResult()
+            {
+                Seccuess = true,
+                answer = "Did nothing"
+            };
             var ConnectionResult = new ConnectionResult();
             var connectionInfo = ConnectionInfo(server, type, out var result);
             using var client = new SshClient(connectionInfo);
