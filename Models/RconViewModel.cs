@@ -138,7 +138,7 @@ namespace PavlovRconWebserver.Models
         }
         
         [DisplayName("Select the server you wanna execute the commands:")]
-        public List<RconServer> RconServer { get; set; }
+        public List<PavlovServer> SingleServer { get; set; }
         public string Command { get; set; }
         public bool MultiRcon = false;
         public List<PlayerModel> Players { get; set; } = new List<PlayerModel>();

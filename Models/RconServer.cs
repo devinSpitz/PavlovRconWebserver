@@ -14,19 +14,10 @@ namespace PavlovRconWebserver.Models
         public string Adress { get; set; }
         [Required]
         public string Name { get; set; }
-
-        [Required]
-        [DisplayName("Rcon port")]
-        public int TelnetPort { get; set; } = 9100;
-
+        
         [DisplayName("SSH port")]
         public int SshPort { get; set; } = 22;
         
-        
-        [DisplayName("Rcon password")]
-        [Display(Description = "Will get converted if not md5 already")]
-        public string Password { get; set; }
-
         [DisplayName("SSH username")]
         public string SshUsername { get; set; } 
         [DisplayName("SSH password")]
@@ -42,10 +33,8 @@ namespace PavlovRconWebserver.Models
         [DisplayName("SSH passphrase")]
         [Display(Description = "CAUTION: WILL BE SAVED BLANK")]
         public string SshPassphrase { get; set; }
-        
-        [DisplayName("Pavlov server path on server")]
-        public string PavlovServerPath { get; set; }
 
+        public ICollection<PavlovServer> PavlovServers { get; set; } = new List<PavlovServer>();
 
         
     }

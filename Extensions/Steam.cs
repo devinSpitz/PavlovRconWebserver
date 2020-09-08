@@ -22,13 +22,16 @@ namespace PavlovRconWebserver.Extensions
             var servers = await rconServerSerivce.FindAll();
             foreach (var server in servers)
             {
-                try
+                foreach (var signleServer in server.PavlovServers)
                 {
-                    await rconSerivce.SendCommand(server, "", true);
-                }
-                catch (Exception e)
-                {
-                    // ingore for now
+                    try
+                    {
+                        await rconSerivce.SendCommand(signleServer, "", true);
+                    }
+                    catch (Exception e)
+                    {
+                        // ingore for now
+                    } 
                 }
             }
         }

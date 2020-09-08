@@ -24,14 +24,14 @@
     }
     </script>
 }
-@Html.LabelFor(x=>x.RconServer)
+@Html.LabelFor(x=>x.SingleServer)
 @if (Model.MultiRcon)
 {
-    @Html.ListBoxFor(m => m.RconServer, new MultiSelectList(server,"Id","Name",Model.RconServer), new { @class = "form-control form-control-sm" })
+    @Html.ListBoxFor(m => m.SingleServer, new MultiSelectList(server,"Id","Name",Model.SingleServer), new { @class = "form-control form-control-sm" })
 }
 else
 {
-    @Html.DropDownListFor(m => m.RconServer, new SelectList(server,"Id","Name",Model.RconServer), new { @class = "form-control form-control-sm" })
+    @Html.DropDownListFor(m => m.SingleServer, new SelectList(server,"Id","Name",Model.SingleServer), new { @class = "form-control form-control-sm" })
 }
 
 <br>

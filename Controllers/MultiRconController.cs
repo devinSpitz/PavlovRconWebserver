@@ -17,12 +17,14 @@ namespace PavlovRconWebserver.Controllers
         private readonly RconService _service;
         private readonly RconServerSerivce _serverService;
         private readonly UserService _userservice;
+        private readonly PavlovServerService _pavlovServerService;
         
-        public MultiRconController(RconService service,RconServerSerivce serverService,UserService userService)
+        public MultiRconController(RconService service,RconServerSerivce serverService,UserService userService,PavlovServerService pavlovServerService)
         {
             _service = service;
             _serverService = serverService;
             _userservice = userService;
+            _pavlovServerService = pavlovServerService;
         }
 
         [HttpGet("[controller]/")]
@@ -48,11 +50,11 @@ namespace PavlovRconWebserver.Controllers
             foreach (var server in servers)
             {
                 var response = "";
-                var rconServer = new RconServer();
+                var singleServer = new PavlovServer();
                 try
                 {
-                    rconServer = await _serverService.FindOne(server);
-                    response = await _service.SendCommand(rconServer, command);
+                    singleServer = await _pavlovServerService.FindOne(server);
+                    response = await _service.SendCommand(singleServer, command);
                 }
                 catch (CommandException e)
                 {
@@ -62,13 +64,13 @@ namespace PavlovRconWebserver.Controllers
 
                 if (String.IsNullOrEmpty(response))
                 {
-                    results.Add("The response from "+rconServer.Adress+" was empty!");
+                    results.Add("The response from "+singleServer.RconServer.Adress+" was empty!");
                     continue;
                 }
 
                 if (command != "ServerInfo")
                 {
-                    response = "\""+rconServer.Name +"\": "+ response;
+                    response = "\""+singleServer.RconServer.Name +"\": "+ response;
                 }
                 results.Add(response);
             };

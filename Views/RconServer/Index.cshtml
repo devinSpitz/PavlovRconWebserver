@@ -22,6 +22,9 @@
     <th>
         Adress    
     </th>
+    <th>
+        Pavlov Server
+    </th>
     </thead>
     <tbody>
     @foreach (var rconServer in Model)
@@ -40,6 +43,16 @@
             </td>
             <td>
                 @rconServer.Adress
+            </td>
+            
+            <td>
+                <ul>
+                    <li><a href="@Url.Action("EditServer", "PavlovServer", new {serverId = 0,rconServerId = rconServer.Id})"><span>&#10133;</span></a></li>
+                    @foreach (var pavlovServer in rconServer.PavlovServers)
+                    {
+                        <li>@pavlovServer.Name<a href="@Url.Action("EditServer", "PavlovServer", new {serverId = pavlovServer.Id, rconServerId = rconServer.Id})"><span>&#8505;</span></a></li>
+                    }
+                </ul>
             </td>
         </tr>
     }
