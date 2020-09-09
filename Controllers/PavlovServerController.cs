@@ -1,6 +1,3 @@
-using System;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using PavlovRconWebserver.Exceptions;
@@ -37,7 +34,7 @@ namespace PavlovRconWebserver.Controllers
             var server = new PavlovServer();
             if (serverId != null && serverId != 0)
             {
-                server = await _pavlovServerService.FindOne(serverId);
+                server = await _pavlovServerService.FindOne(serverId,_service);
             }
             else
             {

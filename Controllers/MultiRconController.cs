@@ -33,7 +33,7 @@ namespace PavlovRconWebserver.Controllers
             if(!await  RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return new UnauthorizedResult();
             RconViewModel viewModel = new RconViewModel();
             viewModel.MultiRcon = true;
-            ViewBag.Servers = await _serverService.FindAll(_pavlovServerService);
+            ViewBag.Servers = await _pavlovServerService.FindAll();
             ViewBag.commandsAllow = await RightsHandler.GetAllowCommands(viewModel, HttpContext.User, _userservice);
             return View("/Views/Rcon/Index.cshtml",viewModel);
         }
@@ -53,7 +53,7 @@ namespace PavlovRconWebserver.Controllers
                 var singleServer = new PavlovServer();
                 try
                 {
-                    singleServer = await _pavlovServerService.FindOne(server);
+                    singleServer = await _pavlovServerService.FindOne(server,_serverService);
                     response = await _service.SendCommand(singleServer, command);
                 }
                 catch (CommandException e)
@@ -84,8 +84,8 @@ namespace PavlovRconWebserver.Controllers
             }
         }
         
-        [HttpPost("[controller]/RconServerInfoPartialView")]
-        public async Task<IActionResult> RconServerInfoPartialView(string[] servers,int[] serverIds)
+        [HttpPost("[controller]/SingleServerInfoPartialView")]
+        public async Task<IActionResult> SingleServerInfoPartialView(string[] servers,int[] serverIds)
         {
             if(!await  RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return new UnauthorizedResult();
             var count = 0;

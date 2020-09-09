@@ -15,9 +15,9 @@ function init(){
         setValueFields(PlayerCommands,TwoValueCommands,false);
     });
 
-    $("#RconServer").change(function(){
+    $("#SingleServer").change(function(){
         let servers = [];
-        $("#RconServer :selected").each(function(){
+        $("#SingleServer :selected").each(function(){
             servers.push($(this).val())
         });
         if(servers.length===1 &&typeof servers[0] !== undefined && servers[0] !== "" && !MultiRcon)
@@ -26,7 +26,7 @@ function init(){
         }
     });
     let servers = [];
-    $("#RconServer :selected").each(function(){
+    $("#SingleServer :selected").each(function(){
         servers.push($(this).val())
     });
     if(servers.length===1 &&typeof servers[0] !== undefined && servers[0] !== "" && !MultiRcon)
@@ -95,7 +95,7 @@ function UpdatePlayers(server){
     $(".overlay").show();
     if(typeof server == "undefined")
     {
-        server  = $("#RconServer").val();
+        server  = $("#SingleServer").val();
     }
     var dropdown = $("#Players");
     dropdown.empty();
@@ -181,7 +181,7 @@ function sendSingleCommand(command)
     $(".overlay").show();
     let data = {};
     let servers = [];
-    $("#RconServer :selected").each(function(){
+    $("#SingleServer :selected").each(function(){
         servers.push($(this).val())
     });
     let controller = "Rcon";
@@ -204,7 +204,11 @@ function sendSingleCommand(command)
             else{
                 if(command==="ServerInfo")
                 {
-                    RconServerInfoPartialView(result,servers);
+                    if(MultiRcon) {
+                        SingleServerInfoPartialView(result,servers);
+                    }else{
+                        SingleServerInfoPartialView(result,servers[0]);
+                    }
                 }
                 else {
                     if(MultiRcon)
@@ -227,7 +231,7 @@ function sendSingleCommand(command)
 
 }
 
-function RconServerInfoPartialView(result,ServerIds)
+function SingleServerInfoPartialView(result,ServerIds)
 {
     let controller = "Rcon";
     let data = {};
@@ -240,7 +244,7 @@ function RconServerInfoPartialView(result,ServerIds)
 
     $.ajax({
         type: 'POST',
-        url: "/"+controller+"/RconServerInfoPartialView",
+        url: "/"+controller+"/SingleServerInfoPartialView",
         data: data,
         success:  function(data)
         {
@@ -278,7 +282,7 @@ function RconChooseMapPartialView()
 {
     var data = {};
     let servers = [];
-    $("#RconServer :selected").each(function(){
+    $("#SingleServer :selected").each(function(){
         servers.push($(this).val())
     });
 

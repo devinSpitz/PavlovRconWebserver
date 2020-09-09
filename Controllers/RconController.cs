@@ -39,7 +39,7 @@ namespace PavlovRconWebserver.Controllers
             if(!await RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return Unauthorized();
             var viewModel = new RconViewModel();
             viewModel.MultiRcon = false;
-            ViewBag.Servers = await _serverService.FindAll(_pavlovServerService);
+            ViewBag.Servers = await _pavlovServerService.FindAll();
             //set allowed Commands
             List<string> allowCommands = new List<string>();
             ViewBag.commandsAllow = await RightsHandler.GetAllowCommands(viewModel, HttpContext.User, _userservice);
@@ -58,7 +58,7 @@ namespace PavlovRconWebserver.Controllers
             var singleServer = new PavlovServer();
             try
             {
-                singleServer = await _pavlovServerService.FindOne(server);
+                singleServer = await _pavlovServerService.FindOne(server,_serverService);
                 response = await _service.SendCommand(singleServer, command);
             }
             catch (CommandException e)
@@ -70,8 +70,8 @@ namespace PavlovRconWebserver.Controllers
             return new ObjectResult(response);
         }
         
-        [HttpPost("[controller]/RconServerInfoPartialView")]
-        public async Task<IActionResult> RconServerInfoPartialView(string server,int serverId)
+        [HttpPost("[controller]/SingleServerInfoPartialView")]
+        public async Task<IActionResult> SingleServerInfoPartialView(string server,int serverId)
         {
             if(!await RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return Unauthorized();
             var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(server);
@@ -144,7 +144,7 @@ namespace PavlovRconWebserver.Controllers
             if(!await RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return Unauthorized();
             if (serverId<=0) return BadRequest("Please choose a server!");
             PlayerListClass playersList = new PlayerListClass();
-            var server = await _pavlovServerService.FindOne(serverId);
+            var server = await _pavlovServerService.FindOne(serverId,_serverService);
             var playersTmp = "";
             try
             {

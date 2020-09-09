@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using LiteDB;
 using LiteDB.Identity.Database;
 using PavlovRconWebserver.Models;
 
@@ -29,10 +28,12 @@ namespace PavlovRconWebserver.Services
             return _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer")
                 .FindAll().Where(x=>x.RconServerId == rconServerId);
         }
-        public async Task<PavlovServer> FindOne(long id)
+        public async Task<PavlovServer> FindOne(long id,RconServerSerivce rconServerSerivce)
         {
-            return _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer")
+            var pavlovServer =  _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer")
                 .Find(x => x.Id == id).FirstOrDefault();
+            pavlovServer.RconServer = await rconServerSerivce.FindOne(pavlovServer.RconServerId);
+            return pavlovServer;
         }
         public async Task<bool> Upsert(PavlovServer pavlovServer,RconService service,RconServerSerivce rconServerSerivce)
         {
