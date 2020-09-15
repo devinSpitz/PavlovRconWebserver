@@ -34,7 +34,7 @@
                     <tbody>
                     @foreach (var identity in @Model.AllSteamIdentities)
                     {
-                        var selectedMap = Model.SelectedSteamIdentities.FirstOrDefault(x => x.SteamIdentityId == identity.Id);
+                        var selectedMap = Model.SelectedSteamIdentities.FirstOrDefault(x => x.SteamIdentity.Id == identity.Id);
                         if (selectedMap != null)
                         {
                             continue; // This map is selected
@@ -92,14 +92,14 @@
                                 {
                                     if (String.IsNullOrEmpty(teamSelectedSteamIdentity.RoleOverwrite))
                                     {
-                                        <a href="@Url.Action("EditTeamSelectedSteamIdentity", "Team", new {teamId = teamSelectedSteamIdentity.TeamId, steamIdentityId = teamSelectedSteamIdentity.SteamIdentityId})"><span>&#9998;</span></a>
+                                        <a href="@Url.Action("EditTeamSelectedSteamIdentity", "Team", new {teamId = teamSelectedSteamIdentity.Team.Id, steamIdentityId = teamSelectedSteamIdentity.SteamIdentity.Id})"><span>&#9998;</span></a>
                                     }
                                     else
                                     {
-                                        <a href="@Url.Action("EditTeamSelectedSteamIdentity", "Team", new {teamId = teamSelectedSteamIdentity.TeamId, steamIdentityId = teamSelectedSteamIdentity.SteamIdentityId,overWriteRole = teamSelectedSteamIdentity.RoleOverwrite})"><span>&#9998;</span></a>
+                                        <a href="@Url.Action("EditTeamSelectedSteamIdentity", "Team", new {teamId = teamSelectedSteamIdentity.Team.Id, steamIdentityId = teamSelectedSteamIdentity.SteamIdentity.Id,overWriteRole = teamSelectedSteamIdentity.RoleOverwrite})"><span>&#9998;</span></a>
                                     }
                                 }
-                                <a href="@Url.Action("DeleteTeamSelectedSteamIdentity", "Team", new {teamId = teamSelectedSteamIdentity.TeamId, steamIdentityId = teamSelectedSteamIdentity.SteamIdentityId})"><span>&#10060;</span></a>
+                                <a href="@Url.Action("DeleteTeamSelectedSteamIdentity", "Team", new {teamId = teamSelectedSteamIdentity.Team.Id, steamIdentityId = teamSelectedSteamIdentity.SteamIdentity.Id})"><span>&#10060;</span></a>
                                                                     
                                </td>
               </tr>

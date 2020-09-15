@@ -204,6 +204,7 @@ function sendSingleCommand(command)
             else{
                 if(command==="ServerInfo")
                 {
+                    debugger;
                     if(MultiRcon) {
                         SingleServerInfoPartialView(result,servers);
                     }else{

@@ -29,7 +29,7 @@ So all maps you choose here will not be removed wile cleaning the cache which ha
             </div>
             @foreach (var map in @Model.AllMaps)
             {
-                var selectedMap = Model.SelectedMaps.FirstOrDefault(x => x.MapId == map.Id);
+                var selectedMap = Model.SelectedMaps.FirstOrDefault(x => x.Map.Id == map.Id);
                 if (selectedMap != null)
                 {
                     continue; // This map is selected
@@ -73,7 +73,7 @@ So all maps you choose here will not be removed wile cleaning the cache which ha
         <div class="panel-body" id="DeletePanelBody">
             @foreach (var map in @Model.SelectedMaps)
             {
-                    map.Map = Model.AllMaps.FirstOrDefault(x => x.Id == map.MapId);
+                    map.Map = Model.AllMaps.FirstOrDefault(x => x.Id == map.Map.Id);
                     if (map.Map == null)
                     {
                         continue; // have to delete the map some when cause its no longer on steam workskhops :(
@@ -81,7 +81,7 @@ So all maps you choose here will not be removed wile cleaning the cache which ha
             <div class="col-xs-6">
                     <div class="panel panel-default" data-Author="@map.Map.Author" data-Name="@map.Map.Name">
                         <div class="panel-heading">
-                            @map.MapId
+                            @map.Map.Id
                         </div>
                         <div class="panel-body">
                             @if (@map.Map.Name?.Length > maxLength)
@@ -93,7 +93,7 @@ So all maps you choose here will not be removed wile cleaning the cache which ha
                                 <b>@map.Map.Name</b>
                             }
                             <br>
-                            <button data-dismiss="modal" onclick="ChangeMap('@map.MapId',this)"><img style="width: 150px;height: 150px" src="@map.Map.ImageUrl"></button>
+                            <button data-dismiss="modal" onclick="ChangeMap('@map.Map.Id',this)"><img style="width: 150px;height: 150px" src="@map.Map.ImageUrl"></button>
                             @if (@map.Map.Author?.Length > maxLength)
                             {
                                 <br><b>by @map.Map.Author.Substring(0, maxLength) ...</b>

@@ -1,0 +1,59 @@
+
+@model Match
+
+@{
+    ViewBag.Title = "Match";
+    Layout = "_Layout";
+
+    var PavlovServers = Model.AllPavlovServers.Select(x=>new
+    {
+        Id = x.Id,
+        Name = x.Name
+    });
+}
+
+<h2>@ViewBag.Title</h2>
+
+<form asp-controller="MatchMaking" asp-action="CreateMatch" method="post">
+    
+<div asp-validation-summary="All" class="text-danger"></div>
+    <div class="col-md-11">
+        <div class="panel panel-default">
+            <div class="panel-heading">Main match settings</div>
+            <div class="panel-body">
+                <input asp-for="Id" class="form-control" value="@Model.Id" type="hidden"/>
+                <span asp-validation-for="Id" class="text-danger"></span>
+                <div class="form-group col-md-9">
+                    <label asp-for="Name"></label>
+                    <input asp-for="Name" class="form-control" value="@Model.Name"/>
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <div class="form-group col-md-3">
+                    <label asp-for="Rounds"></label>
+                    <input asp-for="Rounds" class="form-control" value="@Model.Rounds"/>
+                    <span asp-validation-for="Rounds" class="text-danger"></span>
+                </div>
+                <div class="form-group col-md-9">
+                    <label asp-for="PavlovServer"></label>
+                    @Html.DropDownListFor(m => m.PavlovServer, new SelectList(PavlovServers,"Id","Name",Model.PavlovServer), new { @class = "form-control form-control-sm" })
+                    <span asp-validation-for="GameMode" class="text-danger"></span>
+                </div>
+                <div class="form-group col-md-3">
+                    <label asp-for="GameMode"></label>
+                    <select asp-items="Html.GetEnumSelectList<GameMode>()" class="form-control form-control-sm"></select>
+                    <span asp-validation-for="GameMode" class="text-danger"></span>
+                </div>   
+                
+            </div>
+        </div>
+    </div>
+    <div class="col-md-11">
+        <div class="panel panel-default">
+            <div class="panel-heading">Gamemode specific settings</div>
+            <div class="panel-body" id="GameModeSpecificPanel">
+
+            </div>
+        </div>
+    </div>
+
+</form>

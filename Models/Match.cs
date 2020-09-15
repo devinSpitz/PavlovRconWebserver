@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using LiteDB;
 
 namespace PavlovRconWebserver.Models
 {
@@ -18,14 +20,28 @@ namespace PavlovRconWebserver.Models
     {
         public int Id { get; set; }
         public string Name { get; set; }
+        
         public int Rounds { get; set; }
+        
         public Team TeamA { get; set; }
         public Team TeamB { get; set; }
-        public virtual ICollection<MatchSelectedSteamIdentity> MatchSelectedSteamIdentities { get; set; }
-        public virtual ICollection<MatchRound> MatchRound { get; set; }
+        
+        [BsonIgnore][NotMapped]
+        public List<Team> AllTeams { get; set; }
+        
+        [BsonIgnore][NotMapped]
+        public List<MatchSelectedSteamIdentity> MatchSelectedSteamIdentities { get; set; }
+        
+        [BsonIgnore][NotMapped]
+        public List<MatchRound> MatchRound { get; set; }
+        
         public GameMode GameMode { get; set; }
-        public int RconServerId { get; set; }
-        public virtual RconServer RconServer { get; set; }
+        
+        [BsonRef("RconServer")]
+        public PavlovServer PavlovServer { get; set; }
+        
+        [BsonIgnore][NotMapped]
+        public List<PavlovServer> AllPavlovServers { get; set; }
         public Status Status { get; set; } = Status.Preparing;
     }
 }

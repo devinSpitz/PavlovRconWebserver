@@ -53,8 +53,8 @@ namespace PavlovRconWebserver.Controllers
             {
                 steamIdentityOnTeam = await _teamSelectedSteamIdentityService.FindOne(teamId,steamIdentity.Id);
             }
-            if (steamIdentityOnTeam == null) return false;
             if(await RightsHandler.IsUserAtLeastInRole("Captain", HttpContext.User, _userService))  return true;
+            if (steamIdentityOnTeam == null) return false;
             return await RightsHandler.IsUserAtLeastInTeamRole("Captain", steamIdentityOnTeam.RoleOverwrite);
         }
         
@@ -148,9 +148,9 @@ namespace PavlovRconWebserver.Controllers
             
             if (!await RightsHandler.IsUserAtLeastInRole("Admin", HttpContext.User, _userService)) return Unauthorized();
             var list = (await _steamIdentityService.FindAll()).ToList();
-            foreach (var identity in list.Where(identity => !String.IsNullOrEmpty(identity.LiteDbUserId.ToString())))
+            foreach (var identity in list.Where(identity => !String.IsNullOrEmpty(identity.LiteDbUser.Id.ToString())))
             {
-                identity.LiteDbUser = await _userManager.FindByIdAsync(identity.LiteDbUserId.ToString());
+                identity.LiteDbUser = await _userManager.FindByIdAsync(identity.LiteDbUser.Id.ToString());
             }
             return View("SteamIdentities",list);
         }
@@ -178,6 +178,8 @@ namespace PavlovRconWebserver.Controllers
         [HttpPost("[controller]/SaveSteamIdentity")]
         public async Task<IActionResult> SaveSteamIdentity(SteamIdentity steamIdentity)
         {            
+            
+            steamIdentity.LiteDbUsers = _userService.FindAll().ToList();
             if (steamIdentity.Id == 0 || steamIdentity.Id == null)
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -189,13 +191,10 @@ namespace PavlovRconWebserver.Controllers
                 if (!await RightsHandler.IsUserAtLeastInRole("Admin", HttpContext.User, _userService)) return Unauthorized();
             }
             var newTeam = false;
+                steamIdentity.LiteDbUser = _userService.FindAll().FirstOrDefault(x=>x.Id==new ObjectId(steamIdentity.LiteDbUserId));
+          
             if(!ModelState.IsValid) 
                 return View("SteamIdentity",steamIdentity);
-            StringValues liteDBUserId;
-            var done = this.Request.Form.TryGetValue("LiteDbUserId",out liteDBUserId); // can not autoParse it don't know why 
-            if(done)
-                steamIdentity.LiteDbUserId = new ObjectId(liteDBUserId);
-            
             if (steamIdentity.Id == 0 || steamIdentity.Id == null)
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -307,19 +306,7 @@ namespace PavlovRconWebserver.Controllers
             var viewModel = new TeamSelectedSteamIdentitiesViewModel();
             viewModel.TeamId = teamId;
             viewModel.SelectedSteamIdentities = (await _teamSelectedSteamIdentityService.FindAllFrom(teamId)).ToList();
-            foreach (var selectedSteamIdentity in viewModel.SelectedSteamIdentities)
-            {
-                selectedSteamIdentity.SteamIdentity = await _steamIdentityService.FindOne(selectedSteamIdentity.SteamIdentityId);
-                var userId = selectedSteamIdentity.SteamIdentity.LiteDbUserId.ToString();
-                if(userId!="")
-                    selectedSteamIdentity.SteamIdentity.LiteDbUser = await _userManager.FindByIdAsync(userId);
-                selectedSteamIdentity.Team = await _teamService.FindOne(selectedSteamIdentity.TeamId);
-            }
             viewModel.AllSteamIdentities = (await _steamIdentityService.FindAll()).ToList();
-            foreach (var steamIdentity in viewModel.AllSteamIdentities)
-            {
-                steamIdentity.LiteDbUser = _userManager.Users.FirstOrDefault(x=>x.Id == steamIdentity.LiteDbUserId);
-            }
             return View("TeamSteamIdentitys",viewModel);
         }
         
@@ -356,7 +343,7 @@ namespace PavlovRconWebserver.Controllers
 
             identity.RoleOverwrite = updateOverwriteRoleOfTeamSelectedSteamIdentityViewModel.overWriteRole;
             await _teamSelectedSteamIdentityService.Update(identity);
-            return await EditTeamSelectedSteamIdentities(identity.TeamId);
+            return await EditTeamSelectedSteamIdentities(identity.Team.Id);
         }
         
         [HttpGet]
@@ -376,8 +363,8 @@ namespace PavlovRconWebserver.Controllers
             if (identity != null) return new ObjectResult(true);
             var newIdentity = new TeamSelectedSteamIdentity()
             {
-                TeamId = teamId,
-                SteamIdentityId = steamIdentityId
+                Team = await _teamService.FindOne(teamId),
+                SteamIdentity = await _steamIdentityService.FindOne(steamIdentityId)
             };
             await _teamSelectedSteamIdentityService.Insert(newIdentity);
             return new ObjectResult(true);

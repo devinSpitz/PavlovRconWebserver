@@ -58,7 +58,7 @@ namespace PavlovRconWebserver.Controllers
             var singleServer = new PavlovServer();
             try
             {
-                singleServer = await _pavlovServerService.FindOne(server,_serverService);
+                singleServer = await _pavlovServerService.FindOne(server);
                 response = await _service.SendCommand(singleServer, command);
             }
             catch (CommandException e)
@@ -75,7 +75,7 @@ namespace PavlovRconWebserver.Controllers
         {
             if(!await RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return Unauthorized();
             var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(server);
-            tmp.Name = (await _serverService.FindOne(serverId)).Name;
+            tmp.Name = (await _pavlovServerService.FindOne(serverId)).Name;
             return PartialView("RconServerInfoPartialView", tmp);
         }
         
@@ -103,7 +103,7 @@ namespace PavlovRconWebserver.Controllers
                
                     foreach (var map in listOfMaps)
                     {
-                        if (mapsSelected.FirstOrDefault(x => x.MapId == map.Id) != null)
+                        if (mapsSelected.FirstOrDefault(x => x.Map.Id == map.Id) != null)
                         {
                             map.sort = 1;
                         }
@@ -144,7 +144,7 @@ namespace PavlovRconWebserver.Controllers
             if(!await RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return Unauthorized();
             if (serverId<=0) return BadRequest("Please choose a server!");
             PlayerListClass playersList = new PlayerListClass();
-            var server = await _pavlovServerService.FindOne(serverId,_serverService);
+            var server = await _pavlovServerService.FindOne(serverId);
             var playersTmp = "";
             try
             {

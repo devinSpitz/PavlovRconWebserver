@@ -19,20 +19,19 @@ namespace PavlovRconWebserver.Services
 
         public async Task<IEnumerable<PavlovServer>> FindAll()
         {
-            return _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer")
+            return _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer").Include(x=>x.RconServer)
                 .FindAll().OrderByDescending(x=>x.Id);
         }
         
-        public async Task<IEnumerable<PavlovServer>> FindAllFrom(int rconServerId)
+        public List<PavlovServer> FindAllFrom(int rconServerId)
         {
-            return _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer")
-                .FindAll().Where(x=>x.RconServerId == rconServerId);
+            return _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer").Include(x=>x.RconServer)
+                .Find(x=>x.RconServer.Id==rconServerId).ToList();
         }
-        public async Task<PavlovServer> FindOne(long id,RconServerSerivce rconServerSerivce)
+        public async Task<PavlovServer> FindOne(long id)
         {
-            var pavlovServer =  _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer")
+            var pavlovServer =  _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer").Include(x=>x.RconServer)
                 .Find(x => x.Id == id).FirstOrDefault();
-            pavlovServer.RconServer = await rconServerSerivce.FindOne(pavlovServer.RconServerId);
             return pavlovServer;
         }
         public async Task<bool> Upsert(PavlovServer pavlovServer,RconService service,RconServerSerivce rconServerSerivce)

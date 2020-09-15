@@ -1,6 +1,8 @@
 ﻿
 using Hangfire;
 using Hangfire.MemoryStorage;
+using LiteDB;
+using LiteDB.Identity.Database;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -11,6 +13,7 @@ using LiteDB.Identity.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi.Models;
 using PavlovRconWebserver.Extensions;
+using PavlovRconWebserver.Models;
 
 namespace PavlovRconWebserver
 {
@@ -18,7 +21,7 @@ namespace PavlovRconWebserver
    {
       public Startup(IConfiguration configuration) => Configuration = configuration;
 
-      public IConfiguration Configuration { get; }
+      private IConfiguration Configuration { get; }
 
       // This method gets called by the runtime. Use this method to add services to the container.
       public void ConfigureServices(IServiceCollection services)
@@ -38,6 +41,8 @@ namespace PavlovRconWebserver
          services.AddTransient<TeamSelectedSteamIdentityService>();
          services.AddTransient<MatchService>();
          services.AddTransient<PavlovServerService>();
+         
+         
          // Add application services.
          services.AddTransient<IEmailSender, EmailSender>();
          services.AddSwaggerGen(c =>

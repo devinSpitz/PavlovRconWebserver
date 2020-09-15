@@ -21,6 +21,7 @@ namespace PavlovRconWebserver.Services
         public async Task<IEnumerable<SteamIdentity>> FindAll()
         {
             return _liteDb.LiteDatabase.GetCollection<SteamIdentity>("SteamIdentity")
+                .Include(x=>x.LiteDbUser)
                 .FindAll().OrderByDescending(x=>x.Id);
         }
         
@@ -28,12 +29,14 @@ namespace PavlovRconWebserver.Services
         public async Task<SteamIdentity> FindOne(long id)
         {
             return _liteDb.LiteDatabase.GetCollection<SteamIdentity>("SteamIdentity")
+                .Include(x=>x.LiteDbUser)
                 .Find(x => x.Id == id).FirstOrDefault();
         }
         public async Task<SteamIdentity> FindOne(ObjectId liteDbUserId)
         {
             return _liteDb.LiteDatabase.GetCollection<SteamIdentity>("SteamIdentity")
-                .Find(x => x.LiteDbUserId == liteDbUserId).FirstOrDefault();
+                .Include(x=>x.LiteDbUser)
+                .Find(x => x.LiteDbUser.Id == liteDbUserId).FirstOrDefault();
         }
         public async Task<bool> Upsert(SteamIdentity steamIdentity)
         {

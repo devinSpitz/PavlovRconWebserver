@@ -33,7 +33,7 @@ namespace PavlovRconWebserver.Controllers
         public async Task<IActionResult> Index()
         {
             if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
-            return View("Index",await _service.FindAll(_pavlovServerService));
+            return View("Index",await _service.FindAll());
         }
         [HttpGet("[controller]/EditServer/{serverId?}")]
         public async Task<IActionResult> EditServer(int? serverId)
@@ -138,8 +138,8 @@ namespace PavlovRconWebserver.Controllers
             if (map != null) return true;
             var NewMap = new ServerSelectedMap()
             {
-                MapId = mapId,
-                RconServerId = serverId
+                Map = await _mapsService.FindOne(mapId),
+                RconServer = await _service.FindOne(serverId)
             };
             await _serverSelectedMapService.Insert(NewMap);
             return true;

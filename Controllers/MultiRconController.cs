@@ -53,7 +53,7 @@ namespace PavlovRconWebserver.Controllers
                 var singleServer = new PavlovServer();
                 try
                 {
-                    singleServer = await _pavlovServerService.FindOne(server,_serverService);
+                    singleServer = await _pavlovServerService.FindOne(server);
                     response = await _service.SendCommand(singleServer, command);
                 }
                 catch (CommandException e)

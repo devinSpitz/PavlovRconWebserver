@@ -32,26 +32,26 @@ namespace PavlovRconWebserver.Controllers
         {
             if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
             var server = new PavlovServer();
-            if (serverId != null && serverId != 0)
+            if (serverId != 0)
             {
-                server = await _pavlovServerService.FindOne(serverId,_service);
+                server = await _pavlovServerService.FindOne(serverId);
             }
-            else
-            {
-                server.RconServerId = rconServerId;
-            }
-            return View("Server",server);
+
+            PavlovServerViewModel viewModel = new PavlovServerViewModel();
+            viewModel = viewModel.fromPavlovServer(server,rconServerId);
+            
+            return View("Server",viewModel);
         }
 
         [HttpPost]
-        public async Task<IActionResult> EditServer(PavlovServer server)
+        public async Task<IActionResult> EditServer(PavlovServerViewModel server)
         {
             if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
             return View("Server",server);
         }
         
         [HttpPost("[controller]/SaveServer")]
-        public async Task<IActionResult> SaveServer(PavlovServer server)
+        public async Task<IActionResult> SaveServer(PavlovServerViewModel server)
         {
             var newServer = false;
             if(!ModelState.IsValid) 
@@ -59,8 +59,8 @@ namespace PavlovRconWebserver.Controllers
             if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
             try
             {
-                server.RconServer = await _service.FindOne(server.RconServerId);
-                await _pavlovServerService.Upsert(server, _rconService, _service);
+                server.RconServer = await _service.FindOne(server.rconServerId);
+                await _pavlovServerService.Upsert(server.toPavlovServer(server), _rconService, _service);
             }
             catch (SaveServerException e)
             {

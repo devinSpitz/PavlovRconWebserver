@@ -31,9 +31,9 @@ namespace PavlovRconWebserver.Services
             PrivateKeyPassphrase
         }
 
-        private async Task<ConnectionResult> SShTunnel(PavlovServer server, AuthType type, string command)
+        private async Task<ConnectionResult> SShTunnel(PavlovServer server, AuthType type, string command,RconServer rconServer)
         {
-            var connectionInfo = ConnectionInfo(server, type, out var result);
+            var connectionInfo = ConnectionInfo(server, type, out var result,rconServer);
             var guid = Guid.NewGuid();
             var tmpFolderRemote = "/tmp/pavlovNetcatRconWebServer/";
             var pavlovLocalScriptPath = "Temp/pavlovNetcatRconWebServerScript" + guid + ".sh";
@@ -165,7 +165,7 @@ namespace PavlovRconWebserver.Services
             return result;
         }
 
-        private static ConnectionInfo ConnectionInfo(PavlovServer server, AuthType type, out ConnectionResult result)
+        private static ConnectionInfo ConnectionInfo(PavlovServer server, AuthType type, out ConnectionResult result,RconServer rconServer)
         {
             ConnectionInfo connectionInfo = null;
 
@@ -173,21 +173,21 @@ namespace PavlovRconWebserver.Services
             //auth
             if (type == AuthType.PrivateKey)
             {
-                var keyFiles = new[] {new PrivateKeyFile("KeyFiles/" + server.RconServer.SshKeyFileName)};
-                connectionInfo = new ConnectionInfo(server.RconServer.Adress, server.RconServer.SshUsername,
-                    new PrivateKeyAuthenticationMethod(server.RconServer.SshUsername, keyFiles));
+                var keyFiles = new[] {new PrivateKeyFile("KeyFiles/" + rconServer.SshKeyFileName)};
+                connectionInfo = new ConnectionInfo(rconServer.Adress, rconServer.SshUsername,
+                    new PrivateKeyAuthenticationMethod(rconServer.SshUsername, keyFiles));
             }
             else if (type == AuthType.UserPass)
             {
-                connectionInfo = new ConnectionInfo(server.RconServer.Adress, server.RconServer.SshUsername,
-                    new PasswordAuthenticationMethod(server.RconServer.SshUsername, server.RconServer.SshPassword));
+                connectionInfo = new ConnectionInfo(rconServer.Adress, rconServer.SshUsername,
+                    new PasswordAuthenticationMethod(rconServer.SshUsername, rconServer.SshPassword));
             }
             else if (type == AuthType.PrivateKeyPassphrase)
             {
-                var keyFiles = new[] {new PrivateKeyFile("KeyFiles/" + server.RconServer.SshKeyFileName, server.RconServer.SshPassphrase)};
-                connectionInfo = new ConnectionInfo(server.RconServer.Adress, server.RconServer.SshUsername,
-                    new PasswordAuthenticationMethod(server.RconServer.SshUsername, server.RconServer.SshPassphrase),
-                    new PrivateKeyAuthenticationMethod(server.RconServer.SshUsername, keyFiles));
+                var keyFiles = new[] {new PrivateKeyFile("KeyFiles/" + rconServer.SshKeyFileName, rconServer.SshPassphrase)};
+                connectionInfo = new ConnectionInfo(rconServer.Adress, rconServer.SshUsername,
+                    new PasswordAuthenticationMethod(rconServer.SshUsername, rconServer.SshPassphrase),
+                    new PrivateKeyAuthenticationMethod(rconServer.SshUsername, keyFiles));
             }
 
             return connectionInfo;
@@ -201,58 +201,58 @@ namespace PavlovRconWebserver.Services
                 Seccuess = true,
                 answer = "Did nothing"
             };
-            var ConnectionResult = new ConnectionResult();
-            var connectionInfo = ConnectionInfo(server, type, out var result);
-            using var client = new SshClient(connectionInfo);
-            client.Connect();
-            //check if first scripts exist
-            using var sftp = new SftpClient(connectionInfo);
-            try
-            {
-                sftp.Connect();
-                //Delete old maps in tmp folder
-                //
-                var Maps = sftp.ListDirectory("/tmp/workshop/"+server+"/content/555160");
-                var ToDeleteMaps = new List<string>();
-                foreach (var map in Maps)
-                {
-                    if (!map.IsDirectory) continue;
-                    if (_serverSelectedMapService.FindSelectedMap(server.RconServer.Id, map.Name) == null) // map is on the selectet list
-                    {
-                        continue; // map is selected
-                    }
-
-                    // Check if map is running
-                    var isRunningAnswerCommand = client.CreateCommand("lsof +D " + map.FullName);
-                    isRunningAnswerCommand.CommandTimeout = TimeSpan.FromMilliseconds(500);
-                    var isRunningAnswer = isRunningAnswerCommand.Execute();
-                    if (isRunningAnswer.Contains("COMMAND") && isRunningAnswer.Contains("USER")
-                    ) // map is running on the server
-                    {
-                        continue; // map is in use
-                    }
-
-                    // Delete map do not handy error right know
-                    var deleteMapCommand = client.CreateCommand("rm -rf " + map.FullName);
-                    deleteMapCommand.CommandTimeout = TimeSpan.FromMilliseconds(500);
-                    var deleteMapsCommandResponse = deleteMapCommand.Execute();
-                    if (deleteMapsCommandResponse.Contains("remove write-protected") ||
-                        deleteMapsCommandResponse.Contains("Permission denied"))
-                    {
-                        throw new CommandException("Do not have rights do delete map!");
-                    }
-                    
-
-                }
-
-            }
-            finally
-            {
-                sftp.Disconnect();
-            }
-
-            ConnectionResult.Seccuess = true;
-            return ConnectionResult;
+            // var ConnectionResult = new ConnectionResult();
+            // var connectionInfo = ConnectionInfo(server, type, out var result);
+            // using var client = new SshClient(connectionInfo);
+            // client.Connect();
+            // //check if first scripts exist
+            // using var sftp = new SftpClient(connectionInfo);
+            // try
+            // {
+            //     sftp.Connect();
+            //     //Delete old maps in tmp folder
+            //     //
+            //     var Maps = sftp.ListDirectory("/tmp/workshop/"+server+"/content/555160");
+            //     var ToDeleteMaps = new List<string>();
+            //     foreach (var map in Maps)
+            //     {
+            //         if (!map.IsDirectory) continue;
+            //         if (_serverSelectedMapService.FindSelectedMap(rconServer.Id, map.Name) == null) // map is on the selectet list
+            //         {
+            //             continue; // map is selected
+            //         }
+            //
+            //         // Check if map is running
+            //         var isRunningAnswerCommand = client.CreateCommand("lsof +D " + map.FullName);
+            //         isRunningAnswerCommand.CommandTimeout = TimeSpan.FromMilliseconds(500);
+            //         var isRunningAnswer = isRunningAnswerCommand.Execute();
+            //         if (isRunningAnswer.Contains("COMMAND") && isRunningAnswer.Contains("USER")
+            //         ) // map is running on the server
+            //         {
+            //             continue; // map is in use
+            //         }
+            //
+            //         // Delete map do not handy error right know
+            //         var deleteMapCommand = client.CreateCommand("rm -rf " + map.FullName);
+            //         deleteMapCommand.CommandTimeout = TimeSpan.FromMilliseconds(500);
+            //         var deleteMapsCommandResponse = deleteMapCommand.Execute();
+            //         if (deleteMapsCommandResponse.Contains("remove write-protected") ||
+            //             deleteMapsCommandResponse.Contains("Permission denied"))
+            //         {
+            //             throw new CommandException("Do not have rights do delete map!");
+            //         }
+            //         
+            //
+            //     }
+            //
+            // }
+            // finally
+            // {
+            //     sftp.Disconnect();
+            // }
+            //
+            // ConnectionResult.Seccuess = true;
+            // return ConnectionResult;
         }
 
         //Use every type of auth as a backupway to get the result
@@ -266,21 +266,21 @@ namespace PavlovRconWebserver.Services
                 !string.IsNullOrEmpty(server.RconServer.SshUsername))
             {
                 if (deleteUnusedMaps) connectionResult = await DeleteUnusedMaps(server, AuthType.PrivateKeyPassphrase);
-                else connectionResult = await SShTunnel(server, AuthType.PrivateKeyPassphrase, command);
+                else connectionResult = await SShTunnel(server, AuthType.PrivateKeyPassphrase, command,server.RconServer);
             }
 
             if (!connectionResult.Seccuess && !string.IsNullOrEmpty(server.RconServer.SshKeyFileName) &&
                 File.Exists("KeyFiles/" + server.RconServer.SshKeyFileName) && !string.IsNullOrEmpty(server.RconServer.SshUsername))
             {
                 if (deleteUnusedMaps) connectionResult = await DeleteUnusedMaps(server, AuthType.PrivateKey);
-                else connectionResult = await SShTunnel(server, AuthType.PrivateKey, command);
+                else connectionResult = await SShTunnel(server, AuthType.PrivateKey, command,server.RconServer);
             }
 
             if (!connectionResult.Seccuess && !string.IsNullOrEmpty(server.RconServer.SshUsername) &&
                 !string.IsNullOrEmpty(server.RconServer.SshPassword))
             {
                 if (deleteUnusedMaps) connectionResult = await DeleteUnusedMaps(server, AuthType.UserPass);
-                else connectionResult = await SShTunnel(server, AuthType.UserPass, command);
+                else connectionResult = await SShTunnel(server, AuthType.UserPass, command,server.RconServer);
             }
 
             if (!connectionResult.Seccuess)

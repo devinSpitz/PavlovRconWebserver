@@ -17,17 +17,17 @@ namespace PavlovRconWebserver.Extensions
         public static async Task DeleteAllUnsedMapsFromAllServers(string connectionString)
         {
             var serverSelectedMapService = new ServerSelectedMapService(new LiteDbIdentityContext(connectionString));
-            var rconServerSerivce = new RconServerSerivce(new LiteDbIdentityContext(connectionString));
-            var rconSerivce = new RconService(serverSelectedMapService,rconServerSerivce);
             var pavlovServerService = new PavlovServerService(new LiteDbIdentityContext(connectionString));
-            var servers = await rconServerSerivce.FindAll(pavlovServerService);
+            var rconServerSerivce = new RconServerSerivce(new LiteDbIdentityContext(connectionString),pavlovServerService);
+            var rconSerivce = new RconService(serverSelectedMapService,rconServerSerivce);
+            var servers = await rconServerSerivce.FindAll();
             foreach (var server in servers)
             {
                 foreach (var signleServer in server.PavlovServers)
                 {
                     try
                     {
-                        await rconSerivce.SendCommand(signleServer, "", true);
+                        await rconSerivce.SendCommand(signleServer, "" ,true);
                     }
                     catch (Exception e)
                     {

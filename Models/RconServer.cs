@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using LiteDB;
 
 namespace PavlovRconWebserver.Models
 {
@@ -27,15 +28,17 @@ namespace PavlovRconWebserver.Models
         [DisplayName("SSH key filename")]
         [Display(Description = "Select a filename")]
         public string SshKeyFileName { get; set; }
-        [NotMapped]
+        [NotMapped][BsonIgnore]
         public List<string> SshKeyFileNames { get; set; } = new List<string>();
         
         [DisplayName("SSH passphrase")]
         [Display(Description = "CAUTION: WILL BE SAVED BLANK")]
         public string SshPassphrase { get; set; }
 
-        public ICollection<PavlovServer> PavlovServers { get; set; } = new List<PavlovServer>();
+        [NotMapped][BsonIgnore]
+        public List<PavlovServer> PavlovServers { get; set; }
 
-        
+
     }
+    
 }

@@ -18,13 +18,15 @@ namespace PavlovRconWebserver.Models
         
         [DisplayName("SteamName")]
         public string Name { get; set; }
-        
-        [DisplayName("Linked user (for rights)")]
-        public ObjectId LiteDbUserId { get; set; }
-        
+
+        [BsonRef("LiteDbUser")]
         public virtual LiteDbUser LiteDbUser { get; set; }
         
-        [NotMapped]
-        public ICollection<LiteDbUser> LiteDbUsers { get; set; }
+        
+        [NotMapped][BsonIgnore]
+        public string LiteDbUserId { get; set; }
+        
+        [NotMapped][BsonIgnore]
+        public List<LiteDbUser> LiteDbUsers { get; set; }
     }
 }

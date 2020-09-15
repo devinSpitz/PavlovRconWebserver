@@ -12,74 +12,81 @@ namespace PavlovRconWebserver.Services
     public class RconServerSerivce
     {
         private ILiteDbIdentityContext _liteDb;
-        public RconServerSerivce(ILiteDbIdentityContext liteDbContext)
+        private PavlovServerService _pavlovServer;
+        public RconServerSerivce(ILiteDbIdentityContext liteDbContext,PavlovServerService pavlovServerService)
         {
             _liteDb = liteDbContext;
+            _pavlovServer = pavlovServerService;
         }
 
-        public async Task<IEnumerable<RconServer>> FindAll(PavlovServerService pavlovServerService)
+        public async Task<IEnumerable<RconServer>> FindAll()
         {
             var list =  _liteDb.LiteDatabase.GetCollection<RconServer>("RconServer")
-                .FindAll().ToList();
-            
-            foreach (var rconServer in list)
-            {
-                rconServer.PavlovServers = (await pavlovServerService.FindAllFrom(rconServer.Id)).ToList();
-            }
-
+                .FindAll().Select(x=>
+                {
+                    x.PavlovServers = _pavlovServer.FindAllFrom(x.Id);
+                    return x;
+                }).ToList();
             return list;
         }
 
         public async Task<RconServer> FindOne(int id)
         {
             return _liteDb.LiteDatabase.GetCollection<RconServer>("RconServer")
-                .Find(x => x.Id == id).FirstOrDefault();
+                .Find(x => x.Id == id).Select(x=>
+                {
+                    x.PavlovServers = _pavlovServer.FindAllFrom(x.Id);
+                    return x;
+                }).FirstOrDefault();
         }
 
         public async Task<int> Insert(RconServer rconServer,RconService service)
         {
-
-            foreach (var singleServer in rconServer.PavlovServers)
-            {
-                
-                await validateRconServer(singleServer,service);
-            }
+            if(rconServer.PavlovServers != null)
+                foreach (var singleServer in rconServer.PavlovServers)
+                {
+                    await validateRconServer(singleServer,service);
+                }
             
             
             return _liteDb.LiteDatabase.GetCollection<RconServer>("RconServer")
                 .Insert(rconServer);
         }
 
-        public async Task validateRconServer(PavlovServer rconServer,RconService rconService)
+        public async Task validateRconServer(PavlovServer pavlovServer,RconService rconService)
         {
-
-            if (!RconHelper.IsMD5(rconServer.TelnetPassword))
+            if (String.IsNullOrEmpty(pavlovServer.TelnetPassword)&&pavlovServer.Id!=0)
             {
-                if (String.IsNullOrEmpty(rconServer.TelnetPassword))
+                pavlovServer.TelnetPassword = (await _pavlovServer.FindOne(pavlovServer.Id)).TelnetPassword;
+            }
+            if (!RconHelper.IsMD5(pavlovServer.TelnetPassword))
+            {
+                if (String.IsNullOrEmpty(pavlovServer.TelnetPassword))
                 {
-                    throw new SaveServerException("Password","The telnet password is required!");
+                    throw new SaveServerException("Password", "The telnet password is required!");
                 }
-                rconServer.TelnetPassword = RconHelper.CreateMD5(rconServer.TelnetPassword);
+
+                pavlovServer.TelnetPassword = RconHelper.CreateMD5(pavlovServer.TelnetPassword);
             }
 
-            if (rconServer.RconServer.SshPort<=0)
+            if (pavlovServer.RconServer.SshPort<=0)
             {
                 throw new SaveServerException("SshPort","You need a SSH port!");
             }
 
-            if (String.IsNullOrEmpty(rconServer.RconServer.SshUsername))
+            if (String.IsNullOrEmpty(pavlovServer.RconServer.SshUsername))
             {
                 throw new SaveServerException("SshUsername","You need a username!");
             }
             
-            if (String.IsNullOrEmpty(rconServer.RconServer.SshPassword)&&String.IsNullOrEmpty(rconServer.RconServer.SshKeyFileName))
+            if (String.IsNullOrEmpty(pavlovServer.RconServer.SshPassword)&&String.IsNullOrEmpty(pavlovServer.RconServer.SshKeyFileName))
             {
                 throw new SaveServerException("SshPassword","You need at least a password or a key file!");
             }
             //try to send Command ServerInfo
             try
             {
-                var response = await rconService.SendCommand(rconServer, "ServerInfo");
+                var response = await rconService.SendCommand(pavlovServer, "ServerInfo");
             }
             catch (CommandException e)
             {
@@ -88,7 +95,7 @@ namespace PavlovRconWebserver.Services
             //try if the user have rights to delete maps cache
             try
             {
-                await rconService.SendCommand(rconServer, "", true);
+                await rconService.SendCommand(pavlovServer, "",true);
             }
             catch (CommandException e)
             {
