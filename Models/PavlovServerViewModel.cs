@@ -4,9 +4,9 @@ namespace PavlovRconWebserver.Models
 {
     public class PavlovServerViewModel: PavlovServer
     {
-        public int rconServerId { get; set; }
+        public int sshServerId { get; set; }
 
-        public PavlovServerViewModel fromPavlovServer(PavlovServer pavlovServer,int rconServerId)
+        public PavlovServerViewModel fromPavlovServer(PavlovServer pavlovServer,int sshServerId)
         {
             return new PavlovServerViewModel()
             {
@@ -14,9 +14,10 @@ namespace PavlovRconWebserver.Models
                 Name = pavlovServer.Name,
                 ServerFolderPath = pavlovServer.ServerFolderPath,
                 ServerPort = pavlovServer.ServerPort,
+                ServerType = pavlovServer.ServerType,
                 TelnetPassword = pavlovServer.TelnetPassword,
                 TelnetPort = pavlovServer.TelnetPort,
-                rconServerId = rconServerId
+                sshServerId = sshServerId
             };
         }
         
@@ -27,7 +28,8 @@ namespace PavlovRconWebserver.Models
                 Id = viewModel.Id,
                 Name = viewModel.Name,
                 ServerFolderPath = viewModel.ServerFolderPath,
-                RconServer = viewModel.RconServer,
+                SshServer = viewModel.SshServer,
+                ServerType = viewModel.ServerType,
                 ServerPort = viewModel.ServerPort,
                 TelnetPassword = viewModel.TelnetPassword,
                 TelnetPort = viewModel.TelnetPort,

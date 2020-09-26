@@ -16,12 +16,12 @@ namespace PavlovRconWebserver.Services
     {
 
         private readonly ServerSelectedMapService _serverSelectedMapService;
-        private readonly RconServerSerivce _rconServerSerivce;
+        private readonly SshServerSerivce _sshServerSerivce;
         
-        public RconService(ServerSelectedMapService serverSelectedMapService,RconServerSerivce rconServerSerivce)
+        public RconService(ServerSelectedMapService serverSelectedMapService,SshServerSerivce sshServerSerivce)
         {
             _serverSelectedMapService = serverSelectedMapService;
-            _rconServerSerivce = rconServerSerivce;
+            _sshServerSerivce = sshServerSerivce;
         }
 
         public enum AuthType
@@ -31,9 +31,9 @@ namespace PavlovRconWebserver.Services
             PrivateKeyPassphrase
         }
 
-        private async Task<ConnectionResult> SShTunnel(PavlovServer server, AuthType type, string command,RconServer rconServer)
+        private async Task<ConnectionResult> SShTunnel(PavlovServer server, AuthType type, string command,SshServer sshServer)
         {
-            var connectionInfo = ConnectionInfo(server, type, out var result,rconServer);
+            var connectionInfo = ConnectionInfo(server, type, out var result,sshServer);
             var guid = Guid.NewGuid();
             var tmpFolderRemote = "/tmp/pavlovNetcatRconWebServer/";
             var pavlovLocalScriptPath = "Temp/pavlovNetcatRconWebServerScript" + guid + ".sh";
@@ -165,7 +165,7 @@ namespace PavlovRconWebserver.Services
             return result;
         }
 
-        private static ConnectionInfo ConnectionInfo(PavlovServer server, AuthType type, out ConnectionResult result,RconServer rconServer)
+        private static ConnectionInfo ConnectionInfo(PavlovServer server, AuthType type, out ConnectionResult result,SshServer sshServer)
         {
             ConnectionInfo connectionInfo = null;
 
@@ -173,21 +173,21 @@ namespace PavlovRconWebserver.Services
             //auth
             if (type == AuthType.PrivateKey)
             {
-                var keyFiles = new[] {new PrivateKeyFile("KeyFiles/" + rconServer.SshKeyFileName)};
-                connectionInfo = new ConnectionInfo(rconServer.Adress, rconServer.SshUsername,
-                    new PrivateKeyAuthenticationMethod(rconServer.SshUsername, keyFiles));
+                var keyFiles = new[] {new PrivateKeyFile("KeyFiles/" + sshServer.SshKeyFileName)};
+                connectionInfo = new ConnectionInfo(sshServer.Adress, sshServer.SshUsername,
+                    new PrivateKeyAuthenticationMethod(sshServer.SshUsername, keyFiles));
             }
             else if (type == AuthType.UserPass)
             {
-                connectionInfo = new ConnectionInfo(rconServer.Adress, rconServer.SshUsername,
-                    new PasswordAuthenticationMethod(rconServer.SshUsername, rconServer.SshPassword));
+                connectionInfo = new ConnectionInfo(sshServer.Adress, sshServer.SshUsername,
+                    new PasswordAuthenticationMethod(sshServer.SshUsername, sshServer.SshPassword));
             }
             else if (type == AuthType.PrivateKeyPassphrase)
             {
-                var keyFiles = new[] {new PrivateKeyFile("KeyFiles/" + rconServer.SshKeyFileName, rconServer.SshPassphrase)};
-                connectionInfo = new ConnectionInfo(rconServer.Adress, rconServer.SshUsername,
-                    new PasswordAuthenticationMethod(rconServer.SshUsername, rconServer.SshPassphrase),
-                    new PrivateKeyAuthenticationMethod(rconServer.SshUsername, keyFiles));
+                var keyFiles = new[] {new PrivateKeyFile("KeyFiles/" + sshServer.SshKeyFileName, sshServer.SshPassphrase)};
+                connectionInfo = new ConnectionInfo(sshServer.Adress, sshServer.SshUsername,
+                    new PasswordAuthenticationMethod(sshServer.SshUsername, sshServer.SshPassphrase),
+                    new PrivateKeyAuthenticationMethod(sshServer.SshUsername, keyFiles));
             }
 
             return connectionInfo;
@@ -261,26 +261,26 @@ namespace PavlovRconWebserver.Services
         {
             var connectionResult = new ConnectionResult();
             
-            if (!string.IsNullOrEmpty(server.RconServer.SshPassphrase) &&
-                !string.IsNullOrEmpty(server.RconServer.SshKeyFileName) && File.Exists("KeyFiles/" + server.RconServer.SshKeyFileName) &&
-                !string.IsNullOrEmpty(server.RconServer.SshUsername))
+            if (!string.IsNullOrEmpty(server.SshServer.SshPassphrase) &&
+                !string.IsNullOrEmpty(server.SshServer.SshKeyFileName) && File.Exists("KeyFiles/" + server.SshServer.SshKeyFileName) &&
+                !string.IsNullOrEmpty(server.SshServer.SshUsername))
             {
                 if (deleteUnusedMaps) connectionResult = await DeleteUnusedMaps(server, AuthType.PrivateKeyPassphrase);
-                else connectionResult = await SShTunnel(server, AuthType.PrivateKeyPassphrase, command,server.RconServer);
+                else connectionResult = await SShTunnel(server, AuthType.PrivateKeyPassphrase, command,server.SshServer);
             }
 
-            if (!connectionResult.Seccuess && !string.IsNullOrEmpty(server.RconServer.SshKeyFileName) &&
-                File.Exists("KeyFiles/" + server.RconServer.SshKeyFileName) && !string.IsNullOrEmpty(server.RconServer.SshUsername))
+            if (!connectionResult.Seccuess && !string.IsNullOrEmpty(server.SshServer.SshKeyFileName) &&
+                File.Exists("KeyFiles/" + server.SshServer.SshKeyFileName) && !string.IsNullOrEmpty(server.SshServer.SshUsername))
             {
                 if (deleteUnusedMaps) connectionResult = await DeleteUnusedMaps(server, AuthType.PrivateKey);
-                else connectionResult = await SShTunnel(server, AuthType.PrivateKey, command,server.RconServer);
+                else connectionResult = await SShTunnel(server, AuthType.PrivateKey, command,server.SshServer);
             }
 
-            if (!connectionResult.Seccuess && !string.IsNullOrEmpty(server.RconServer.SshUsername) &&
-                !string.IsNullOrEmpty(server.RconServer.SshPassword))
+            if (!connectionResult.Seccuess && !string.IsNullOrEmpty(server.SshServer.SshUsername) &&
+                !string.IsNullOrEmpty(server.SshServer.SshPassword))
             {
                 if (deleteUnusedMaps) connectionResult = await DeleteUnusedMaps(server, AuthType.UserPass);
-                else connectionResult = await SShTunnel(server, AuthType.UserPass, command,server.RconServer);
+                else connectionResult = await SShTunnel(server, AuthType.UserPass, command,server.SshServer);
             }
 
             if (!connectionResult.Seccuess)

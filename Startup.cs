@@ -31,7 +31,7 @@ namespace PavlovRconWebserver
          services.AddLiteDBIdentity(connectionString).AddDefaultTokenProviders();
          // Add LiteDB Dependency. Thare are three ways to set database:
          // 1. By default it uses the first connection string on appsettings.json, ConnectionStrings section.
-         services.AddTransient<RconServerSerivce>();
+         services.AddTransient<SshServerSerivce>();
          services.AddTransient<UserService>();
          services.AddTransient<RconService>();
          services.AddTransient<ServerSelectedMapService>();

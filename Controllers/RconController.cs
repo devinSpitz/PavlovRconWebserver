@@ -16,13 +16,13 @@ namespace PavlovRconWebserver.Controllers
     public class RconController : Controller
     {
         private readonly RconService _service;
-        private readonly RconServerSerivce _serverService;
+        private readonly SshServerSerivce _serverService;
         private readonly UserService _userservice;
         private readonly ServerSelectedMapService _serverSelectedMapService;
         private readonly MapsService _mapsService;
         private readonly PavlovServerService _pavlovServerService;
         
-        public RconController(RconService service,RconServerSerivce serverService,UserService userService,ServerSelectedMapService serverSelectedMapService,MapsService mapsService,PavlovServerService pavlovServerService)
+        public RconController(RconService service,SshServerSerivce serverService,UserService userService,ServerSelectedMapService serverSelectedMapService,MapsService mapsService,PavlovServerService pavlovServerService)
         {
             _service = service;
             _serverService = serverService;
@@ -76,18 +76,18 @@ namespace PavlovRconWebserver.Controllers
             if(!await RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return Unauthorized();
             var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(server);
             tmp.Name = (await _pavlovServerService.FindOne(serverId)).Name;
-            return PartialView("RconServerInfoPartialView", tmp);
+            return PartialView("PavlovServerInfoPartialView", tmp);
         }
         
         [HttpPost("[controller]/RconChooseItemPartialView")]
         public async Task<IActionResult> RconChooseItemPartialView()
         {
             if(!await RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return Unauthorized();
-            return PartialView("RconChooseItemPartialView");
+            return PartialView("PavlovChooseItemPartialView");
         }
         
-        [HttpPost("[controller]/RconChooseMapPartialView")]
-        public async Task<IActionResult> RconChooseMapPartialView(int? serverId)
+        [HttpPost("[controller]/PavlovChooseMapPartialView")]
+        public async Task<IActionResult> PavlovChooseMapPartialView(int? serverId)
         {
             //onMutliRcon do not handle the selected maps
             if(!await RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return Unauthorized();
@@ -112,7 +112,7 @@ namespace PavlovRconWebserver.Controllers
                 }
                 
             }
-            return PartialView("~/Views/Rcon/RconChooseMapPartialView.cshtml",listOfMaps);
+            return PartialView("~/Views/Rcon/PavlovChooseMapPartialView.cshtml",listOfMaps);
         }
 
 

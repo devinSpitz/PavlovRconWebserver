@@ -8,14 +8,14 @@ namespace PavlovRconWebserver.Controllers
 {
     public class PavlovServerController : Controller
     {
-        private readonly RconServerSerivce _service;
+        private readonly SshServerSerivce _service;
         private readonly RconService _rconService;
         private readonly UserService _userservice;
         private readonly PavlovServerService _pavlovServerService;        
         private readonly MapsService _mapsService;
         private readonly ServerSelectedMapService _serverSelectedMapService;
         
-        public PavlovServerController(RconServerSerivce service,UserService userService,PavlovServerService pavlovServerService,RconService rconService,ServerSelectedMapService serverSelectedMapService,MapsService mapsService)
+        public PavlovServerController(SshServerSerivce service,UserService userService,PavlovServerService pavlovServerService,RconService rconService,ServerSelectedMapService serverSelectedMapService,MapsService mapsService)
         {
             _service = service;
             _userservice = userService;
@@ -27,8 +27,8 @@ namespace PavlovRconWebserver.Controllers
         }
         
         
-        [HttpGet("[controller]/EditServer/{serverId}/{rconServerId}")]
-        public async Task<IActionResult> EditServer(int serverId,int rconServerId)
+        [HttpGet("[controller]/EditServer/{serverId}/{sshServerId}")]
+        public async Task<IActionResult> EditServer(int serverId,int sshServerId)
         {
             if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
             var server = new PavlovServer();
@@ -38,7 +38,7 @@ namespace PavlovRconWebserver.Controllers
             }
 
             PavlovServerViewModel viewModel = new PavlovServerViewModel();
-            viewModel = viewModel.fromPavlovServer(server,rconServerId);
+            viewModel = viewModel.fromPavlovServer(server,sshServerId);
             
             return View("Server",viewModel);
         }
@@ -59,7 +59,7 @@ namespace PavlovRconWebserver.Controllers
             if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
             try
             {
-                server.RconServer = await _service.FindOne(server.rconServerId);
+                server.SshServer = await _service.FindOne(server.sshServerId);
                 await _pavlovServerService.Upsert(server.toPavlovServer(server), _rconService, _service);
             }
             catch (SaveServerException e)
@@ -84,14 +84,14 @@ namespace PavlovRconWebserver.Controllers
                     return await EditServer(server);
             }
 
-            return RedirectToAction("Index","RconServer");
+            return RedirectToAction("Index","SshServer");
         }
         [HttpGet("[controller]/DeleteServer/{id}")]
         public async Task<IActionResult> DeleteServer(int id)
         {
             if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
             await _pavlovServerService.Delete(id);
-            return RedirectToAction("Index","RconServer");
+            return RedirectToAction("Index","SshServer");
         }
     }
 }

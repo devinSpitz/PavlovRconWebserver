@@ -22,6 +22,7 @@ namespace PavlovRconWebserver.Models
         public string Name { get; set; }
         
         public int Rounds { get; set; }
+        public Map Map { get; set; }
         
         public Team TeamA { get; set; }
         public Team TeamB { get; set; }
@@ -37,7 +38,7 @@ namespace PavlovRconWebserver.Models
         
         public GameMode GameMode { get; set; }
         
-        [BsonRef("RconServer")]
+        [BsonRef("PavlovServer")]
         public PavlovServer PavlovServer { get; set; }
         
         [BsonIgnore][NotMapped]

@@ -1,5 +1,5 @@
 
-@model RconServer
+@model SshServer
 
 @{
     ViewBag.Title = "Add/Update rcon server";
@@ -15,7 +15,7 @@
 
 <h2>@ViewBag.Title</h2>
 
-<form asp-controller="RconServer" asp-action="SaveServer" method="post">
+<form asp-controller="SshServer" asp-action="SaveServer" method="post">
     <div asp-validation-summary="All" class="text-danger"></div>
     <div class="col-md-11">
         <div class="panel panel-default">

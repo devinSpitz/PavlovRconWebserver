@@ -33,8 +33,8 @@ namespace PavlovRconWebserver.Models
         [Required]
         public ServerType ServerType { get; set; }
         
-        [BsonRef("RconServer")]
-        public RconServer RconServer { get; set; }
+        [BsonRef("SshServer")]
+        public SshServer SshServer { get; set; }
 
     }
 }

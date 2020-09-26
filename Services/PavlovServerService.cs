@@ -19,25 +19,25 @@ namespace PavlovRconWebserver.Services
 
         public async Task<IEnumerable<PavlovServer>> FindAll()
         {
-            return _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer").Include(x=>x.RconServer)
+            return _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer").Include(x=>x.SshServer)
                 .FindAll().OrderByDescending(x=>x.Id);
         }
         
-        public List<PavlovServer> FindAllFrom(int rconServerId)
+        public List<PavlovServer> FindAllFrom(int sshServerId)
         {
-            return _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer").Include(x=>x.RconServer)
-                .Find(x=>x.RconServer.Id==rconServerId).ToList();
+            return _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer").Include(x=>x.SshServer)
+                .Find(x=>x.SshServer.Id==sshServerId).ToList();
         }
         public async Task<PavlovServer> FindOne(long id)
         {
-            var pavlovServer =  _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer").Include(x=>x.RconServer)
+            var pavlovServer =  _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer").Include(x=>x.SshServer)
                 .Find(x => x.Id == id).FirstOrDefault();
             return pavlovServer;
         }
-        public async Task<bool> Upsert(PavlovServer pavlovServer,RconService service,RconServerSerivce rconServerSerivce)
+        public async Task<bool> Upsert(PavlovServer pavlovServer,RconService service,SshServerSerivce sshServerSerivce)
         {
             
-            await rconServerSerivce.validateRconServer(pavlovServer,service);
+            await sshServerSerivce.validateSshServer(pavlovServer,service);
             return _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer")
                 .Upsert(pavlovServer);
         }

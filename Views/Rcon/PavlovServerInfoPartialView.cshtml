@@ -1,4 +1,4 @@
-@model List<ServerInfoViewModel>
+@model ServerInfoViewModel
 
 <!-- Modal -->
 <div class="modal fade" id="add-contact" tabindex="-1" role="dialog" aria-labelledby="addContactLabel" aria-hidden="true">
@@ -11,9 +11,8 @@
                 </button>
             </div>
             <div class="modal-body">
-                @foreach (var server in Model)
-                {
-                        await Html.RenderPartialAsync("/Views/Rcon/RconServerInfoSinglePartialView.cshtml", server);
+                @{
+                    await Html.RenderPartialAsync("/Views/Rcon/PavlovServerInfoSinglePartialView.cshtml", Model);
                 }
                 <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
             </div>

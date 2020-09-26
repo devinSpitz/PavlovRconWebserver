@@ -14,14 +14,14 @@ namespace PavlovRconWebserver.Controllers
     public class MatchMakingController : Controller
     {
         private readonly RconService _service;
-        private readonly RconServerSerivce _serverService;
+        private readonly SshServerSerivce _serverService;
         private readonly UserService _userservice;
         private readonly ServerSelectedMapService _serverSelectedMapService;
         private readonly MapsService _mapsService;
         private readonly MatchService _matchService;
         private readonly PavlovServerService _pavlovServerService;
         private readonly TeamService _teamService;
-        public MatchMakingController(RconService service,RconServerSerivce serverService,UserService userService,ServerSelectedMapService serverSelectedMapService,MapsService mapsService,MatchService matchService,PavlovServerService pavlovServerService,TeamService teamService)
+        public MatchMakingController(RconService service,SshServerSerivce serverService,UserService userService,ServerSelectedMapService serverSelectedMapService,MapsService mapsService,MatchService matchService,PavlovServerService pavlovServerService,TeamService teamService)
         {
             _service = service;
             _serverService = serverService;

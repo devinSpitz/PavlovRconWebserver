@@ -20,23 +20,23 @@ namespace PavlovRconWebserver.Services
         {
             return _liteDb.LiteDatabase.GetCollection<ServerSelectedMap>("ServerSelectedMap")
                 .Include(x=>x.Map)
-                .Include(x=>x.RconServer)
+                .Include(x=>x.PavlovServer)
                 .FindAll();
         }
 
-        public async Task<IEnumerable<ServerSelectedMap>> FindAllFrom(RconServer rconServer)
+        public async Task<IEnumerable<ServerSelectedMap>> FindAllFrom(SshServer sshServer)
         {
             return _liteDb.LiteDatabase.GetCollection<ServerSelectedMap>("ServerSelectedMap")
                 .Include(x=>x.Map)
-                .Include(x=>x.RconServer)
-                .Find(x=>x.RconServer.Id == rconServer.Id);
+                .Include(x=>x.PavlovServer)
+                .Find(x=>x.PavlovServer.Id == sshServer.Id);
         }
         
         public async Task<IEnumerable<ServerSelectedMap>> FindAllFrom(Map map)
         {
             return _liteDb.LiteDatabase.GetCollection<ServerSelectedMap>("ServerSelectedMap")
                 .Include(x=>x.Map)
-                .Include(x=>x.RconServer)
+                .Include(x=>x.PavlovServer)
                 .Find(x=>x.Map.Id == map.Id);
         }
 
@@ -48,8 +48,8 @@ namespace PavlovRconWebserver.Services
 
         public async Task<ServerSelectedMap> FindSelectedMap(int serverId,string mapId )
         {
-            return _liteDb.LiteDatabase.GetCollection<ServerSelectedMap>("ServerSelectedMap").Include(x=>x.Map).Include(x=>x.RconServer)
-                .Find(x => x.Map.Id == mapId && x.RconServer.Id == serverId).FirstOrDefault();
+            return _liteDb.LiteDatabase.GetCollection<ServerSelectedMap>("ServerSelectedMap").Include(x=>x.Map).Include(x=>x.PavlovServer)
+                .Find(x => x.Map.Id == mapId && x.PavlovServer.Id == serverId).FirstOrDefault();
         }
         
         public async Task<int> Insert(ServerSelectedMap serverSelectedMap)

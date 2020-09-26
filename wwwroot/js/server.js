@@ -24,7 +24,7 @@ function callApi(method,serverId,mapId,object)
 {
     $.ajax({
         type: 'GET',
-        url: "/RconServer/"+method+"ServerSelectedMap",
+        url: "/SshServer/"+method+"ServerSelectedMap",
         data: { serverId: serverId, mapId: mapId  },
         success:  function(data)
         {

@@ -12,15 +12,15 @@ using PavlovRconWebserver.Services;
 namespace PavlovRconWebserver.Controllers
 {
     [Authorize]
-    public class RconServerController : Controller
+    public class SshServerController : Controller
     {
-        private readonly RconServerSerivce _service;
+        private readonly SshServerSerivce _service;
         private readonly UserService _userservice;
         private readonly ServerSelectedMapService _serverSelectedMapService;
         private readonly RconService _rconService;
         private readonly MapsService _mapsService;
         private readonly PavlovServerService _pavlovServerService;
-        public RconServerController(RconServerSerivce service,UserService userService,ServerSelectedMapService serverSelectedMapService,RconService rconService,MapsService mapsService,PavlovServerService pavlovServerService)
+        public SshServerController(SshServerSerivce service,UserService userService,ServerSelectedMapService serverSelectedMapService,RconService rconService,MapsService mapsService,PavlovServerService pavlovServerService)
         {
             _service = service;
             _userservice = userService;
@@ -39,7 +39,7 @@ namespace PavlovRconWebserver.Controllers
         public async Task<IActionResult> EditServer(int? serverId)
         {
             if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
-            var server = new RconServer();
+            var server = new SshServer();
             if (serverId != null && serverId != 0)
             {
                 server = await _service.FindOne((int)serverId);
@@ -58,7 +58,7 @@ namespace PavlovRconWebserver.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> EditServer(RconServer server)
+        public async Task<IActionResult> EditServer(SshServer server)
         {
             if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
             try
@@ -74,7 +74,7 @@ namespace PavlovRconWebserver.Controllers
         }
         
         [HttpPost("[controller]/SaveServer")]
-        public async Task<IActionResult> SaveServer(RconServer server)
+        public async Task<IActionResult> SaveServer(SshServer server)
         {
             var newServer = false;
             if(!ModelState.IsValid) 
@@ -139,7 +139,7 @@ namespace PavlovRconWebserver.Controllers
             var NewMap = new ServerSelectedMap()
             {
                 Map = await _mapsService.FindOne(mapId),
-                RconServer = await _service.FindOne(serverId)
+                PavlovServer = await _pavlovServerService.FindOne(serverId)
             };
             await _serverSelectedMapService.Insert(NewMap);
             return true;

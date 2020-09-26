@@ -19,8 +19,8 @@
 
     <input asp-for="Id" class="form-control" value="@Model.Id" type="hidden"/>
     <span asp-validation-for="Id" class="text-danger"></span>  
-        <input asp-for="rconServerId" class="form-control" value="@Model.rconServerId" type="hidden"/>
-        <span asp-validation-for="rconServerId" class="text-danger"></span>  
+        <input asp-for="sshServerId" class="form-control" value="@Model.sshServerId" type="hidden"/>
+        <span asp-validation-for="sshServerId" class="text-danger"></span>  
     
     <div class="form-group col-md-12">
                     <label asp-for="Name"></label>
@@ -43,14 +43,14 @@
         
     <div class="form-group col-md-3">
         <label asp-for="ServerType"></label>
-        <select asp-items="Html.GetEnumSelectList<ServerType>()" class="form-control form-control-sm"></select>
+        <select asp-for="ServerType" asp-items="Html.GetEnumSelectList<ServerType>()" class="form-control form-control-sm"></select>
         <span asp-validation-for="ServerType" class="text-danger"></span>
     </div>
-                <div class="form-group col-md-6">
-                    <label asp-for="ServerPort"></label>
-                    <input asp-for="ServerPort" class="form-control" value="@Model.ServerPort"/>
-                    <span asp-validation-for="ServerPort" class="text-danger"></span>
-                </div>
+    <div class="form-group col-md-6">
+        <label asp-for="ServerPort"></label>
+        <input asp-for="ServerPort" class="form-control" value="@Model.ServerPort"/>
+        <span asp-validation-for="ServerPort" class="text-danger"></span>
+    </div>
     <div class="form-group col-md-6">
         <label asp-for="ServerFolderPath"></label>
         <input asp-for="ServerFolderPath" class="form-control" value="@Model.ServerFolderPath"/>

@@ -6,7 +6,7 @@ using LiteDB;
 
 namespace PavlovRconWebserver.Models
 {
-    public class RconServer
+    public class SshServer
     {
         public int Id { get; set; }
         [Required]

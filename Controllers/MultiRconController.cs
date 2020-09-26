@@ -15,11 +15,11 @@ namespace PavlovRconWebserver.Controllers
     public class MultiRconController : Controller
     {
         private readonly RconService _service;
-        private readonly RconServerSerivce _serverService;
+        private readonly SshServerSerivce _serverService;
         private readonly UserService _userservice;
         private readonly PavlovServerService _pavlovServerService;
         
-        public MultiRconController(RconService service,RconServerSerivce serverService,UserService userService,PavlovServerService pavlovServerService)
+        public MultiRconController(RconService service,SshServerSerivce serverService,UserService userService,PavlovServerService pavlovServerService)
         {
             _service = service;
             _serverService = serverService;
@@ -64,13 +64,13 @@ namespace PavlovRconWebserver.Controllers
 
                 if (String.IsNullOrEmpty(response))
                 {
-                    results.Add("The response from "+singleServer.RconServer.Adress+" was empty!");
+                    results.Add("The response from "+singleServer.SshServer.Adress+" was empty!");
                     continue;
                 }
 
                 if (command != "ServerInfo")
                 {
-                    response = "\""+singleServer.RconServer.Name +"\": "+ response;
+                    response = "\""+singleServer.SshServer.Name +"\": "+ response;
                 }
                 results.Add(response);
             };
@@ -93,13 +93,13 @@ namespace PavlovRconWebserver.Controllers
             foreach (var server in servers)
             {
                 var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(server);
-                var rconServer = await _serverService.FindOne(serverIds[count]);
-                tmp.Name = rconServer.Name;
+                var sshServer = await _serverService.FindOne(serverIds[count]);
+                tmp.Name = sshServer.Name;
                 serverList.Add(tmp);
                 
                 count++;
             }
-            return PartialView("/Views/Rcon/RconServerInfoMultiPartialView.cshtml", serverList);
+            return PartialView("/Views/Rcon/SshServerInfoMultiPartialView.cshtml", serverList);
         }
 
     }
