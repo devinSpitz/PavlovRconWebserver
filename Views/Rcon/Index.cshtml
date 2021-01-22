@@ -59,9 +59,24 @@ else
             </div>
         </div>
         
-            @*// Buttons*@
+        @*// Buttons*@
     </div>
 </div>
+
+
+@* PlayerList *@
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            Player List 
+            <button type="button" class="btn btn-success btn-group" onclick="UpdatePlayerList()">Update</button>
+        </div>
+        <div class="panel-body" id="PlayerListBig">
+            @* Gets autopopulated *@
+            
+        </div>
+    </div>
+     
+
 @if (!Model.MultiRcon && playerCommands.Count > 0)
 {
    

@@ -158,12 +158,45 @@ namespace PavlovRconWebserver.Models
     public class PlayerListClass
     {
         public List<PlayerModel> PlayerList { get; set; }
+        public List<PlayerModelExtended> PlayerListExtended { get; set; } = new List<PlayerModelExtended>();
     }
     public class PlayerModel
     {
         public string Username { get; set; }
         public string UniqueId { get; set; }
     }
+
+    public class PlayerModelExtendedRconModel
+    {
+        public PlayerModelExtended PlayerInfo = new PlayerModelExtended();
+    }
+    public class PlayerModelExtended : PlayerModel
+    {
+        public string KDA = "";
+        public string Cash = "";
+        public int TeamId = 0;
+
+        public string getKills()
+        {
+            var tmp = KDA.Split("/");
+            if (tmp.Length != 3) return "0";
+            return tmp[0];
+        }
+        public string getDeaths()
+        {
+            var tmp = KDA.Split("/");
+            if (tmp.Length != 3) return "0";
+            return tmp[1];
+        }
+        public string getAssists()
+        {
+            var tmp = KDA.Split("/");;
+            if (tmp.Length != 3) return "0";
+            return tmp[2];
+        }
+        
+    }
+    
     public class Command
     {
         public string Name { get; set; }

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
@@ -174,18 +173,18 @@ namespace PavlovRconWebserver.Services
             if (type == AuthType.PrivateKey)
             {
                 var keyFiles = new[] {new PrivateKeyFile("KeyFiles/" + sshServer.SshKeyFileName)};
-                connectionInfo = new ConnectionInfo(sshServer.Adress, sshServer.SshUsername,
+                connectionInfo = new ConnectionInfo(sshServer.Adress,sshServer.SshPort, sshServer.SshUsername,
                     new PrivateKeyAuthenticationMethod(sshServer.SshUsername, keyFiles));
             }
             else if (type == AuthType.UserPass)
             {
-                connectionInfo = new ConnectionInfo(sshServer.Adress, sshServer.SshUsername,
+                connectionInfo = new ConnectionInfo(sshServer.Adress,sshServer.SshPort, sshServer.SshUsername,
                     new PasswordAuthenticationMethod(sshServer.SshUsername, sshServer.SshPassword));
             }
             else if (type == AuthType.PrivateKeyPassphrase)
             {
                 var keyFiles = new[] {new PrivateKeyFile("KeyFiles/" + sshServer.SshKeyFileName, sshServer.SshPassphrase)};
-                connectionInfo = new ConnectionInfo(sshServer.Adress, sshServer.SshUsername,
+                connectionInfo = new ConnectionInfo(sshServer.Adress,sshServer.SshPort, sshServer.SshUsername,
                     new PasswordAuthenticationMethod(sshServer.SshUsername, sshServer.SshPassphrase),
                     new PrivateKeyAuthenticationMethod(sshServer.SshUsername, keyFiles));
             }

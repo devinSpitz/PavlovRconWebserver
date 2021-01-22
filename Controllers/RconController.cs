@@ -159,6 +159,36 @@ namespace PavlovRconWebserver.Controllers
         }
         
         
+        [HttpPost("[controller]/GetTeamList")]
+        public async Task<IActionResult> GetTeamList(int serverId)
+        {
+            
+            if(!await RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return Unauthorized();
+            if (serverId<=0) return BadRequest("Please choose a server!");
+            var server = await _pavlovServerService.FindOne(serverId);
+            var playersTmp = "";
+            var extendetList = new List<PlayerModelExtended>();
+            PlayerListClass playersList = new PlayerListClass();
+            try
+            {
+                playersTmp = await _service.SendCommand(server, "RefreshList");
+            }
+            catch (CommandException e)
+            {
+                return BadRequest(e.Message);
+            }
+            playersList = JsonConvert.DeserializeObject<PlayerListClass>(playersTmp);
+            foreach (var player in playersList.PlayerList)
+            {
+                var playerInfo = await _service.SendCommand(server, "InspectPlayer " + player.UniqueId);
+                var singlePlayer = JsonConvert.DeserializeObject<PlayerModelExtendedRconModel>(playerInfo);
+                singlePlayer.PlayerInfo.Username = player.Username;
+                extendetList.Add(singlePlayer.PlayerInfo);
+            }
+            return PartialView("/Views/Rcon/PlayerList.cshtml",extendetList);
+        }
+
+        
 
     }
 

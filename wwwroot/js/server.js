@@ -50,7 +50,6 @@ function callApi(method,serverId,mapId,object)
 function search(searchInput,attr)
 {
     $( ".mapPanel" ).each(function( index ) {
-        debugger;
         if($(this).attr(attr).toLowerCase().indexOf(searchInput)>=0)
         {
             $(this).parent().show();

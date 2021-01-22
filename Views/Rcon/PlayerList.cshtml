@@ -1,0 +1,50 @@
+@model List<PlayerModelExtended>
+
+<style>
+    .Blue{
+        background-color: #2b669a;
+    }
+    
+    .Red{
+        background-color: #f98787;
+    }
+</style>
+
+@{
+    var hasTwoTeams = Model.GroupBy(x => x.TeamId).Count()==2;
+    var tableHeaer = "<thead><tr><th>Name</th><th>Kills</th><th>Deaths</th><th>Assits</th><th>Cash</th><th>SteamId</th></tr></thead>";
+}
+
+@if (hasTwoTeams)
+{
+    <div class="row  col-xs-6">
+        <table class="table table-responsive table-bordered bg-primary ">
+            @Html.Raw(tableHeaer)
+            @foreach (var player in Model.Where(x => x.TeamId == 0))
+            {
+                @await Html.PartialAsync("PlayerSingle",player)
+            }
+            
+        </table>
+    </div>
+    <div class="row col-xs-5">
+        <table class="table table-responsive table-bordered Red  ">
+            @Html.Raw(tableHeaer)
+            @foreach (var player in Model.Where(x => x.TeamId == 1))
+            {
+                @await Html.PartialAsync("PlayerSingle",player)
+            }
+        </table>
+    </div>
+}
+else
+{
+    <table class="table table-striped table-responsive col-xs-12">
+        @Html.Raw(tableHeaer)
+        @foreach (var player in Model.Where(x => x.TeamId == 0))
+        {
+            @await Html.PartialAsync("PlayerSingle",player)
+        }
+        
+    </table>
+}

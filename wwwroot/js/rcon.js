@@ -106,15 +106,14 @@ function UpdatePlayers(server){
         data: { serverId: server },
         success:  function(data)
         { 
-            $(data).each(function (){
-                if($(this.playerList).length<=0)
-                {
-                    dropdown.append($("<option />").val("-").text("--There are no players--"));
-                }
-                $(this.playerList).each(function (){
-                    dropdown.append($("<option />").val(this.uniqueId).text(this.username));
-                });
+            if($(data.playerList).length<=0)
+            {
+                dropdown.append($("<option />").val("-").text("--There are no players--"));
+            }
+            $(data.playerList).each(function (){
+                dropdown.append($("<option />").val(this.uniqueId).text(this.username));
             });
+
             $(".overlay").hide();
         },
         error: function(XMLHttpRequest, textStatus, errorThrown)
@@ -124,6 +123,42 @@ function UpdatePlayers(server){
                 jsonTOHtmlPartialView(JSON.stringify(XMLHttpRequest.responseText));
             }else{
                 alert('Could not update players!');
+            }
+
+            $(".overlay").hide();
+        }
+    });
+
+
+}
+
+
+function UpdatePlayerList(serv){
+
+    $(".overlay").show();
+    if(typeof server == "undefined")
+    {
+        server  = $("#SingleServer").val();
+    }
+    var PlayerListBig = $("#PlayerListBig");
+    PlayerListBig.html("");
+    //foreach Player
+    $.ajax({
+        type: 'POST',
+        url: "/Rcon/GetTeamList",
+        data: { serverId: server },
+        success:  function(data)
+        {
+            PlayerListBig.html(data);
+            $(".overlay").hide();
+        },
+        error: function(XMLHttpRequest, textStatus, errorThrown)
+        {
+            if(typeof XMLHttpRequest.status !== "undefined" && XMLHttpRequest.status===400&&typeof XMLHttpRequest.responseText !== "undefined" && XMLHttpRequest.responseText !== "")
+            {
+                jsonTOHtmlPartialView(JSON.stringify(XMLHttpRequest.responseText));
+            }else{
+                alert('Could not update players list!');
             }
 
             $(".overlay").hide();
@@ -204,7 +239,6 @@ function sendSingleCommand(command)
             else{
                 if(command==="ServerInfo")
                 {
-                    debugger;
                     if(MultiRcon) {
                         SingleServerInfoPartialView(result,servers);
                     }else{
