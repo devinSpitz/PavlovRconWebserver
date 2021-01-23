@@ -327,7 +327,7 @@ function RconChooseMapPartialView()
     $(".overlay").show();
     $.ajax({
         type: 'POST',
-        url: "/Rcon/RconChooseMapPartialView",
+        url: "/Rcon/PavlovChooseMapPartialView",
         data : data,
         success:  function(data)
         {

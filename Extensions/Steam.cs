@@ -122,16 +122,16 @@ namespace PavlovRconWebserver.Extensions
 
             foreach (var tmpMap in tmpRconMaps)
             {
-               mapsService.Upsert(tmpMap);
+               await mapsService.Upsert(tmpMap);
             }
-
+            //Delete Maps in the database which are not in steam anymore!
             foreach (var map in await mapsService.FindAll())
             {
                 var tmp = tmpRconMaps.FirstOrDefault(x => x.Id == map.Id);
                 var isNumeric = int.TryParse( map.Id, out _);
                 if (tmp == null&&isNumeric)
                 {
-                    mapsService.Delete(tmp.Id);
+                    await mapsService.Delete(map.Id);
                     // i should my here delete them from the serverSelectedMaps as well
                 }
             }
