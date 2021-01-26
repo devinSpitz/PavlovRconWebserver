@@ -1,5 +1,6 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using LiteDB.Identity.Models
+@using PavlovRconWebserver.Extensions
 @inject SignInManager<LiteDbUser> SignInManager
 @inject UserManager<LiteDbUser> UserManager
 <!DOCTYPE html>
@@ -21,6 +22,7 @@
     </environment>
 </head>
 <body>
+
 <nav class="navbar navbar-inverse navbar-fixed-top">
     <div class="container">
         <div class="navbar-header">
@@ -38,21 +40,48 @@
                 {
                     if((await UserManager.IsInRoleAsync(await UserManager.GetUserAsync(User),"Admin")))
                     {
-                        <li>
-                            <a asp-area="" asp-controller="User" asp-action="Index">Users</a>
+                        <li class="dropdown">
+                            <a class="dropdown-toggle" data-toggle="dropdown" href="#">User Management<span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a asp-area="" asp-controller="User" asp-action="Index">Users</a>
+                                </li>
+                                <li>
+                                    <a asp-area="" asp-controller="Role" asp-action="Index">Roles</a>
+                                </li>
+                            </ul>
                         </li>
                         <li>
-                            <a asp-area="" asp-controller="Role" asp-action="Index">Roles</a>
-                        </li>
-                        <li>
-                            <a asp-area="" asp-controller="RconServer" asp-action="Index">Servers</a>
+                            <a asp-area="" asp-controller="SshServer" asp-action="Index">Servers</a>
                         </li>
                     }
-                    <li>
-                        <a asp-area="" asp-controller="Rcon" asp-action="Index">Commands</a>
+                    <li class="dropdown">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">Commands<span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a asp-area="" asp-controller="Rcon" asp-action="Index">Commands</a>
+                            </li>
+                            <li>
+                                <a asp-area="" asp-controller="MultiRcon" asp-action="Index">Multi Commands</a>
+                            </li>
+                        </ul>
                     </li>
-                    <li>
-                        <a asp-area="" asp-controller="MultiRcon" asp-action="Index">Multi Commands</a>
+                    <li class="dropdown">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">Matchmaking (WIP)<span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a asp-area="" asp-controller="Team" asp-action="Index">Teams</a>
+                            </li>
+                            @if((await UserManager.IsInRoleAsync(await UserManager.GetUserAsync(User),"Admin")))
+                            {
+                                <li>
+                                    <a asp-area="" asp-controller="Team" asp-action="SteamIdentitiesIndex">Steam Identities</a>
+                                </li>
+                                <li>
+                                    <a asp-area="" asp-controller="MatchMaking" asp-action="Index">Matches</a>
+                                </li>
+                            }
+                        </ul>
                     </li>
                 }
             </ul>
@@ -61,14 +90,51 @@
     </div>
 </nav>
 <div class="container body-content">
+    <div class="overlay">
+        <div id="loadingDiv">
+        </div>
+    </div>
+    
+    
+<div id="modal-placeholder"></div>
     @RenderBody()
     <footer class="col-md-12">
-        
-    <hr/>
+
+        <hr/>
         <p>Pavlov Rcon Webserver</p>
     </footer>
 </div>
 
+<style>
+.overlay {
+    background: #e9e9e9; 
+    display: none;      
+    position: absolute;  
+    top: 0;                  
+    right: 0;              
+    bottom: 0;
+    left: 0;
+    opacity: 0.5;
+    z-index: 999999;
+}
+
+#loadingDiv{
+  position:absolute;
+  top:0px;
+  right:0px;
+  width:100%;
+  height:100%;
+  background-color:#666;
+  background-image:url("/images/Loadingsome.gif");
+  background-repeat:no-repeat;
+  background-position:center;
+  z-index:10000000;
+  filter: alpha(opacity=40); /* For IE8 and earlier */
+}
+.nowrap{white-space: nowrap;}
+
+ 
+</style>
 <environment include="Development">
     <script src="~/lib/jquery/dist/jquery.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>

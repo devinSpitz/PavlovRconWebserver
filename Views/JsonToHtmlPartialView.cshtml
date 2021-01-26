@@ -39,11 +39,11 @@
             }
             else if (isSingleLevel) //might not be multiLevel nor singleLevel (if no data)
             {
-                await Html.RenderPartialAsync("JsonToHtmlSingleLevelPartialView.cshtml", Model);
+                await Html.RenderPartialAsync("JsonToHtmlSinglelevelPartialView.cshtml", Model);
             }
             else
             {
-                <div class="bg-danger">@Model.Replace("\"","")</div>
+                <div class="bg-danger">@Model?.Replace("\"","")</div>
             }
             <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
             </div>
