@@ -53,7 +53,7 @@ namespace PavlovRconWebserver.Models
                   Group = "Player commands",
                   valuesOptions = new List<string>()
                   {
-                    "unlimited", "5min", "10min", "30min", "1h", "3h", "6h", "12h", "24h", "48"
+                    "unlimited", "5min", "10min", "30min", "1h", "3h", "6h", "12h", "24h", "48h"
                   },
                 },new Command()
                 {
