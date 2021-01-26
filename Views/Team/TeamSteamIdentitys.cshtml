@@ -1,0 +1,123 @@
+@model TeamSelectedSteamIdentitiesViewModel
+
+@{
+    ViewBag.Title = "Add StaemIdentities to Teams";
+    Layout = "_Layout";
+    var maxLength = 20;
+
+}
+<style>
+    .bigFont{
+    font-size: 30px;
+    }
+</style>
+
+<h2>@ViewBag.Title</h2>
+
+<a class="bigFont" href="@Url.Action("Index","SshServer")"><span> &#128281;</span></a><br>
+<div class="col-sm-6" id="Save">
+    <div class="panel panel-default mapPanel" >
+        <div class="panel-heading">
+            Select the members of your Team <a asp-area="" asp-controller="Team" asp-action="EditSteamIdentity">&#10133; Add SteamIdentity</a>
+        </div>
+        <div class="panel-body" id="SavePanelBody">
+            <div class="col-12">
+                <table class="table table-responsive table-bordered">
+                    <thead>
+                    <tr>
+                        <th class="col-3">Steam id:</th>
+                        <th class="col-3">Steam name:</th>
+                        <th class="col-3">PRW Name</th>
+                        <th class="col-3">Add</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var identity in @Model.AllSteamIdentities)
+                    {
+                        var selectedMap = Model.SelectedSteamIdentities.FirstOrDefault(x => x.SteamIdentity.Id == identity.Id);
+                        if (selectedMap != null)
+                        {
+                            continue; // This map is selected
+                        }
+                        <tr data-steamId="@identity.Id">
+                                <td class="col-3">
+                                    <a href="@Url.Action("EditSteamIdentity", "Team", new {steamIdentityId = @identity.Id})"><span> &#8505;</span></a> 
+                                    @identity.Id</td>
+                                <td class="col-3">@identity.Name</td>
+                                <td class="col-3">@identity.LiteDbUser?.NormalizedUserName</td>
+                                <td class="col-3"><a onclick="AddSteamIdentitiy(teamId,this)">Add &#10133;</a></td>
+                         </tr>
+                    
+                        //Do print
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-sm-6" id="Delete">
+    <div class="panel panel-default" >
+        <div class="panel-heading">
+            Here are your members of the Team
+        </div>
+        <div class="panel-body" id="DeletePanelBody">
+            <div class="col-12">
+                <table class="table table-responsive table-bordered">
+                                
+                    <thead>
+                    <tr>
+                        <th class="col-2">Steam id:</th>
+                        <th class="col-2">Steam name:</th>
+                        <th class="col-2">PRW Name</th>
+                        <th class="col-2">Role in Team</th>
+                        <th class="col-2">Edit</th>
+
+                    </tr>
+                    </thead>
+                    <tbody>
+
+
+
+                    @foreach (var teamSelectedSteamIdentity in @Model.SelectedSteamIdentities)
+                    {
+                        //print
+                        <tr>
+                                <td class="col-2">@teamSelectedSteamIdentity.SteamIdentity?.Id</td>
+                                <td class="col-2">@teamSelectedSteamIdentity.SteamIdentity?.Name</td>
+                                <td class="col-2">@teamSelectedSteamIdentity.SteamIdentity?.LiteDbUser?.NormalizedUserName</td>
+                            <td class="col-2">@teamSelectedSteamIdentity.RoleOverwrite</td>
+                            <td class="col-2">
+                                @if (@teamSelectedSteamIdentity.SteamIdentity?.LiteDbUser != null)
+                                {
+                                    if (String.IsNullOrEmpty(teamSelectedSteamIdentity.RoleOverwrite))
+                                    {
+                                        <a href="@Url.Action("EditTeamSelectedSteamIdentity", "Team", new {teamId = teamSelectedSteamIdentity.Team.Id, steamIdentityId = teamSelectedSteamIdentity.SteamIdentity.Id})"><span>&#9998;</span></a>
+                                    }
+                                    else
+                                    {
+                                        <a href="@Url.Action("EditTeamSelectedSteamIdentity", "Team", new {teamId = teamSelectedSteamIdentity.Team.Id, steamIdentityId = teamSelectedSteamIdentity.SteamIdentity.Id,overWriteRole = teamSelectedSteamIdentity.RoleOverwrite})"><span>&#9998;</span></a>
+                                    }
+                                }
+                                <a href="@Url.Action("DeleteTeamSelectedSteamIdentity", "Team", new {teamId = teamSelectedSteamIdentity.Team.Id, steamIdentityId = teamSelectedSteamIdentity.SteamIdentity.Id})"><span>&#10060;</span></a>
+                                                                    
+                               </td>
+              </tr>
+
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts{
+    <script>
+    let teamId = @Model.TeamId
+    </script>
+}
+
+<script src="~/js/TeamSelectedSteamIdentities.js" asp-append-version="true"></script>

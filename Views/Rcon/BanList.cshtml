@@ -1,21 +1,30 @@
-@model List<ServerInfoViewModel>
+@model List<ServerBans>
+
+
+@{
+    var tableHeaer = "<thead><tr><th>Name</th><th>Steam</th><th>Comment</th><th>Banned date</th><th>Ban span</th><th>Actions</th></thead>";
+}
 
 <!-- Modal -->
 <div class="modal fade" id="add-contact" tabindex="-1" role="dialog" aria-labelledby="addContactLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addContactLabel">Serverinfos</h5>
+                <h5 class="modal-title" id="addContactLabel">Banned peoples:</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">×</span>
                 </button>
             </div>
             <div class="modal-body">
-                @foreach (var server in Model)
+            <table class="table table-bordered table-responsive col-xs-12">
+                @Html.Raw(tableHeaer)
+                @foreach (var player in Model)
                 {
-                        await Html.RenderPartialAsync("/Views/Rcon/RconServerInfoSinglePartialView.cshtml", server);
+                    @await Html.PartialAsync("BanSingle",player)
                 }
-                <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+        
+            </table>
+            
             </div>
         </div>
     </div>

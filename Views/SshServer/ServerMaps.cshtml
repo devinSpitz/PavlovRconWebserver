@@ -1,0 +1,119 @@
+@model SelectedServerMapsViewModel
+
+@{
+    ViewBag.Title = "Add maps to the Server";
+    Layout = "_Layout";
+    var maxLength = 20;
+
+}
+<style>
+    .bigFont{
+    font-size: 30px;
+    }
+</style>
+
+<h2>@ViewBag.Title</h2>
+
+The Pavlov Rcon Server will clean your cache of the maps you haved installed of the server. <br>
+So all maps you choose here will not be removed wile cleaning the cache which happens every time you swtich a map over the Pavlov Rcon Webserver.<br>
+<a class="bigFont" href="@Url.Action("Index","SshServer")"><span> &#128281;</span></a><br>
+<div class="col-sm-6" id="Save">
+    <div class="panel panel-default" >
+        <div class="panel-heading">
+            Select the maps you wanne play on the server
+        </div>
+        <div class="panel-body" id="SavePanelBody">
+            <div class='search' style="margin-bottom: 15px;padding-bottom: 15px;">
+                <input  class="col-xs-6" id='searchAuthor' type="text" placeholder='Search for authors' name="search"> 
+                <input class="col-xs-6" id='searchName' type="text" placeholder='Search for map name' name="search"> 
+            </div>
+            @foreach (var map in @Model.AllMaps)
+            {
+                var selectedMap = Model.SelectedMaps.FirstOrDefault(x => x.Map.Id == map.Id);
+                if (selectedMap != null)
+                {
+                    continue; // This map is selected
+                }
+                <div class="col-xs-6">
+                    <div class="panel panel-default mapPanel" data-Author="@map.Author" data-Name="@map.Name">
+                        <div class="panel-heading">
+                            @map.Id
+                        </div>
+                        <div class="panel-body">
+                            @if (@map.Name?.Length > maxLength)
+                            {
+                                <b>@map.Name.Substring(0, maxLength) ...</b>
+                            }
+                            else
+                            {
+                                <b>@map.Name</b>
+                            }
+                            <br>
+                            <button data-dismiss="modal" onclick="ChangeMap('@map.Id',this)"><img style="width: 150px;height: 150px" src="@map.ImageUrl"></button>
+                            @if (@map.Author?.Length > maxLength)
+                            {
+                                <br><b>by @map.Author.Substring(0, maxLength) ...</b>
+                            }
+                            else
+                            {
+                                <br><b>by @map.Author</b>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+<div class="col-sm-6" id="Delete">
+    <div class="panel panel-default" >
+        <div class="panel-heading">
+            Here are all selected maps for the server
+        </div>
+        <div class="panel-body" id="DeletePanelBody">
+            @foreach (var map in @Model.SelectedMaps)
+            {
+                    map.Map = Model.AllMaps.FirstOrDefault(x => x.Id == map.Map.Id);
+                    if (map.Map == null)
+                    {
+                        continue; // have to delete the map some when cause its no longer on steam workskhops :(
+                    }
+            <div class="col-xs-6">
+                    <div class="panel panel-default" data-Author="@map.Map.Author" data-Name="@map.Map.Name">
+                        <div class="panel-heading">
+                            @map.Map.Id
+                        </div>
+                        <div class="panel-body">
+                            @if (@map.Map.Name?.Length > maxLength)
+                            {
+                                <b>@map.Map.Name.Substring(0, maxLength) ...</b>
+                            }
+                            else
+                            {
+                                <b>@map.Map.Name</b>
+                            }
+                            <br>
+                            <button data-dismiss="modal" onclick="ChangeMap('@map.Map.Id',this)"><img style="width: 150px;height: 150px" src="@map.Map.ImageUrl"></button>
+                            @if (@map.Map.Author?.Length > maxLength)
+                            {
+                                <br><b>by @map.Map.Author.Substring(0, maxLength) ...</b>
+                            }
+                            else
+                            {
+                                <br><b>by @map.Map.Author</b>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script>
+    let serverId = @Model.ServerId
+    </script>
+}
+
+<script src="~/js/server.js" asp-append-version="true"></script>

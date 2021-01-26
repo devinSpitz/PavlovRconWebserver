@@ -1,9 +1,12 @@
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using LiteDB;
 
 namespace PavlovRconWebserver.Models
 {
-    public class RconServer
+    public class SshServer
     {
         public int Id { get; set; }
         [Required]
@@ -12,25 +15,9 @@ namespace PavlovRconWebserver.Models
         public string Adress { get; set; }
         [Required]
         public string Name { get; set; }
-
-        [Required]
-        [DisplayName("Rcon port")]
-        public int TelnetPort { get; set; } = 9100;
-
+        
         [DisplayName("SSH port")]
         public int SshPort { get; set; } = 22;
-        
-        [DisplayName("Use telnet directly")]
-        [Display(Description = "Not recommended")]
-        public bool UseTelnet { get; set; }
-        
-        [DisplayName("Rcon password")]
-        [Display(Description = "Will get converted if not md5 already")]
-        public string Password { get; set; }
-
-        
-        [DisplayName("Use SSH")]
-        public bool UseSsh { get; set; }
         
         [DisplayName("SSH username")]
         public string SshUsername { get; set; } 
@@ -38,14 +25,20 @@ namespace PavlovRconWebserver.Models
         [Display(Description = "CAUTION: WILL BE SAVED BLANK")]
         public string SshPassword { get; set; }
         
-        [DisplayName("SSH key filename")]//Todo maybe chosable from javascript that scans the folder or even upload but that check security
-        [Display(Description = "Put in the name of the file in the keyfile folder")]
+        [DisplayName("SSH key filename")]
+        [Display(Description = "Select a filename")]
         public string SshKeyFileName { get; set; }
+        [NotMapped][BsonIgnore]
+        public List<string> SshKeyFileNames { get; set; } = new List<string>();
         
         [DisplayName("SSH passphrase")]
         [Display(Description = "CAUTION: WILL BE SAVED BLANK")]
         public string SshPassphrase { get; set; }
-        
-        
+
+        [NotMapped][BsonIgnore]
+        public List<PavlovServer> PavlovServers { get; set; }
+
+
     }
+    
 }

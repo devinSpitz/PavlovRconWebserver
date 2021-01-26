@@ -1,0 +1,49 @@
+@model ServerBans
+@{
+    var banDate = "";
+    if (@Model?.BannedDateTime.ToLongDateString() == new DateTime().ToLongDateString())
+    {
+        banDate = "Unkown";
+    }
+    else
+    {
+        banDate = @Model?.BannedDateTime.ToLongDateString()+" : "+Model?.BannedDateTime.ToShortTimeString();
+    }
+}
+<tr>
+    <td>
+        @Model?.Id
+    </td>
+    <td>
+        @Model?.SteamName
+    </td>
+    <td>
+        @Model?.SteamId 
+        <Button alt="Remove ban" onclick="RemoveBannedPlayer('@Model?.SteamId')"><span >&#128711;</span></Button>
+    </td>
+    <td>
+        @Model?.Comment
+    </td>
+    <td>
+        @banDate
+    </td>
+    <td>
+        @{
+            var tmp = new DateTime();
+            var tmpString = "";
+            if (Model != null)
+            {
+                tmp = Model.BannedDateTime.Add(Model.BanSpan);
+                tmpString = tmp.ToLongTimeString();
+            }
+            if (tmpString == "00:00:00")
+            {
+                tmpString = "Permanent";
+            }
+            
+        }
+        @tmpString
+    </td>  
+    <td>          
+    </td>
+</tr>

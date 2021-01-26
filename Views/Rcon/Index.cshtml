@@ -2,44 +2,17 @@
 @model RconViewModel
 
 @{
-  
+    List<string> commandsAllow = ViewBag.commandsAllow;
+    var twoValueCommands = Model.TwoValueCommands.Where(x => commandsAllow.Contains(x.Name)).ToList();
+    var playerCommands = Model.PlayerCommands.Where(x => commandsAllow.Contains(x.Name)).ToList();
     var server = ViewBag.Servers;
     ViewData["Title"] = "Rcon Page";
 }
-<style>
-.overlay {
-    background: #e9e9e9; 
-    display: none;      
-    position: absolute;  
-    top: 0;                  
-    right: 0;              
-    bottom: 0;
-    left: 0;
-    opacity: 0.5;
-    z-index: 999999;
-}
-
-#loadingDiv{
-  position:absolute;
-  top:0px;
-  right:0px;
-  width:100%;
-  height:100%;
-  background-color:#666;
-  background-image:url("/images/Loadingsome.gif");
-  background-repeat:no-repeat;
-  background-position:center;
-  z-index:10000000;
-  filter: alpha(opacity=40); /* For IE8 and earlier */
-}
-.nowrap{white-space: nowrap;}
-
- 
-</style>
 @section Scripts{
     <script>
-    let PlayerCommands = jQuery.parseJSON('@Html.Raw(@JsonConvert.SerializeObject(@Model.PlayerCommands))');
-    let TwoValueCommands = jQuery.parseJSON('@Html.Raw(@JsonConvert.SerializeObject(@Model.TwoValueCommands))');
+    let PlayerCommands = jQuery.parseJSON('@Html.Raw(@JsonConvert.SerializeObject(Model.PlayerCommands))');
+    let TwoValueCommands = jQuery.parseJSON('@Html.Raw(@JsonConvert.SerializeObject(Model.TwoValueCommands))');
+    let serverBanModel = jQuery.parseJSON('@Html.Raw(@JsonConvert.SerializeObject(new ServerBans()))');
     @if (Model.MultiRcon)
     {  
         <text>
@@ -52,19 +25,16 @@
     }
     </script>
 }
-@Html.LabelFor(x=>x.RconServer)
+@Html.LabelFor(x=>x.SingleServer)
 @if (Model.MultiRcon)
 {
-    @Html.ListBoxFor(m => m.RconServer, new MultiSelectList(server,"Id","Name",Model.RconServer), new { @class = "form-control form-control-sm" })
+    @Html.ListBoxFor(m => m.SingleServer, new MultiSelectList(server,"Id","Name",Model.SingleServer), new { @class = "form-control form-control-sm" })
 }
 else
 {
-    @Html.DropDownListFor(m => m.RconServer, new SelectList(server,"Id","Name",Model.RconServer), new { @class = "form-control form-control-sm" })
+    @Html.DropDownListFor(m => m.SingleServer, new SelectList(server,"Id","Name",Model.SingleServer), new { @class = "form-control form-control-sm" })
 }
-<div class="overlay">
-    <div id="loadingDiv">
-    </div>
-</div>
+
 <br>
 <div class="panel panel-default">
     <div class="panel-heading">
@@ -72,35 +42,72 @@ else
     </div>
     <div class="panel-body">
         <div class="row">
-            <div class="col-md-12 responsive nowrap">
-                <button type="button" class="center-block btn btn-success btn-responsive col-md-3" onclick="sendSingleCommand('ServerInfo')">ServerInfo</button>
-                <div class="col-md-1"></div>
-                <button type="button" class="center-block btn btn-success btn-responsive  col-md-3" onclick="sendSingleCommand('ResetSND')">ResetSND</button>
-                <div class="col-md-1"></div>
-                <button type="button" class="center-block btn btn-success btn-responsive  col-md-3" onclick="sendSingleCommand('RotateMap')">RotateMap</button>
+            <div class="col-xs-12 responsive nowrap">
+                @if (commandsAllow.Contains("ServerInfo"))
+                {
+                    <button type="button" class="center-block btn btn-success btn-responsive col-xs-3" onclick="sendSingleCommand('ServerInfo')">ServerInfo</button>
+                }
+            <div class="col-xs-1"></div>
+                @if (commandsAllow.Contains("ResetSND"))
+                {
+                    <button type="button" class="center-block btn btn-success btn-responsive  col-xs-3" onclick="sendSingleCommand('ResetSND')">ResetSND</button>
+                }
+            <div class="col-xs-1"></div>
+                @if (commandsAllow.Contains("RotateMap"))
+                {
+                    <button type="button" class="center-block btn btn-success btn-responsive  col-xs-3" onclick="sendSingleCommand('RotateMap')">RotateMap</button>
+                }
             </div>
         </div>
+            <div class="row">
+                <div class="col-xs-12 responsive nowrap" style="margin-top: 1px;">
+                    <button type="button" class="center-block btn btn-success btn-responsive col-xs-3" onclick="BanMenu()">Ban Menu</button>
+                    <div class="col-xs-1"></div>
+                    @if (commandsAllow.Contains("Blacklist"))
+                    {
+                        <button type="button" class="center-block btn btn-success btn-responsive col-xs-3" onclick="sendSingleCommand('Blacklist')">InMemory Blacklist</button>
+                    }
+                </div>
+            </div>
         
-            @*// Buttons*@
+        @*// Buttons*@
     </div>
 </div>
-@if (!Model.MultiRcon)
+
+
+@* PlayerList *@
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            Player List 
+            <button type="button" class="btn btn-success btn-group" onclick="UpdatePlayerList()">Update</button>
+        </div>
+        <div class="panel-body" id="PlayerListBig">
+            @* Gets autopopulated *@
+            
+        </div>
+    </div>
+     
+
+@if (!Model.MultiRcon && playerCommands.Count > 0)
 {
    
     <div class="panel panel-default">
         <div class="panel-heading">
-            Player Actions 
+            Player/Server Actions 
             <button type="button" class="btn btn-success btn-group" onclick="UpdatePlayers()">Update Players</button>
         </div>
         <div class="panel-body" id="PlayerAction">
             <div class="row">
                 <div class="col-sm-4">
                     @Html.LabelFor(x=>x.Players)
-                    @Html.ListBoxFor(m => m.Players, new MultiSelectList(Model.Players,"Name","SteamId",Model.PlayersSelected), new { @class = "form-control form-control-sm" })
+                    @Html.DropDownListFor(m => m.Players, new SelectList(Model.Players,"Name","SteamId",Model.PlayersSelected), new { @class = "form-control form-control-sm", size = 10 })
                 </div>
                 <div class="col-sm-4">
-                    @Html.LabelFor(x=>x.PlayerCommands)
-                    @Html.DropDownListFor(m => m.PlayerCommands, new SelectList(Model.PlayerCommands,"Name","Name",Model.PlayerCommands), new { @class = "form-control form-control-sm" })
+                    <div class="tooltipHover">
+                    @Html.LabelFor(x => x.PlayerCommands)
+                    <span class="tooltiptext">Server comamnds doesn't need a selected player</span>
+                    </div>
+                    @Html.DropDownListFor(m => playerCommands, new SelectList(playerCommands, "Name", "Name", playerCommands, "Group"), new {@class = "form-control form-control-sm"})
                 </div>
                 <div class="col-sm-2" id="PlayerValueParent">
                     <label asp-for="PlayerValue"></label>
@@ -117,33 +124,34 @@ else
 @{
     //Give Team Cach // switch Map
 }
-<div class="panel panel-default">
-    <div class="panel-heading">
-        Actions with two values
-    </div>
-    <div class="panel-body" id="TwoValueInputs">
-        <div class="row">
-            <div class="col-sm-4">
-                @Html.LabelFor(x=>x.TwoValueCommands)
-                @Html.DropDownListFor(m => m.TwoValueCommands, new SelectList(Model.TwoValueCommands,"Name","Name",Model.TwoValueCommands), new { @class = "form-control form-control-sm" })
-            </div>
-            <div class="col-sm-4" id="PlayerValueParent">
-                <label asp-for="PlayerValue"></label>
-                @* Gets autopopulated *@
-            </div>
-            <div class="col-sm-2" id="PlayerValueTwoParent">
-                <label asp-for="PlayerValueTwo"></label>
-                @* Gets autopopulated *@
-            </div>
-            <div class="col-sm-2 buttonParent">
-                <button id="Do" name="Do" type="button" class="btn btn-success btn-group center" onclick="TwoValuesSendCommand()">Do</button>
+@if (twoValueCommands.Count > 0)
+{
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            Actions with two values
+        </div>
+        <div class="panel-body" id="TwoValueInputs">
+            <div class="row">
+                <div class="col-sm-4">
+                    @Html.LabelFor(x => x.TwoValueCommands)
+                    @Html.DropDownListFor(m => twoValueCommands, new SelectList(twoValueCommands, "Name", "Name", twoValueCommands), new {@class = "form-control form-control-sm"})
+                </div>
+                <div class="col-sm-4" id="PlayerValueParent">
+                    <label asp-for="PlayerValue"></label>
+                    @* Gets autopopulated *@
+                </div>
+                <div class="col-sm-2" id="PlayerValueTwoParent">
+                    <label asp-for="PlayerValueTwo"></label>
+                    @* Gets autopopulated *@
+                </div>
+                <div class="col-sm-2 buttonParent">
+                    <button id="Do" name="Do" type="button" class="btn btn-success btn-group center" onclick="TwoValuesSendCommand()">Do</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-
-<div id="modal-placeholder"></div>
+}
 <style>
     .buttonParent{
         margin-top: 40px;
@@ -155,6 +163,40 @@ else
       -ms-transform: translate(-50%, -50%);
       transform: translate(-50%, -50%);
     }
+    .modal-body{
+      display: inline-block;
+    }
+                
+    select[multiple]{
+    max-height: 500px;
+    min-height: 200px;
+    }
+    .tooltipHover {
+      position: relative;
+      display: inline-block;
+    }
+    
+    /* Tooltip text */
+    .tooltipHover .tooltiptext {
+      visibility: hidden;
+     display: inline-block;
+      background-color: black;
+      color: #fff;
+      text-align: center;
+      padding: 5px 0;
+      border-radius: 6px;
+      min-width: 200px;
+     
+      /* Position the tooltip text - see examples below! */
+      position: absolute;
+      z-index: 1;
+    }
+    
+    /* Show the tooltip text when you mouse over the tooltip container */
+    .tooltipHover:hover .tooltiptext {
+      visibility: visible;
+    }
+    
 </style>
 
 

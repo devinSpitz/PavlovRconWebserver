@@ -1,4 +1,5 @@
-@model RconServer
+
+@model SshServer
 
 @{
     ViewBag.Title = "Add/Update rcon server";
@@ -8,59 +9,36 @@
     {
         placeholder = "Leave blank if you don't want to update it";
     }
-}
+    var keyFiles = Model.SshKeyFileNames.Prepend("");
 
+}
 
 <h2>@ViewBag.Title</h2>
 
-<form asp-controller="RconServer" asp-action="SaveServer" method="post">
+<form asp-controller="SshServer" asp-action="SaveServer" method="post">
     <div asp-validation-summary="All" class="text-danger"></div>
-    <input asp-for="Id" class="form-control" value="@Model.Id" type="hidden"/>
     <div class="col-md-11">
         <div class="panel panel-default">
             <div class="panel-heading">Main server settings</div>
             <div class="panel-body">
+                
+    <input asp-for="Id" class="form-control" value="@Model.Id" type="hidden"/>
+    <span asp-validation-for="Id" class="text-danger"></span>  
                 <div class="form-group col-md-12">
                     <label asp-for="Name"></label>
                     <input asp-for="Name" class="form-control" value="@Model.Name"/>
-                    <span asp-validation-for="Name" class="text-danger"></span>  
+                    <span asp-validation-for="Name" class="text-danger"></span>
                 </div>
                 <div class="form-group col-md-10">
                     <label asp-for="Adress"></label>
                     <input asp-for="Adress" class="form-control" value="@Model.Adress"/>
                     <span asp-validation-for="Adress" class="text-danger"></span>
                 </div>
-                <div class="form-group  col-md-2">
-                    <label asp-for="TelnetPort"></label>
-                    <input asp-for="TelnetPort" class="form-control" value="@Model.TelnetPort"/>
-                    <span asp-validation-for="TelnetPort" class="text-danger"></span>
-                </div>
-                <div class="form-group  col-md-6">
-                    <label asp-for="Password"></label>
-                    <input asp-for="Password" class="form-control" placeholder="@placeholder" type="password" value="" autocomplete="off"/>
-                    <p class="help-block">
-                        @ViewData.ModelMetadata.Properties.Where(m => m.PropertyName == "Password").FirstOrDefault().Description
-                    </p>
-                    <span asp-validation-for="Password" class="text-danger"></span>
-                </div>
-                <div class="form-group col-md-6">
-                    <label asp-for="UseTelnet"></label><br>
-                    @Html.CheckBoxFor(m => m.UseTelnet)
-                    <span asp-validation-for="UseTelnet" class="text-danger"></span>
-                    <p class="help-block">
-                        @ViewData.ModelMetadata.Properties.Where(m => m.PropertyName == "UseTelnet").FirstOrDefault().Description
-                    </p>
-                </div>
             </div>
         </div>
         <div class="panel panel-default">
             <div class="panel-heading">SSH</div>
             <div class="panel-body">
-                <div class="form-group col-md-6">
-                    <label asp-for="UseSsh"></label><br>
-                    @Html.CheckBoxFor(m => m.UseSsh)
-                    <span asp-validation-for="UseSsh" class="text-danger"></span>
-                </div>
                 <div class="form-group col-md-6">
                     <label asp-for="SshPort"></label>
                     <input asp-for="SshPort" class="form-control" value="@Model.SshPort"/>
@@ -81,7 +59,7 @@
                 </div>
                 <div class="form-group col-md-6">
                     <label asp-for="SshKeyFileName"></label>
-                    <input asp-for="SshKeyFileName" class="form-control" value="@Model.SshKeyFileName"/>
+                    @Html.DropDownListFor(m => m.SshKeyFileName, new SelectList(keyFiles,"","",Model.SshKeyFileName), new { @class = "form-control form-control-sm" })
                     <p class="help-block">
                         @ViewData.ModelMetadata.Properties.Where(m => m.PropertyName == "SshKeyFileName").FirstOrDefault().Description
                     </p>
@@ -102,6 +80,6 @@
         <div class="saveButton col-md-1">
             <button type="submit" class="btn btn-primary btn-default col-md-12">Save</button>
         </div>
-    </div>
-    
+</div>
+
 </form>
