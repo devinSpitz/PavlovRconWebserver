@@ -10,18 +10,20 @@ Pictures:
 ![ChooseItem](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/ChooseItem.png?raw=true)
 ![ChooseMap](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/ChooseMap.png?raw=true)
 ![Modals](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/Modals.png?raw=true)
-![AddServerPart1](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/AddServerPart1.png?raw=true)
-![AddServerPart2](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/AddServerPart2.png?raw=true)
 
 
 Videos:  
 [Feature Guide](https://youtu.be/iSmAP6_DAyM)  
 [How To Install/Build](https://youtu.be/GBgW4mP2zgI)    
 
+Since last commit the ssh user will need following premissions for this folder and everything in there:
 
+Read+Write /home/steam/pavlovserver/   // path of your pavlov server: for now only to manage the blacklist but will be more in the future.
+Read+Write /tmp/workshop/7777/content/555160/   // path to the pavlov maps: 7777 could be different on your system. It is the port your pavlov server uses!
+
+
+* 
 * Telnet direct connections are not supported anymore cause i have to clean the maps from the cache!  
-
-Important for the server the Telnet password and port are riquired cause it will at the end always connect to localhost over Telnet to execute the commands. 
 
 
 
@@ -30,10 +32,6 @@ Auth logic with priority(with added multiple options):
 1. ssh key + username + passphrase
 2. ssh key + username
 3. ssh username pass
-
-Default users:  
-User: admin  
-pw: A2345a$  
 
 Default users:  
 User: admin  
@@ -50,6 +48,8 @@ https://dev.to/ianknighton/hosting-a-net-core-app-with-nginx-and-let-s-encrypt-1
 
 What are the features?
 newly added:  
+* Player list with stats etc.
+* Ban list over time. You can now ban People for a specific time.
 * You can select maps that will not get deleted, when the cache will get cleaned.
 * Maps will be deleted every day on 3 o clock in the morning(so the cache will not overflow on your server)
 * Maps from steam will be crawled every day on 2 o clock in the morning(While this  is happening the server may have a lot to do and will answer with some delay)
@@ -68,9 +68,6 @@ Note:
 
 Help:
 =======
-- If you expirience any problem first press "CTRL"+"F5" to reload JavaScript.  
-
-
 1. If you expirience any problem first press "CTRL"+"F5" to reload JavaScript.  
 2. Known issues found by makupi/pavlov-bot: https://github.com/makupi/pavlov-bot#known-issues-with-rcon-that-bot-cant-fix
 
