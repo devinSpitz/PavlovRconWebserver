@@ -3,9 +3,8 @@
 ![GitHub All Releases](https://img.shields.io/github/downloads/devinspitz/PavlovRconWebserver/total)
 ![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/devinspitz/PavlovRconWebserver?label=release)
 ![Plaforms](https://img.shields.io/static/v1?label=platform:&message=windows10%20|%20linux&color=green)  
-Pictures:
+Pictures:  
 ![Index](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/Index.png?raw=true)
-![Login](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/Login.png?raw=true)
 ![Commands2](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/Commands2.png?raw=true)
 ![ChooseItem](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/ChooseItem.png?raw=true)
 ![ChooseMap](https://github.com/devinSpitz/PavlovRconWebserver/blob/master/Pictures/ChooseMap.png?raw=true)
@@ -91,19 +90,20 @@ Boostrap: The most popular front-end framework for developing responsive, mobile
 https://getbootstrap.com
 
 Html Agility Pack (HAP)
-https://github.com/zzzprojects/html-agility-pack
+https://github.com/zzzprojects/html-agility-pack  
 
 
-An easy and reliable way to perform fire-and-forget, delayed and recurring, long-running, short-running, CPU or I/O intensive tasks inside ASP.NET applications. No Windows Service / Task Scheduler required. Even ASP.NET is not required. Backed by Redis, SQL Server, SQL Azure or MSMQ. This is a .NET alternative to Sidekiq, Resque and Celery. https://www.hangfire.io/  
-https://www.hangfire.io/
-=======
-Thanks to all this people who worked for this nuget packages. Without that it wouldn't be possible to do this.
-
-
-Swagger tools for documenting APIs built on ASP.NET Core
-https://github.com/domaindrivendev/Swashbuckle.AspNetCore
-
-Thanks to all this people who worked for this nuget packages. Without that it wouldn't be possible to do this.
+An easy and reliable way to perform fire-and-forget, delayed and recurring, long-running, short-running,   
+CPU or I/O intensive tasks inside ASP.NET applications. No Windows Service / Task Scheduler required. Even ASP.NET is not required. Backed by Redis, SQL Server, SQL Azure or MSMQ. This is a .NET alternative to Sidekiq, Resque and Celery. https://www.hangfire.io/   
+https://www.hangfire.io/  
+=======  
+Thanks to all this people who worked for this nuget packages. Without that it wouldn't be possible to do this.  
+  
+  
+Swagger tools for documenting APIs built on ASP.NET Core  
+https://github.com/domaindrivendev/Swashbuckle.AspNetCore  
+  
+Thanks to all this people who worked for this nuget packages. Without that it wouldn't be possible to do this.  
 
 
 
