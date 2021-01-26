@@ -408,7 +408,7 @@ function RemoveBannedPlayer(steamId)
     $.ajax({
         type: 'POST',
         url: "/Rcon/RemoveBanPlayer",
-        data: {serverId: servers[0],ban: steamId},
+        data: {serverId: servers[0],steamId: steamId},
         success:  function(result)
         {
             if(result.toString()==="")
