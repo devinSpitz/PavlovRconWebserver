@@ -18,7 +18,12 @@ Videos:
 [Feature Guide](https://youtu.be/iSmAP6_DAyM)  
 [How To Install/Build](https://youtu.be/GBgW4mP2zgI)    
 
+
 * Telnet direct connections are not supported anymore cause i have to clean the maps from the cache!  
+
+Important for the server the Telnet password and port are riquired cause it will at the end always connect to localhost over Telnet to execute the commands. 
+
+
 
 Auth logic with priority(with added multiple options):
 
@@ -30,18 +35,14 @@ Default users:
 User: admin  
 pw: A2345a$  
 
+Default users:  
+User: admin  
+pw: A2345a$  
+
 How to install:  
 [How To Install/Build](https://youtu.be/GBgW4mP2zgI)   
   
-  You now also will need to set the premissions for the pavlov rcon server to Delete the maps that are not in use: 
-  if you installed it like the wiki says you should have the same installation and can just use this Command: 
-  `sudo groupadd pavlovRconWebserver && 
-  sudo usermod -a -G pavlovRconWebserver steam &&
-  sudo usermod -a -G pavlovRconWebserver pavlov &&
-  sudo chgrp -R pavlovRconWebserver /tmp/workshop/7777/content/555160/ &&
-  sudo chmod -R g+rw /tmp/workshop/7777/content/555160/`  
-otherwise just be sure that the SSH user that you have added to the rconserver has rights to remove the maps in the folder: /tmp/workshop/7777/content/555160/  
-  
+
 Also may take a look at this tutorial (But be also aware the the builds are standalone so you dont need any sdk or runtime if you just take the build):  
 https://dev.to/ianknighton/hosting-a-net-core-app-with-nginx-and-let-s-encrypt-1m50  
 
@@ -62,9 +63,13 @@ newly added:
 Note:   
 - If you build it by yourself be sure to add the database.db file and the other riquired folders(see release) befor start the application.  
 - The old user and roles system ist not compatible to the new one. So you have to restart with a new database, if you are from the version 0.0.1!  
+
 * Telnet direct connections are not supported anymore cause i have to clean the maps from the cache!  
 
 Help:
+=======
+- If you expirience any problem first press "CTRL"+"F5" to reload JavaScript.  
+
 
 1. If you expirience any problem first press "CTRL"+"F5" to reload JavaScript.  
 2. Known issues found by makupi/pavlov-bot: https://github.com/makupi/pavlov-bot#known-issues-with-rcon-that-bot-cant-fix
@@ -92,8 +97,12 @@ https://getbootstrap.com
 Html Agility Pack (HAP)
 https://github.com/zzzprojects/html-agility-pack
 
+
 An easy and reliable way to perform fire-and-forget, delayed and recurring, long-running, short-running, CPU or I/O intensive tasks inside ASP.NET applications. No Windows Service / Task Scheduler required. Even ASP.NET is not required. Backed by Redis, SQL Server, SQL Azure or MSMQ. This is a .NET alternative to Sidekiq, Resque and Celery. https://www.hangfire.io/  
 https://www.hangfire.io/
+=======
+Thanks to all this people who worked for this nuget packages. Without that it wouldn't be possible to do this.
+
 
 Swagger tools for documenting APIs built on ASP.NET Core
 https://github.com/domaindrivendev/Swashbuckle.AspNetCore
