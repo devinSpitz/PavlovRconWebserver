@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.ComponentModel;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace PavlovRconWebserver.Models
 {
@@ -30,6 +31,12 @@ namespace PavlovRconWebserver.Models
                 },
                 new Command()
                 {
+                    Name  = "Blacklist",
+                    InputValue = false,
+                    MinRole = "Captain"
+                },
+                new Command()
+                {
                     Name  = "RotateMap",
                     InputValue = false,
                     MinRole = "Captain"
@@ -41,20 +48,39 @@ namespace PavlovRconWebserver.Models
                 new Command()
                 {
                   Name  = "Ban",
-                  InputValue = false,
-                  MinRole = "Mod"
+                  InputValue = true,
+                  MinRole = "Mod",
+                  Group = "Player commands",
+                  valuesOptions = new List<string>()
+                  {
+                    "unlimited", "5min", "10min", "30min", "1h", "3h", "6h", "12h", "24h", "48"
+                  },
+                },new Command()
+                {
+                    Name  = "Unban",
+                    InputValue = false,
+                    MinRole = "Mod",
+                    Group = "Player commands"
+                },new Command()
+                {
+                    Name  = "Kill",
+                    InputValue = false,
+                    MinRole = "Mod",
+                    Group = "Player commands"
                 },
                 new Command()
                 {
                     Name  = "Kick",
                     InputValue = false,
-                    MinRole = "Mod"
+                    MinRole = "Mod",
+                    Group = "Player commands"
                 },
                 new Command()
                 {
                     Name  = "InspectPlayer",
                     InputValue = false,
-                    MinRole = "User"
+                    MinRole = "User",
+                    Group = "Player commands"
                 },
                 new Command()
                 {
@@ -64,14 +90,16 @@ namespace PavlovRconWebserver.Models
                     {
                         "0", "1"
                     },
-                    MinRole = "Captain"
+                    MinRole = "Captain",
+                    Group = "Player commands"
                 },
                 new Command()
                 {
                     Name  = "GiveItem",
                     InputValue = true,
                     PartialViewName = "ItemView",
-                    MinRole = "Admin"
+                    MinRole = "Admin",
+                    Group = "Player commands"
                     
                 },
                 new Command()
@@ -82,7 +110,8 @@ namespace PavlovRconWebserver.Models
                     {
                         "clown", "prisoner", "naked", "farmer", "russian", "nato"
                     },
-                    MinRole = "Admin"
+                    MinRole = "Admin",
+                    Group = "Player commands"
                 },
                 new Command()
                 {
@@ -92,7 +121,8 @@ namespace PavlovRconWebserver.Models
                     {
                         "500", "1000", "1500", "2000", "5000", "10000", "20000"
                     },
-                    MinRole = "Admin"
+                    MinRole = "Admin",
+                    Group = "Player commands"
                 },
                 new Command()
                 {
@@ -102,7 +132,8 @@ namespace PavlovRconWebserver.Models
                     {
                         "0","1","2"
                     },
-                    MinRole = "Admin"
+                    MinRole = "Admin",
+                    Group = "Server commands"
                 }
             };
             TwoValueCommands = new List<ExtendedCommand>()
@@ -144,6 +175,7 @@ namespace PavlovRconWebserver.Models
         public List<PlayerModel> Players { get; set; } = new List<PlayerModel>();
         public List<PlayerModel> PlayersSelected { get; set; } = new List<PlayerModel>();
 
+        [DisplayName("Server/Player commands")]
         public List<Command> PlayerCommands { get; } = new List<Command>();
         public List<Command> SpecialCommands { get; } = new List<Command>();
         public List<ExtendedCommand> TwoValueCommands { get; } = new List<ExtendedCommand>();
@@ -175,6 +207,7 @@ namespace PavlovRconWebserver.Models
         public string KDA = "";
         public string Cash = "";
         public int TeamId = 0;
+        public int Score = 0;
 
         public string getKills()
         {
@@ -208,6 +241,8 @@ namespace PavlovRconWebserver.Models
         public string PartialViewName { get; set; }
         
         public string MinRole { get; set; }
+
+        public string Group { get; set; }
     }
     
     public class ExtendedCommand: Command

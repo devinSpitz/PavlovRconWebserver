@@ -18,6 +18,11 @@ namespace PavlovRconWebserver.Models
         [Required]
         [DisplayName("Rcon port")]
         public int TelnetPort { get; set; } = 9100;
+        
+        
+        [Required]
+        [DisplayName("Delete unused maps after x days:")]
+        public int DeletAfter { get; set; } = 7;
 
         [DisplayName("Rcon password")]
         [Display(Description = "Will get converted if not md5 already")]

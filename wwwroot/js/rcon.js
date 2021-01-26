@@ -1,7 +1,6 @@
 
 //Will be called on document ready
 function init(){
-    
     setValueFields(PlayerCommands,TwoValueCommands,true);
 
     if(!MultiRcon)
@@ -22,6 +21,8 @@ function init(){
         });
         if(servers.length===1 &&typeof servers[0] !== undefined && servers[0] !== "" && !MultiRcon)
         {
+            var PlayerListBig = $("#PlayerListBig");
+            PlayerListBig.html("");
             UpdatePlayers(servers[0]);
         }
     });
@@ -31,6 +32,8 @@ function init(){
     });
     if(servers.length===1 &&typeof servers[0] !== undefined && servers[0] !== "" && !MultiRcon)
     {
+        var PlayerListBig = $("#PlayerListBig");
+        PlayerListBig.html("");
         UpdatePlayers(servers[0]);
     }
 
@@ -133,13 +136,13 @@ function UpdatePlayers(server){
 }
 
 
-function UpdatePlayerList(serv){
+
+function UpdatePlayerList(){
 
     $(".overlay").show();
-    if(typeof server == "undefined")
-    {
-        server  = $("#SingleServer").val();
-    }
+
+    var server  = $("#SingleServer").val();
+
     var PlayerListBig = $("#PlayerListBig");
     PlayerListBig.html("");
     //foreach Player
@@ -172,21 +175,31 @@ function PlayerAction()
 {
     let command = "";
 
-    let playersSelected = [];
+    let playersSelected = "";
     $("#Players :selected").each(function(){
-        playersSelected.push($(this).val())
+        playersSelected = $(this).val();
     });
     let playerCommand = "";
     $("#playerCommands :selected").each(function(){
         playerCommand = $(this).val();
     });
-    command += playerCommand+" %Player% ";
+    
+    if(playerCommand === "SetLimitedAmmoType")
+    {
 
+        command += playerCommand+" ";
+    }else{
+
+        command += playerCommand+" %Player% ";
+    }
+    
+    
+
+    
     let playerValue = "";
     playerValue = $("#PlayerAction").find("#PlayerValue").val();
 
     let withInput = false;
-
     $(PlayerCommands).each(function(){
         if(this.Name === playerCommand)
         {
@@ -198,27 +211,31 @@ function PlayerAction()
     {
         command += playerValue;
     }
-    if(playersSelected.length > 1)
+
+    if(playerCommand === "Ban" && playersSelected === "-")
     {
-        $(playersSelected).each(function(){
-            var tmpCommand = command.replace("%Player%",$(this).val());
-            sendSingleCommand(tmpCommand);
-        }); 
+        alert("You have to choose a player!");
+        return false;
     }
-    else {
-        var tmpCommand = command.replace("%Player%",playersSelected);
-        sendSingleCommand(tmpCommand);
+    else if(playerCommand === "Ban" && playersSelected !== "-")
+    {
+        AddBanPlayer(playersSelected,playerValue);
     }
+    var tmpCommand = command.replace("%Player%",playersSelected);
+    sendSingleCommand(tmpCommand);
 
 }
+
 function sendSingleCommand(command)
 {
     $(".overlay").show();
     let data = {};
     let servers = [];
+    
     $("#SingleServer :selected").each(function(){
         servers.push($(this).val())
     });
+
     let controller = "Rcon";
     if(MultiRcon) {
         controller = "MultiRcon";
@@ -349,6 +366,96 @@ function RconChooseMapPartialView()
         }
     });
 }
+
+function BanMenu()
+{
+    $(".overlay").show();
+    let servers = [];
+    $("#SingleServer :selected").each(function(){
+        servers.push($(this).val())
+    });
+    $.ajax({
+        type: 'POST',
+        url: "/Rcon/GetBansFromServers",
+        data: { serverId: servers[0]},
+        success:  function(data)
+        {
+
+            $(".overlay").hide();
+            $('#modal-placeholder').html(data);
+            $('#modal-placeholder > .modal').modal('show');
+
+        },
+        error: function(XMLHttpRequest, textStatus, errorThrown)
+        {
+
+            $(".overlay").hide();
+            jsonTOHtmlPartialView(JSON.stringify(XMLHttpRequest))
+        }
+    });
+}
+
+
+// There is AddBanPlayer and RemoveBanPlayer
+function RemoveBannedPlayer(steamId)
+{
+    $(".overlay").show();
+    let data = {};
+    let servers = [];
+    $("#SingleServer :selected").each(function(){
+        servers.push($(this).val())
+    });
+    $.ajax({
+        type: 'POST',
+        url: "/Rcon/RemoveBanPlayer",
+        data: {serverId: servers[0],ban: steamId},
+        success:  function(result)
+        {
+            if(result.toString()==="")
+            {
+                alert("Did nothing!");
+            }
+            else{
+                alert(result.toString());
+            }
+            $(".overlay").hide();
+        },
+        error: function(XMLHttpRequest)
+        {
+            alert(JSON.stringify(XMLHttpRequest));
+            $(".overlay").hide();
+        }
+    });
+}
+
+function AddBanPlayer(steamId,timespan)
+{
+    let data = {};
+    let servers = [];
+    $("#SingleServer :selected").each(function(){
+        servers.push($(this).val())
+    });
+    $.ajax({
+        type: 'POST',
+        url: "/Rcon/AddBanPlayer",
+        data: {serverId: servers[0],steamId: steamId,timeSpan: timespan},
+        success:  function(result)
+        {
+            if(result.toString()==="")
+            {
+                alert("Did nothing!");
+            }
+            else{
+                alert(result.toString());
+            }
+        },
+        error: function(XMLHttpRequest)
+        {
+            alert(JSON.stringify(XMLHttpRequest));
+        }
+    });
+}
+
 
 function jsonTOHtmlPartialView(json)
 {

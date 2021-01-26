@@ -1,22 +1,54 @@
 @model PlayerModelExtended
-
+@{
+    var steamId = "          ";
+    if(!string.IsNullOrEmpty(@Model?.UniqueId))
+    {
+        steamId = @Model.UniqueId;
+    }
+    var userName = "          ";
+    if(!string.IsNullOrEmpty(@Model?.Username))
+    {
+        userName = @Model.Username;
+    }
+}
 <tr>
     <td>
-        @Model.Username
+        <div class="tooltipHover">
+            @if (userName.Length >= 10)
+            {
+                <text>
+                    @userName.Substring(0, 10)...
+                </text>
+            }
+            else
+            {
+                <text>
+                    @userName
+                </text>
+            }
+            
+            <span class="tooltiptext">@userName</span>
+        </div>
+        
     </td>
     <td>
-        @Model.getKills()
+        @Model?.Score
     </td>
     <td>
-        @Model.getDeaths()
+        @Model?.getKills()
     </td>
     <td>
-        @Model.getAssists()
+        @Model?.getDeaths()
     </td>
     <td>
-        @Model.Cash
+        @Model?.getAssists()
     </td>
     <td>
-        @Model.UniqueId
+        @Model?.Cash
     </td>
-</tr>
+    <td>
+        <div class="tooltipHover">@steamId.Substring(0,6)...
+        <span class="tooltiptext">@steamId</span>
+        </div>
+    </td>
+</tr>           

@@ -10,8 +10,9 @@
 }
 @section Scripts{
     <script>
-    let PlayerCommands = jQuery.parseJSON('@Html.Raw(@JsonConvert.SerializeObject(@Model.PlayerCommands))');
-    let TwoValueCommands = jQuery.parseJSON('@Html.Raw(@JsonConvert.SerializeObject(@Model.TwoValueCommands))');
+    let PlayerCommands = jQuery.parseJSON('@Html.Raw(@JsonConvert.SerializeObject(Model.PlayerCommands))');
+    let TwoValueCommands = jQuery.parseJSON('@Html.Raw(@JsonConvert.SerializeObject(Model.TwoValueCommands))');
+    let serverBanModel = jQuery.parseJSON('@Html.Raw(@JsonConvert.SerializeObject(new ServerBans()))');
     @if (Model.MultiRcon)
     {  
         <text>
@@ -46,18 +47,28 @@ else
                 {
                     <button type="button" class="center-block btn btn-success btn-responsive col-xs-3" onclick="sendSingleCommand('ServerInfo')">ServerInfo</button>
                 }
-                <div class="col-xs-1"></div>
+            <div class="col-xs-1"></div>
                 @if (commandsAllow.Contains("ResetSND"))
                 {
                     <button type="button" class="center-block btn btn-success btn-responsive  col-xs-3" onclick="sendSingleCommand('ResetSND')">ResetSND</button>
                 }
-                <div class="col-xs-1"></div>
+            <div class="col-xs-1"></div>
                 @if (commandsAllow.Contains("RotateMap"))
                 {
                     <button type="button" class="center-block btn btn-success btn-responsive  col-xs-3" onclick="sendSingleCommand('RotateMap')">RotateMap</button>
                 }
             </div>
         </div>
+            <div class="row">
+                <div class="col-xs-12 responsive nowrap" style="margin-top: 1px;">
+                    <button type="button" class="center-block btn btn-success btn-responsive col-xs-3" onclick="BanMenu()">Ban Menu</button>
+                    <div class="col-xs-1"></div>
+                    @if (commandsAllow.Contains("Blacklist"))
+                    {
+                        <button type="button" class="center-block btn btn-success btn-responsive col-xs-3" onclick="sendSingleCommand('Blacklist')">InMemory Blacklist</button>
+                    }
+                </div>
+            </div>
         
         @*// Buttons*@
     </div>
@@ -82,18 +93,21 @@ else
    
     <div class="panel panel-default">
         <div class="panel-heading">
-            Player Actions 
+            Player/Server Actions 
             <button type="button" class="btn btn-success btn-group" onclick="UpdatePlayers()">Update Players</button>
         </div>
         <div class="panel-body" id="PlayerAction">
             <div class="row">
                 <div class="col-sm-4">
                     @Html.LabelFor(x=>x.Players)
-                    @Html.ListBoxFor(m => m.Players, new MultiSelectList(Model.Players,"Name","SteamId",Model.PlayersSelected), new { @class = "form-control form-control-sm" })
+                    @Html.DropDownListFor(m => m.Players, new SelectList(Model.Players,"Name","SteamId",Model.PlayersSelected), new { @class = "form-control form-control-sm", size = 10 })
                 </div>
                 <div class="col-sm-4">
-                    @Html.LabelFor(x=>x.PlayerCommands)
-                    @Html.DropDownListFor(m => playerCommands, new SelectList(playerCommands,"Name","Name",playerCommands), new { @class = "form-control form-control-sm" })
+                    <div class="tooltipHover">
+                    @Html.LabelFor(x => x.PlayerCommands)
+                    <span class="tooltiptext">Server comamnds doesn't need a selected player</span>
+                    </div>
+                    @Html.DropDownListFor(m => playerCommands, new SelectList(playerCommands, "Name", "Name", playerCommands, "Group"), new {@class = "form-control form-control-sm"})
                 </div>
                 <div class="col-sm-2" id="PlayerValueParent">
                     <label asp-for="PlayerValue"></label>
@@ -149,6 +163,40 @@ else
       -ms-transform: translate(-50%, -50%);
       transform: translate(-50%, -50%);
     }
+    .modal-body{
+      display: inline-block;
+    }
+                
+    select[multiple]{
+    max-height: 500px;
+    min-height: 200px;
+    }
+    .tooltipHover {
+      position: relative;
+      display: inline-block;
+    }
+    
+    /* Tooltip text */
+    .tooltipHover .tooltiptext {
+      visibility: hidden;
+     display: inline-block;
+      background-color: black;
+      color: #fff;
+      text-align: center;
+      padding: 5px 0;
+      border-radius: 6px;
+      min-width: 200px;
+     
+      /* Position the tooltip text - see examples below! */
+      position: absolute;
+      z-index: 1;
+    }
+    
+    /* Show the tooltip text when you mouse over the tooltip container */
+    .tooltipHover:hover .tooltiptext {
+      visibility: visible;
+    }
+    
 </style>
 
 

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using PavlovRconWebserver.Exceptions;
 using PavlovRconWebserver.Extensions;
+using PavlovRconWebserver.Models.ManageViewModels;
 using PavlovRconWebserver.Services;
 
 namespace PavlovRconWebserver.Controllers
@@ -21,8 +22,15 @@ namespace PavlovRconWebserver.Controllers
         private readonly ServerSelectedMapService _serverSelectedMapService;
         private readonly MapsService _mapsService;
         private readonly PavlovServerService _pavlovServerService;
+        private readonly ServerBansService _serverBansService;
         
-        public RconController(RconService service,SshServerSerivce serverService,UserService userService,ServerSelectedMapService serverSelectedMapService,MapsService mapsService,PavlovServerService pavlovServerService)
+        public RconController(RconService service,
+            SshServerSerivce serverService,
+            UserService userService,
+            ServerSelectedMapService serverSelectedMapService,
+            MapsService mapsService,
+            PavlovServerService pavlovServerService,
+            ServerBansService serverBansService)
         {
             _service = service;
             _serverService = serverService;
@@ -30,6 +38,7 @@ namespace PavlovRconWebserver.Controllers
             _serverSelectedMapService = serverSelectedMapService;
             _mapsService = mapsService;
             _pavlovServerService = pavlovServerService;
+            _serverBansService = serverBansService;
         }
         
    
@@ -115,8 +124,83 @@ namespace PavlovRconWebserver.Controllers
             return PartialView("~/Views/Rcon/PavlovChooseMapPartialView.cshtml",listOfMaps);
         }
 
+        [HttpPost("[controller]/GetBansFromServers")]
+        public async Task<IActionResult> GetBansFromServers(int serverId)
+        {
+            if(!await RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return Unauthorized();
+            if (serverId<=0) return BadRequest("Please choose a server!");
+            var server = await _pavlovServerService.FindOne(serverId);
+            var banlist = await _serverBansService.FindAllFromPavlovServerId(serverId,true);
+            //merge the blacklist To Banlist
+            try
+            {
+                banlist = await _service.GetServerBansFromBlackList(server, banlist);
+            }
+            catch (CommandException e)
+            {
+                return BadRequest(e.Message);
+            }
+
+            return PartialView("/Views/Rcon/BanList.cshtml", banlist);
+        }
+        
+        [HttpPost("[controller]/AddBanPlayer")]
+        public async Task<IActionResult> AddBanPlayer(int serverId,string steamId,string timespan)
+        {
+            if (serverId<=0) return BadRequest("Please choose a server!");
+            if (string.IsNullOrEmpty(steamId) || steamId == "-") return BadRequest("SteamId must be set!");
+            if (string.IsNullOrEmpty(timespan)) return BadRequest("TimeSpan  must be set!");
+            var ban = new ServerBans();
+            ban.SteamId = steamId;
+            var convert = Statics.BanList.TryGetValue(timespan,out var timespans);
+            if (!convert) return BadRequest("Could not convert the timespan!");
+            ban.BanSpan = timespans;
+            ban.BannedDateTime = DateTime.Now;
+            ban.PavlovServer = await _pavlovServerService.FindOne(serverId);
+            var banlist = await _serverBansService.FindAllFromPavlovServerId(ban.PavlovServer.Id,true);
+            banlist = await _service.GetServerBansFromBlackList(ban.PavlovServer, banlist);
+            //needs to handle the Blacklist file. Also save the file here with all current banned players
+            if (banlist.FirstOrDefault(x => x.SteamId == ban.SteamId) == null)
+            {
+                //write to BlackList.txt
+                banlist.Add(ban);
+                await _service.SaveBlackListEntry(ban.PavlovServer,banlist);
+                
+            }
+            await _serverBansService.Upsert(ban);
+
+            return new ObjectResult(true);
+        }
+        
+        [HttpPost("[controller]/RemoveBanPlayer")]
+        public async Task<IActionResult> RemoveBanPlayer(int serverId,string steamId )
+        {
+            if (serverId<=0) return BadRequest("Please choose a server!");
+            if (string.IsNullOrEmpty(steamId) || steamId == "-") return BadRequest("SteamID must be set!");
+            var pavlovServer = await _pavlovServerService.FindOne(serverId);
+            //Remove from blacklist file
+            var banlist = await _service.GetServerBansFromBlackList(pavlovServer, new List<ServerBans>());
+            var toRemove = banlist.FirstOrDefault(x => x.SteamId == steamId);
+            if (toRemove != null)
+            {
+                //write to BlackList.txt
+                banlist.Remove(toRemove);
+                await _service.SaveBlackListEntry(pavlovServer,banlist);
+                
+            }
+            // remove from Database
+            var actualBans = await _serverBansService.FindAllFromPavlovServerId(serverId,true);
+            var toRemoveBan = actualBans.FirstOrDefault(x => x.SteamId == steamId);
+            if (toRemoveBan != null)
+            {
+                await _serverBansService.Delete(toRemoveBan.Id);
+            }
+            
+            return new ObjectResult(true);
+        }
 
         
+
         [HttpPost("[controller]/JsonToHtmlPartialView")]
         public async Task<IActionResult> JsonToHtmlPartialView(string json)
         {
@@ -178,6 +262,17 @@ namespace PavlovRconWebserver.Controllers
                 return BadRequest(e.Message);
             }
             playersList = JsonConvert.DeserializeObject<PlayerListClass>(playersTmp);
+            var serverInfo = "";
+            try
+            {
+                serverInfo = await _service.SendCommand(server, "ServerInfo");
+            }
+            catch (CommandException e)
+            {
+                return BadRequest(e.Message);
+            }
+            var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(serverInfo);
+            
             foreach (var player in playersList.PlayerList)
             {
                 var playerInfo = await _service.SendCommand(server, "InspectPlayer " + player.UniqueId);
@@ -185,6 +280,8 @@ namespace PavlovRconWebserver.Controllers
                 singlePlayer.PlayerInfo.Username = player.Username;
                 extendetList.Add(singlePlayer.PlayerInfo);
             }
+            ViewBag.team0Score = tmp.ServerInfo.Team0Score;
+            ViewBag.team1Score = tmp.ServerInfo.Team1Score;
             return PartialView("/Views/Rcon/PlayerList.cshtml",extendetList);
         }
 

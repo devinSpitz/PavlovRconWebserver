@@ -17,6 +17,7 @@ namespace PavlovRconWebserver.Models
                 ServerType = pavlovServer.ServerType,
                 TelnetPassword = pavlovServer.TelnetPassword,
                 TelnetPort = pavlovServer.TelnetPort,
+                DeletAfter = pavlovServer.DeletAfter,
                 sshServerId = sshServerId
             };
         }
@@ -33,6 +34,7 @@ namespace PavlovRconWebserver.Models
                 ServerPort = viewModel.ServerPort,
                 TelnetPassword = viewModel.TelnetPassword,
                 TelnetPort = viewModel.TelnetPort,
+                DeletAfter = viewModel.DeletAfter,
             };
 
 

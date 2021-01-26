@@ -23,6 +23,7 @@ namespace PavlovRconWebserver.Extensions
             var servers = await sshServerSerivce.FindAll();
             foreach (var server in servers)
             {
+                
                 foreach (var signleServer in server.PavlovServers)
                 {
                     try

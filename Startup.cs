@@ -41,6 +41,7 @@ namespace PavlovRconWebserver
          services.AddTransient<TeamSelectedSteamIdentityService>();
          services.AddTransient<MatchService>();
          services.AddTransient<PavlovServerService>();
+         services.AddTransient<ServerBansService>();
          
          
          // Add application services.
@@ -94,13 +95,16 @@ namespace PavlovRconWebserver
          app.UseStaticFiles();
 
          string connectionString = Configuration.GetConnectionString("DefaultConnection");
-         //Has to do bmore controll of server do realy do that.
-         // RecurringJob.AddOrUpdate( 
-         //    () => Steam.DeleteAllUnsedMapsFromAllServers(connectionString),
-         //    Cron.Daily(3)); // Delete all unusedMaps every day on 3 in the morning
+         
+         RecurringJob.AddOrUpdate( 
+            () => Steam.DeleteAllUnsedMapsFromAllServers(connectionString),
+            Cron.Daily(3)); // Delete all unusedMaps every day on 3 in the morning
          RecurringJob.AddOrUpdate( 
             () => Steam.CrawlSteamMaps(connectionString),
             Cron.Daily(2)); // Get all Maps every day on 2 in the morning
+         RecurringJob.AddOrUpdate( 
+            () => RconStatic.CheckBansForAllServers(connectionString),
+            string.Format("*/{0} * * * *", (object) 5)); // Check for bans and remove them is necessary
 
             
          app.UseRouting();

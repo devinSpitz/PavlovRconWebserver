@@ -9,7 +9,7 @@ namespace PavlovRconWebserver.Models
         [BsonRef("Map")] 
         public virtual Map Map { get; set; }
         
-        [BsonRef("SshServer")] 
+        [BsonRef("PavlovServer")] 
         public virtual PavlovServer PavlovServer { get; set; }
     }
 }
