@@ -2,7 +2,7 @@
 
 
 @{
-    var tableHeaer = "<thead><tr><th>Name</th><th>Steam</th><th>Comment</th><th>Banned date</th><th>Ban span</th><th>Actions</th></thead>";
+    var tableHeaer = "<thead><tr><th>Id</th><th>SteamUser</th><th>SteamId</th><th>Comment</th><th>Banned date</th><th>Ban span</th></thead>";
 }
 
 <!-- Modal -->
@@ -22,7 +22,6 @@
                 {
                     @await Html.PartialAsync("BanSingle",player)
                 }
-        
             </table>
             
             </div>

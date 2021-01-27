@@ -219,7 +219,8 @@ function PlayerAction()
     }
     else if(playerCommand === "Ban" && playersSelected !== "-")
     {
-        AddBanPlayer(playersSelected,playerValue);
+        AddBanPlayer(playersSelected,playerValue); // also makes the command
+        return; 
     }
     var tmpCommand = command.replace("%Player%",playersSelected);
     sendSingleCommand(tmpCommand);
