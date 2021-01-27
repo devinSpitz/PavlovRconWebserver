@@ -38,7 +38,7 @@ namespace PavlovRconWebserver.Services
 
             if (getActive)
             {
-                result = result.Where(x => DateTime.Now > x.BannedDateTime.Add(x.BanSpan)).ToList();
+                result = result.Where(x => DateTime.Now < x.BannedDateTime.Add(x.BanSpan)).ToList();
             }
 
             return result;

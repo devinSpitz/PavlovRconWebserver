@@ -447,7 +447,7 @@ function AddBanPlayer(steamId,timespan)
                 alert("Did nothing!");
             }
             else{
-                alert(result.toString());
+                jsonTOHtmlPartialView(result.toString());
             }
         },
         error: function(XMLHttpRequest)

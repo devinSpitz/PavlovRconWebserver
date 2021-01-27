@@ -131,15 +131,6 @@ namespace PavlovRconWebserver.Controllers
             if (serverId<=0) return BadRequest("Please choose a server!");
             var server = await _pavlovServerService.FindOne(serverId);
             var banlist = await _serverBansService.FindAllFromPavlovServerId(serverId,true);
-            //merge the blacklist To Banlist
-            try
-            {
-                banlist = await _service.GetServerBansFromBlackList(server, banlist);
-            }
-            catch (CommandException e)
-            {
-                return BadRequest(e.Message);
-            }
 
             return PartialView("/Views/Rcon/BanList.cshtml", banlist);
         }
@@ -158,6 +149,21 @@ namespace PavlovRconWebserver.Controllers
             ban.BannedDateTime = DateTime.Now;
             ban.PavlovServer = await _pavlovServerService.FindOne(serverId);
             
+            //Get steam name
+            try
+            {
+                var playersTmp = await _service.SendCommand(ban.PavlovServer, "RefreshList");
+                var playersList = JsonConvert.DeserializeObject<PlayerListClass>(playersTmp);
+                var playerName = playersList.PlayerList.FirstOrDefault(x => x.UniqueId == steamId)?.Username;
+                if (playerName != null)
+                {
+                    ban.SteamName = playerName; 
+                }
+            }
+            catch (CommandException e)
+            {
+                //Ignore cause the player name is not something very important
+            }
             
             try
             {
@@ -177,21 +183,6 @@ namespace PavlovRconWebserver.Controllers
                 await _service.SaveBlackListEntry(ban.PavlovServer,banlist);
                 
             }
-            //Get steam name
-            try
-            {
-                var playersTmp = await _service.SendCommand(ban.PavlovServer, "RefreshList");
-                var playersList = JsonConvert.DeserializeObject<PlayerListClass>(playersTmp);
-                var playerName = playersList.PlayerList.FirstOrDefault(x => x.UniqueId == steamId)?.Username;
-                if (playerName != null)
-                {
-                    ban.SteamName = playerName; 
-                }
-            }
-            catch (CommandException e)
-            {
-                //Ignore cause the player name is not something very important
-            }
             
             await _serverBansService.Upsert(ban);
 
@@ -206,15 +197,7 @@ namespace PavlovRconWebserver.Controllers
             if (string.IsNullOrEmpty(steamId) || steamId == "-") return BadRequest("SteamID must be set!");
             var pavlovServer = await _pavlovServerService.FindOne(serverId);
             
-            //unban command
-            try
-            {
-                await _service.SendCommand(pavlovServer, "Unban "+steamId);
-            }
-            catch (CommandException e)
-            {
-                return BadRequest("Could not unban player from in memory blacklist!");
-            }
+
             //Remove from blacklist file
             var banlist = await _service.GetServerBansFromBlackList(pavlovServer, new List<ServerBans>());
             var toRemove = banlist.FirstOrDefault(x => x.SteamId == steamId);
@@ -233,6 +216,16 @@ namespace PavlovRconWebserver.Controllers
                 await _serverBansService.Delete(toRemoveBan.Id);
             }
             
+            Task.Delay(500).Wait();
+            //unban command
+            try
+            {
+                await _service.SendCommand(pavlovServer, "Unban "+steamId);
+            }
+            catch (CommandException e)
+            {
+                return BadRequest("Could not unban player from in memory blacklist!");
+            }
             return new ObjectResult(true);
         }
 
