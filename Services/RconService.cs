@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualBasic;
+using Newtonsoft.Json;
 using PavlovRconWebserver.Exceptions;
 using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
@@ -308,6 +309,14 @@ namespace PavlovRconWebserver.Services
             var blacklist = await SendCommand(server, server.ServerFolderPath + FilePaths.BanList, false, false,content,true);
 
             return true;
+        }       
+        
+        public async Task<PlayerModelExtended> GetPlayerInfo(PavlovServer server, string steamId,string username)
+        {
+            var playerInfo = await SendCommand(server, "InspectPlayer " + steamId);
+            var singlePlayer = JsonConvert.DeserializeObject<PlayerModelExtendedRconModel>(playerInfo);
+            singlePlayer.PlayerInfo.Username = username;
+            return singlePlayer.PlayerInfo;
         }
         
         public async Task<List<ServerBans>> GetServerBansFromBlackList(PavlovServer server, List<ServerBans> banlist)

@@ -303,18 +303,20 @@ namespace PavlovRconWebserver.Controllers
             }
             var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(serverInfo);
             
-            foreach (var player in playersList.PlayerList)
+            
+            if (playersList.PlayerList != null)
             {
-                var playerInfo = await _service.SendCommand(server, "InspectPlayer " + player.UniqueId);
-                var singlePlayer = JsonConvert.DeserializeObject<PlayerModelExtendedRconModel>(playerInfo);
-                singlePlayer.PlayerInfo.Username = player.Username;
-                extendetList.Add(singlePlayer.PlayerInfo);
+                var players = await Task.WhenAll(playersList.PlayerList.Select(i => _service.GetPlayerInfo(server, i.UniqueId, i.Username))
+                    .ToArray());
+                extendetList = players.ToList();
             }
+
             ViewBag.team0Score = tmp.ServerInfo.Team0Score;
             ViewBag.team1Score = tmp.ServerInfo.Team1Score;
             return PartialView("/Views/Rcon/PlayerList.cshtml",extendetList);
         }
-
+        
+        
         
 
     }
