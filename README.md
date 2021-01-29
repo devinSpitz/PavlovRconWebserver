@@ -19,7 +19,26 @@ Since last commit the ssh user will need following premissions for this folder a
   
 Read+Write /home/steam/pavlovserver/   // path of your pavlov server: for now only to manage the blacklist but will be more in the future.  
 Read+Write /tmp/workshop/7777/content/555160/   // path to the pavlov maps: 7777 could be different on your system. It is the port your pavlov server uses!  
-  
+
+
+```
+sudo groupadd pavlovRconWebserver && 
+sudo usermod -a -G pavlovRconWebserver UserNameWhichIsEnteredAsSshUserInPavlovRconWebserver &&
+sudo usermod -a -G pavlovRconWebserver steam && 
+sudo chown :pavlovRconWebserver /tmp/workshop/7777/content/555160/ && 
+sudo chown :pavlovRconWebserver /home/steam/pavlovserver/Pavlov/Saved/Config/ &&
+sudo setfacl -m g:pavlovRconWebserver:rwx,d:g:pavlovRconWebserver:rwx /tmp/workshop/7777/content/555160/ &&
+sudo setfacl -m g:pavlovRconWebserver:rwx,d:g:pavlovRconWebserver:rwx /home/steam/pavlovserver/Pavlov/Saved/Config/
+```
+
+you may also need this for all the files which already be there (This is way to powerfull but works)
+```
+sudo chmod 777 $(find /tmp/workshop/7777/content/555160/ -type d)
+```
+
+sudo 
+
+
 
 * Telnet direct connections are not supported anymore cause i have to clean the maps from the cache!  
 
@@ -92,11 +111,13 @@ https://getbootstrap.com
 Html Agility Pack (HAP)
 https://github.com/zzzprojects/html-agility-pack  
 
-
 An easy and reliable way to perform fire-and-forget, delayed and recurring, long-running, short-running,   
-CPU or I/O intensive tasks inside ASP.NET applications. No Windows Service / Task Scheduler required. Even ASP.NET is not required. Backed by Redis, SQL Server, SQL Azure or MSMQ. This is a .NET alternative to Sidekiq, Resque and Celery. https://www.hangfire.io/   
-https://www.hangfire.io/  
-=======  
+CPU or I/O intensive tasks inside ASP.NET applications. No Windows Service / Task Scheduler required. Even ASP.NET is not required. Backed by Redis, SQL Server, SQL Azure or MSMQ. This is a .NET alternative to Sidekiq, Resque and Celery. 
+https://www.hangfire.io/   
+
+
+
+=====================  
 Thanks to all this people who worked for this nuget packages. Without that it wouldn't be possible to do this.  
   
   
