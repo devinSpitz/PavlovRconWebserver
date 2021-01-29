@@ -126,7 +126,7 @@ namespace PavlovRconWebserver.Controllers
             }
             
 
-            if (newServer) return await EditServerSelectedMaps(server.Id);
+            if (newServer) return await Index();
             
             return await Index();
         }
@@ -153,24 +153,7 @@ namespace PavlovRconWebserver.Controllers
             return true;
         }
         
-        [HttpGet("[controller]/EditServerSelectedMaps/{serverId}")]
-        public async Task<IActionResult> EditServerSelectedMaps(int serverId)
-        {
-            if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
-            var serverSelectedMap = new List<ServerSelectedMap>();
-            var server = await _service.FindOne(serverId);
-            serverSelectedMap = (await _serverSelectedMapService.FindAllFrom(server)).ToList();
 
-            var tmp = await _mapsService.FindAll();
-
-            var viewModel = new SelectedServerMapsViewModel()
-            {
-                AllMaps = tmp.ToList(),
-                SelectedMaps = serverSelectedMap,
-                ServerId = serverId
-            };
-            return View("ServerMaps",viewModel);
-        }
         
         
         [HttpGet("[controller]/DeleteServer/{id}")]

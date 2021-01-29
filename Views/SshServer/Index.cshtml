@@ -54,7 +54,7 @@
                             <li>
                                 <a href="@Url.Action("DeleteServer", "PavlovServer", new {pavlovServer.Id})"><span>&#10060;</span></a> @pavlovServer.Name 
                                 <a href="@Url.Action("EditServer", "PavlovServer", new {serverId = pavlovServer.Id, sshServerId = sshServer.Id})"><span>Edit &#8505;</span></a> or 
-                                <a href="@Url.Action("EditServerSelectedMaps", "SshServer", new {serverId = pavlovServer.Id})"><span>Maps &#128506;</span></a>
+                                <a href="@Url.Action("EditServerSelectedMaps", "PavlovServer", new {serverId = pavlovServer.Id})"><span>Maps &#128506;</span></a>
                             </li>
                         }
                     }

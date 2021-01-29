@@ -406,19 +406,20 @@ namespace PavlovRconWebserver.Services
                     var lastAccessTime = attributes.LastAccessTime;
                     if (lastAccessTime < DateTime.Now.Subtract(new TimeSpan(server.DeletAfter,0,0,0)))
                     {
-                        var deleteMapCommand = client.CreateCommand("rm -rf " + map.FullName);
-                        deleteMapCommand.CommandTimeout = TimeSpan.FromMilliseconds(500);
-                        toDeleteMaps.Add(map.Name);
-                        var deleteMapsCommandResponse = deleteMapCommand.Execute();
-                         if (deleteMapsCommandResponse.Contains("remove write-protected") ||
-                             deleteMapsCommandResponse.Contains("Permission denied"))
-                         {
-                             throw new CommandException("You don't have the rights to delete the maps!");
-                         }
-                         if (sftp.Exists(map.FullName))
-                         {
-                             throw new CommandException("Could not delete map!");
-                         }
+                        
+                            
+                        try
+                        {
+                            DeleteDirectory(sftp,map.FullName);
+                        }
+                        catch (SftpPermissionDeniedException)
+                        {
+                            throw new CommandException("Permission denied to delet map");
+                        }
+                        if (sftp.Exists(map.FullName))
+                        {
+                            throw new CommandException("Could not delete map!");
+                        }
                     }
                     
                     
@@ -436,7 +437,25 @@ namespace PavlovRconWebserver.Services
             ConnectionResult.Seccuess = true;
             return ConnectionResult;
         }
+        private static void DeleteDirectory(SftpClient client, string path)
+        {
+            foreach (SftpFile file in client.ListDirectory(path))
+            {
+                if ((file.Name != ".") && (file.Name != ".."))
+                {
+                    if (file.IsDirectory)
+                    {
+                        DeleteDirectory(client, file.FullName);
+                    }
+                    else
+                    {
+                        client.DeleteFile(file.FullName);
+                    }
+                }
+            }
 
+            client.DeleteDirectory(path);
+        }
         //Use every type of auth as a backup way to get the result
         // that can cause long waiting times but i think its better than just do one thing.
         public async Task<string> SendCommand(PavlovServer server, string command, bool deleteUnusedMaps = false,

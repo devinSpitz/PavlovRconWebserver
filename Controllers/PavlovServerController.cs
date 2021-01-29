@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using PavlovRconWebserver.Exceptions;
@@ -48,6 +50,25 @@ namespace PavlovRconWebserver.Controllers
         {
             if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
             return View("Server",server);
+        }
+        
+        [HttpGet("[controller]/EditServerSelectedMaps/{serverId}")]
+        public async Task<IActionResult> EditServerSelectedMaps(int serverId)
+        {
+            if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
+            var serverSelectedMap = new List<ServerSelectedMap>();
+            var server = await _service.FindOne(serverId);
+            serverSelectedMap = (await _serverSelectedMapService.FindAllFrom(server)).ToList();
+
+            var tmp = await _mapsService.FindAll();
+
+            var viewModel = new SelectedServerMapsViewModel()
+            {
+                AllMaps = tmp.ToList(),
+                SelectedMaps = serverSelectedMap,
+                ServerId = serverId
+            };
+            return View("ServerMaps",viewModel);
         }
         
         [HttpPost("[controller]/SaveServer")]
