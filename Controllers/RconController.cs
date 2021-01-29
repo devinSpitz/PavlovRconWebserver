@@ -306,9 +306,19 @@ namespace PavlovRconWebserver.Controllers
             
             if (playersList.PlayerList != null)
             {
-                var players = await Task.WhenAll(playersList.PlayerList.Select(i => _service.GetPlayerInfo(server, i.UniqueId, i.Username))
-                    .ToArray());
-                extendetList = players.ToList();
+                int i = 0;
+                var query = from s in playersList.PlayerList 
+                    let num = i++
+                    group s by num / 5 into g
+                    select g.ToArray();
+                var playerGroups = query.ToArray();
+                
+                foreach (var playerGroup in playerGroups)
+                {
+                    extendetList.AddRange(await Task.WhenAll(playerGroup
+                        .Select(i => _service.GetPlayerInfo(server, i.UniqueId, i.Username))
+                        .ToArray()));
+                }
             }
 
             ViewBag.team0Score = tmp.ServerInfo.Team0Score;
