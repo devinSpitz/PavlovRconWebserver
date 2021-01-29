@@ -130,7 +130,7 @@ namespace PavlovRconWebserver.Services
                         "After the ssh connection the telnet connection can not login. Can not send command!");
                 }
 
-                Task.Delay(100).Wait();
+                Task.Delay(150).Wait();
                 // check answer
                 result.answer = sshCommandExecuteBtach.Result;
 

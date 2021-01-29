@@ -16,14 +16,36 @@
                 </button>
             </div>
             <div class="modal-body">
-            <table class="table table-bordered table-responsive col-xs-12">
-                @Html.Raw(tableHeaer)
-                @foreach (var player in Model)
-                {
-                    @await Html.PartialAsync("BanSingle",player)
-                }
-            </table>
-            
+                <div class="panel panel-default">
+                    <div class="panel-heading">Banned Players</div>
+                    <div class="panel-body">
+                        <table class="table table-bordered table-responsive col-xs-12">
+                            @Html.Raw(tableHeaer)
+                            @foreach (var player in Model)
+                            {
+                                @await Html.PartialAsync("BanSingle", player)
+                            }
+                        </table>
+                    </div>
+                </div>
+                
+                <br>
+                <div class="panel panel-default">
+                    <div class="panel-heading">Unban SteamId</div>
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-xs-6">
+                                <input name="UnbanSteamId" id="UnbanSteamId" class="form-control" placeholder="76561197960287930">
+                            </div>
+                            <div class="col-xs-3">
+                            </div>
+                            <div class="col-xs-3">
+                                <Button alt="Remove ban" class="btn-success" onclick="RemoveBannedPlayer($('#UnbanSteamId').val())">Unban</Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
