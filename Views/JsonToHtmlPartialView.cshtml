@@ -5,21 +5,37 @@
     
     var isMultiLevel = false; 
     var isSingleLevel = false;
+    var isKick = false;
+    object? converted = null;
+    KickViewModel kick = new KickViewModel();
+    //Realy realy bad way to do it :(
     try
     {
-        var converted = JsonConvert.DeserializeObject(Model);
-        if (converted is JObject)
+        try
         {
-            isMultiLevel = true;
+            converted = JsonConvert.DeserializeObject(Model);
         }
-        else if (converted is JArray)
+        catch
         {
-            isSingleLevel = true;
+            //Ignore
+        }
+        kick = JsonConvert.DeserializeObject<KickViewModel>(Model,new JsonSerializerSettings{CheckAdditionalContent = false});
+        if (kick.UniqueID != ""&&kick.UniqueID != null)
+        {
+            isKick = true;
         }
     }
-    catch (Exception e)
+    catch
     {
-        //ignore
+        // ignored
+    }
+    if (converted!= null && converted is JObject)
+    {
+        isMultiLevel = true;
+    }
+    else if (converted!= null && converted is JArray)
+    {
+        isSingleLevel = true;
     }
 }
 <!-- Modal -->
@@ -40,6 +56,10 @@
             else if (isSingleLevel) //might not be multiLevel nor singleLevel (if no data)
             {
                 await Html.RenderPartialAsync("JsonToHtmlSinglelevelPartialView.cshtml", Model);
+            }
+            else if (isKick)
+            {
+                await Html.RenderPartialAsync("JsonToHtmlMultilevelPartialView.cshtml", JsonConvert.SerializeObject(kick)); 
             }
             else
             {
