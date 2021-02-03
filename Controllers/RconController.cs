@@ -216,7 +216,7 @@ namespace PavlovRconWebserver.Controllers
                 await _serverBansService.Delete(toRemoveBan.Id);
             }
             
-            Task.Delay(500).Wait();
+            Task.Delay(1000).Wait();
             //unban command
             try
             {
