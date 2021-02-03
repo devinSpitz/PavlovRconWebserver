@@ -160,7 +160,7 @@ namespace PavlovRconWebserver.Models
                     InputValueTwo = true,
                     valuesTwoOptions = new List<string>()
                     {
-                        "SND", "TDM", "DM", "GUN"
+                        "SND", "TDM", "DM", "GUN","ZWV", "WW2GUN", "TANKTDM", "KOTH"
                     },
                     PartialViewName = "https://steamcommunity.com/workshop/browse/?appid=555160&browsesort=trend&section=readytouseitems&actualsort=trend&p=1&numperpage=30",
                     MinRole = "Captain"

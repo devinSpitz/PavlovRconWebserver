@@ -33,7 +33,14 @@
             var tmpString = "";
             if (Model != null)
             {
-                tmp = Model.BannedDateTime.Add(Model.BanSpan);
+                try
+                {
+                    tmp = Model.BannedDateTime.Add(Model.BanSpan);
+                }
+                catch (Exception e)
+                {
+                    tmpString = "Permanent";
+                }
                 tmpString = tmp.ToLongTimeString();
             }
             if (tmpString == "00:00:00")

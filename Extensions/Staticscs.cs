@@ -8,7 +8,7 @@ namespace PavlovRconWebserver.Extensions
     {
         public static IDictionary<string, TimeSpan> BanList { get; } = new Dictionary<string, TimeSpan>()
         {
-            {"unlimited", new TimeSpan(999999999, 0, 0, 0, 0)},
+            {"unlimited", new TimeSpan(9999999, 0, 0, 0, 0)},
             {"5min", new TimeSpan(0, 0, 5, 0, 0)},
             {"10min", new TimeSpan(0, 0, 10, 0, 0)},
             {"30min", new TimeSpan(0, 0, 30, 0, 0)},
