@@ -7,7 +7,7 @@
     }
     else
     {
-        banDate = @Model?.BannedDateTime.ToLongDateString()+" : "+Model?.BannedDateTime.ToShortTimeString();
+        banDate = @Model?.BannedDateTime.ToShortDateString()+" "+Model?.BannedDateTime.ToShortTimeString();
     }
 }
 <tr>
@@ -24,10 +24,10 @@
     <td>
         @Model?.Comment
     </td>
-    <td>
+    <td class='date col-xs-3'>
         @banDate
     </td>
-    <td>
+    <td class='date col-xs-3'>
         @{
             var tmp = new DateTime();
             var tmpString = "";
@@ -37,11 +37,18 @@
                 {
                     tmp = Model.BannedDateTime.Add(Model.BanSpan);
                 }
-                catch (Exception e)
+                catch
                 {
-                    tmpString = "Permanent";
+                    //Ignore
                 }
-                tmpString = tmp.ToLongTimeString();
+                if (tmp.ToLongDateString() + " : " + tmp.ToShortTimeString() == new DateTime().ToLongDateString() + " : " + new DateTime().ToShortTimeString())
+                {
+                    tmpString = "Permanent"; 
+                }
+                else
+                {
+                    tmpString = @tmp.ToShortDateString()+" "+tmp.ToShortTimeString();
+                }
             }
             if (tmpString == "00:00:00")
             {

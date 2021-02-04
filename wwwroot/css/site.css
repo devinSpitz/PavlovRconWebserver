@@ -2,6 +2,9 @@
     padding-top: 50px;
     padding-bottom: 20px;
 }
+.cssModalSizeAsChildren{
+    display: inline flow-root list-item;
+}
 
 /* Wrapping element */
 /* Set some basic padding to keep content from hitting the edges */
