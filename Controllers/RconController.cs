@@ -23,6 +23,7 @@ namespace PavlovRconWebserver.Controllers
         private readonly MapsService _mapsService;
         private readonly PavlovServerService _pavlovServerService;
         private readonly ServerBansService _serverBansService;
+        private readonly PavlovServerPlayerService _pavlovServerPlayerService;
         
         public RconController(RconService service,
             SshServerSerivce serverService,
@@ -30,7 +31,8 @@ namespace PavlovRconWebserver.Controllers
             ServerSelectedMapService serverSelectedMapService,
             MapsService mapsService,
             PavlovServerService pavlovServerService,
-            ServerBansService serverBansService)
+            ServerBansService serverBansService,
+            PavlovServerPlayerService pavlovServerPlayerService)
         {
             _service = service;
             _serverService = serverService;
@@ -39,6 +41,7 @@ namespace PavlovRconWebserver.Controllers
             _mapsService = mapsService;
             _pavlovServerService = pavlovServerService;
             _serverBansService = serverBansService;
+            _pavlovServerPlayerService = pavlovServerPlayerService;
         }
         
    
@@ -279,19 +282,9 @@ namespace PavlovRconWebserver.Controllers
             
             if(!await RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return Unauthorized();
             if (serverId<=0) return BadRequest("Please choose a server!");
+
             var server = await _pavlovServerService.FindOne(serverId);
-            var playersTmp = "";
-            var extendetList = new List<PlayerModelExtended>();
-            PlayerListClass playersList = new PlayerListClass();
-            try
-            {
-                playersTmp = await _service.SendCommand(server, "RefreshList");
-            }
-            catch (CommandException e)
-            {
-                return BadRequest(e.Message);
-            }
-            playersList = JsonConvert.DeserializeObject<PlayerListClass>(playersTmp);
+            var players = await _pavlovServerPlayerService.FindAllFromServer(serverId);
             var serverInfo = "";
             try
             {
@@ -299,31 +292,27 @@ namespace PavlovRconWebserver.Controllers
             }
             catch (CommandException e)
             {
-                return BadRequest(e.Message);
+                throw  new PavlovServerPlayerException(e.Message);
             }
+            
             var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(serverInfo);
-            
-            
-            if (playersList.PlayerList != null)
+            var model = new PavlovServerPlayerListViewModel()
             {
-                int i = 0;
-                var query = from s in playersList.PlayerList 
-                    let num = i++
-                    group s by num / 3 into g
-                    select g.ToArray();
-                var playerGroups = query.ToArray();
-                
-                foreach (var playerGroup in playerGroups)
+                PlayerList = players.Select(x => new PlayerModelExtended()
                 {
-                    extendetList.AddRange(await Task.WhenAll(playerGroup
-                        .Select(i => _service.GetPlayerInfo(server, i.UniqueId, i.Username))
-                        .ToArray()));
-                }
-            }
-
-            ViewBag.team0Score = tmp.ServerInfo.Team0Score;
-            ViewBag.team1Score = tmp.ServerInfo.Team1Score;
-            return PartialView("/Views/Rcon/PlayerList.cshtml",extendetList);
+                    Cash = x.Cash,
+                    KDA = x.KDA,
+                    Score = x.Score,
+                    TeamId = x.TeamId,
+                    UniqueId = x.UniqueId,
+                    Username = x.Username
+                }).ToList(),
+                team0Score = tmp.ServerInfo.Team0Score,
+                team1Score = tmp.ServerInfo.Team1Score
+            };
+            
+            
+            return PartialView("/Views/Rcon/PlayerList.cshtml",model);
         }
         
         

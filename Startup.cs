@@ -42,6 +42,7 @@ namespace PavlovRconWebserver
          services.AddTransient<MatchService>();
          services.AddTransient<PavlovServerService>();
          services.AddTransient<ServerBansService>();
+         services.AddTransient<PavlovServerPlayerService>();
          
          
          // Add application services.
@@ -104,6 +105,9 @@ namespace PavlovRconWebserver
             Cron.Daily(2)); // Get all Maps every day on 2 in the morning
          RecurringJob.AddOrUpdate( 
             () => RconStatic.CheckBansForAllServers(connectionString),
+            string.Format("*/{0} * * * *", (object) 5)); // Check for bans and remove them is necessary
+         RecurringJob.AddOrUpdate( 
+            () => RconStatic.ReloadPlayerListFromServer(connectionString),
             string.Format("*/{0} * * * *", (object) 5)); // Check for bans and remove them is necessary
 
             

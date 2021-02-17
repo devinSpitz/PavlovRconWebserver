@@ -38,6 +38,31 @@ namespace PavlovRconWebserver.Extensions
                     } 
                 }
             }
+        }        
+        
+        public static async Task ReloadPlayerListFromServer(string connectionString)
+        {
+            var serverSelectedMapService = new ServerSelectedMapService(new LiteDbIdentityContext(connectionString));
+            var pavlovServerService = new PavlovServerService(new LiteDbIdentityContext(connectionString));
+            var sshServerSerivce = new SshServerSerivce(new LiteDbIdentityContext(connectionString),pavlovServerService);
+            var rconSerivce = new RconService(serverSelectedMapService,sshServerSerivce);
+            var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString),pavlovServerService,rconSerivce);
+            var servers = await sshServerSerivce.FindAll();
+            foreach (var server in servers)
+            {
+                
+                foreach (var signleServer in server.PavlovServers)
+                {
+                    try
+                    {
+                        await pavlovServerPlayerService.SaveRealTimePlayerListFromServer(signleServer.Id);
+                    }
+                    catch (Exception e)
+                    {
+                        // ingore for now
+                    } 
+                }
+            }
         }
 
     }
