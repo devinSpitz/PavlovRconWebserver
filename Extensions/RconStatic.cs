@@ -59,6 +59,7 @@ namespace PavlovRconWebserver.Extensions
                     }
                     catch (Exception e)
                     {
+                        Console.WriteLine(e.Message);
                         // ingore for now
                     } 
                 }

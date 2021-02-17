@@ -204,10 +204,10 @@ namespace PavlovRconWebserver.Models
     }
     public class PlayerModelExtended : PlayerModel
     {
-        public string KDA = "";
-        public string Cash = "";
-        public int TeamId = 0;
-        public int Score = 0;
+        public string KDA { get; set; } = "";
+        public string Cash { get; set; } = "";
+        public int TeamId { get; set; } = 0;
+        public int Score { get; set; } = 0;
 
         public string getKills()
         {

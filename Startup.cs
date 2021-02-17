@@ -96,16 +96,26 @@ namespace PavlovRconWebserver
          app.UseStaticFiles();
 
          string connectionString = Configuration.GetConnectionString("DefaultConnection");
-         
-         RecurringJob.AddOrUpdate( 
-            () => Steam.DeleteAllUnsedMapsFromAllServers(connectionString),
-            Cron.Daily(3)); // Delete all unusedMaps every day on 3 in the morning
+
+
+         if (env.EnvironmentName != "Development")
+         {
+            RecurringJob.AddOrUpdate(
+               () => Steam.DeleteAllUnsedMapsFromAllServers(connectionString),
+               Cron.Daily(3)); // Delete all unusedMaps every day on 3 in the morning
+         }
+
          RecurringJob.AddOrUpdate( 
             () => Steam.CrawlSteamMaps(connectionString),
             Cron.Daily(2)); // Get all Maps every day on 2 in the morning
-         RecurringJob.AddOrUpdate( 
-            () => RconStatic.CheckBansForAllServers(connectionString),
-            string.Format("*/{0} * * * *", (object) 5)); // Check for bans and remove them is necessary
+
+         if (env.EnvironmentName != "Development")
+         {
+            RecurringJob.AddOrUpdate( 
+               () => RconStatic.CheckBansForAllServers(connectionString),
+               string.Format("*/{0} * * * *", (object) 5)); // Check for bans and remove them is necessary
+         }
+
          RecurringJob.AddOrUpdate( 
             () => RconStatic.ReloadPlayerListFromServer(connectionString),
             string.Format("*/{0} * * * *", (object) 5)); // Check for bans and remove them is necessary

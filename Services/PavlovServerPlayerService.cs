@@ -35,7 +35,7 @@ namespace PavlovRconWebserver.Services
                 .DeleteMany(x => x.ServerId == serverId);
             
             return _liteDb.LiteDatabase.GetCollection<PavlovServerPlayer>("PavlovServerPlayer")
-                .Upsert(pavlovServerPlayers);
+                .Insert(pavlovServerPlayers);
         }
 
         
