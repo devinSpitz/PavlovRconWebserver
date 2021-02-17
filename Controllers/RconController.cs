@@ -309,7 +309,7 @@ namespace PavlovRconWebserver.Controllers
                 int i = 0;
                 var query = from s in playersList.PlayerList 
                     let num = i++
-                    group s by num / 5 into g
+                    group s by num / 3 into g
                     select g.ToArray();
                 var playerGroups = query.ToArray();
                 
