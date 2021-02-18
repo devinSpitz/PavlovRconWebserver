@@ -102,12 +102,12 @@ namespace PavlovRconWebserver.Services
                     }
                 }
 
-
+                //Todo: make this code more rebust
                 var sshCommand = client.CreateCommand("chmod +x " + pavlovRemoteScriptPath);
                 sshCommand.Execute();
 
                 var sshCommandExecuteBtach = client.CreateCommand(pavlovRemoteScriptPath + " " + commandFileRemote);
-                sshCommandExecuteBtach.CommandTimeout = TimeSpan.FromMilliseconds(500);
+                sshCommandExecuteBtach.CommandTimeout = TimeSpan.FromMilliseconds(1000);
                 try
                 {
                     sshCommandExecuteBtach.Execute();
@@ -130,7 +130,7 @@ namespace PavlovRconWebserver.Services
                         "After the ssh connection the telnet connection can not login. Can not send command!");
                 }
 
-                Task.Delay(500).Wait();
+                //Task.Delay(500).Wait();
                 // check answer
                 result.answer = sshCommandExecuteBtach.Result;
 
