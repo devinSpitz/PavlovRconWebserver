@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <UserSecretsId>aspnet-AspNetCore.Identity.LiteDB.Demo-A220779C-FF35-4548-B67B-1F33A07A49F3</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
@@ -14,7 +14,7 @@
     <PackageReference Include="HtmlAgilityPack" Version="1.11.30" />
     <PackageReference Include="LiteDB.Identity" Version="1.0.3" />
     <PackageReference Include="LiteGuard" Version="2.2.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="3.1.6" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="5.0.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1-beta1" />
     <PackageReference Include="SSH.NET" Version="2020.0.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.0.7" />

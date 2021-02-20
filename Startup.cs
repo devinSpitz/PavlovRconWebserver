@@ -1,8 +1,7 @@
 ﻿
 using Hangfire;
+using Hangfire.Dashboard;
 using Hangfire.MemoryStorage;
-using LiteDB;
-using LiteDB.Identity.Database;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -10,10 +9,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PavlovRconWebserver.Services;
 using LiteDB.Identity.Extensions;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi.Models;
 using PavlovRconWebserver.Extensions;
-using PavlovRconWebserver.Models;
 
 namespace PavlovRconWebserver
 {
@@ -43,7 +42,6 @@ namespace PavlovRconWebserver
          services.AddTransient<PavlovServerService>();
          services.AddTransient<ServerBansService>();
          services.AddTransient<PavlovServerPlayerService>();
-         
          
          // Add application services.
          services.AddTransient<IEmailSender, EmailSender>();
@@ -90,7 +88,6 @@ namespace PavlovRconWebserver
                c.SwaggerEndpoint("/swagger/v0.0.1/swagger.json", "Pavlov Rcon Webserver V0.0.1");
           
             });
-            app.UseHangfireDashboard();
             
          }
          app.UseStaticFiles();
@@ -125,9 +122,17 @@ namespace PavlovRconWebserver
          app.UseAuthentication();
          app.UseAuthorization();
          app.UseHttpsRedirection();
+         
          app.UseEndpoints(endpoints =>
          {
             endpoints.MapDefaultControllerRoute();
+            endpoints.MapHangfireDashboard("/hangfire", new DashboardOptions
+            {
+               Authorization = new IDashboardAuthorizationFilter[]
+               {
+                  new DashboardAuthorizationFilter()
+               }
+            });
          });
          
       }
