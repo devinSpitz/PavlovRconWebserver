@@ -43,6 +43,7 @@ namespace PavlovRconWebserver
          services.AddTransient<PavlovServerService>();
          services.AddTransient<ServerBansService>();
          services.AddTransient<PavlovServerPlayerService>();
+         services.AddTransient<PavlovServerInfoService>();
          // services
          //    .AddAuthentication(cfg =>
          //    {
@@ -133,6 +134,11 @@ namespace PavlovRconWebserver
 
          RecurringJob.AddOrUpdate( 
             () => RconStatic.ReloadPlayerListFromServer(connectionString),
+            string.Format("*/{0} * * * *", (object) 5)); // Check for bans and remove them is necessary
+
+            
+         RecurringJob.AddOrUpdate( 
+            () => RconStatic.ReloadServerInfoFromServer(connectionString),
             string.Format("*/{0} * * * *", (object) 5)); // Check for bans and remove them is necessary
 
             

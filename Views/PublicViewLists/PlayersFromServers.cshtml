@@ -40,7 +40,7 @@
                     <tr><th colspan="7">Team score: @viewModel.team0Score</th></tr>
                     @foreach (var player in viewModel.PlayerList.Where(x => x.TeamId == 0).OrderByDescending(x => x.Score))
                     {
-                        @await Html.PartialAsync("/Views/Rcon/PlayerSingle.cshtml", player)
+                        @await Html.PartialAsync("/Views/PublicViewLists/PlayerSingle.cshtml", player)
                     }
 
                 </table>
@@ -51,7 +51,7 @@
                     <tr><th colspan="7">Team score: @viewModel.team1Score</th></tr>
                     @foreach (var player in viewModel.PlayerList.Where(x => x.TeamId == 1).OrderByDescending(x => x.Score))
                     {
-                        @await Html.PartialAsync("/Views/Rcon/PlayerSingle.cshtml", player)
+                        @await Html.PartialAsync("/Views/PublicViewLists/PlayerSingle.cshtml", player)
                     }
                 </table>
             </div>
@@ -62,7 +62,7 @@
                 @Html.Raw(tableHeaer)
                 @foreach (var player in viewModel.PlayerList.OrderByDescending(x => x.Score))
                 {
-                    @await Html.PartialAsync("/Views/Rcon/PlayerSingle.cshtml", player)
+                    @await Html.PartialAsync("/Views/PublicViewLists/PlayerSingle.cshtml", player)
                 }
 
             </table>
