@@ -1,4 +1,5 @@
 ﻿
+using System.Net;
 using Hangfire;
 using Hangfire.Dashboard;
 using Hangfire.MemoryStorage;
@@ -42,7 +43,12 @@ namespace PavlovRconWebserver
          services.AddTransient<PavlovServerService>();
          services.AddTransient<ServerBansService>();
          services.AddTransient<PavlovServerPlayerService>();
-         
+         services
+            .AddAuthentication(cfg =>
+            {
+               cfg.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            })
+            .AddCookie();
          // Add application services.
          services.AddTransient<IEmailSender, EmailSender>();
          services.AddSwaggerGen(c =>
@@ -71,9 +77,21 @@ namespace PavlovRconWebserver
          var options = new BackgroundJobServerOptions
          {
             WorkerCount = 10
-                
+
          };
-         
+
+         if (env.EnvironmentName == "Development")
+         {
+            app.UseHangfireDashboard("/hangfire"
+               //    ,new DashboardOptions
+               // {
+               //    Authorization = new IDashboardAuthorizationFilter[]
+               //    {
+               //       new DashboardAuthorizationFilter()
+               //    }
+               // }
+            ); // Does not work on dotnet 3.1 and i can not compile dotnet 5.0 on my ubuntu right now.
+         }
 
          app.UseHangfireServer(options);
          if (env.EnvironmentName == "Development")
@@ -126,13 +144,6 @@ namespace PavlovRconWebserver
          app.UseEndpoints(endpoints =>
          {
             endpoints.MapDefaultControllerRoute();
-            endpoints.MapHangfireDashboard("/hangfire", new DashboardOptions
-            {
-               Authorization = new IDashboardAuthorizationFilter[]
-               {
-                  new DashboardAuthorizationFilter()
-               }
-            });
          });
          
       }
