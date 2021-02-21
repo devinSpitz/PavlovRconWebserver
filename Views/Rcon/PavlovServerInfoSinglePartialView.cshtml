@@ -1,12 +1,17 @@
 @model ServerInfoViewModel
-
-<div class="panel panel-default">
+<style>
+    .pavlovServerInfoStyle{
+        margin-left: auto;
+        margin-right: auto;
+        text-align: center;
+        }
+</style>
+<div class="panel panel-default pavlovServerInfoStyle">
         <div class="panel-heading">
-            @Model.Name
+            <b>@Model.ServerInfo.ServerName</b>
         </div>
     <div class="panel-body">
         <img  src="@Model.ServerInfo.MapPictureLink" height="150px" width="150px"/>
-        <li>Name: @Model.ServerInfo.ServerName</li>
         <li>Round state: @Model.ServerInfo.RoundState</li>
         <li>Game mode: @Model.ServerInfo.GameMode</li>
         <li>Player count: @Model.ServerInfo.PlayerCount</li>
