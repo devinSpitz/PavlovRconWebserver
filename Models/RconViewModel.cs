@@ -212,19 +212,19 @@ namespace PavlovRconWebserver.Models
         public string getKills()
         {
             var tmp = KDA?.Split("/");
-            if (tmp.Length != 3) return "0";
+            if (tmp?.Length != 3) return "0";
             return tmp[0];
         }
         public string getDeaths()
         {
             var tmp = KDA?.Split("/");
-            if (tmp.Length != 3) return "0";
+            if (tmp?.Length != 3) return "0";
             return tmp[1];
         }
         public string getAssists()
         {
             var tmp = KDA?.Split("/");;
-            if (tmp.Length != 3) return "0";
+            if (tmp?.Length != 3) return "0";
             return tmp[2];
         }
         
