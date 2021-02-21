@@ -10,6 +10,7 @@ namespace PavlovRconWebserver.Models
     {
         
         public string MapLabel { get; set; }
+        public string MapPictureLink { get; set; }
         public string GameMode { get; set; }
         public string ServerName { get; set; }
         public string RoundState { get; set; }

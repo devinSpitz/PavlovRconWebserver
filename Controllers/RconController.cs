@@ -88,6 +88,10 @@ namespace PavlovRconWebserver.Controllers
             if(!await RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return Unauthorized();
             var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(server);
             tmp.Name = (await _pavlovServerService.FindOne(serverId)).Name;
+
+            var map = await _mapsService.FindOne(tmp.ServerInfo.MapLabel.Replace("UGC",""));
+            if(map!=null)
+                tmp.ServerInfo.MapPictureLink = map.ImageUrl;
             return PartialView("PavlovServerInfoPartialView", tmp);
         }
         
