@@ -43,12 +43,12 @@ namespace PavlovRconWebserver
          services.AddTransient<PavlovServerService>();
          services.AddTransient<ServerBansService>();
          services.AddTransient<PavlovServerPlayerService>();
-         services
-            .AddAuthentication(cfg =>
-            {
-               cfg.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-            })
-            .AddCookie();
+         // services
+         //    .AddAuthentication(cfg =>
+         //    {
+         //       cfg.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+         //    })
+         //    .AddCookie();
          // Add application services.
          services.AddTransient<IEmailSender, EmailSender>();
          services.AddSwaggerGen(c =>
