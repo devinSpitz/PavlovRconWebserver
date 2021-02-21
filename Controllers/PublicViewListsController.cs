@@ -32,11 +32,14 @@ namespace PavlovRconWebserver.Controllers
             _pavlovServerPlayerService = pavlovServerPlayerService;
         }
         
-        [HttpGet("[controller]/PlayersFromServers/{serverId}/{backgroundColorHex?}/{fontColorHex?}")]
+        [HttpGet("[controller]/PlayersFromServers/")]
         // GET
-        public async Task<IActionResult> PlayersFromServers(int serverId,string backgroundColorHex,string fontColorHex)
+        public async Task<IActionResult> PlayersFromServers([FromQuery]int[] servers,[FromQuery]string backgroundColorHex,[FromQuery]string fontColorHex)
         {
-
+            var result = new List<PavlovServerPlayerListPublicViewModel>();
+            foreach (var serverId in servers)
+            {
+                
                 var server = await _pavlovServerService.FindOne(serverId);
                 var players = await _pavlovServerPlayerService.FindAllFromServer(serverId);
                 var serverInfo = "";
@@ -68,9 +71,11 @@ namespace PavlovRconWebserver.Controllers
                     team0Score = tmp.ServerInfo.Team0Score,
                     team1Score = tmp.ServerInfo.Team1Score
                 };
+                result.Add(model);
+            }
             ViewBag.background = backgroundColorHex;
             ViewBag.textColor = fontColorHex;
-            return PartialView(model);
+            return PartialView(result);
         }
     }
 }

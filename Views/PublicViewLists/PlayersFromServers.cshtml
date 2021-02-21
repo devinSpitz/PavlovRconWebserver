@@ -1,4 +1,4 @@
-@model PavlovServerPlayerListPublicViewModel
+@model List<PavlovServerPlayerListPublicViewModel>
 
 <style>
     .stylePavlovServers{
@@ -13,54 +13,56 @@
         background-color: #f98787 !important;
     }
 </style>
+@foreach (var viewModel in Model)
+{
+    <div class="stylePavlovServers">
+        @await Html.PartialAsync("/Views/Rcon/PavlovServerInfoSinglePartialView.cshtml", new ServerInfoViewModel
+        {
+            Name = viewModel.ServerInfo.ServerName,
+            ServerInfo = viewModel.ServerInfo
+        })
+        @{
+            var hasTwoTeams = viewModel.PlayerList.GroupBy(x => x.TeamId).Count() == 2;
+            var tableHeaer = "<thead><tr><th>Name</th><th>Score</th><th>Kills</th><th>Deaths</th><th>Assits</th><th>Cash</th></tr></thead>";
+        }
+        @if (hasTwoTeams)
+        {
+            <div class="row  col-xs-6">
+                <table class="table table-responsive table-bordered bg-primary ">
+                    @Html.Raw(tableHeaer)
+                    <tr><th colspan="7">Team score: @viewModel.team0Score</th></tr>
+                    @foreach (var player in viewModel.PlayerList.Where(x => x.TeamId == 0).OrderByDescending(x => x.Score))
+                    {
+                        @await Html.PartialAsync("/Views/Rcon/PlayerSingle.cshtml", player)
+                    }
 
-<div class="stylePavlovServers">
-    @await Html.PartialAsync("/Views/Rcon/PavlovServerInfoSinglePartialView.cshtml",new ServerInfoViewModel
-    {
-        Name = Model.ServerInfo.ServerName,
-        ServerInfo = Model.ServerInfo
-    })
-    @{
-        var hasTwoTeams = Model.PlayerList.GroupBy(x => x.TeamId).Count() == 2;
-        var tableHeaer = "<thead><tr><th>Name</th><th>Score</th><th>Kills</th><th>Deaths</th><th>Assits</th><th>Cash</th></tr></thead>";
-    }
-    @if (hasTwoTeams)
-    {
-        <div class="row  col-xs-6">
-            <table class="table table-responsive table-bordered bg-primary ">
+                </table>
+            </div>
+            <div class="row col-xs-6">
+                <table class="table table-responsive table-bordered Red  ">
+                    @Html.Raw(tableHeaer)
+                    <tr><th colspan="7">Team score: @viewModel.team1Score</th></tr>
+                    @foreach (var player in viewModel.PlayerList.Where(x => x.TeamId == 1).OrderByDescending(x => x.Score))
+                    {
+                        @await Html.PartialAsync("/Views/Rcon/PlayerSingle.cshtml", player)
+                    }
+                </table>
+            </div>
+        }
+        else
+        {
+            <table class="table table-bordered table-responsive col-xs-12">
                 @Html.Raw(tableHeaer)
-                <tr><th colspan="7">Team score: @Model.team0Score</th></tr>
-                @foreach (var player in Model.PlayerList.Where(x => x.TeamId == 0).OrderByDescending(x => x.Score))
+                @foreach (var player in viewModel.PlayerList.OrderByDescending(x => x.Score))
                 {
                     @await Html.PartialAsync("/Views/Rcon/PlayerSingle.cshtml", player)
                 }
 
             </table>
-        </div>
-        <div class="row col-xs-6">
-            <table class="table table-responsive table-bordered Red  ">
-                @Html.Raw(tableHeaer)
-                <tr><th colspan="7">Team score: @Model.team1Score</th></tr>
-                @foreach (var player in Model.PlayerList.Where(x => x.TeamId == 1).OrderByDescending(x => x.Score))
-                {
-                    @await Html.PartialAsync("/Views/Rcon/PlayerSingle.cshtml", player)
-                }
-            </table>
-        </div>
-    }
-    else
-    {
-        <table class="table table-bordered table-responsive col-xs-12">
-            @Html.Raw(tableHeaer)
-            @foreach (var player in Model.PlayerList.OrderByDescending(x => x.Score))
-            {
-                @await Html.PartialAsync("/Views/Rcon/PlayerSingle.cshtml", player)
-            }
-
-        </table>
-    }
-</div>
+        }
+    </div>
 
 
+}
 
 
