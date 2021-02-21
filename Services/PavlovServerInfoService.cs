@@ -34,7 +34,7 @@ namespace PavlovRconWebserver.Services
         public async Task<int> Upsert(PavlovServerInfo pavlovServerInfo)
         {
             _liteDb.LiteDatabase.GetCollection<PavlovServerInfo>("PavlovServerInfo")
-                .Delete(pavlovServerInfo.ServerId);
+                .DeleteMany(x=>x.ServerId == pavlovServerInfo.ServerId);
             
             return _liteDb.LiteDatabase.GetCollection<PavlovServerInfo>("PavlovServerInfo")
                 .Insert(pavlovServerInfo);
