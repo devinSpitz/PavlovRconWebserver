@@ -11,12 +11,12 @@
         margin-right: auto;
         color: @ViewBag.textColor;
     }
-    .Blue{
-        background-color: #2b669a !important;
+    .Team0{
+        background-color: #2b669a;
     }
     
-    .Red{
-        background-color: #f98787 !important;
+    .Team1{
+        background-color: #f98787;
     }
     
 </style>
@@ -35,7 +35,7 @@
         @if (hasTwoTeams)
         {
             <div class="row  col-xs-6">
-                <table class="table pavlovTable table-responsive table-bordered bg-primary ">
+                <table class="table pavlovTable table-responsive table-bordered bg-primary Team0">
                     @Html.Raw(tableHeaer)
                     <tr><th colspan="7">Team score: @viewModel.team0Score</th></tr>
                     @foreach (var player in viewModel.PlayerList.Where(x => x.TeamId == 0).OrderByDescending(x => x.Score))
@@ -46,7 +46,7 @@
                 </table>
             </div>
             <div class="row col-xs-6">
-                <table class="table pavlovTable table-responsive table-bordered Red  ">
+                <table class="table pavlovTable table-responsive table-bordered Team1  ">
                     @Html.Raw(tableHeaer)
                     <tr><th colspan="7">Team score: @viewModel.team1Score</th></tr>
                     @foreach (var player in viewModel.PlayerList.Where(x => x.TeamId == 1).OrderByDescending(x => x.Score))
