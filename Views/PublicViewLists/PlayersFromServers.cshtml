@@ -34,7 +34,7 @@
         }
         @if (hasTwoTeams)
         {
-            <div class="row  col-xs-6">
+            <div class="row  col-ms-6">
                 <table class="table pavlovTable table-responsive table-bordered bg-primary Team0">
                     @Html.Raw(tableHeaer)
                     <tr><th colspan="7">Team score: @viewModel.team0Score</th></tr>
@@ -45,7 +45,7 @@
 
                 </table>
             </div>
-            <div class="row col-xs-6">
+            <div class="row col-ms-6">
                 <table class="table pavlovTable table-responsive table-bordered Team1  ">
                     @Html.Raw(tableHeaer)
                     <tr><th colspan="7">Team score: @viewModel.team1Score</th></tr>
@@ -58,7 +58,7 @@
         }
         else
         {
-            <table class="table pavlovTable table-bordered table-responsive col-xs-12">
+            <table class="table pavlovTable table-bordered table-responsive col-ms-12">
                 @Html.Raw(tableHeaer)
                 @foreach (var player in viewModel.PlayerList.OrderByDescending(x => x.Score))
                 {
