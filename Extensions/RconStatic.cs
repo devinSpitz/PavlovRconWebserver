@@ -75,9 +75,8 @@ namespace PavlovRconWebserver.Extensions
                 Console.WriteLine(e); // not complete ignore at least let us now that there is a problem over cli
                 //But the Job has to go one cause otherwise the playerlist is not updated
             }
-            
             if(recursive)
-                BackgroundJob.Schedule(() => ReloadPlayerListFromServerAndTheServerInfo(connectionString,recursive),new TimeSpan(0,0,30)); // Check for bans and remove them is necessary
+                BackgroundJob.Enqueue(() => ReloadPlayerListFromServerAndTheServerInfo(connectionString,recursive)); // Check for bans and remove them is necessary
         }
         
 

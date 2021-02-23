@@ -142,7 +142,7 @@ namespace PavlovRconWebserver.Services
                 //Task.Delay(500).Wait();
                 // check answer
                 result.answer = sshCommandExecuteBtach.Result;
-
+                sshCommandExecuteBtach.CancelAsync();
                 sshCommandExecuteBtach.Dispose();
 
                 if (result.errors.Count > 0 || result.answer == "")
