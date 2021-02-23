@@ -1,28 +1,9 @@
 @model PlayerModelExtended
-@{
-    var userName = "          ";
-    if(!string.IsNullOrEmpty(@Model?.Username))
-    {
-        userName = @Model.Username;
-    }
-}
+
 <tr>
     <td>
         <div class="tooltipHover">
-            @if (userName.Length >= 10)
-            {
-                <text>
-                    @userName.Substring(0, 10)...
-                </text>
-            }
-            else
-            {
-                <text>
-                    @userName
-                </text>
-            }
-            
-            <span class="tooltiptext">@userName</span>
+            @Model?.Username
         </div>
         
     </td>
