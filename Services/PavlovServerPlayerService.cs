@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -31,11 +32,16 @@ namespace PavlovRconWebserver.Services
 
         public async Task<int> Upsert(List<PavlovServerPlayer> pavlovServerPlayers,int serverId)
         {
-            _liteDb.LiteDatabase.GetCollection<PavlovServerPlayer>("PavlovServerPlayer")
+            var deletedPlayers = _liteDb.LiteDatabase.GetCollection<PavlovServerPlayer>("PavlovServerPlayer")
                 .DeleteMany(x => x.ServerId == serverId);
             
-            return _liteDb.LiteDatabase.GetCollection<PavlovServerPlayer>("PavlovServerPlayer")
+            Console.WriteLine("Removed "+deletedPlayers + " on the serverId = "+serverId);
+            var savedPlayers =  _liteDb.LiteDatabase.GetCollection<PavlovServerPlayer>("PavlovServerPlayer")
                 .Insert(pavlovServerPlayers);
+            
+            Console.WriteLine("Saved "+deletedPlayers + " on the serverId = "+serverId);
+
+            return savedPlayers;
         }
 
         
@@ -83,7 +89,7 @@ namespace PavlovRconWebserver.Services
                 Score = x.Score,
                 ServerId = serverId
             }).ToList();
-            await Upsert(pavlovServerPlayerList, serverId);
+            var playersFound = await Upsert(pavlovServerPlayerList, serverId);
             return true;
         }
         
