@@ -1,11 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using LiteDB;
 
 namespace PavlovRconWebserver.Models
 {
     public class PavlovServerInfo : ServerInfo
     {
-        [Key]
         public int ServerId { get; set; }
     }
 }

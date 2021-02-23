@@ -31,12 +31,12 @@ namespace PavlovRconWebserver.Services
                 .Find(x=>x.ServerId==serverId).FirstOrDefault();
         }
 
-        public async Task<int> Upsert(PavlovServerInfo pavlovServerInfo)
+        public async Task Upsert(PavlovServerInfo pavlovServerInfo)
         {
             _liteDb.LiteDatabase.GetCollection<PavlovServerInfo>("PavlovServerInfo")
                 .DeleteMany(x=>x.ServerId == pavlovServerInfo.ServerId);
             
-            return _liteDb.LiteDatabase.GetCollection<PavlovServerInfo>("PavlovServerInfo")
+            _liteDb.LiteDatabase.GetCollection<PavlovServerInfo>("PavlovServerInfo")
                 .Insert(pavlovServerInfo);
         }
 
