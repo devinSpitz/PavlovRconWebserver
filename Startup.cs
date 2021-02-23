@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Net;
 using Hangfire;
 using Hangfire.Dashboard;
@@ -131,15 +132,10 @@ namespace PavlovRconWebserver
                () => RconStatic.CheckBansForAllServers(connectionString),
                string.Format("*/{0} * * * *", (object) 5)); // Check for bans and remove them is necessary
          }
+         
+         BackgroundJob.Schedule( 
+            () => RconStatic.ReloadPlayerListFromServerAndTheServerInfo(connectionString,true),new TimeSpan(0,1,0)); // Check for bans and remove them is necessary
 
-         RecurringJob.AddOrUpdate( 
-            () => RconStatic.ReloadPlayerListFromServer(connectionString),
-            string.Format("*/{0} * * * *", (object) 5)); // Check for bans and remove them is necessary
-
-            
-         RecurringJob.AddOrUpdate( 
-            () => RconStatic.ReloadServerInfoFromServer(connectionString),
-            string.Format("*/{0} * * * *", (object) 5)); // Check for bans and remove them is necessary
 
             
          app.UseRouting();

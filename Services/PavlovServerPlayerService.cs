@@ -44,6 +44,7 @@ namespace PavlovRconWebserver.Services
             var server = await _pavlovServerService.FindOne(serverId);
             var playersTmp = "";
             var extendetList = new List<PlayerModelExtended>();
+            // need to get the live info
             PlayerListClass playersList = new PlayerListClass();
             try
             {

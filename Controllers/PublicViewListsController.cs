@@ -40,7 +40,6 @@ namespace PavlovRconWebserver.Controllers
             foreach (var serverId in servers)
             {
                 
-                var server = await _pavlovServerService.FindOne(serverId);
                 var players = await _pavlovServerPlayerService.FindAllFromServer(serverId);
                 var serverInfo = await _pavlovServerInfoService.FindServer(serverId);
                 
