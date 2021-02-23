@@ -104,8 +104,9 @@ namespace PavlovRconWebserver.Services
 
                 //Todo: make this code more rebust
                 var sshCommand = client.CreateCommand("chmod +x " + pavlovRemoteScriptPath);
+                sshCommand.CommandTimeout=TimeSpan.FromMilliseconds(500);
                 sshCommand.Execute();
-
+                sshCommand.Dispose();
                 var sshCommandExecuteBtach = client.CreateCommand(pavlovRemoteScriptPath + " " + commandFileRemote);
                 sshCommandExecuteBtach.CommandTimeout = TimeSpan.FromMilliseconds(1000);
                 try
@@ -134,6 +135,8 @@ namespace PavlovRconWebserver.Services
                 // check answer
                 result.answer = sshCommandExecuteBtach.Result;
 
+                sshCommandExecuteBtach.Dispose();
+                
                 if (result.errors.Count > 0 || result.answer == "")
                     return result;
 
