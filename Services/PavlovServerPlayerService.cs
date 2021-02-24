@@ -78,7 +78,7 @@ namespace PavlovRconWebserver.Services
                 int i = 0;
                 var query = from s in playersList.PlayerList 
                     let num = i++
-                    group s by num / 3 into g
+                    group s by num / 1 into g //The speed doesn't mather anymore and i may makes the server unstable when make multiple requests at once
                     select g.ToArray();
                 var playerGroups = query.ToArray();
                 
