@@ -115,7 +115,6 @@ namespace PavlovRconWebserver.Services
                 {
                     sshCommand.Dispose();
                     client.Disconnect();
-                    client.Dispose();
                     return result;
                 }
                 var sshCommandExecuteBtach = client.CreateCommand(pavlovRemoteScriptPath + " " + commandFileRemote);
@@ -147,7 +146,6 @@ namespace PavlovRconWebserver.Services
                 result.answer = sshCommandExecuteBtach.Result;
                 sshCommandExecuteBtach.CancelAsync();
                 sshCommandExecuteBtach.Dispose();
-                
                 //kill process
                 if (result.errors.Count > 0 || result.answer == "")
                     return result;
@@ -183,7 +181,10 @@ namespace PavlovRconWebserver.Services
             }
 
             client.Disconnect();
-            client.Dispose();
+            if (client.IsConnected)
+            {
+                client.Dispose();
+            }
             return result;
         }
 
@@ -211,13 +212,12 @@ namespace PavlovRconWebserver.Services
                     new PasswordAuthenticationMethod(sshServer.SshUsername, sshServer.SshPassphrase),
                     new PrivateKeyAuthenticationMethod(sshServer.SshUsername, keyFiles));
             }
-
             return connectionInfo;
         }
 
         private async Task<ConnectionResult> GetFile(PavlovServer server, AuthType type,string path,SshServer sshServer)
         {
-            var ConnectionResult = new ConnectionResult();
+            var connectionResult = new ConnectionResult();
             var connectionInfo = ConnectionInfo(server, type, out var result,sshServer);
             //check if first scripts exist
             using var sftp = new SftpClient(connectionInfo);
@@ -234,6 +234,7 @@ namespace PavlovRconWebserver.Services
                     }
                     catch (SftpPermissionDeniedException e)
                     {
+                        sftp.Disconnect();
                         throw new CommandException("Could not create file: "+path+" "+e.Message);
                     }
                 }
@@ -247,8 +248,8 @@ namespace PavlovRconWebserver.Services
 
                 var fileContentArray = outPutStream.ToArray();
                 var fileContent = System.Text.Encoding.Default.GetString(fileContentArray);
-                ConnectionResult.Seccuess = true;
-                ConnectionResult.answer = fileContent;
+                connectionResult.Seccuess = true;
+                connectionResult.answer = fileContent;
 
             }
             finally
@@ -256,7 +257,7 @@ namespace PavlovRconWebserver.Services
                 sftp.Disconnect();
             }
             
-            return ConnectionResult;
+            return connectionResult;
             
         }
 
@@ -264,7 +265,7 @@ namespace PavlovRconWebserver.Services
             SshServer sshServer,string content)
         {
 
-            var ConnectionResult = new ConnectionResult();
+            var connectionResult = new ConnectionResult();
             var connectionInfo = ConnectionInfo(server, type, out var result, sshServer);
             //check if first scripts exist
             using var sftp = new SftpClient(connectionInfo);
@@ -297,13 +298,13 @@ namespace PavlovRconWebserver.Services
 
                 if (fileContent == content)
                 {
-                    ConnectionResult.Seccuess = true;
-                    ConnectionResult.answer = "File upload successfully";
+                    connectionResult.Seccuess = true;
+                    connectionResult.answer = "File upload successfully";
                 }
                 else
                 {
-                    ConnectionResult.Seccuess = false;
-                    ConnectionResult.answer = "File in not the same as uploaded. So upload failed!";
+                    connectionResult.Seccuess = false;
+                    connectionResult.answer = "File in not the same as uploaded. So upload failed!";
                 }
     
 
@@ -313,7 +314,7 @@ namespace PavlovRconWebserver.Services
                 sftp.Disconnect();
             }
 
-            return ConnectionResult;
+            return connectionResult;
         }
         
         public async Task<bool> SaveBlackListEntry(PavlovServer server, List<ServerBans> NewBlackListContent)
@@ -375,7 +376,7 @@ namespace PavlovRconWebserver.Services
             //     Seccuess = true,
             //     answer = "Did nothing"
             // };
-            var ConnectionResult = new ConnectionResult();
+            var connectionResult = new ConnectionResult();
             var connectionInfo = ConnectionInfo(server, type, out var result,sshServer);
             using var client = new SshClient(connectionInfo);
             client.Connect();
@@ -428,10 +429,13 @@ namespace PavlovRconWebserver.Services
                         }
                         catch (SftpPermissionDeniedException)
                         {
+                        
+                            sftp.Disconnect();
                             throw new CommandException("Permission denied to delet map");
                         }
                         if (sftp.Exists(map.FullName))
                         {
+                            sftp.Disconnect();
                             throw new CommandException("Could not delete map!");
                         }
                     }
@@ -448,8 +452,8 @@ namespace PavlovRconWebserver.Services
                 sftp.Disconnect();
             }
             client.Disconnect();
-            ConnectionResult.Seccuess = true;
-            return ConnectionResult;
+            connectionResult.Seccuess = true;
+            return connectionResult;
         }
         private static void DeleteDirectory(SftpClient client, string path)
         {
