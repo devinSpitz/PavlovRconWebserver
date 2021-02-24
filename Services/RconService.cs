@@ -149,8 +149,6 @@ namespace PavlovRconWebserver.Services
                 sshCommandExecuteBtach.Dispose();
                 
                 //kill process
-                client.Disconnect();
-                client.Dispose();
                 if (result.errors.Count > 0 || result.answer == "")
                     return result;
 
