@@ -49,9 +49,9 @@ namespace PavlovRconWebserver.Extensions
                 var pavlovServerService = new PavlovServerService(new LiteDbIdentityContext(connectionString));
                 var sshServerSerivce = new SshServerSerivce(new LiteDbIdentityContext(connectionString),pavlovServerService);
                 var rconSerivce = new RconService(serverSelectedMapService,sshServerSerivce);
-                var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString),pavlovServerService,rconSerivce);
                 var mapsService = new MapsService(new LiteDbIdentityContext(connectionString));
                 var pavlovServerInfoService = new PavlovServerInfoService(new LiteDbIdentityContext(connectionString),pavlovServerService,rconSerivce,mapsService);
+                var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString),pavlovServerService,rconSerivce,pavlovServerInfoService);
                 var servers = await sshServerSerivce.FindAll();
                 foreach (var server in servers)
                 {
