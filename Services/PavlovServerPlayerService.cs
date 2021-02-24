@@ -15,13 +15,15 @@ namespace PavlovRconWebserver.Services
         private ILiteDbIdentityContext _liteDb;
         private readonly PavlovServerService _pavlovServerService;
         private readonly RconService _rconService;
+        private readonly PavlovServerInfoService _pavlovServerInfoService;
         
         
-        public PavlovServerPlayerService(ILiteDbIdentityContext liteDbContext,PavlovServerService pavlovServerService,RconService rconService)
+        public PavlovServerPlayerService(ILiteDbIdentityContext liteDbContext,PavlovServerService pavlovServerService,RconService rconService,PavlovServerInfoService pavlovServerInfoService)
         {
             _rconService = rconService;
             _pavlovServerService = pavlovServerService;
             _liteDb = liteDbContext;
+            _pavlovServerInfoService = pavlovServerInfoService;
         }
 
         public async Task<IEnumerable<PavlovServerPlayer>> FindAllFromServer(int serverId)
@@ -44,6 +46,19 @@ namespace PavlovRconWebserver.Services
         public async Task<bool> SaveRealTimePlayerListFromServer(int serverId)
         {
             var server = await _pavlovServerService.FindOne(serverId);
+            var serverInfo = "";
+            try
+            {
+                serverInfo = await _rconService.SendCommand(server, "ServerInfo");
+            }
+            catch (CommandException e)
+            {
+                throw  new PavlovServerPlayerException(e.Message);
+            }
+            
+            var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(serverInfo);
+
+            if (tmp == null || tmp.ServerInfo.RoundState != "Started") return true;
             var playersTmp = "";
             var extendetList = new List<PlayerModelExtended>();
             // need to get the live info
