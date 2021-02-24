@@ -76,7 +76,7 @@ namespace PavlovRconWebserver.Extensions
                 //But the Job has to go one cause otherwise the playerlist is not updated
             }
             if(recursive)
-                BackgroundJob.Schedule(() => ReloadPlayerListFromServerAndTheServerInfo(connectionString,recursive),new TimeSpan(0,0,15)); // Check for bans and remove them is necessary
+                BackgroundJob.Schedule(() => ReloadPlayerListFromServerAndTheServerInfo(connectionString,recursive),new TimeSpan(0,0,30)); // Check for bans and remove them is necessary
         }
         
 
