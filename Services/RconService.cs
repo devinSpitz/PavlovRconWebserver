@@ -219,8 +219,6 @@ namespace PavlovRconWebserver.Services
         {
             var ConnectionResult = new ConnectionResult();
             var connectionInfo = ConnectionInfo(server, type, out var result,sshServer);
-            using var client = new SshClient(connectionInfo);
-            client.Connect();
             //check if first scripts exist
             using var sftp = new SftpClient(connectionInfo);
             try
@@ -268,8 +266,6 @@ namespace PavlovRconWebserver.Services
 
             var ConnectionResult = new ConnectionResult();
             var connectionInfo = ConnectionInfo(server, type, out var result, sshServer);
-            using var client = new SshClient(connectionInfo);
-            client.Connect();
             //check if first scripts exist
             using var sftp = new SftpClient(connectionInfo);
             try
