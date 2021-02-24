@@ -447,7 +447,7 @@ namespace PavlovRconWebserver.Services
             {
                 sftp.Disconnect();
             }
-            
+            client.Disconnect();
             ConnectionResult.Seccuess = true;
             return ConnectionResult;
         }
