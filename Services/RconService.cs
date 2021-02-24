@@ -46,10 +46,11 @@ namespace PavlovRconWebserver.Services
             var commandFilelocal = "Temp/Command" + guid;
             File.Copy("Command", commandFilelocal, true);
             var commandFileRemote = tmpFolderRemote + "Commands" + guid;
+            
+            //connection
+            using var client = new SshClient(connectionInfo);
             try
             {
-                //connection
-                using var client = new SshClient(connectionInfo);
                 client.Connect();
                 //check if first scripts exist
                 using (var sftp = new SftpClient(connectionInfo))
@@ -113,6 +114,7 @@ namespace PavlovRconWebserver.Services
                 catch (Exception e)
                 {
                     sshCommand.Dispose();
+                    client.Disconnect();
                     return result;
                 }
                 var sshCommandExecuteBtach = client.CreateCommand(pavlovRemoteScriptPath + " " + commandFileRemote);
@@ -144,6 +146,9 @@ namespace PavlovRconWebserver.Services
                 result.answer = sshCommandExecuteBtach.Result;
                 sshCommandExecuteBtach.CancelAsync();
                 sshCommandExecuteBtach.Dispose();
+                
+                //kill process
+                client.Disconnect();
 
                 if (result.errors.Count > 0 || result.answer == "")
                     return result;
@@ -156,6 +161,7 @@ namespace PavlovRconWebserver.Services
             }
             catch (Exception e)
             {
+                client.Disconnect();
                 switch (e)
                 {
                     case SshAuthenticationException _:
@@ -177,6 +183,7 @@ namespace PavlovRconWebserver.Services
                 return result;
             }
 
+            client.Disconnect();
             return result;
         }
 
