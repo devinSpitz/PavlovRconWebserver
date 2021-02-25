@@ -119,7 +119,7 @@ namespace PavlovRconWebserver.Services
                 client.Disconnect();
             }
 
-            result.answer = string.Join("][", result.MultiAnswer);
+            result.answer = string.Join("],[", result.MultiAnswer);
             result.answer = "[" + result.answer + "]";
             if (result.errors.Count <= 0 || result.answer != "")
             {
