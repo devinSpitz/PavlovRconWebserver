@@ -119,7 +119,7 @@ namespace PavlovRconWebserver.Services
                 client.Disconnect();
             }
 
-            result.answer = string.Join("],[", result.MultiAnswer);
+            result.answer = string.Join(",", result.MultiAnswer);
             result.answer = "[" + result.answer + "]";
             if (result.errors.Count <= 0 || result.answer != "")
             {
@@ -405,7 +405,7 @@ namespace PavlovRconWebserver.Services
             }
 
             var playerInfo = await SendCommand(server, "", false, false, "", false, true, commands);
-            var tmpPlayers = JsonConvert.DeserializeObject<List<PlayerModelExtendedRconModel>>(playerInfo);
+            var tmpPlayers = JsonConvert.DeserializeObject<List<PlayerModelExtendedRconModel>>(playerInfo,new JsonSerializerSettings{CheckAdditionalContent = false});
             foreach (var player in tmpPlayers)
             {
                 player.PlayerInfo.Username = player.PlayerInfo.PlayerName;
