@@ -238,12 +238,7 @@ function sendSingleCommand(command)
     });
 
     let controller = "Rcon";
-    if(MultiRcon) {
-        controller = "MultiRcon";
-        data =  { servers: servers, command: command };
-    }else{
-        data =  { server: servers[0], command: command };
-    }
+    data =  { server: servers[0], command: command };
     $.ajax({
         type: 'POST',
         url: "/"+controller+"/sendCommand",
@@ -257,19 +252,10 @@ function sendSingleCommand(command)
             else{
                 if(command==="ServerInfo")
                 {
-                    if(MultiRcon) {
-                        SingleServerInfoPartialView(result,servers);
-                    }else{
-                        SingleServerInfoPartialView(result,servers[0]);
-                    }
+                    SingleServerInfoPartialView(result,servers[0]);
                 }
                 else {
-                    if(MultiRcon)
-                    {
-                        jsonTOHtmlPartialView(result.toString());
-                    }else{
-                        jsonTOHtmlPartialView(result.toString());
-                    }
+                    jsonTOHtmlPartialView(result.toString());
                 }
                 $(".overlay").hide();
             }
@@ -288,12 +274,7 @@ function SingleServerInfoPartialView(result,ServerIds)
 {
     let controller = "Rcon";
     let data = {};
-    if(MultiRcon) {
-        controller = "MultiRcon";
-        data = { servers: result ,serverIds: ServerIds};
-    }else{
-        data = { server: result ,serverId: ServerIds[0]};
-    }
+    data = { server: result ,serverId: ServerIds[0]};
 
     $.ajax({
         type: 'POST',
@@ -339,9 +320,7 @@ function RconChooseMapPartialView()
         servers.push($(this).val())
     });
 
-    if(!MultiRcon) {
-        data = { serverId: servers[0]};
-    }
+    data = { serverId: servers[0]};
     $(".overlay").show();
     $.ajax({
         type: 'POST',

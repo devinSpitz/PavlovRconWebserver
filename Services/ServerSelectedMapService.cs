@@ -24,7 +24,7 @@ namespace PavlovRconWebserver.Services
                 .FindAll();
         }
 
-        public async Task<IEnumerable<ServerSelectedMap>> FindAllFrom(SshServer sshServer)
+        public async Task<IEnumerable<ServerSelectedMap>> FindAllFrom(PavlovServer sshServer)
         {
             return _liteDb.LiteDatabase.GetCollection<ServerSelectedMap>("ServerSelectedMap")
                 .Include(x=>x.Map)

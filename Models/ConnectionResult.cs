@@ -7,5 +7,7 @@ namespace PavlovRconWebserver.Models
         public bool Seccuess { get; set; } = false;
         public List<string> errors { get; set; } = new List<string>();
         public string answer { get; set; } = "";
+        
+        public List<string> MultiAnswer { get; set; } = new List<string>();
     }
 }

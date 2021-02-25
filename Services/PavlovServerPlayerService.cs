@@ -46,19 +46,6 @@ namespace PavlovRconWebserver.Services
         public async Task<bool> SaveRealTimePlayerListFromServer(int serverId)
         {
             var server = await _pavlovServerService.FindOne(serverId);
-            var serverInfo = "";
-            try
-            {
-                serverInfo = await _rconService.SendCommand(server, "ServerInfo");
-            }
-            catch (CommandException e)
-            {
-                throw  new PavlovServerPlayerException(e.Message);
-            }
-            
-            var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(serverInfo);
-
-            if (tmp == null || tmp.ServerInfo.RoundState != "Started") return true;
             var playersTmp = "";
             var extendetList = new List<PlayerModelExtended>();
             // need to get the live info
@@ -73,21 +60,10 @@ namespace PavlovRconWebserver.Services
             }
             playersList = JsonConvert.DeserializeObject<PlayerListClass>(playersTmp);
 
-            if (playersList.PlayerList != null)
+            if (playersList?.PlayerList.Count>0)
             {
-                int i = 0;
-                var query = from s in playersList.PlayerList 
-                    let num = i++
-                    group s by num / 1 into g //The speed doesn't mather anymore and i may makes the server unstable when make multiple requests at once
-                    select g.ToArray();
-                var playerGroups = query.ToArray();
-                
-                foreach (var playerGroup in playerGroups)
-                {
-                    extendetList.AddRange(await Task.WhenAll(playerGroup
-                        .Select(i => _rconService.GetPlayerInfo(server, i.UniqueId, i.Username))
-                        .ToArray()));
-                }
+                var infos = await _rconService.GetPlayerInfo(server, playersList.PlayerList.Select(x => x.UniqueId).ToList());
+                extendetList = infos;
             }
 
             var pavlovServerPlayerList = extendetList.Select(x => new PavlovServerPlayer

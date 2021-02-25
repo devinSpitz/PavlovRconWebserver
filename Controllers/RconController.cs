@@ -86,7 +86,7 @@ namespace PavlovRconWebserver.Controllers
         public async Task<IActionResult> SingleServerInfoPartialView(string server,int serverId)
         {
             if(!await RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return Unauthorized();
-            var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(server);
+            var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(server.Replace("\"\"","\"ServerInfo\""));
             tmp.Name = (await _pavlovServerService.FindOne(serverId)).Name;
 
             var map = await _mapsService.FindOne(tmp.ServerInfo.MapLabel.Replace("UGC",""));
@@ -112,7 +112,7 @@ namespace PavlovRconWebserver.Controllers
             listOfMaps = (await _mapsService.FindAll()).ToList();
             if (serverId != null)
             {
-                var server = await _serverService.FindOne((int)serverId);
+                var server = await _pavlovServerService.FindOne((int)serverId);
                 var mapsSelected = await  _serverSelectedMapService.FindAllFrom(server);
                 if (mapsSelected != null)
                 {
@@ -299,7 +299,7 @@ namespace PavlovRconWebserver.Controllers
                 throw  new PavlovServerPlayerException(e.Message);
             }
             
-            var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(serverInfo);
+            var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(serverInfo.Replace("\"\"","\"ServerInfo\""));
             var model = new PavlovServerPlayerListViewModel()
             {
                 PlayerList = players.Select(x => new PlayerModelExtended()

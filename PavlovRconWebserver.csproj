@@ -67,12 +67,6 @@
     <Content Remove="Views\Account\ForgotPassword.cshtml" />
   </ItemGroup>
   <ItemGroup>
-    <None Update="Command">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="pavlovNetcatRconWebServerScript.sh">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Update="KeyFiles\CopyOnPublish.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

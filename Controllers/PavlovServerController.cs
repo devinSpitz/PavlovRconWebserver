@@ -57,7 +57,7 @@ namespace PavlovRconWebserver.Controllers
         {
             if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
             var serverSelectedMap = new List<ServerSelectedMap>();
-            var server = await _service.FindOne(serverId);
+            var server = await _pavlovServerService.FindOne(serverId);
             serverSelectedMap = (await _serverSelectedMapService.FindAllFrom(server)).ToList();
 
             var tmp = await _mapsService.FindAll();

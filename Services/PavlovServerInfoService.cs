@@ -54,7 +54,7 @@ namespace PavlovRconWebserver.Services
                 throw  new PavlovServerPlayerException(e.Message);
             }
             
-            var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(serverInfo);
+            var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(serverInfo.Replace("\"\"","\"ServerInfo\""));
             var map = await _mapsService.FindOne(tmp.ServerInfo.MapLabel.Replace("UGC",""));
             if(map!=null)
                 tmp.ServerInfo.MapPictureLink = map.ImageUrl;
