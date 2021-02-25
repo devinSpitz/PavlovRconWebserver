@@ -406,6 +406,10 @@ namespace PavlovRconWebserver.Services
 
             var playerInfo = await SendCommand(server, "", false, false, "", false, true, commands);
             var tmpPlayers = JsonConvert.DeserializeObject<List<PlayerModelExtendedRconModel>>(playerInfo);
+            foreach (var player in tmpPlayers)
+            {
+                player.PlayerInfo.Username = player.PlayerInfo.PlayerName;
+            }
             return tmpPlayers.Select(x => x.PlayerInfo).ToList();
 
         }
