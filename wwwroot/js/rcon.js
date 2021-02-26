@@ -144,7 +144,6 @@ function UpdatePlayers(server){
 
 function UpdatePlayerList(){
 
-    $(".overlay").show();
 
     var server  = $("#SingleServer").val();
 
@@ -158,7 +157,6 @@ function UpdatePlayerList(){
         success:  function(data)
         {
             PlayerListBig.html(data);
-            $(".overlay").hide();
         },
         error: function(XMLHttpRequest, textStatus, errorThrown)
         {
@@ -169,7 +167,6 @@ function UpdatePlayerList(){
                 alert('Could not update players list!');
             }
 
-            $(".overlay").hide();
         }
     });
 

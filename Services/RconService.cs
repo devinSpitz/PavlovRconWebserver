@@ -24,13 +24,15 @@ namespace PavlovRconWebserver.Services
         private readonly MapsService _mapsService;
         private readonly PavlovServerInfoService _pavlovServerInfoService;
         private readonly PavlovServerPlayerService _pavlovServerPlayerService;
+        private readonly PavlovServerPlayerHistoryService _pavlovServerPlayerHistoryService;
 
-        public RconService(ServerSelectedMapService serverSelectedMapService, MapsService mapsService,PavlovServerInfoService pavlovServerInfoService,PavlovServerPlayerService pavlovServerPlayerService)
+        public RconService(ServerSelectedMapService serverSelectedMapService, MapsService mapsService,PavlovServerInfoService pavlovServerInfoService,PavlovServerPlayerService pavlovServerPlayerService,PavlovServerPlayerHistoryService pavlovServerPlayerHistoryService)
         {
             _serverSelectedMapService = serverSelectedMapService;
             _mapsService = mapsService;
             _pavlovServerInfoService = pavlovServerInfoService;
             _pavlovServerPlayerService = pavlovServerPlayerService;
+            _pavlovServerPlayerHistoryService = pavlovServerPlayerHistoryService;
         }
 
         public enum AuthType
@@ -492,6 +494,18 @@ namespace PavlovRconWebserver.Services
                             ServerId = server.Id
                         }).ToList();
                         await _pavlovServerPlayerService.Upsert(pavlovServerPlayerList, server.Id);
+                        await _pavlovServerPlayerHistoryService.Upsert(pavlovServerPlayerList.Select(x=>new PavlovServerPlayerHistory
+                        {
+                            Username = x.Username,
+                            UniqueId = x.UniqueId,
+                            PlayerName = x.PlayerName,
+                            KDA = x.KDA,
+                            Cash = x.Cash,
+                            TeamId = x.TeamId,
+                            Score = x.Score,
+                            ServerId = x.ServerId,
+                            date = DateTime.Now
+                        }).ToList(), server.Id);
                         
                         
                         var commandTwo = "ServerInfo";

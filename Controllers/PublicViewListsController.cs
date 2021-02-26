@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using PavlovRconWebserver.Exceptions;
+using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
 using PavlovRconWebserver.Services;
 
@@ -12,24 +13,21 @@ namespace PavlovRconWebserver.Controllers
     public class PublicViewListsController : Controller
     {
         
-        private readonly RconService _service;
-        private readonly MapsService _mapsService;
-        private readonly PavlovServerService _pavlovServerService;
         private readonly PavlovServerPlayerService _pavlovServerPlayerService;
+        private readonly UserService _userService;
         private readonly PavlovServerInfoService _pavlovServerInfoService;
+        private readonly PavlovServerPlayerHistoryService _pavlovServerPlayerHistoryService;
         
         
-        public PublicViewListsController(RconService service,
+        public PublicViewListsController(PavlovServerPlayerHistoryService pavlovServerPlayerHistoryService,
+            UserService userService,
             PavlovServerInfoService pavlovServerInfoService,
-            MapsService mapsService,
-            PavlovServerService pavlovServerService,
             PavlovServerPlayerService pavlovServerPlayerService)
         {
-            _service = service;
             _pavlovServerInfoService = pavlovServerInfoService;
-            _mapsService = mapsService;
-            _pavlovServerService = pavlovServerService;
             _pavlovServerPlayerService = pavlovServerPlayerService;
+            _pavlovServerPlayerHistoryService = pavlovServerPlayerHistoryService;
+            _userService = userService;
         }
         
         [HttpGet("[controller]/PlayersFromServers/")]
@@ -64,5 +62,23 @@ namespace PavlovRconWebserver.Controllers
             ViewBag.textColor = fontColorHex;
             return PartialView(result);
         }
+        
+        [HttpGet("[controller]/GetHistoryOfPlayer/{uniqueId}")]
+        // GET
+        public async Task<IActionResult> GetHistoryOfPlayer(string uniqueId)
+        {
+            if(!await RightsHandler.IsUserAtLeastInRole("Admin", HttpContext.User, _userService))  return BadRequest("You need to be admin!");
+            return View("PlayersHistory",(await _pavlovServerPlayerHistoryService.FindAllFromPlayer(uniqueId))?.ToList());
+        }
+
+        [HttpGet("[controller]/GetHistoryOfServer/{serverId}")]
+        // GET
+        public async Task<IActionResult> GetHistoryOfServer(int serverId)
+        {
+            if(!await RightsHandler.IsUserAtLeastInRole("Admin", HttpContext.User, _userService))  return BadRequest("You need to be admin!");
+            return View("PlayersHistory",(await _pavlovServerPlayerHistoryService.FindAllFromServer(serverId))?.ToList());
+        }
     }
+    
+
 }

@@ -45,6 +45,7 @@ namespace PavlovRconWebserver
          services.AddTransient<ServerBansService>();
          services.AddTransient<PavlovServerPlayerService>();
          services.AddTransient<PavlovServerInfoService>();
+         services.AddTransient<PavlovServerPlayerHistoryService>();
          // services
          //    .AddAuthentication(cfg =>
          //    {

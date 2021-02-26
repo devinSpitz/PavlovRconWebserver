@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using LiteDB.Identity.Models;
+using Microsoft.AspNetCore.Identity;
 using PavlovRconWebserver.Models;
 using PavlovRconWebserver.Services;
 
@@ -63,7 +65,8 @@ namespace PavlovRconWebserver.Extensions
                 if(checkRole.Value==role) return result;
             }
             return result;
-        }       
+        }  
+        
         public static async Task<bool> IsUserAtLeastInTeamRole(string role,string TeamRole)
         {
             var result = false;
