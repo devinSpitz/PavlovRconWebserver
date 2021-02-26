@@ -81,8 +81,8 @@ namespace PavlovRconWebserver.Extensions
             // {
             //     throw new Exception(String.Join(" | Next Exception:  ",exceptions.Select(x=>x.Message).ToList()));
             // }
-            
-            BackgroundJob.Schedule(() => ReloadPlayerListFromServerAndTheServerInfo(connectionString,recursive),new TimeSpan(0,0,30)); // Check for bans and remove them is necessary
+
+            BackgroundJob.Schedule(() => ReloadPlayerListFromServerAndTheServerInfo(connectionString, recursive),new TimeSpan(0, 1, 0)); // Check for bans and remove them is necessary
 
         }
         
