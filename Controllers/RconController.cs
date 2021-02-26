@@ -145,6 +145,7 @@ namespace PavlovRconWebserver.Controllers
         [HttpPost("[controller]/AddBanPlayer")]
         public async Task<IActionResult> AddBanPlayer(int serverId,string steamId,string timespan)
         {
+            if(!await RightsHandler.IsUserAtLeastInRole("Mod", HttpContext.User, _userservice))  return Unauthorized();
             if (serverId<=0) return BadRequest("Please choose a server!");
             if (string.IsNullOrEmpty(steamId) || steamId == "-") return BadRequest("SteamId must be set!");
             if (string.IsNullOrEmpty(timespan)) return BadRequest("TimeSpan  must be set!");
@@ -200,6 +201,7 @@ namespace PavlovRconWebserver.Controllers
         [HttpPost("[controller]/RemoveBanPlayer")]
         public async Task<IActionResult> RemoveBanPlayer(int serverId,string steamId )
         {
+            if(!await RightsHandler.IsUserAtLeastInRole("Mod", HttpContext.User, _userservice))  return Unauthorized();
             if (serverId<=0) return BadRequest("Please choose a server!");
             if (string.IsNullOrEmpty(steamId) || steamId == "-") return BadRequest("SteamID must be set!");
             var pavlovServer = await _pavlovServerService.FindOne(serverId);

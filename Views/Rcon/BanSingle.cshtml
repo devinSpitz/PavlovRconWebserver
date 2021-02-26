@@ -1,4 +1,9 @@
+@using LiteDB.Identity.Models
+@using Microsoft.AspNetCore.Identity
 @model ServerBans
+
+@inject SignInManager<LiteDbUser> SignInManager
+@inject UserManager<LiteDbUser> UserManager
 @{
     var banDate = "";
     if (@Model?.BannedDateTime.ToLongDateString() == new DateTime().ToLongDateString())
@@ -19,7 +24,10 @@
     </td>
     <td>
         @Model?.SteamId 
-        <Button alt="Remove ban" class="btn-danger" onclick="RemoveBannedPlayer('@Model?.SteamId')"><span >&#128711;</span></Button>
+          @if (await UserManager.IsInRoleAsync(await UserManager.GetUserAsync(User), "Mod"))
+          {
+              <Button alt="Remove ban" class="btn-danger" onclick="RemoveBannedPlayer('@Model?.SteamId')"><span >&#128711;</span></Button>
+          }
     </td>
     <td>
         @Model?.Comment

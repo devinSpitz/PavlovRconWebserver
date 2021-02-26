@@ -1,5 +1,8 @@
+@using LiteDB.Identity.Models
+@using Microsoft.AspNetCore.Identity
 @model List<ServerBans>
-
+@inject SignInManager<LiteDbUser> SignInManager
+@inject UserManager<LiteDbUser> UserManager
 
 @{
     var tableHeaer = "<thead><tr><th>Id</th><th>SteamUser</th><th>SteamId</th><th>Comment</th><th class='date'>Banned date</th><th class='date'>Banned till</th></thead>";
@@ -32,23 +35,25 @@
                         </table>
                     </div>
                 </div>
-                
-                <br>
-                <div class="panel panel-default">
-                    <div class="panel-heading">Unban SteamId</div>
-                    <div class="panel-body">
-                        <div class="row">
-                            <div class="col-xs-6">
-                                <input name="UnbanSteamId" id="UnbanSteamId" class="form-control" placeholder="76561197960287930">
-                            </div>
-                            <div class="col-xs-3">
-                            </div>
-                            <div class="col-xs-3">
-                                <Button alt="Remove ban" class="btn-success" onclick="RemoveBannedPlayer($('#UnbanSteamId').val())">Unban</Button>
+                @if (await UserManager.IsInRoleAsync(await UserManager.GetUserAsync(User), "Mod"))
+                {
+                    <br>
+                    <div class="panel panel-default">
+                        <div class="panel-heading">Unban SteamId</div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-xs-6">
+                                    <input name="UnbanSteamId" id="UnbanSteamId" class="form-control" placeholder="76561197960287930">
+                                </div>
+                                <div class="col-xs-3">
+                                </div>
+                                <div class="col-xs-3">
+                                    <Button alt="Remove ban" class="btn-success" onclick="RemoveBannedPlayer($('#UnbanSteamId').val())">Unban</Button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                }
 
             </div>
         </div>

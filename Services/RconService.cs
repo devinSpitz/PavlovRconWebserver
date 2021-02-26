@@ -21,12 +21,16 @@ namespace PavlovRconWebserver.Services
     {
 
         private readonly ServerSelectedMapService _serverSelectedMapService;
-        private readonly SshServerSerivce _sshServerSerivce;
+        private readonly MapsService _mapsService;
+        private readonly PavlovServerInfoService _pavlovServerInfoService;
+        private readonly PavlovServerPlayerService _pavlovServerPlayerService;
 
-        public RconService(ServerSelectedMapService serverSelectedMapService, SshServerSerivce sshServerSerivce)
+        public RconService(ServerSelectedMapService serverSelectedMapService, MapsService mapsService,PavlovServerInfoService pavlovServerInfoService,PavlovServerPlayerService pavlovServerPlayerService)
         {
             _serverSelectedMapService = serverSelectedMapService;
-            _sshServerSerivce = sshServerSerivce;
+            _mapsService = mapsService;
+            _pavlovServerInfoService = pavlovServerInfoService;
+            _pavlovServerPlayerService = pavlovServerPlayerService;
         }
 
         public enum AuthType
@@ -35,6 +39,9 @@ namespace PavlovRconWebserver.Services
             UserPass,
             PrivateKeyPassphrase
         }
+
+
+
 
         private async Task<ConnectionResult> SShTunnelMultipleCommands(PavlovServer server, AuthType type,
             string[] commands,
@@ -45,7 +52,7 @@ namespace PavlovRconWebserver.Services
             try
             {
                 client.Connect();
-                ShellStream stream = client.CreateShellStream("pavlovRconWebserver", 80, 24, 800, 600, 1024);
+                ShellStream stream = client.CreateShellStream("pavlovRconWebserverSShTunnelMultipleCommands", 80, 24, 800, 600, 1024);
                 var telnetConnectResult = await SendCommandForShell("nc localhost " + server.TelnetPort, stream);
                 if (telnetConnectResult.ToString().Contains("Password:"))
                 {
@@ -123,7 +130,7 @@ namespace PavlovRconWebserver.Services
             result.answer = "[" + result.answer + "]";
             if (result.errors.Count <= 0 || result.answer != "")
             {
-                result.Seccuess = true;
+                result.Success = true;
             }
 
             return result;
@@ -246,7 +253,7 @@ namespace PavlovRconWebserver.Services
             if (result.errors.Count > 0 || result.answer == "")
                 return result;
 
-            result.Seccuess = true;
+            result.Success = true;
             return result;
         }
 
@@ -314,7 +321,7 @@ namespace PavlovRconWebserver.Services
 
                 var fileContentArray = outPutStream.ToArray();
                 var fileContent = System.Text.Encoding.Default.GetString(fileContentArray);
-                connectionResult.Seccuess = true;
+                connectionResult.Success = true;
                 connectionResult.answer = fileContent;
 
             }
@@ -364,12 +371,12 @@ namespace PavlovRconWebserver.Services
 
                 if (fileContent == content)
                 {
-                    connectionResult.Seccuess = true;
+                    connectionResult.Success = true;
                     connectionResult.answer = "File upload successfully";
                 }
                 else
                 {
-                    connectionResult.Seccuess = false;
+                    connectionResult.Success = false;
                     connectionResult.answer = "File in not the same as uploaded. So upload failed!";
                 }
 
@@ -391,27 +398,189 @@ namespace PavlovRconWebserver.Services
                 content, true);
 
             return true;
-        }
-
-        public async Task<List<PlayerModelExtended>> GetPlayerInfo(PavlovServer server, List<string> steamIds)
+        }    
+        public async Task<ConnectionResult> SShTunnelGetAllInfoFromPavlovServer(PavlovServer server, AuthType type,SshServer sshServer)
         {
-            List<string> commands = new List<string>();
-            if (steamIds != null)
+            
+            var connectionInfo = ConnectionInfo(server, type, out var result, sshServer);
+            using var client = new SshClient(connectionInfo);
+            try
             {
-                foreach (var steamId in steamIds)
+                client.Connect();
+                ShellStream stream = client.CreateShellStream("pavlovRconWebserverSShTunnelMultipleCommands", 80, 24, 800, 600, 1024);
+                var telnetConnectResult = await SendCommandForShell("nc localhost " + server.TelnetPort, stream);
+                if (telnetConnectResult.ToString().Contains("Password:"))
                 {
-                    commands.Add("InspectPlayer " + steamId);
+                    var authResult = await SendCommandForShell(server.TelnetPassword, stream);
+                    if (authResult.ToString().Contains("Authenticated=1"))
+                    {
+                        // Get PlayerList:
+                        var commandOne = "RefreshList";
+                        var commandResultOne = await SendCommandForShell(commandOne, stream);
+                        
+                        string singleCommandResultOne = "";
+                        if (commandResultOne.ToString().Contains("{"))
+                        {
+                            singleCommandResultOne = commandResultOne.ToString()
+                                .Substring(commandResultOne.ToString().IndexOf("{", StringComparison.Ordinal));
+                        }
+                        
+                        if (singleCommandResultOne.StartsWith("Password: Authenticated=1"))
+                            singleCommandResultOne = singleCommandResultOne.Replace("Password: Authenticated=1", "");
+                        
+                        
+                        if (singleCommandResultOne.Contains(commandOne))
+                            singleCommandResultOne = singleCommandResultOne.Replace(commandOne, "");
+                        
+                        
+                        var playersList = JsonConvert.DeserializeObject<PlayerListClass>(singleCommandResultOne);
+                        var steamIds = playersList.PlayerList.Select(x => x.UniqueId);
+                        //Inspect PlayerList
+                        List<string> commands = new List<string>(); 
+                        if (steamIds != null)
+                        {
+                            foreach (var steamId in steamIds)
+                            {
+                                commands.Add("InspectPlayer " + steamId);
+                            }
+                        }
+
+                        List<string> playerListRaw = new List<string>();
+                        foreach (var command in commands)
+                        {
+                            var commandResult = await SendCommandForShell(command, stream);
+                        
+                            string singleCommandResult = "";
+                            if (commandResult.ToString().Contains("{"))
+                            {
+                                singleCommandResult = commandResult.ToString()
+                                    .Substring(commandResult.ToString().IndexOf("{", StringComparison.Ordinal));
+                            }
+                        
+                            if (singleCommandResult.StartsWith("Password: Authenticated=1"))
+                                singleCommandResult = singleCommandResult.Replace("Password: Authenticated=1", "");
+                        
+                        
+                            if (singleCommandResult.Contains(command))
+                                singleCommandResult = singleCommandResult.Replace(command, "");
+                        
+                            playerListRaw.Add(singleCommandResult);
+                        
+                        }
+                        var playerListJson = string.Join(",", playerListRaw);
+                        playerListJson = "[" + result.answer + "]";
+                        var finsihedPlayerList = new List<PlayerModelExtended>();
+                        var tmpPlayers = JsonConvert.DeserializeObject<List<PlayerModelExtendedRconModel>>(playerListJson,new JsonSerializerSettings{CheckAdditionalContent = false});
+                        if (tmpPlayers != null)
+                        {
+                            foreach (var player in tmpPlayers)
+                            {
+                                player.PlayerInfo.Username = player.PlayerInfo.PlayerName;
+                            }
+
+                            finsihedPlayerList = tmpPlayers.Select(x => x.PlayerInfo).ToList();
+                        }
+
+                        var pavlovServerPlayerList = finsihedPlayerList.Select(x => new PavlovServerPlayer
+                        {
+                            Username = x.Username,
+                            UniqueId = x.UniqueId,
+                            KDA = x.KDA,
+                            Cash = x.Cash,
+                            TeamId = x.TeamId,
+                            Score = x.Score,
+                            ServerId = server.Id
+                        }).ToList();
+                        await _pavlovServerPlayerService.Upsert(pavlovServerPlayerList, server.Id);
+                        
+                        
+                        var commandTwo = "ServerInfo";
+                        var commandResultTwo = await SendCommandForShell(commandTwo, stream);
+                        
+                        string singleCommandResultTwo = "";
+                        if (commandResultTwo.ToString().Contains("{"))
+                        {
+                            singleCommandResultTwo = commandResultTwo.ToString()
+                                .Substring(commandResultTwo.ToString().IndexOf("{", StringComparison.Ordinal));
+                        }
+                        
+                        if (singleCommandResultTwo.StartsWith("Password: Authenticated=1"))
+                            singleCommandResultTwo = singleCommandResultTwo.Replace("Password: Authenticated=1", "");
+                        
+                        
+                        if (singleCommandResultTwo.Contains(commandTwo))
+                            singleCommandResultTwo = singleCommandResultTwo.Replace(commandTwo, "");
+                        
+                        
+                        var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(singleCommandResultTwo.Replace("\"\"","\"ServerInfo\""));
+                        var map = await _mapsService.FindOne(tmp.ServerInfo.MapLabel.Replace("UGC",""));
+                        if(map!=null)
+                            tmp.ServerInfo.MapPictureLink = map.ImageUrl;
+
+
+                        var tmpinfo = new PavlovServerInfo
+                        {
+                            MapLabel = tmp.ServerInfo.MapLabel,
+                            MapPictureLink = tmp.ServerInfo.MapPictureLink,
+                            GameMode = tmp.ServerInfo.GameMode,
+                            ServerName = tmp.ServerInfo.ServerName,
+                            RoundState = tmp.ServerInfo.RoundState,
+                            PlayerCount = tmp.ServerInfo.PlayerCount,
+                            Teams = tmp.ServerInfo.Teams,
+                            Team0Score = tmp.ServerInfo.Team0Score,
+                            Team1Score = tmp.ServerInfo.Team1Score,
+                            ServerId = server.Id
+                        };
+                        
+                        await _pavlovServerInfoService.Upsert(tmpinfo);
+
+                        result.Success = true;
+                    }
+                    else
+                    {
+                        result.errors.Add(
+                            "After the ssh connection the telnet connection can not login. Can not send command!");
+                    }
                 }
-            }
+                else
+                {
+                    result.errors.Add(
+                        "After the ssh connection the telnet connection gives strange answers. Can not send command!");
+                }
 
-            var playerInfo = await SendCommand(server, "", false, false, "", false, true, commands);
-            var tmpPlayers = JsonConvert.DeserializeObject<List<PlayerModelExtendedRconModel>>(playerInfo,new JsonSerializerSettings{CheckAdditionalContent = false});
-            foreach (var player in tmpPlayers)
+                await SendCommandForShell("Disconect", stream);
+                stream.Close();
+
+            }catch (Exception e)
             {
-                player.PlayerInfo.Username = player.PlayerInfo.PlayerName;
-            }
-            return tmpPlayers.Select(x => x.PlayerInfo).ToList();
+                switch (e)
+                {
+                    case SshAuthenticationException _:
+                        result.errors.Add("Could not Login over ssh!");
+                        break;
+                    case SshConnectionException _:
+                        result.errors.Add("Could not connect to host over ssh!");
+                        break;
+                    case SshOperationTimeoutException _:
+                        result.errors.Add("Could not connect to host cause of timeout over ssh!");
+                        break;
+                    case SocketException _:
+                        result.errors.Add("Could not connect to host!");
+                        break;
+                    default:
+                    {
+                        client.Disconnect();
+                        throw;
+                    }
+                }
 
+            }
+            finally
+            {
+                client.Disconnect();
+            }
+
+            return result;
         }
 
         public async Task<List<ServerBans>> GetServerBansFromBlackList(PavlovServer server, List<ServerBans> banlist)
@@ -540,7 +709,7 @@ namespace PavlovRconWebserver.Services
             }
 
             client.Disconnect();
-            connectionResult.Seccuess = true;
+            connectionResult.Success = true;
             return connectionResult;
         }
 
@@ -568,7 +737,7 @@ namespace PavlovRconWebserver.Services
         // that can cause long waiting times but i think its better than just do one thing.
         public async Task<string> SendCommand(PavlovServer server, string command, bool deleteUnusedMaps = false,
             bool getFile = false, string writeContent = "", bool writeFile = false, bool multiCommand = false,
-            List<string> multiCommands = null)
+            List<string> multiCommands = null, bool reloadServerInfo = false)
         {
             var connectionResult = new ConnectionResult();
 
@@ -587,12 +756,14 @@ namespace PavlovRconWebserver.Services
                 else if (multiCommand && multiCommands != null)
                     connectionResult = await SShTunnelMultipleCommands(server, AuthType.PrivateKeyPassphrase,
                         multiCommands.ToArray(), server.SshServer);
+                else if (reloadServerInfo)
+                    connectionResult = await SShTunnelGetAllInfoFromPavlovServer(server, AuthType.PrivateKeyPassphrase, server.SshServer);
                 else
                     connectionResult =
                         await SShTunnel(server, AuthType.PrivateKeyPassphrase, command, server.SshServer);
             }
 
-            if (!connectionResult.Seccuess && !string.IsNullOrEmpty(server.SshServer.SshKeyFileName) &&
+            if (!connectionResult.Success && !string.IsNullOrEmpty(server.SshServer.SshKeyFileName) &&
                 File.Exists("KeyFiles/" + server.SshServer.SshKeyFileName) &&
                 !string.IsNullOrEmpty(server.SshServer.SshUsername))
             {
@@ -606,10 +777,12 @@ namespace PavlovRconWebserver.Services
                 else if (multiCommand && multiCommands != null)
                     connectionResult = await SShTunnelMultipleCommands(server, AuthType.PrivateKey,
                         multiCommands.ToArray(), server.SshServer);
+                else if (reloadServerInfo)
+                    connectionResult = await SShTunnelGetAllInfoFromPavlovServer(server, AuthType.PrivateKey, server.SshServer);
                 else connectionResult = await SShTunnel(server, AuthType.PrivateKey, command, server.SshServer);
             }
 
-            if (!connectionResult.Seccuess && !string.IsNullOrEmpty(server.SshServer.SshUsername) &&
+            if (!connectionResult.Success && !string.IsNullOrEmpty(server.SshServer.SshUsername) &&
                 !string.IsNullOrEmpty(server.SshServer.SshPassword))
             {
                 if (deleteUnusedMaps)
@@ -621,11 +794,13 @@ namespace PavlovRconWebserver.Services
                         await WriteFile(server, AuthType.UserPass, command, server.SshServer, writeContent);
                 else if (multiCommand && multiCommands != null)
                     connectionResult = await SShTunnelMultipleCommands(server, AuthType.UserPass,
-                        multiCommands.ToArray(), server.SshServer);
+                        multiCommands.ToArray(), server.SshServer);   
+                else if (reloadServerInfo)
+                    connectionResult = await SShTunnelGetAllInfoFromPavlovServer(server, AuthType.UserPass, server.SshServer);
                 else connectionResult = await SShTunnel(server, AuthType.UserPass, command, server.SshServer);
             }
 
-            if (!connectionResult.Seccuess)
+            if (!connectionResult.Success)
             {
                 if (connectionResult.errors.Count <= 0) throw new CommandException("Could not connect to server!");
                 throw new CommandException(Strings.Join(connectionResult.errors.ToArray(), "\n"));

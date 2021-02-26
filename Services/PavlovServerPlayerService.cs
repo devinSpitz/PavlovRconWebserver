@@ -14,13 +14,11 @@ namespace PavlovRconWebserver.Services
         
         private ILiteDbIdentityContext _liteDb;
         private readonly PavlovServerService _pavlovServerService;
-        private readonly RconService _rconService;
         private readonly PavlovServerInfoService _pavlovServerInfoService;
         
         
-        public PavlovServerPlayerService(ILiteDbIdentityContext liteDbContext,PavlovServerService pavlovServerService,RconService rconService,PavlovServerInfoService pavlovServerInfoService)
+        public PavlovServerPlayerService(ILiteDbIdentityContext liteDbContext,PavlovServerService pavlovServerService,PavlovServerInfoService pavlovServerInfoService)
         {
-            _rconService = rconService;
             _pavlovServerService = pavlovServerService;
             _liteDb = liteDbContext;
             _pavlovServerInfoService = pavlovServerInfoService;
@@ -41,44 +39,7 @@ namespace PavlovRconWebserver.Services
 
             return savedPlayers;
         }
-
         
-        public async Task<bool> SaveRealTimePlayerListFromServer(int serverId)
-        {
-            var server = await _pavlovServerService.FindOne(serverId);
-            var playersTmp = "";
-            var extendetList = new List<PlayerModelExtended>();
-            // need to get the live info
-            PlayerListClass playersList = new PlayerListClass();
-            try
-            {
-                playersTmp = await _rconService.SendCommand(server, "RefreshList");
-            }
-            catch (CommandException e)
-            {
-                throw  new PavlovServerPlayerException(e.Message);
-            }
-            playersList = JsonConvert.DeserializeObject<PlayerListClass>(playersTmp);
-
-            if (playersList?.PlayerList.Count>0)
-            {
-                var infos = await _rconService.GetPlayerInfo(server, playersList.PlayerList.Select(x => x.UniqueId).ToList());
-                extendetList = infos;
-            }
-
-            var pavlovServerPlayerList = extendetList.Select(x => new PavlovServerPlayer
-            {
-                Username = x.Username,
-                UniqueId = x.UniqueId,
-                KDA = x.KDA,
-                Cash = x.Cash,
-                TeamId = x.TeamId,
-                Score = x.Score,
-                ServerId = serverId
-            }).ToList();
-            var playersFound = await Upsert(pavlovServerPlayerList, serverId);
-            return true;
-        }
         
         
     }

@@ -20,7 +20,10 @@ namespace PavlovRconWebserver.Extensions
             var serverSelectedMapService = new ServerSelectedMapService(new LiteDbIdentityContext(connectionString));
             var pavlovServerService = new PavlovServerService(new LiteDbIdentityContext(connectionString));
             var sshServerSerivce = new SshServerSerivce(new LiteDbIdentityContext(connectionString),pavlovServerService);
-            var rconSerivce = new RconService(serverSelectedMapService,sshServerSerivce);
+            var mapsService = new MapsService(new LiteDbIdentityContext(connectionString));
+            var pavlovServerInfoService = new PavlovServerInfoService(new LiteDbIdentityContext(connectionString),pavlovServerService,mapsService);
+            var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString),pavlovServerService,pavlovServerInfoService);
+            var rconSerivce = new RconService(serverSelectedMapService,mapsService,pavlovServerInfoService,pavlovServerPlayerService);
             var serverBansService = new ServerBansService(new LiteDbIdentityContext(connectionString));
             var servers = await sshServerSerivce.FindAll();
             foreach (var server in servers)
@@ -43,15 +46,16 @@ namespace PavlovRconWebserver.Extensions
         
         public static async Task ReloadPlayerListFromServerAndTheServerInfo(string connectionString,bool recursive = false)
         {
+            var exceptions = new List<Exception>();
             try
             {
                 var serverSelectedMapService = new ServerSelectedMapService(new LiteDbIdentityContext(connectionString));
                 var pavlovServerService = new PavlovServerService(new LiteDbIdentityContext(connectionString));
                 var sshServerSerivce = new SshServerSerivce(new LiteDbIdentityContext(connectionString),pavlovServerService);
-                var rconSerivce = new RconService(serverSelectedMapService,sshServerSerivce);
                 var mapsService = new MapsService(new LiteDbIdentityContext(connectionString));
-                var pavlovServerInfoService = new PavlovServerInfoService(new LiteDbIdentityContext(connectionString),pavlovServerService,rconSerivce,mapsService);
-                var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString),pavlovServerService,rconSerivce,pavlovServerInfoService);
+                var pavlovServerInfoService = new PavlovServerInfoService(new LiteDbIdentityContext(connectionString),pavlovServerService,mapsService);
+                var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString),pavlovServerService,pavlovServerInfoService);
+                var rconSerivce = new RconService(serverSelectedMapService,mapsService,pavlovServerInfoService,pavlovServerPlayerService);
                 var servers = await sshServerSerivce.FindAll();
                 foreach (var server in servers)
                 {
@@ -59,24 +63,27 @@ namespace PavlovRconWebserver.Extensions
                     {
                         try
                         {
-                            await pavlovServerInfoService.SaveRealServerInfoFromServer(signleServer.Id);
-                            await pavlovServerPlayerService.SaveRealTimePlayerListFromServer(signleServer.Id);
+                            await rconSerivce.SendCommand(signleServer,"",false,false,"",false,false,null,true);
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine(e.Message);
-                            // ingore for now
+                            exceptions.Add(e);
                         } 
                     }
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine(e); // not complete ignore at least let us now that there is a problem over cli
-                //But the Job has to go one cause otherwise the playerlist is not updated
+                exceptions.Add(e);
             }
-            if(recursive)
-                BackgroundJob.Schedule(() => ReloadPlayerListFromServerAndTheServerInfo(connectionString,recursive),new TimeSpan(0,0,30)); // Check for bans and remove them is necessary
+            // Ignore them for now
+            // if (exceptions.Count > 0)
+            // {
+            //     throw new Exception(String.Join(" | Next Exception:  ",exceptions.Select(x=>x.Message).ToList()));
+            // }
+            
+            BackgroundJob.Schedule(() => ReloadPlayerListFromServerAndTheServerInfo(connectionString,recursive),new TimeSpan(0,0,30)); // Check for bans and remove them is necessary
+
         }
         
 

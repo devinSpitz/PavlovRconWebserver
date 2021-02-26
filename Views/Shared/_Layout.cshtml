@@ -60,23 +60,26 @@
                             <a asp-area="" asp-controller="Rcon" asp-action="Index">Commands</a>
                         </li>
                     </li>
-                    <li class="dropdown">
-                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">Matchmaking (WIP)<span class="caret"></span></a>
-                        <ul class="dropdown-menu">
-                            <li>
-                                <a asp-area="" asp-controller="Team" asp-action="Index">Teams</a>
-                            </li>
-                            @if((await UserManager.IsInRoleAsync(await UserManager.GetUserAsync(User),"Admin")))
-                            {
+                    if(await UserManager.IsInRoleAsync(await UserManager.GetUserAsync(User),"Captain"))
+                    {
+                        <li class="dropdown">
+                            <a class="dropdown-toggle" data-toggle="dropdown" href="#">Matchmaking (WIP)<span class="caret"></span></a>
+                            <ul class="dropdown-menu">
                                 <li>
-                                    <a asp-area="" asp-controller="Team" asp-action="SteamIdentitiesIndex">Steam Identities</a>
+                                    <a asp-area="" asp-controller="Team" asp-action="Index">Teams</a>
                                 </li>
-                                <li>
-                                    <a asp-area="" asp-controller="MatchMaking" asp-action="Index">Matches</a>
-                                </li>
-                            }
-                        </ul>
-                    </li>
+                                @if((await UserManager.IsInRoleAsync(await UserManager.GetUserAsync(User),"Admin")))
+                                {
+                                    <li>
+                                        <a asp-area="" asp-controller="Team" asp-action="SteamIdentitiesIndex">Steam Identities</a>
+                                    </li>
+                                    <li>
+                                        <a asp-area="" asp-controller="MatchMaking" asp-action="Index">Matches</a>
+                                    </li>
+                                }
+                            </ul>
+                        </li>
+                    }
                 }
             </ul>
             @await Html.PartialAsync("_LoginPartial")
