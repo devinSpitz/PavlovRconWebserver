@@ -103,7 +103,6 @@ function search(searchInput,attr)
 
 function UpdatePlayers(server){
 
-    $(".overlay").show();
     if(typeof server == "undefined")
     {
         server  = $("#SingleServer").val();
@@ -125,7 +124,6 @@ function UpdatePlayers(server){
                 dropdown.append($("<option />").val(this.uniqueId).text(this.username));
             });
 
-            $(".overlay").hide();
         },
         error: function(XMLHttpRequest, textStatus, errorThrown)
         {
@@ -136,7 +134,6 @@ function UpdatePlayers(server){
                 alert('Could not update players!');
             }
 
-            $(".overlay").hide();
         }
     });
 
