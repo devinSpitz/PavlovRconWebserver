@@ -468,7 +468,7 @@ namespace PavlovRconWebserver.Services
                         
                         }
                         var playerListJson = string.Join(",", playerListRaw);
-                        playerListJson = "[" + result.answer + "]";
+                        playerListJson = "[" + playerListJson + "]";
                         var finsihedPlayerList = new List<PlayerModelExtended>();
                         var tmpPlayers = JsonConvert.DeserializeObject<List<PlayerModelExtendedRconModel>>(playerListJson,new JsonSerializerSettings{CheckAdditionalContent = false});
                         if (tmpPlayers != null)
