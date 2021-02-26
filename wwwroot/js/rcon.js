@@ -1,6 +1,12 @@
 
 //Will be called on document ready
 function init(){
+
+    setInterval(function() {
+        UpdatePlayerList();
+        UpdatePlayers();
+    }, 30 * 1000); // 30 * 1000 milsec = 30 sec
+ 
     setValueFields(PlayerCommands,TwoValueCommands,true);
 
     if(!MultiRcon)
@@ -24,6 +30,7 @@ function init(){
             var PlayerListBig = $("#PlayerListBig");
             PlayerListBig.html("");
             UpdatePlayers(servers[0]);
+            UpdatePlayerList();
         }
     });
     let servers = [];
@@ -35,6 +42,7 @@ function init(){
         var PlayerListBig = $("#PlayerListBig");
         PlayerListBig.html("");
         UpdatePlayers(servers[0]);
+        UpdatePlayerList();
     }
 
 };

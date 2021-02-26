@@ -267,17 +267,14 @@ namespace PavlovRconWebserver.Controllers
             if(!await RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return Unauthorized();
             if (serverId<=0) return BadRequest("Please choose a server!");
             PlayerListClass playersList = new PlayerListClass();
-            var server = await _pavlovServerService.FindOne(serverId);
-            var playersTmp = "";
-            try
+
+
+            var players= await _pavlovServerPlayerService.FindAllFromServer(serverId);
+            playersList.PlayerList = players.Select(x => new PlayerModel
             {
-                playersTmp = await _service.SendCommand(server, "RefreshList");
-            }
-            catch (CommandException e)
-            {
-                return BadRequest(e.Message);
-            }
-            playersList = JsonConvert.DeserializeObject<PlayerListClass>(playersTmp);
+                Username = x.Username,
+                UniqueId = x.UniqueId
+            }).ToList();
             return Ok(playersList);
         }
         
