@@ -1,15 +1,10 @@
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
 using LiteDB;
 
 namespace PavlovRconWebserver.Models
 {
-    public enum GameMode
-    {
-        SND = 1,
-        TDM = 2,
-        DmBrHg= 3
-    }
     public enum Status
     {
         Preparing = 1,
@@ -21,11 +16,13 @@ namespace PavlovRconWebserver.Models
         public int Id { get; set; }
         public string Name { get; set; }
         
-        public int Rounds { get; set; }
-        public Map Map { get; set; }
+        [DisplayName("Map")]
+        public string MapId { get; set; }
         
-        public Team TeamA { get; set; }
-        public Team TeamB { get; set; }
+        public string GameMode { get; set; }
+        
+        public Team Team0 { get; set; }
+        public Team Team1 { get; set; }
         
         [BsonIgnore][NotMapped]
         public List<Team> AllTeams { get; set; }
@@ -36,7 +33,7 @@ namespace PavlovRconWebserver.Models
         [BsonIgnore][NotMapped]
         public List<MatchRound> MatchRound { get; set; }
         
-        public GameMode GameMode { get; set; }
+        // public GameMode GameMode { get; set; }
         
         [BsonRef("PavlovServer")]
         public PavlovServer PavlovServer { get; set; }

@@ -1,4 +1,5 @@
 
+@using PavlovRconWebserver.Extensions
 @model Match
 
 @{
@@ -12,6 +13,8 @@
     });
 }
 
+<script src="~/js/MatchMaking.js" asp-append-version="true"></script>
+
 <h2>@ViewBag.Title</h2>
 
 <form asp-controller="MatchMaking" asp-action="CreateMatch" method="post">
@@ -23,35 +26,34 @@
             <div class="panel-body">
                 <input asp-for="Id" class="form-control" value="@Model.Id" type="hidden"/>
                 <span asp-validation-for="Id" class="text-danger"></span>
-                <div class="form-group col-md-9">
+                <div class="form-group col-md-5">
                     <label asp-for="Name"></label>
                     <input asp-for="Name" class="form-control" value="@Model.Name"/>
                     <span asp-validation-for="Name" class="text-danger"></span>
                 </div>
-                <div class="form-group col-md-3">
-                    <label asp-for="Rounds"></label>
-                    <input asp-for="Rounds" class="form-control" value="@Model.Rounds"/>
-                    <span asp-validation-for="Rounds" class="text-danger"></span>
-                </div>
-                <div class="form-group col-md-9">
+                <div class="form-group col-md-7">
                     <label asp-for="PavlovServer"></label>
                     @Html.DropDownListFor(m => m.PavlovServer, new SelectList(PavlovServers,"Id","Name",Model.PavlovServer), new { @class = "form-control form-control-sm" })
-                    <span asp-validation-for="GameMode" class="text-danger"></span>
+                    <span asp-validation-for="PavlovServer" class="text-danger"></span>
+                </div>
+                <div class="form-group col-md-3">
+                    <label asp-for="MapId"></label> <button type="button" class="btn btn-sm btn-primary valueFieldButtons" onclick="RconChooseMapPartialView()">Open selector</button>
+                    <input asp-for="MapId" class="form-control" value="@Model.MapId"/>
+                    <span asp-validation-for="Name" class="text-danger"></span>
                 </div>
                 <div class="form-group col-md-3">
                     <label asp-for="GameMode"></label>
-                    <select asp-for="GameMode" asp-items="Html.GetEnumSelectList<GameMode>()" class="form-control form-control-sm"></select>
-                    <span asp-validation-for="GameMode" class="text-danger"></span>
-                </div>   
-                
+                   @Html.DropDownListFor(m => m.GameMode, new SelectList(GameModes.ModesString,Model.GameMode), new { @class = "form-control form-control-sm" })
+                   <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-11">
         <div class="panel panel-default">
-            <div class="panel-heading">Gamemode specific settings</div>
+            <div class="panel-heading">Player/Teams Select</div>
             <div class="panel-body" id="GameModeSpecificPanel">
-
+            @* Gets auto populatet *@
             </div>
         </div>
     </div>

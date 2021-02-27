@@ -19,5 +19,42 @@ namespace PavlovRconWebserver.Extensions
             {"24h", new TimeSpan(0, 24, 0, 0, 0)},
             {"48h", new TimeSpan(2, 0, 0, 0, 0)},
         };
+
+
+        
+        
+    }
+
+    public static class GameModes
+    {
+        public static IDictionary<string, bool> HasTeams = new Dictionary<string, bool>()
+        {
+            {"SND",true},
+            {"TDM",true},
+            {"DM",false},
+            {"GUN",false},
+            {"ZWV",true},
+            {"WW2GUN",true},
+            {"TANKTDM",true},
+            {"KOTH",false},
+        };
+        
+        public static IDictionary<string, bool> OneTeam = new Dictionary<string, bool>()
+        {
+            {"SND",false},
+            {"TDM",false},
+            {"DM",false},
+            {"GUN",false},
+            {"ZWV",true},
+            {"WW2GUN",false},
+            {"TANKTDM",false},
+            {"KOTH",false},
+        };
+
+        public static string[] ModesString = new[]
+        {
+            "SND", "TDM", "DM", "GUN","ZWV", "WW2GUN", "TANKTDM", "KOTH"
+        };
+
     }
 }

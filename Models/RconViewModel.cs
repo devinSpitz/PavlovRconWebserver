@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using PavlovRconWebserver.Extensions;
 
 namespace PavlovRconWebserver.Models
 {
@@ -158,10 +160,7 @@ namespace PavlovRconWebserver.Models
                     Name  = "SwitchMap",
                     InputValue = true,
                     InputValueTwo = true,
-                    valuesTwoOptions = new List<string>()
-                    {
-                        "SND", "TDM", "DM", "GUN","ZWV", "WW2GUN", "TANKTDM", "KOTH"
-                    },
+                    valuesTwoOptions = GameModes.ModesString.ToList(),
                     PartialViewName = "https://steamcommunity.com/workshop/browse/?appid=555160&browsesort=trend&section=readytouseitems&actualsort=trend&p=1&numperpage=30",
                     MinRole = "Captain"
                 }

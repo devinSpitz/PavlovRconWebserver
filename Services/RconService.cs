@@ -505,7 +505,7 @@ namespace PavlovRconWebserver.Services
                             Score = x.Score,
                             ServerId = x.ServerId,
                             date = DateTime.Now
-                        }).ToList(), server.Id);
+                        }).ToList(), server.Id,1);
                         
                         
                         var commandTwo = "ServerInfo";

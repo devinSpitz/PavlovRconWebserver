@@ -70,6 +70,14 @@ namespace PavlovRconWebserver.Controllers
             if(!await RightsHandler.IsUserAtLeastInRole("Admin", HttpContext.User, _userService))  return BadRequest("You need to be admin!");
             return View("PlayersHistory",(await _pavlovServerPlayerHistoryService.FindAllFromPlayer(uniqueId))?.ToList());
         }
+        
+        [HttpGet("[controller]/API/GetHistoryOfPlayer/{uniqueId}")]
+        // GET
+        public async Task<IActionResult> GetHistoryOfPlayerApi(string uniqueId)
+        {
+            if(!await RightsHandler.IsUserAtLeastInRole("Admin", HttpContext.User, _userService))  return BadRequest("You need to be admin!");
+            return new ObjectResult((await _pavlovServerPlayerHistoryService.FindAllFromPlayer(uniqueId))?.ToList());
+        }
 
         [HttpGet("[controller]/GetHistoryOfServer/{serverId}")]
         // GET
@@ -77,6 +85,14 @@ namespace PavlovRconWebserver.Controllers
         {
             if(!await RightsHandler.IsUserAtLeastInRole("Admin", HttpContext.User, _userService))  return BadRequest("You need to be admin!");
             return View("PlayersHistory",(await _pavlovServerPlayerHistoryService.FindAllFromServer(serverId))?.ToList());
+        }
+        
+        [HttpGet("[controller]/API/GetHistoryOfServer/{serverId}")]
+        // GET
+        public async Task<IActionResult> GetHistoryOfServerApi(int serverId)
+        {
+            if(!await RightsHandler.IsUserAtLeastInRole("Admin", HttpContext.User, _userService))  return BadRequest("You need to be admin!");
+            return new ObjectResult((await _pavlovServerPlayerHistoryService.FindAllFromServer(serverId))?.ToList());
         }
     }
     

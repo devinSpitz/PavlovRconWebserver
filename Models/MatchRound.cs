@@ -9,8 +9,10 @@ namespace PavlovRconWebserver.Models
         public int Id { get; set; }
         [BsonRef("Match")]
         public Match Match { get; set; }
-        
+
+        public int Team0Score { get; set; } = 0;
+        public int Team01core { get; set; } = 0;
         [BsonIgnore][NotMapped]
-        public List<MatchRoundPlayerInfo> MatchRoundPlayerInfo { get; set; }
+        public List<PlayerModelExtended> MatchRoundPlayerInfo { get; set; }
     }
 }

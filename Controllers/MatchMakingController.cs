@@ -51,6 +51,37 @@ namespace PavlovRconWebserver.Controllers
             };
             return View("Match",match);
         }
+                
+        [HttpPost("[controller]/PartialViewPerGameMode")]
+        public async Task<IActionResult> PartialViewPerGameMode(string gameMode)
+        {
+            if(!await RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return Unauthorized();
+
+
+            var gotAnswer = GameModes.HasTeams.TryGetValue(gameMode, out var hasTeams);
+            if (gotAnswer)
+            {
+                if (hasTeams)
+                {
+                    var gotAnswer2 = GameModes.OneTeam.TryGetValue(gameMode, out var oneTeam);
+                    if (gotAnswer2)
+                    {
+                        return PartialView(oneTeam ? "SteamIdentityPartialView" : "TeamPartailView");
+                    }
+                    
+                    BadRequest("internal error!");
+                }
+                else
+                {
+                    return PartialView("SteamIdentityPartialView");
+                }
+            }
+            else
+            {
+                return BadRequest("There is no gameMode like that!");
+            }
+            return BadRequest("There is no gameMode like that!"); 
+        }
         
         
     }
