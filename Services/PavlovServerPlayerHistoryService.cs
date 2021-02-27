@@ -35,7 +35,7 @@ namespace PavlovRconWebserver.Services
         public async Task Upsert(List<PavlovServerPlayerHistory> pavlovServerPlayerHistories,int serverId,int deleteAfterDays)
         {
             var toDelete = _liteDb.LiteDatabase.GetCollection<PavlovServerPlayerHistory>("PavlovServerPlayerHistory")
-                .FindAll().Where(x=>x.ServerId == serverId&&(x.date+new TimeSpan(deleteAfterDays,0,0,0))<DateTime.Now);
+                .FindAll().Where(x=>x.ServerId == serverId&&(x.date.Add(new TimeSpan(deleteAfterDays,0,0,0)))<DateTime.Now);
 
             _liteDb.LiteDatabase.GetCollection<PavlovServerPlayerHistory>("PavlovServerPlayerHistory")
                 .DeleteMany(x=>toDelete.Select(y=>y.Id).ToList().Contains(x.Id));
