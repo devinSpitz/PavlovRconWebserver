@@ -26,9 +26,21 @@ namespace PavlovRconWebserver.Models
         
         [BsonIgnore][NotMapped]
         public List<Team> AllTeams { get; set; }
+
+        [BsonIgnore]
+        [NotMapped]
+        public List<MatchSelectedSteamIdentity> MatchSelectedSteamIdentities { get; set; } =
+            new List<MatchSelectedSteamIdentity>();
         
-        [BsonIgnore][NotMapped]
-        public List<MatchSelectedSteamIdentity> MatchSelectedSteamIdentities { get; set; }
+        [BsonIgnore]
+        [NotMapped]
+        public List<MatchTeamSelectedSteamIdentity> MatchTeam0SelectedSteamIdentities { get; set; } =
+            new List<MatchTeamSelectedSteamIdentity>();
+        
+        [BsonIgnore]
+        [NotMapped]
+        public List<MatchTeamSelectedSteamIdentity> MatchTeam1SelectedSteamIdentities { get; set; } =
+            new List<MatchTeamSelectedSteamIdentity>();
         
         [BsonIgnore][NotMapped]
         public List<MatchRound> MatchRound { get; set; }
@@ -37,6 +49,9 @@ namespace PavlovRconWebserver.Models
         
         [BsonRef("PavlovServer")]
         public PavlovServer PavlovServer { get; set; }
+        [BsonIgnore][NotMapped]
+        public int PavlovServerId { get; set; }
+
         
         [BsonIgnore][NotMapped]
         public List<PavlovServer> AllPavlovServers { get; set; }

@@ -46,6 +46,8 @@ namespace PavlovRconWebserver
          services.AddTransient<PavlovServerPlayerService>();
          services.AddTransient<PavlovServerInfoService>();
          services.AddTransient<PavlovServerPlayerHistoryService>();
+         services.AddTransient<MatchSelectedSteamIdentitiesService>();
+         services.AddTransient<MatchSelectedTeamSteamIdentitiesService>();
          // services
          //    .AddAuthentication(cfg =>
          //    {

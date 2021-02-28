@@ -4,7 +4,7 @@ namespace PavlovRconWebserver.Models
 {
     public class MatchSelectedSteamIdentity
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
         [BsonRef("SteamIdentity")] 
         public virtual SteamIdentity SteamIdentity { get; set; }
         [BsonRef("Match")] 

@@ -1,2 +1,20 @@
-@model Match
+@model SteamIdentityMatchViewModel
+<div class="row">
+    @Html.Partial("SteamIdentityListPartialView",new SteamIdentityMatchListViewModel
+    {
+        cssClass = "col-md-4",
+        SteamIdentities = Model.AllSteamIdentities,
+        selectListId = "AllSteamIdentities"
+    })
+    <div class="col-md-4">
+        <Button alt="Select" class="btn-success" id="SelectNoTeamsSteamIdentities">Select</Button>
+    </div>
+    @Html.Partial("SteamIdentityListPartialView",new SteamIdentityMatchListViewModel
+    {
+        cssClass = "col-md-4 SelectedSteamIdentities",
+        SteamIdentities = Model.SelectedSteamIdentities,
+        selectListId = "SelectedSteamIdentities"
+    })
+</div>
 
+<script>bindSelectButtons();</script>

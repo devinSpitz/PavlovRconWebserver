@@ -1,2 +1,32 @@
-@model Match
+@model SteamIdentityMatchTeamViewModel
 
+<div class="row">
+        <div class="col-md-6">
+    @Html.Partial("TeamSinglePartailView", new SteamIdentityMatchTeamSingleViewModel
+    {
+        AvailableTeams = Model.AvailableTeams,
+        SelectedSteamIdentities = Model.SelectedSteamIdentitiesTeam0,
+        SelectId = "SelectIdTeam0",
+        SelectedId = "SelectedIdTeam0",
+        TeamsDropDownId = "dropDownTeam0",
+        SelectButtonId = "selectButtonTeam0"
+    })
+        </div>
+    <div class="col-md-2">
+
+    </div>
+    
+    <div class="col-md-6">
+    @Html.Partial("TeamSinglePartailView", new SteamIdentityMatchTeamSingleViewModel
+    {
+        AvailableTeams = Model.AvailableTeams,
+        SelectedSteamIdentities = Model.SelectedSteamIdentitiesTeam1,
+        SelectId = "SelectIdTeam1",
+        SelectedId = "SelectedIdTeam1",
+        TeamsDropDownId = "dropDownTeam1",
+        SelectButtonId = "selectButtonTeam1"
+    })
+    
+    </div>
+</div>
+<script>bindSelectButtons();</script>

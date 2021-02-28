@@ -1,5 +1,6 @@
 
 @using PavlovRconWebserver.Extensions
+@using Newtonsoft.Json
 @model Match
 
 @{
@@ -12,12 +13,15 @@
         Name = x.Name
     });
 }
-
+@section Scripts{
+    <script>
+    const match = jQuery.parseJSON('@Html.Raw(@JsonConvert.SerializeObject(Model))');
+    </script>
+}
 <script src="~/js/MatchMaking.js" asp-append-version="true"></script>
 
 <h2>@ViewBag.Title</h2>
 
-<form asp-controller="MatchMaking" asp-action="CreateMatch" method="post">
     
 <div asp-validation-summary="All" class="text-danger"></div>
     <div class="col-md-11">
@@ -58,4 +62,6 @@
         </div>
     </div>
 
-</form>
+    
+<br>
+  <Button alt="Save" class="btn-success col-md-12" onclick="SaveMatch()">Save</Button>

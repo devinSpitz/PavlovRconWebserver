@@ -5,7 +5,7 @@ function init(){
     setInterval(function() {
         UpdatePlayerList();
         UpdatePlayers();
-    }, 30 * 1000); // 30 * 1000 milsec = 30 sec
+    }, 60 * 1000); // 30 * 1000 milsec = 30 sec
  
     setValueFields(PlayerCommands,TwoValueCommands,true);
 
@@ -131,7 +131,7 @@ function UpdatePlayers(server){
             {
                 jsonTOHtmlPartialView(JSON.stringify(XMLHttpRequest.responseText));
             }else{
-                alert('Could not update players!');
+                dropdown.append($("<option />").val("-").text('Could not update players!'));
             }
 
         }
@@ -164,7 +164,7 @@ function UpdatePlayerList(){
             {
                 jsonTOHtmlPartialView(JSON.stringify(XMLHttpRequest.responseText));
             }else{
-                alert('Could not update players list!');
+                PlayerListBig.html("<div class'bg-danger'>Could not update players list!</div>");
             }
 
         }

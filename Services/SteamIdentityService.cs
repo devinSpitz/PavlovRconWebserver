@@ -38,6 +38,12 @@ namespace PavlovRconWebserver.Services
                 .Include(x=>x.LiteDbUser)
                 .Find(x => x.LiteDbUser.Id == liteDbUserId).FirstOrDefault();
         }
+        
+        public async Task<IEnumerable<SteamIdentity>> FindAList(List<long> identities)
+        {
+            return _liteDb.LiteDatabase.GetCollection<SteamIdentity>("SteamIdentity")
+                .FindAll().Where(x => identities.Contains(x.Id));
+        }
         public async Task<bool> Upsert(SteamIdentity steamIdentity)
         {
             return _liteDb.LiteDatabase.GetCollection<SteamIdentity>("SteamIdentity")

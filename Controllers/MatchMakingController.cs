@@ -13,24 +13,30 @@ namespace PavlovRconWebserver.Controllers
     [Authorize]
     public class MatchMakingController : Controller
     {
-        private readonly RconService _service;
-        private readonly SshServerSerivce _serverService;
         private readonly UserService _userservice;
-        private readonly ServerSelectedMapService _serverSelectedMapService;
-        private readonly MapsService _mapsService;
         private readonly MatchService _matchService;
         private readonly PavlovServerService _pavlovServerService;
         private readonly TeamService _teamService;
-        public MatchMakingController(RconService service,SshServerSerivce serverService,UserService userService,ServerSelectedMapService serverSelectedMapService,MapsService mapsService,MatchService matchService,PavlovServerService pavlovServerService,TeamService teamService)
+        private readonly SteamIdentityService _steamIdentityService;
+        private readonly MatchSelectedSteamIdentitiesService _matchSelectedSteamIdentitiesService;
+        private readonly MatchSelectedTeamSteamIdentitiesService _matchSelectedTeamSteamIdentitiesService;
+        private readonly TeamSelectedSteamIdentityService _teamSelectedSteamIdentityService;
+        public MatchMakingController(UserService userService,
+            MatchService matchService,
+            PavlovServerService pavlovServerService,TeamService teamService,
+            MatchSelectedSteamIdentitiesService matchSelectedSteamIdentities,
+            SteamIdentityService steamIdentityService,
+            TeamSelectedSteamIdentityService teamSelectedSteamIdentityService,
+            MatchSelectedTeamSteamIdentitiesService matchSelectedTeamSteamIdentitiesService)
         {
-            _service = service;
-            _serverService = serverService;
             _userservice = userService;
-            _serverSelectedMapService = serverSelectedMapService;
-            _mapsService = mapsService;
             _matchService = matchService;
             _pavlovServerService = pavlovServerService;
             _teamService = teamService;
+            _steamIdentityService = steamIdentityService;
+            _matchSelectedSteamIdentitiesService = matchSelectedSteamIdentities;
+            _matchSelectedTeamSteamIdentitiesService = matchSelectedTeamSteamIdentitiesService;
+            _teamSelectedSteamIdentityService = teamSelectedSteamIdentityService;
         }
 
 
@@ -51,13 +57,59 @@ namespace PavlovRconWebserver.Controllers
             };
             return View("Match",match);
         }
+        [HttpPost("[controller]/GetAvailableSteamIdentities")]
+        public async Task<IActionResult> GetAvailableSteamIdentities(int teamId)
+        {
+            var steamIdentities = await _teamSelectedSteamIdentityService.FindAllFrom(teamId);
+            return new ObjectResult(steamIdentities);
+        }
                 
+        [HttpPost("[controller]/SaveMatch")]
+        public async Task<IActionResult> SaveMatch(Match match)
+        {
+            var bla = await _matchService.Upsert(match);
+            if (bla)
+            {
+                return await Index();
+            }
+            else
+            {
+                return await PartialViewPerGameMode(match.GameMode, match);
+            }
+        }
+        
+        [HttpPost("[controller]/PartialViewPerGameModeWithId")]
+        public async Task<IActionResult> PartialViewPerGameModeWithId(string gameMode,int? matchId)
+        {
+            var match = new Match();
+            if (matchId != null)
+            {
+                match = await _matchService.FindOne((int)matchId);
+            }
+            return await PartialViewPerGameMode(gameMode, match);
+        }   
+        
         [HttpPost("[controller]/PartialViewPerGameMode")]
-        public async Task<IActionResult> PartialViewPerGameMode(string gameMode)
+        public async Task<IActionResult> PartialViewPerGameMode(string gameMode,Match match)
         {
             if(!await RightsHandler.IsUserAtLeastInRole("User", HttpContext.User, _userservice))  return Unauthorized();
 
+            var selectedSteamIdentitiesRaw = (await _matchSelectedSteamIdentitiesService.FindAllSelectedForMatch(match.Id)).ToList();
+            var selectedTeam0SteamIdentitiesRaw = (await _matchSelectedTeamSteamIdentitiesService.FindAllSelectedForMatchAndTeam(match.Id,0)).ToList();
+            var selectedTeam1SteamIdentitiesRaw = (await _matchSelectedTeamSteamIdentitiesService.FindAllSelectedForMatchAndTeam(match.Id,1)).ToList();
 
+            var Teams = (await _teamService.FindAll()).ToList();
+            
+            
+            
+            var steamIdentities = (await _steamIdentityService.FindAll()).ToList();
+            var selectedSteamIdentities = (await _steamIdentityService.FindAList(selectedSteamIdentitiesRaw.Select(x=>x.Id).ToList())).ToList();
+            var selectedTeam0SteamIdentities = (await _steamIdentityService.FindAList(selectedTeam0SteamIdentitiesRaw.Select(x=>x.Id).ToList())).ToList();
+            var selectedTeam1SteamIdentities = (await _steamIdentityService.FindAList(selectedTeam1SteamIdentitiesRaw.Select(x=>x.Id).ToList())).ToList();
+            foreach (var selectedSteamIdentity in selectedSteamIdentities)
+            {
+                steamIdentities.Remove(steamIdentities.FirstOrDefault(x => x.Id == selectedSteamIdentity.Id));
+            }
             var gotAnswer = GameModes.HasTeams.TryGetValue(gameMode, out var hasTeams);
             if (gotAnswer)
             {
@@ -66,14 +118,35 @@ namespace PavlovRconWebserver.Controllers
                     var gotAnswer2 = GameModes.OneTeam.TryGetValue(gameMode, out var oneTeam);
                     if (gotAnswer2)
                     {
-                        return PartialView(oneTeam ? "SteamIdentityPartialView" : "TeamPartailView");
+                        if (oneTeam)
+                        {
+                            return PartialView("SteamIdentityPartialView",new SteamIdentityMatchViewModel()
+                            {
+                                SelectedSteamIdentities = selectedSteamIdentities,
+                                AllSteamIdentities = steamIdentities
+                            }); 
+                        }
+                        else
+                        {
+                            return PartialView("TeamPartailView", new SteamIdentityMatchTeamViewModel
+                            {
+                                AvailableTeams = Teams,
+                                SelectedSteamIdentitiesTeam0 = selectedTeam0SteamIdentities,
+                                SelectedSteamIdentitiesTeam1 = selectedTeam1SteamIdentities
+                            });
+                        }
+                        
                     }
                     
                     BadRequest("internal error!");
                 }
                 else
-                {
-                    return PartialView("SteamIdentityPartialView");
+                { 
+                    return PartialView("SteamIdentityPartialView",new SteamIdentityMatchViewModel()
+                    {
+                        SelectedSteamIdentities = selectedSteamIdentities,
+                        AllSteamIdentities = steamIdentities
+                    });
                 }
             }
             else

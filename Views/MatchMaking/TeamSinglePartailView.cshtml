@@ -1,0 +1,18 @@
+@model SteamIdentityMatchTeamSingleViewModel
+
+<div class="row">
+    
+    @Html.DropDownList(Model.TeamsDropDownId, new SelectList(Model.AvailableTeams,"Id","Name",Model.AvailableTeams), new { @class = "form-control form-control-sm" })
+
+    @* needs to get auopupulated per team *@
+    @Html.ListBox(Model.SelectId, new MultiSelectList(Model.AvailableSteamIdentities, "Id", "Name"), new {@class = "form-control form-control-sm"})
+    <div class="col-md-4">
+        <Button alt="Select" class="btn-success" id="@Model.SelectButtonId">Select</Button>
+    </div>
+    @* needs to get auopupulated per team *@
+    @Html.ListBox(Model.SelectedId, new MultiSelectList(Model.SelectedSteamIdentities, "Id", "Name"), new {@class = "form-control form-control-sm"})
+
+
+
+
+</div>
