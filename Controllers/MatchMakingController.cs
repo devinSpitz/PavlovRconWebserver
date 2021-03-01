@@ -206,7 +206,7 @@ namespace PavlovRconWebserver.Controllers
                     return BadRequest("Please select a server!");
                 }
                 realmatch.PavlovServer = await _pavlovServerService.FindOne(match.PavlovServerId);
-                if(match.PavlovServer == null) return BadRequest("Error while mapping pavlovServer!");
+                if(realmatch.PavlovServer == null) return BadRequest("Error while mapping pavlovServer!");
                 realmatch.Status = match.Status;
             }
             else
