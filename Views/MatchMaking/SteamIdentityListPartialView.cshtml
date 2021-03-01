@@ -1,7 +1,4 @@
 @model SteamIdentityMatchListViewModel
 
-<div class="@Model.cssClass">
-    
-@Html.ListBox(Model.selectListId, new MultiSelectList(Model.SteamIdentities,"Id","Name"), new { @class = "form-control form-control-sm" })
 
-</div>
+@Html.ListBox(Model.selectListId, new MultiSelectList(Model.SteamIdentities,"Id","Name"), new { @class = "form-control form-control-sm" })

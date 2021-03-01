@@ -1,20 +1,28 @@
 @model SteamIdentityMatchViewModel
 <div class="row">
-    @Html.Partial("SteamIdentityListPartialView",new SteamIdentityMatchListViewModel
-    {
-        cssClass = "col-md-4",
-        SteamIdentities = Model.AllSteamIdentities,
-        selectListId = "AllSteamIdentities"
-    })
     <div class="col-md-4">
-        <Button alt="Select" class="btn-success" id="SelectNoTeamsSteamIdentities">Select</Button>
+        @Html.LabelFor(x=>x.AllSteamIdentities)
+        @Html.Partial("SteamIdentityListPartialView", new SteamIdentityMatchListViewModel
+        {
+            SteamIdentities = Model.AllSteamIdentities,
+            selectListId = "AllSteamIdentities"
+        })
     </div>
-    @Html.Partial("SteamIdentityListPartialView",new SteamIdentityMatchListViewModel
-    {
-        cssClass = "col-md-4 SelectedSteamIdentities",
-        SteamIdentities = Model.SelectedSteamIdentities,
-        selectListId = "SelectedSteamIdentities"
-    })
+    
+<div class="col-md-4">
+    <Button alt="Select" class="btn-success" id="SelectNoTeamsSteamIdentities">Select</Button>
+</div>
+
+    <div class="col-md-4 SelectedSteamIdentities">
+    
+        @Html.LabelFor(x => x.SelectedSteamIdentities)
+        @Html.Partial("SteamIdentityListPartialView", new SteamIdentityMatchListViewModel
+        {
+            SteamIdentities = Model.SelectedSteamIdentities,
+            selectListId = "MatchSelectedSteamIdentitiesStrings"
+        })
+    </div>
+    
 </div>
 
 <script>bindSelectButtons();</script>

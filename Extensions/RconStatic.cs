@@ -1,14 +1,20 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Hangfire;
 using HtmlAgilityPack;
 using LiteDB.Identity.Database;
+using PavlovRconWebserver.Exceptions;
 using PavlovRconWebserver.Models;
 using PavlovRconWebserver.Services;
+using Renci.SshNet;
+using Renci.SshNet.Common;
+using Match = PavlovRconWebserver.Models.Match;
 
 namespace PavlovRconWebserver.Extensions
 {
@@ -88,6 +94,104 @@ namespace PavlovRconWebserver.Extensions
 
         }
         
+        
+        public static async Task StartMatch(string connectionString,int matchId)
+        {
+            var exceptions = new List<Exception>();
+            try
+            {
+                var pavlovServerService = new PavlovServerService(new LiteDbIdentityContext(connectionString));
+                var matchService = new MatchService(new LiteDbIdentityContext(connectionString));
+                var match = await matchService.FindOne(matchId);
+                var server = await pavlovServerService.FindOne(match.PavlovServer.Id);
+                
+                var connectionResult = new ConnectionResult();
+                 if (!string.IsNullOrEmpty(server.SshServer.SshPassphrase) &&
+                !string.IsNullOrEmpty(server.SshServer.SshKeyFileName) &&
+                File.Exists("KeyFiles/" + server.SshServer.SshKeyFileName) &&
+                !string.IsNullOrEmpty(server.SshServer.SshUsername))
+                 {
 
+                     connectionResult = await StartMatchWithAuth(
+                         RconService.AuthType.PrivateKeyPassphrase,server,match);
+                }
+
+                if (!connectionResult.Success && !string.IsNullOrEmpty(server.SshServer.SshKeyFileName) &&
+                    File.Exists("KeyFiles/" + server.SshServer.SshKeyFileName) &&
+                    !string.IsNullOrEmpty(server.SshServer.SshUsername))
+                {
+                    connectionResult = await StartMatchWithAuth(
+                        RconService.AuthType.PrivateKey,server,match);
+                }
+
+                if (!connectionResult.Success && !string.IsNullOrEmpty(server.SshServer.SshUsername) &&
+                    !string.IsNullOrEmpty(server.SshServer.SshPassword))
+                {
+                    connectionResult = await StartMatchWithAuth(
+                        RconService.AuthType.UserPass,server,match);
+                }
+
+                if (!connectionResult.Success)
+                {
+                    if (connectionResult.errors.Count <= 0) throw new CommandException("Could not connect to server!");
+                }
+
+
+            }
+            catch (Exception e)
+            {
+                exceptions.Add(e);
+            }
+            
+        }
+
+        public static async Task<ConnectionResult> StartMatchWithAuth(RconService.AuthType authType,PavlovServer server,Match match)
+        {
+            var connectionInfo = RconService.ConnectionInfo(server, authType, out var result, server.SshServer);
+            using var clientSsh = new SshClient(connectionInfo);
+            using var clientSftp = new SftpClient(connectionInfo);
+            try
+            {
+                clientSsh.Connect();
+                ShellStream stream = clientSsh.CreateShellStream("pavlovRconWebserverSShTunnelMultipleCommands", 80, 24,
+                    800, 600, 1024);
+                var telnetConnectResult = await RconService.SendCommandForShell("nc localhost " + server.TelnetPort, stream);
+                if (telnetConnectResult.ToString().Contains("Password:"))
+                {
+                    
+                }
+            }catch (Exception e)
+            {
+                switch (e)
+                {
+                    case SshAuthenticationException _:
+                        result.errors.Add("Could not Login over ssh!");
+                        break;
+                    case SshConnectionException _:
+                        result.errors.Add("Could not connect to host over ssh!");
+                        break;
+                    case SshOperationTimeoutException _:
+                        result.errors.Add("Could not connect to host cause of timeout over ssh!");
+                        break;
+                    case SocketException _:
+                        result.errors.Add("Could not connect to host!");
+                        break;
+                    default:
+                    {
+                        clientSsh.Disconnect();
+                        clientSftp.Disconnect();
+                        throw;
+                    }
+                }
+
+            }
+            finally
+            {
+                clientSsh.Disconnect();
+                clientSftp.Disconnect();
+            }
+
+            return result;
+        }
     }
 }

@@ -9,6 +9,11 @@ function init(){
             });
     });
 
+    $("#RconChooseMapPartialView").click(function(e){
+        e.preventDefault();
+        RconChooseMapPartialView()
+    });
+
     GetPlayerTeamSelectPartialView($("#GameMode").val(),
         function (data) {
             $("#GameModeSpecificPanel").html(data);
@@ -21,44 +26,48 @@ function bindSelectButtons()
     $("#SelectNoTeamsSteamIdentities").click(function(e)
     {
         e.preventDefault();
-        SelectSteamIdentities("#AllSteamIdentities","#SelectedSteamIdentities");
+        SelectSteamIdentities("#AllSteamIdentities","#MatchSelectedSteamIdentitiesStrings");
     });
 
     $("#selectButtonTeam0").click(function(e)
     {
         e.preventDefault();
-        SelectSteamIdentities("#SelectIdTeam0","#SelectedIdTeam0");
+        SelectSteamIdentities("#SelectIdTeam0","#MatchTeam0SelectedSteamIdentitiesStrings");
     });
 
     $("#selectButtonTeam1").click(function(e)
     {
         e.preventDefault();
-        SelectSteamIdentities("#SelectIdTeam1","#SelectedIdTeam1");
+        SelectSteamIdentities("#SelectIdTeam1","#MatchTeam1SelectedSteamIdentitiesStrings");
     });
     //DropDowns
-    let team0Dropdown = $("#dropDownTeam0");
+    let team0Dropdown = $("#Team0Id");
     $(team0Dropdown).change(function()
     {
-        PopulateTeamsSteamIdentities($(this).val(),"#SelectIdTeam0","#SelectedIdTeam0");
+        PopulateTeamsSteamIdentities($(this).val(),"#SelectIdTeam0","#MatchTeam0SelectedSteamIdentitiesStrings");
     });
-    PopulateTeamsSteamIdentities($(team0Dropdown).val(),"#SelectIdTeam0","#SelectedIdTeam0");
-    let team1Dropdown = $("#dropDownTeam1");
+    PopulateTeamsSteamIdentities($(team0Dropdown).val(),"#SelectIdTeam0","#MatchTeam0SelectedSteamIdentitiesStrings",true);
+    let team1Dropdown = $("#Team1Id");
     $(team1Dropdown).change(function()
     {
-        PopulateTeamsSteamIdentities($(team1Dropdown).val(),"#SelectIdTeam1","#SelectedIdTeam1")
+        PopulateTeamsSteamIdentities($(team1Dropdown).val(),"#SelectIdTeam1","#MatchTeam1SelectedSteamIdentitiesStrings")
     });
-    PopulateTeamsSteamIdentities($(team1Dropdown).val(),"#SelectIdTeam1","#SelectedIdTeam1")
+    PopulateTeamsSteamIdentities($(team1Dropdown).val(),"#SelectIdTeam1","#MatchTeam1SelectedSteamIdentitiesStrings",true)
 }
 
-function PopulateTeamsSteamIdentities(chosenTeam,toId,toremove)
+function PopulateTeamsSteamIdentities(chosenTeam,toId,toremove,first=false)
 {
-    $(toremove).empty();
+
+    let matchId = $("#Id").val();
+    if(!first)
+        $(toremove).empty();
+    $(toId).empty();
     let dropdown = $(toId);
     //foreach Player
     $.ajax({
         type: 'POST',
         url: "/MatchMaking/GetAvailableSteamIdentities",
-        data: { teamId: chosenTeam },
+        data: { teamId: chosenTeam,matchId:matchId },
         success:  function(data)
         {
 
@@ -67,6 +76,7 @@ function PopulateTeamsSteamIdentities(chosenTeam,toId,toremove)
                 dropdown.append($("<option />").val("-").text("--There are no players--"));
             }
             $(data).each(function (){
+                debugger;
                 dropdown.append($("<option />").val(this.steamIdentity.id).text(this.steamIdentity.name));
             });
 
@@ -82,8 +92,8 @@ function PopulateTeamsSteamIdentities(chosenTeam,toId,toremove)
 
         }
     });
-    
-    
+
+
 }
 
 function RconChooseMapPartialView()
@@ -127,11 +137,11 @@ function setMap(id)
 
 function GetPlayerTeamSelectPartialView(gameMode,callbackPositive)
 {
-
+    let matchId = $("#Id").val();
     $.ajax({
         type: 'POST',
         url: "/MatchMaking/PartialViewPerGameModeWithId/",
-        data: {gameMode: gameMode},
+        data: {gameMode: gameMode,matchId: matchId},
         success:  function(data)
         {
             callbackPositive(data);
@@ -150,22 +160,52 @@ function SelectSteamIdentities(toId,fromId)
         dropdown.append($("<option />").val($(this).val()).text($(this).text()));
         $(this).remove();
     })
-    
+
 }
+
 
 function SaveMatch()
 {
-    debugger;
     match.Name = $("#Name").val();
-    
-
-    debugger;
-    if($("#SelectedIdTeam0").length) // Teams
+    match.Id = $("#Id").val();
+    match.PavlovServerId = $("#PavlovServerId").val();
+    match.MapId = $("#MapId").val();
+    match.GameMode = $("#GameMode").val();
+    match.Team0Id = $("#Team0Id").val();
+    match.Team1Id = $("#Team1Id").val();
+    if($("#MatchTeam0SelectedSteamIdentitiesStrings").length) // Teams
     {
-        
-    }else{
-        
+        $("#MatchTeam0SelectedSteamIdentitiesStrings option").each(function ()
+        {
+            match.MatchTeam0SelectedSteamIdentitiesStrings.push($(this).val());
+        });
+        $("#MatchTeam1SelectedSteamIdentitiesStrings option").each(function ()
+        {
+            match.MatchTeam1SelectedSteamIdentitiesStrings.push($(this).val());
+        });
     }
+    else{//no Teams or all in the same team
+        $("#MatchSelectedSteamIdentitiesStrings option").each(function ()
+        {
+            match.MatchSelectedSteamIdentitiesStrings.push($(this).val());
+        });
+    }
+
+    $.ajax({
+        type: 'POST',
+        url: "/MatchMaking/SaveMatch/",
+        data: {match: match},
+        success:  function(data)
+        {
+            debugger;
+            window.location = "/MatchMaking/";
+        },
+        error: function(XMLHttpRequest, textStatus, errorThrown)
+        {
+            debugger;
+            jsonTOHtmlPartialView(JSON.stringify(XMLHttpRequest))
+        }
+    });
     
     
     

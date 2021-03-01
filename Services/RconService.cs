@@ -139,7 +139,7 @@ namespace PavlovRconWebserver.Services
 
         }
 
-        private async Task<StringBuilder> SendCommandForShell(string customCmd, ShellStream stream)
+        public static async Task<StringBuilder> SendCommandForShell(string customCmd, ShellStream stream)
         {
             var reader = new StreamReader(stream);
             var writer = new StreamWriter(stream);
@@ -150,7 +150,7 @@ namespace PavlovRconWebserver.Services
             return answer;
         }
 
-        private async Task WriteStream(string cmd, StreamWriter writer, ShellStream stream)
+        public static async Task WriteStream(string cmd, StreamWriter writer, ShellStream stream)
         {
             await writer.WriteLineAsync(cmd);
             while (stream.Length == 0)
@@ -159,7 +159,7 @@ namespace PavlovRconWebserver.Services
             }
         }
 
-        private async Task<StringBuilder> ReadStream(StreamReader reader)
+        public static async Task<StringBuilder> ReadStream(StreamReader reader)
         {
             StringBuilder result = new StringBuilder();
 
@@ -259,7 +259,7 @@ namespace PavlovRconWebserver.Services
             return result;
         }
 
-        private static ConnectionInfo ConnectionInfo(PavlovServer server, AuthType type, out ConnectionResult result,
+        public static ConnectionInfo ConnectionInfo(PavlovServer server, AuthType type, out ConnectionResult result,
             SshServer sshServer)
         {
             ConnectionInfo connectionInfo = null;

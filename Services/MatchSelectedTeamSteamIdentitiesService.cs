@@ -26,16 +26,18 @@ namespace PavlovRconWebserver.Services
         public async Task<IEnumerable<MatchTeamSelectedSteamIdentity>> FindAllSelectedForMatchAndTeam(int matchId,int teamId)
         {
             return _liteDb.LiteDatabase.GetCollection<MatchTeamSelectedSteamIdentity>("MatchTeamSelectedSteamIdentity")
-                .Include(x=>x.Match)
-                .FindAll().Where(x=>x.Match.Id==matchId&&x.TeamId == teamId);
+                .FindAll().Where(x=>x.matchId==matchId&&x.TeamId == teamId);
         }
         
-        public async Task<int> Upsert(List<MatchTeamSelectedSteamIdentity> matchTeamSelectedSteamIdentity)
+        public async Task<int> Upsert(List<MatchTeamSelectedSteamIdentity> matchTeamSelectedSteamIdentity, int matchId,int teamId)
         {
-            return _liteDb.LiteDatabase.GetCollection<MatchTeamSelectedSteamIdentity>("MatchTeamSelectedSteamIdentity")
-                .Include(x => x.Match)
-                .Upsert(matchTeamSelectedSteamIdentity);
+            if(matchId!=0)
+                _liteDb.LiteDatabase.GetCollection<MatchTeamSelectedSteamIdentity>("MatchTeamSelectedSteamIdentity")
+                    .DeleteMany(x=>x.matchId==matchId && x.TeamId==teamId);
             
+            return _liteDb.LiteDatabase.GetCollection<MatchTeamSelectedSteamIdentity>("MatchTeamSelectedSteamIdentity")
+                .Include(x =>x.matchId==matchId && x.TeamId==teamId)
+                .Upsert(matchTeamSelectedSteamIdentity);
         }
 
     }

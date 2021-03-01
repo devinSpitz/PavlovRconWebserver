@@ -26,7 +26,7 @@ namespace PavlovRconWebserver.Services
         }
         
 
-        public async Task<SteamIdentity> FindOne(long id)
+        public async Task<SteamIdentity> FindOne(string id)
         {
             return _liteDb.LiteDatabase.GetCollection<SteamIdentity>("SteamIdentity")
                 .Include(x=>x.LiteDbUser)
@@ -39,7 +39,7 @@ namespace PavlovRconWebserver.Services
                 .Find(x => x.LiteDbUser.Id == liteDbUserId).FirstOrDefault();
         }
         
-        public async Task<IEnumerable<SteamIdentity>> FindAList(List<long> identities)
+        public async Task<IEnumerable<SteamIdentity>> FindAList(List<string> identities)
         {
             return _liteDb.LiteDatabase.GetCollection<SteamIdentity>("SteamIdentity")
                 .FindAll().Where(x => identities.Contains(x.Id));

@@ -8,7 +8,7 @@ namespace PavlovRconWebserver.Models
         public int teamId { get; set; }
         
         [Required]
-        public long steamIdentityId { get; set; }
+        public string steamIdentityId { get; set; }
         
         [Required]
         public string overWriteRole { get; set; }

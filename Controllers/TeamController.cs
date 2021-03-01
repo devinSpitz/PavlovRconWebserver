@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Hangfire.Annotations;
 using LiteDB;
 using LiteDB.Identity.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -110,10 +111,10 @@ namespace PavlovRconWebserver.Controllers
         }
         
         [HttpGet]
-        public async Task<IActionResult> EditSteamIdentity(long? steamIdentityId)
+        public async Task<IActionResult> EditSteamIdentity([CanBeNull]string steamIdentityId)
         {
 
-            if (steamIdentityId == null || steamIdentityId == 0)
+            if (steamIdentityId == null || steamIdentityId == "0")
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 var bla = await _steamIdentityService.FindOne(new ObjectId(userId));
@@ -129,7 +130,7 @@ namespace PavlovRconWebserver.Controllers
             }
 
             
-            var steamIdentity = await _steamIdentityService.FindOne((long)steamIdentityId);
+            var steamIdentity = await _steamIdentityService.FindOne(steamIdentityId);
             steamIdentity.LiteDbUsers = _userService.FindAll().ToList();
             return View("SteamIdentity",steamIdentity);
         }
@@ -159,7 +160,7 @@ namespace PavlovRconWebserver.Controllers
         [HttpPost]
         public async Task<IActionResult> EditSteamIdentity(SteamIdentity steamIdentity)
         {
-            if (steamIdentity.Id == null || steamIdentity.Id == 0)
+            if (steamIdentity.Id == null || steamIdentity.Id == "0")
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 var bla = await _steamIdentityService.FindOne(new ObjectId(userId));
@@ -181,7 +182,7 @@ namespace PavlovRconWebserver.Controllers
         {            
             
             steamIdentity.LiteDbUsers = _userService.FindAll().ToList();
-            if (steamIdentity.Id == null || steamIdentity.Id == 0)
+            if (steamIdentity.Id == null || steamIdentity.Id == "0")
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 var bla = await _steamIdentityService.FindOne(new ObjectId(userId));
@@ -196,7 +197,7 @@ namespace PavlovRconWebserver.Controllers
           
             if(!ModelState.IsValid) 
                 return View("SteamIdentity",steamIdentity);
-            if (steamIdentity.Id == null || steamIdentity.Id == 0)
+            if (steamIdentity.Id == null || steamIdentity.Id == "0")
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 var bla = await _steamIdentityService.FindOne(new ObjectId(userId));
@@ -311,10 +312,10 @@ namespace PavlovRconWebserver.Controllers
         }
         
         [HttpGet("/{teamId}/{steamIdentityId}")]
-        public async Task<IActionResult> EditTeamSelectedSteamIdentity(int teamId,long steamIdentityId)
+        public async Task<IActionResult> EditTeamSelectedSteamIdentity(int teamId,string steamIdentityId)
         {
             if (teamId == 0) return BadRequest("team id is required");
-            if (steamIdentityId == 0) return BadRequest("steamIdentity id is required");
+            if (steamIdentityId == "0") return BadRequest("steamIdentity id is required");
                 var viewModel = new UpdateOverwriteRoleOfTeamSelectedSteamIdentityViewModel();
             viewModel.teamId = teamId;
             viewModel.steamIdentityId = steamIdentityId;
@@ -322,10 +323,10 @@ namespace PavlovRconWebserver.Controllers
         }
         
         [HttpGet("/{teamId}/{steamIdentityId}/{overWriteRole}")]
-        public async Task<IActionResult> EditTeamSelectedSteamIdentity(int teamId,long steamIdentityId,string overWriteRole)
+        public async Task<IActionResult> EditTeamSelectedSteamIdentity(int teamId,string steamIdentityId,string overWriteRole)
         {
             if (teamId == 0) return BadRequest("team id is required");
-            if (steamIdentityId == 0) return BadRequest("steamIdentity id is required");
+            if (steamIdentityId == "0") return BadRequest("steamIdentity id is required");
             if (String.IsNullOrEmpty(overWriteRole)) return BadRequest("overWriteRole is required");
             var viewModel = new UpdateOverwriteRoleOfTeamSelectedSteamIdentityViewModel();
             viewModel.teamId = teamId;
@@ -347,7 +348,7 @@ namespace PavlovRconWebserver.Controllers
         }
         
         [HttpGet]
-        public async Task<IActionResult> SaveTeamSelectedSteamIdentity(int teamId, long steamIdentityId)
+        public async Task<IActionResult> SaveTeamSelectedSteamIdentity(int teamId, string steamIdentityId)
         {
             if (teamId == 0 || teamId == null)
             {
@@ -370,7 +371,7 @@ namespace PavlovRconWebserver.Controllers
             return new ObjectResult(true);
         }
         [HttpGet]
-        public async Task<IActionResult> DeleteTeamSelectedSteamIdentity(int teamId, long steamIdentityId)
+        public async Task<IActionResult> DeleteTeamSelectedSteamIdentity(int teamId, string steamIdentityId)
         {
             if (teamId == 0 || teamId == null)
             {

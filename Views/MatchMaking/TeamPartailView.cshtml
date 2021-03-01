@@ -4,11 +4,12 @@
         <div class="col-md-6">
     @Html.Partial("TeamSinglePartailView", new SteamIdentityMatchTeamSingleViewModel
     {
+        selectedTeam = Model.selectedTeam0,
         AvailableTeams = Model.AvailableTeams,
         SelectedSteamIdentities = Model.SelectedSteamIdentitiesTeam0,
         SelectId = "SelectIdTeam0",
-        SelectedId = "SelectedIdTeam0",
-        TeamsDropDownId = "dropDownTeam0",
+        SelectedId = "MatchTeam0SelectedSteamIdentitiesStrings",
+        TeamsDropDownId = "Team0Id",
         SelectButtonId = "selectButtonTeam0"
     })
         </div>
@@ -19,11 +20,12 @@
     <div class="col-md-6">
     @Html.Partial("TeamSinglePartailView", new SteamIdentityMatchTeamSingleViewModel
     {
+        selectedTeam = Model.selectedTeam1,
         AvailableTeams = Model.AvailableTeams,
         SelectedSteamIdentities = Model.SelectedSteamIdentitiesTeam1,
         SelectId = "SelectIdTeam1",
-        SelectedId = "SelectedIdTeam1",
-        TeamsDropDownId = "dropDownTeam1",
+        SelectedId = "MatchTeam1SelectedSteamIdentitiesStrings",
+        TeamsDropDownId = "Team1Id",
         SelectButtonId = "selectButtonTeam1"
     })
     

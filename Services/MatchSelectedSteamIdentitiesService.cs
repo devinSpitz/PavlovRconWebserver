@@ -26,14 +26,16 @@ namespace PavlovRconWebserver.Services
         public async Task<IEnumerable<MatchSelectedSteamIdentity>> FindAllSelectedForMatch(int matchId)
         {
             return _liteDb.LiteDatabase.GetCollection<MatchSelectedSteamIdentity>("MatchSelectedSteamIdentity")
-                .Include(x=>x.Match)
-                .FindAll().Where(x=>x.Match.Id==matchId);
+                .FindAll().Where(x=>x.matchId==matchId);
         }
         
-        public async Task<int> Upsert(List<MatchSelectedSteamIdentity> matchSelectedSteamIdentities)
+        public async Task<int> Upsert(List<MatchSelectedSteamIdentity> matchSelectedSteamIdentities,int matchId)
         {
+            if(matchId!=0)
+                _liteDb.LiteDatabase.GetCollection<MatchSelectedSteamIdentity>("MatchSelectedSteamIdentity")
+                    .DeleteMany(x=>x.matchId==matchId);
+            
             return _liteDb.LiteDatabase.GetCollection<MatchSelectedSteamIdentity>("MatchSelectedSteamIdentity")
-                .Include(x => x.Match)
                 .Upsert(matchSelectedSteamIdentities);
             
         }

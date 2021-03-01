@@ -53,7 +53,7 @@ namespace PavlovRconWebserver.Services
                 .Find(x => x.Id == id).FirstOrDefault();
         }
         
-        public async Task<TeamSelectedSteamIdentity> FindOne(long steamIdentityId)
+        public async Task<TeamSelectedSteamIdentity> FindOne(string steamIdentityId)
         {
             return _liteDb.LiteDatabase.GetCollection<TeamSelectedSteamIdentity>("TeamSelectedSteamIdentity")
                 .Include(x=>x.SteamIdentity)
@@ -62,7 +62,7 @@ namespace PavlovRconWebserver.Services
                 .Find(x => x.SteamIdentity.Id == steamIdentityId).FirstOrDefault();
         }
         
-        public async Task<TeamSelectedSteamIdentity> FindOne(int teamId,long steamIdentityId)
+        public async Task<TeamSelectedSteamIdentity> FindOne(int teamId,string steamIdentityId)
         {
             return _liteDb.LiteDatabase.GetCollection<TeamSelectedSteamIdentity>("TeamSelectedSteamIdentity")
                 .Include(x=>x.SteamIdentity)

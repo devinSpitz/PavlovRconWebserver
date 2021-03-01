@@ -13,7 +13,7 @@ namespace PavlovRconWebserver.Models
         [Required]
         
         [DisplayName("SteamID64")]
-        public long Id { get; set; }
+        public string Id { get; set; }
         [Required]
         
         [DisplayName("SteamName")]

@@ -19,12 +19,15 @@ namespace PavlovRconWebserver.Services
         public async Task<IEnumerable<Match>> FindAll()
         {
             return _liteDb.LiteDatabase.GetCollection<Match>("Match")
+                .Include(x=>x.PavlovServer)
                 .FindAll().OrderByDescending(x=>x.Id);
         }
 
         public async Task<Match> FindOne(int id)
         {
             return _liteDb.LiteDatabase.GetCollection<Match>("Match")
+                .Include(x=>x.Team0)
+                .Include(x=>x.Team1)
                 .Find(x => x.Id == id).FirstOrDefault();
         }
 
