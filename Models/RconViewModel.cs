@@ -108,10 +108,7 @@ namespace PavlovRconWebserver.Models
                 {
                     Name  = "SetPlayerSkin",
                     InputValue = true,
-                    valuesOptions = new List<string>()
-                    {
-                        "clown", "prisoner", "naked", "farmer", "russian", "nato"
-                    },
+                    valuesOptions = Statics.Models.ToList(),
                     MinRole = "Admin",
                     Group = "Player commands"
                 },

@@ -177,37 +177,72 @@ namespace PavlovRconWebserver.Controllers
         }
         
         
+        [HttpGet]
+        public async Task<IActionResult> EditOwnSteamIdentity()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var bla = await _steamIdentityService.FindOne(new ObjectId(userId));
+            if (bla == null)
+            {
+                bla = new SteamIdentity()
+                {
+                    LiteDbUserId = userId,
+                    LiteDbUser = _userService.FindAll().FirstOrDefault(x => x.Id == new ObjectId(userId))
+                };
+            }
+            
+            if(!await CheckRightsTeamCaptainOrCaptain(0,bla)) return Unauthorized();
+            //Handle more stuff can be seen in model
+
+            ViewBag.IsOwnSteamIdentity = true;
+            
+            return View("SteamIdentity",bla);
+        }
+        
+        
         [HttpPost("[controller]/SaveSteamIdentity")]
         public async Task<IActionResult> SaveSteamIdentity(SteamIdentity steamIdentity)
         {            
             
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var bla = await _steamIdentityService.FindOne(new ObjectId(userId));
+            var currentOwner = await _steamIdentityService.FindOne(steamIdentity.Id);
             steamIdentity.LiteDbUsers = _userService.FindAll().ToList();
             if (steamIdentity.Id == null || steamIdentity.Id == "0")
             {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var bla = await _steamIdentityService.FindOne(new ObjectId(userId));
                 if(!await CheckRightsTeamCaptainOrCaptain(0,bla)) return Unauthorized();
             }
             else
             {
-                if (!await RightsHandler.IsUserAtLeastInRole("Admin", HttpContext.User, _userService)) return Unauthorized();
+                if(userId!=steamIdentity.LiteDbUserId)
+                    if (!await RightsHandler.IsUserAtLeastInRole("Admin", HttpContext.User, _userService)) return Unauthorized();
             }
             
             steamIdentity.LiteDbUser = _userService.FindAll().FirstOrDefault(x=>x.Id==new ObjectId(steamIdentity.LiteDbUserId));
           
             if(!ModelState.IsValid) 
                 return View("SteamIdentity",steamIdentity);
+            
             if (steamIdentity.Id == null || steamIdentity.Id == "0")
             {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var bla = await _steamIdentityService.FindOne(new ObjectId(userId));
+                userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 if(!await CheckRightsTeamCaptainOrCaptain(0,bla)) return Unauthorized();
             }
             else
             {
-                if (!await RightsHandler.IsUserAtLeastInRole("Admin", HttpContext.User, _userService)) return Unauthorized();
+                
+                if(userId!=steamIdentity.LiteDbUserId)
+                    if (!await RightsHandler.IsUserAtLeastInRole("Admin", HttpContext.User, _userService)) return Unauthorized();
             }
-            await _steamIdentityService.Upsert(steamIdentity);
+
+            if (currentOwner == null || steamIdentity.LiteDbUserId == currentOwner.LiteDbUser.Id.ToString())
+            {
+                await _steamIdentityService.Upsert(steamIdentity);
+            }
+            else
+            {
+                return BadRequest("That would be a duplicate entry!");
+            }
             
 
             if (ModelState.ErrorCount > 0)

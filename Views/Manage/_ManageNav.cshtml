@@ -12,6 +12,9 @@
     <li class="@ManageNavPages.ChangePasswordNavClass(ViewContext)">
         <a asp-action="ChangePassword">Password</a>
     </li>
+    <li class="@ManageNavPages.SteamIdentityNavClass(ViewContext)">
+        <a asp-controller="Team" asp-action="EditOwnSteamIdentity">EditSteamIdentity</a>
+    </li> 
     @if (hasExternalLogins)
     {
         <li class="@ManageNavPages.ExternalLoginsNavClass(ViewContext)">

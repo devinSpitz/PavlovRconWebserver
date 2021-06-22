@@ -25,14 +25,16 @@ namespace PavlovRconWebserver.Services
         private readonly PavlovServerInfoService _pavlovServerInfoService;
         private readonly PavlovServerPlayerService _pavlovServerPlayerService;
         private readonly PavlovServerPlayerHistoryService _pavlovServerPlayerHistoryService;
+        private readonly SteamIdentityService _steamIdentityService;
 
-        public RconService(ServerSelectedMapService serverSelectedMapService, MapsService mapsService,PavlovServerInfoService pavlovServerInfoService,PavlovServerPlayerService pavlovServerPlayerService,PavlovServerPlayerHistoryService pavlovServerPlayerHistoryService)
+        public RconService(SteamIdentityService steamIdentityService,ServerSelectedMapService serverSelectedMapService, MapsService mapsService,PavlovServerInfoService pavlovServerInfoService,PavlovServerPlayerService pavlovServerPlayerService,PavlovServerPlayerHistoryService pavlovServerPlayerHistoryService)
         {
             _serverSelectedMapService = serverSelectedMapService;
             _mapsService = mapsService;
             _pavlovServerInfoService = pavlovServerInfoService;
             _pavlovServerPlayerService = pavlovServerPlayerService;
             _pavlovServerPlayerHistoryService = pavlovServerPlayerHistoryService;
+            _steamIdentityService = steamIdentityService;
         }
 
         public enum AuthType
@@ -406,6 +408,7 @@ namespace PavlovRconWebserver.Services
             
             var connectionInfo = ConnectionInfo(server, type, out var result, sshServer);
             using var client = new SshClient(connectionInfo);
+            var costumesToSet = new Dictionary<string, string>();
             try
             {
                 client.Connect();
@@ -473,11 +476,19 @@ namespace PavlovRconWebserver.Services
                         playerListJson = "[" + playerListJson + "]";
                         var finsihedPlayerList = new List<PlayerModelExtended>();
                         var tmpPlayers = JsonConvert.DeserializeObject<List<PlayerModelExtendedRconModel>>(playerListJson,new JsonSerializerSettings{CheckAdditionalContent = false});
+                        var steamIdentities = await _steamIdentityService.FindAll();
+                        
                         if (tmpPlayers != null)
                         {
                             foreach (var player in tmpPlayers)
                             {
                                 player.PlayerInfo.Username = player.PlayerInfo.PlayerName;
+                                var identity = steamIdentities?.FirstOrDefault(x => x.Id == player.PlayerInfo.UniqueId);
+                                if (identity != null && (identity.Costume != "None" || !string.IsNullOrEmpty(identity.Costume)))
+                                {
+                                    costumesToSet.Add(identity.Id,identity.Costume);
+                                }
+                                
                             }
 
                             finsihedPlayerList = tmpPlayers.Select(x => x.PlayerInfo).ToList();
@@ -549,6 +560,12 @@ namespace PavlovRconWebserver.Services
                         await _pavlovServerInfoService.Upsert(tmpinfo);
 
                         result.Success = true;
+
+
+                        foreach (var customToSet in costumesToSet)
+                        {
+                            await SendCommand(server, "SetPlayerSkin "+customToSet.Key+" "+customToSet.Value);
+                        }
                     }
                     else
                     {

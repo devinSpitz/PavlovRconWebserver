@@ -18,6 +18,10 @@ namespace PavlovRconWebserver.Models
         
         [DisplayName("SteamName")]
         public string Name { get; set; }
+        
+        
+        [DisplayName("Costume")]
+        public string Costume { get; set; }
 
         [BsonRef("LiteDbUser")]
         public virtual LiteDbUser LiteDbUser { get; set; }

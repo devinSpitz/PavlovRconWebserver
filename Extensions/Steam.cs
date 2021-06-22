@@ -16,6 +16,8 @@ namespace PavlovRconWebserver.Extensions
         
         public static async Task DeleteAllUnsedMapsFromAllServers(string connectionString)
         {
+            
+            var steamIdentityService = new SteamIdentityService(new LiteDbIdentityContext(connectionString));
             var serverSelectedMapService = new ServerSelectedMapService(new LiteDbIdentityContext(connectionString));
             var pavlovServerService = new PavlovServerService(new LiteDbIdentityContext(connectionString));
             var sshServerSerivce = new SshServerSerivce(new LiteDbIdentityContext(connectionString),pavlovServerService);
@@ -23,7 +25,7 @@ namespace PavlovRconWebserver.Extensions
             var pavlovServerInfoService = new PavlovServerInfoService(new LiteDbIdentityContext(connectionString),pavlovServerService,mapsService);
             var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString),pavlovServerService,pavlovServerInfoService);
             var pavlovServerPlayerHistoryService = new PavlovServerPlayerHistoryService(new LiteDbIdentityContext(connectionString));
-            var rconSerivce = new RconService(serverSelectedMapService,mapsService,pavlovServerInfoService,pavlovServerPlayerService,pavlovServerPlayerHistoryService);
+            var rconSerivce = new RconService(steamIdentityService,serverSelectedMapService,mapsService,pavlovServerInfoService,pavlovServerPlayerService,pavlovServerPlayerHistoryService);
             var servers = await sshServerSerivce.FindAll();
             foreach (var server in servers)
             {
