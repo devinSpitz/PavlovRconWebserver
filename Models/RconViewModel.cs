@@ -79,6 +79,20 @@ namespace PavlovRconWebserver.Models
                 },
                 new Command()
                 {
+                    Name  = "AddMod",
+                    InputValue = false,
+                    MinRole = "Mod",
+                    Group = "Player commands"
+                },
+                new Command()
+                {
+                    Name  = "RemoveMod",
+                    InputValue = false,
+                    MinRole = "Mod",
+                    Group = "Player commands"
+                },
+                new Command()
+                {
                     Name  = "InspectPlayer",
                     InputValue = false,
                     MinRole = "User",
@@ -132,6 +146,13 @@ namespace PavlovRconWebserver.Models
                         "0","1","2"
                     },
                     MinRole = "Admin",
+                    Group = "Server commands"
+                },
+                new Command()
+                {
+                    Name  = "ItemList",
+                    InputValue = false,
+                    MinRole = "Mod",
                     Group = "Server commands"
                 }
             };

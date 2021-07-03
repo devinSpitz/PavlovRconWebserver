@@ -186,9 +186,8 @@ function PlayerAction()
         playerCommand = $(this).val();
     });
     
-    if(playerCommand === "SetLimitedAmmoType")
+    if(playerCommand === "SetLimitedAmmoType" || playerCommand === "ItemList")
     {
-
         command += playerCommand+" ";
     }else{
 
@@ -381,6 +380,7 @@ function BanMenu()
 // There is AddBanPlayer and RemoveBanPlayer
 function RemoveBannedPlayer(steamId)
 {
+    if(!confirm("Are you willing to unban "+steamId)) return;
     $(".overlay").show();
     let data = {};
     let servers = [];

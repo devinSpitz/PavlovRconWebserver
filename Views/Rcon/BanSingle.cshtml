@@ -24,7 +24,7 @@
     </td>
     <td>
         @Model?.SteamId 
-          @if (await UserManager.IsInRoleAsync(await UserManager.GetUserAsync(User), "Mod"))
+          @if (await UserManager.IsInRoleAsync(await UserManager.GetUserAsync(User), "Mod")||await UserManager.IsInRoleAsync(await UserManager.GetUserAsync(User), "Admin"))
           {
               <Button alt="Remove ban" class="btn-danger" onclick="RemoveBannedPlayer('@Model?.SteamId')"><span >&#128711;</span></Button>
           }

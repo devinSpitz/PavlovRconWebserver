@@ -25,7 +25,7 @@
     {
         <tr>
             <td>
-                <a href="@Url.Action("DeleteTeam", new {team.Id})"><span>&#10060;</span></a>
+                <a href="@Url.Action("DeleteTeam", new {team.Id})" onclick="return confirm('Are you sure you want to Delete?')"><span>&#10060;</span></a>
                 @team.Id
             </td>
             <td>

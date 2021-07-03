@@ -19,7 +19,7 @@
     {
         <tr>
             <td>
-                <a href="@Url.Action("DeleteSteamIdentity", new {steamIdentity.Id})"><span>&#10060;</span></a>
+                <a href="@Url.Action("DeleteSteamIdentity", new {steamIdentity.Id})" onclick="return confirm('Are you sure you want to Delete?')"><span>&#10060;</span></a>
                 @steamIdentity.Id
                 <a href="@Url.Action("EditSteamIdentity", "Team", new {steamIdentityId = steamIdentity.Id})"><span> &#9998;</span></a>
             </td>

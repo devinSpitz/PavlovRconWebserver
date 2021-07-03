@@ -23,7 +23,7 @@
     {
         <tr>
             <td>
-                <a href="@Url.Action("DeleteUser",new{ user.Id })"><span>&#10060;</span></a>
+                <a href="@Url.Action("DeleteUser",new{ user.Id })"  onclick="return confirm('Are you sure you want to Delete?')"><span>&#10060;</span></a>
                 @user.Id
             </td>
             <td>

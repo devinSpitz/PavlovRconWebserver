@@ -24,7 +24,7 @@ namespace PavlovRconWebserver.Extensions
         
         public static string[] Models = new[]
         {
-            "none","clown", "prisoner", "naked", "farmer", "russian", "nato"
+            "none","clown", "prisoner", "naked", "farmer", "russian", "nato", "us", "soviet", "german"
         };
         
     }

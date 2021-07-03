@@ -114,5 +114,27 @@ namespace PavlovRconWebserver.Controllers
             await _pavlovServerService.Delete(id);
             return RedirectToAction("Index","SshServer");
         }
+        
+        [HttpGet("[controller]/EditServerSettings/{serverId}")]
+        public async Task<IActionResult> EditServerSettings(int serverId)
+        {
+            if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
+            var viewModel = new PavlovServerGameIni();
+            var server = await _pavlovServerService.FindOne(serverId);
+            await viewModel.ReadFromFile(server,_rconService);
+            viewModel.serverId = serverId;
+            return View("ServerSettings",viewModel);
+        }        
+        
+        [HttpPost("[controller]/SaveServerSettings/")]
+        public async Task<IActionResult> SaveServerSettings(PavlovServerGameIni pavlovServerGameIni)
+        {
+            if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
+            
+            var server = await _pavlovServerService.FindOne(pavlovServerGameIni.serverId);
+            var selectedMaps = await _serverSelectedMapService.FindAllFrom(server);
+            await pavlovServerGameIni.SaveToFile(server,selectedMaps.ToList(),_rconService);
+            return RedirectToAction("Index","SshServer");
+        }
     }
 }

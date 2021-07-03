@@ -35,7 +35,7 @@
                         </table>
                     </div>
                 </div>
-                @if (await UserManager.IsInRoleAsync(await UserManager.GetUserAsync(User), "Mod"))
+                @if (await UserManager.IsInRoleAsync(await UserManager.GetUserAsync(User), "Mod")||await UserManager.IsInRoleAsync(await UserManager.GetUserAsync(User), "Admin"))
                 {
                     <br>
                     <div class="panel panel-default">

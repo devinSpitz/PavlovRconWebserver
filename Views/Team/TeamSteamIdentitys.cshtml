@@ -99,7 +99,7 @@
                                         <a href="@Url.Action("EditTeamSelectedSteamIdentity", "Team", new {teamId = teamSelectedSteamIdentity.Team.Id, steamIdentityId = teamSelectedSteamIdentity.SteamIdentity.Id,overWriteRole = teamSelectedSteamIdentity.RoleOverwrite})"><span>&#9998;</span></a>
                                     }
                                 }
-                                <a href="@Url.Action("DeleteTeamSelectedSteamIdentity", "Team", new {teamId = teamSelectedSteamIdentity.Team.Id, steamIdentityId = teamSelectedSteamIdentity.SteamIdentity.Id})"><span>&#10060;</span></a>
+                                <a href="@Url.Action("DeleteTeamSelectedSteamIdentity", "Team", new {teamId = teamSelectedSteamIdentity.Team.Id, steamIdentityId = teamSelectedSteamIdentity.SteamIdentity.Id})" onclick="return confirm('Are you sure you want to Delete?')"><span>&#10060;</span></a>
                                                                     
                                </td>
               </tr>

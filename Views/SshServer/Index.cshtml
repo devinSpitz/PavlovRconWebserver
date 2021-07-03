@@ -31,7 +31,7 @@
     {
         <tr>
             <td>
-                <a href="@Url.Action("DeleteServer", new {sshServer.Id})"><span>&#10060;</span></a>
+                <a href="@Url.Action("DeleteServer", new {sshServer.Id})" onclick="return confirm('Are you sure you want to Delete?')"><span>&#10060;</span></a>
                 @sshServer.Id
             </td>
             <td>
@@ -52,9 +52,10 @@
                         foreach (var pavlovServer in sshServer.PavlovServers)
                         {
                             <li>
-                                <a href="@Url.Action("DeleteServer", "PavlovServer", new {pavlovServer.Id})"><span>&#10060;</span></a> @pavlovServer.Name 
+                                <a href="@Url.Action("DeleteServer", "PavlovServer", new {pavlovServer.Id})" onclick="return confirm('Are you sure you want to Delete?')"><span>&#10060;</span></a> @pavlovServer.Name 
                                 <a href="@Url.Action("EditServer", "PavlovServer", new {serverId = pavlovServer.Id, sshServerId = sshServer.Id})"><span>Edit &#8505;</span></a> or 
-                                <a href="@Url.Action("EditServerSelectedMaps", "PavlovServer", new {serverId = pavlovServer.Id})"><span>Maps &#128506;</span></a>
+                                <a href="@Url.Action("EditServerSelectedMaps", "PavlovServer", new {serverId = pavlovServer.Id})"><span>Maps &#128506;</span></a> or
+                                <a href="@Url.Action("EditServerSettings", "PavlovServer", new {serverId = pavlovServer.Id})"><span>ServerSettings &#9881;</span></a>
                             </li>
                         }
                     }

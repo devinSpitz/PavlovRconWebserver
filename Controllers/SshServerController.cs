@@ -132,7 +132,7 @@ namespace PavlovRconWebserver.Controllers
         }
 
         [HttpGet]
-        public async Task<bool> SaveServerSelectedMap(int serverId, string mapId)
+        public async Task<bool> SaveServerSelectedMap(int serverId, string mapId,string gameMode)
         {
             var map = await _serverSelectedMapService.FindSelectedMap(serverId, mapId);
             if (map != null) return true;
@@ -145,7 +145,7 @@ namespace PavlovRconWebserver.Controllers
             return true;
         }
         [HttpGet]
-        public async Task<bool>  DeleteServerSelectedMap(int serverId, string mapId)
+        public async Task<bool>  DeleteServerSelectedMap(int serverId, string mapId,string gameMode)
         {
             var map = await _serverSelectedMapService.FindSelectedMap(serverId, mapId);
             if (map == null) return true;

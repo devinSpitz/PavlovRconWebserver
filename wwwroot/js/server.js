@@ -9,23 +9,26 @@ function init(){
     });
 };
 
-function ChangeMap(mapId,object)
+function ChangeMap(mapId,object,gameMode,onlyChange)
 {
+    //Todo fix gameMode has to specific the if  if its only change the gametype do not remove the stuff soo may add and remove a callback?
     if($(object).parent().parent().parent().parent().parent().parent().prop("id")==="Save") // This is some how ridiculous cause .parents() gave back delete and save. I will get e bether solution xD
     {
-        callApi("Save",serverId,mapId,object);
+        debugger;
+        callApi("Save",serverId,mapId,object,gameMode);
     }else if($(object).parent().parent().parent().parent().parent().parent().prop("id")==="Delete"){
-        callApi("Delete",serverId,mapId,object);
+        debugger;
+        callApi("Delete",serverId,mapId,object,gameMode);
     }
 }
 
 
-function callApi(method,serverId,mapId,object)
+function callApi(method,serverId,mapId,object,gameMode)
 {
     $.ajax({
         type: 'GET',
         url: "/SshServer/"+method+"ServerSelectedMap",
-        data: { serverId: serverId, mapId: mapId  },
+        data: { serverId: serverId, mapId: mapId,gameMode: gameMode },
         success:  function(data)
         {
             if(method==="Save")

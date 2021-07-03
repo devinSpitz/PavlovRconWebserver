@@ -47,7 +47,7 @@ namespace PavlovRconWebserver.Extensions
                     }
                     catch (Exception e)
                     {
-                        // ingore for now
+                        Console.WriteLine(e.Message);
                     } 
                 }
             }
@@ -79,6 +79,7 @@ namespace PavlovRconWebserver.Extensions
                         catch (Exception e)
                         {
                             exceptions.Add(e);
+                            Console.WriteLine(e.Message);
                         } 
                     }
                 }
@@ -86,6 +87,7 @@ namespace PavlovRconWebserver.Extensions
             catch (Exception e)
             {
                 exceptions.Add(e);
+                Console.WriteLine(e.Message);
             }
             // Ignore them for now
             // if (exceptions.Count > 0)
