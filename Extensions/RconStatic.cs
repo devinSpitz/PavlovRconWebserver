@@ -160,11 +160,11 @@ namespace PavlovRconWebserver.Extensions
                 clientSsh.Connect();
                 ShellStream stream = clientSsh.CreateShellStream("pavlovRconWebserverSShTunnelMultipleCommands", 80, 24,
                     800, 600, 1024);
-                var telnetConnectResult = await RconService.SendCommandForShell("nc localhost " + server.TelnetPort, stream);
-                if (telnetConnectResult.ToString().Contains("Password:"))
-                {
-                    
-                }
+                // var telnetConnectResult = await RconService.SendCommandForShell("nc localhost " + server.TelnetPort, stream);
+                // if (telnetConnectResult.ToString().Contains("Password:"))
+                // {
+                //     
+                // }
             }catch (Exception e)
             {
                 switch (e)

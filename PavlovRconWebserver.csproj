@@ -18,6 +18,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1-beta1" />
     <PackageReference Include="SSH.NET" Version="2020.0.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.0.7" />
+    <PackageReference Include="Telnet" Version="0.8.6" />
   </ItemGroup>
   <ItemGroup>
     <Content Update="Views\Rcon\Index.cshtml">

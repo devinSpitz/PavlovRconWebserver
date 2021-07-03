@@ -4,17 +4,16 @@ using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 using PavlovRconWebserver.Exceptions;
 using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
+using PrimS.Telnet;
 using Renci.SshNet;
 using Renci.SshNet.Common;
 using Renci.SshNet.Sftp;
-
 namespace PavlovRconWebserver.Services
 {
     public class RconService
@@ -47,59 +46,65 @@ namespace PavlovRconWebserver.Services
 
 
 
-        private async Task<ConnectionResult> SShTunnelMultipleCommands(PavlovServer server, AuthType type,
-            string[] commands,
-            SshServer sshServer)
+        private async Task<ConnectionResult> SShTunnelMultipleCommands(PavlovServer server, AuthType type,string[] commands, SshServer sshServer)
         {
             var connectionInfo = ConnectionInfo(server, type, out var result, sshServer);
             using var client = new SshClient(connectionInfo);
             try
             {
                 client.Connect();
-                ShellStream stream = client.CreateShellStream("pavlovRconWebserverSShTunnelMultipleCommands", 80, 24, 800, 600, 1024);
-                var telnetConnectResult = await SendCommandForShell("nc localhost " + server.TelnetPort, stream);
-                if (telnetConnectResult.ToString().Contains("Password:"))
+                              
+                if (client.IsConnected)
                 {
-                    var authResult = await SendCommandForShell(server.TelnetPassword, stream);
-                    if (authResult.ToString().Contains("Authenticated=1"))
+                    var portToForward = server.TelnetPort + 50;
+                    var portForwarded = new ForwardedPortLocal("127.0.0.1",(uint) portToForward , "127.0.0.1", (uint)server.TelnetPort);
+                    client.AddForwardedPort(portForwarded);
+                    portForwarded.Start();
+                    using (Client client2 = new Client("127.0.0.1", portToForward, new System.Threading.CancellationToken()))
                     {
-                        foreach (var command in commands)
+                        if (client2.IsConnected)
                         {
-                            var commandResult = await SendCommandForShell(command, stream);
-
-                            string singleCommandResult = "";
-                            if (commandResult.ToString().Contains("{"))
+                            var password = await client2.ReadAsync();
+                            if (password.Contains("Password"))
                             {
-                                singleCommandResult = commandResult.ToString()
-                                    .Substring(commandResult.ToString().IndexOf("{", StringComparison.Ordinal));
+                                await client2.WriteLine(server.TelnetPassword);
+                                var auth = await client2.ReadAsync();
+                                if (auth.Contains("Authenticated=1"))
+                                {
+                                    foreach (var command in commands)
+                                    {
+                                        var singleCommandResult = await SingleCommandResult(client2, command);
+
+                                        result.MultiAnswer.Add(singleCommandResult);
+                                    }
+                                }
+                                else
+                                {
+                                    result.errors.Add("Telnet Client could not authenticate ...");
+                                }
+                                    
+                            }
+                            else
+                            {
+                                result.errors.Add("Telnet Client did not ask for Password ...");
                             }
 
-                            if (singleCommandResult.StartsWith("Password: Authenticated=1"))
-                                singleCommandResult = singleCommandResult.Replace("Password: Authenticated=1", "");
-
-
-                            if (singleCommandResult.Contains(command))
-                                singleCommandResult = singleCommandResult.Replace(command, "");
-
-                            result.MultiAnswer.Add(singleCommandResult);
-
                         }
-
+                        else
+                        {
+                            result.errors.Add("Telnet Client could not connect ...");
+                        }
+                        client2.Dispose();
                     }
-                    else
-                    {
-                        result.errors.Add(
-                            "After the ssh connection the telnet connection can not login. Can not send command!");
-                    }
+                    
+                    client.Disconnect();
                 }
                 else
                 {
-                    result.errors.Add(
-                        "After the ssh connection the telnet connection gives strange answers. Can not send command!");
+                    result.errors.Add("Telnet Client cannot be reached...");
+                    Console.WriteLine("Telnet Client cannot be reached...");
                 }
-
-                await SendCommandForShell("Disconect", stream);
-                stream.Close();
+              
 
             }catch (Exception e)
             {
@@ -117,6 +122,9 @@ namespace PavlovRconWebserver.Services
                     case SocketException _:
                         result.errors.Add("Could not connect to host!");
                         break;
+                    case InvalidOperationException _:
+                        result.errors.Add(e.Message+" <- most lily this error is from telnet");
+                        break;
                     default:
                     {
                         client.Disconnect();
@@ -130,8 +138,19 @@ namespace PavlovRconWebserver.Services
                 client.Disconnect();
             }
 
-            result.answer = string.Join(",", result.MultiAnswer);
-            result.answer = "[" + result.answer + "]";
+            if (result.MultiAnswer.Count>1)
+            {
+                result.answer = string.Join(",", result.MultiAnswer);
+                result.answer = "[" + result.answer + "]";
+            }
+            else if(result.MultiAnswer.Count==1)
+            {
+                result.answer = result.MultiAnswer[0];
+            }
+            else
+            {
+                result.errors.Add("there was no answer");  
+            }
             if (result.errors.Count <= 0 || result.answer != "")
             {
                 result.Success = true;
@@ -141,123 +160,32 @@ namespace PavlovRconWebserver.Services
 
         }
 
-        public static async Task<StringBuilder> SendCommandForShell(string customCmd, ShellStream stream)
+        private static async Task<string> SingleCommandResult(Client client2, string command)
         {
-            var reader = new StreamReader(stream);
-            var writer = new StreamWriter(stream);
-            writer.AutoFlush = true;
-            await WriteStream(customCmd, writer, stream);
-            Task.Delay(100).Wait();
-            var answer = await ReadStream(reader);
-            return answer;
-        }
+            await client2.WriteLine(command);
+            var commandResult = await client2.ReadAsync();
 
-        public static async Task WriteStream(string cmd, StreamWriter writer, ShellStream stream)
-        {
-            await writer.WriteLineAsync(cmd);
-            while (stream.Length == 0)
+
+            string singleCommandResult = "";
+            if (commandResult.Contains("{"))
             {
-                Task.Delay(100).Wait();
-            }
-        }
-
-        public static async Task<StringBuilder> ReadStream(StreamReader reader)
-        {
-            StringBuilder result = new StringBuilder();
-
-            string line;
-            while ((line = await reader.ReadLineAsync()) != null)
-            {
-                result.AppendLine(line);
+                singleCommandResult = commandResult
+                    .Substring(commandResult.IndexOf("{", StringComparison.Ordinal));
             }
 
-            return result;
+            if (singleCommandResult.StartsWith("Password: Authenticated=1"))
+                singleCommandResult = singleCommandResult.Replace("Password: Authenticated=1", "");
+
+
+            if (singleCommandResult.Contains(command))
+                singleCommandResult = singleCommandResult.Replace(command, "");
+            return singleCommandResult;
         }
 
         private async Task<ConnectionResult> SShTunnel(PavlovServer server, AuthType type, string command,
             SshServer sshServer)
         {
-            var connectionInfo = ConnectionInfo(server, type, out var result, sshServer);
-            using var client = new SshClient(connectionInfo);
-            //connection
-            try
-            {
-                client.Connect();
-                ShellStream stream = client.CreateShellStream("pavlovRconWebserver", 80, 24, 800, 600, 1024);
-                var telnetConnectResult = await SendCommandForShell("nc localhost " + server.TelnetPort, stream);
-                if (telnetConnectResult.ToString().Contains("Password:"))
-                {
-                    var authResult = await SendCommandForShell(server.TelnetPassword, stream);
-                    if (authResult.ToString().Contains("Authenticated=1"))
-                    {
-                        var commandResult = await SendCommandForShell(command, stream);
-
-                        string singleCommandResult = "";
-                        if (commandResult.ToString().Contains("{"))
-                        {
-                            singleCommandResult = commandResult.ToString()
-                                .Substring(commandResult.ToString().IndexOf("{", StringComparison.Ordinal));
-                        }
-
-                        if (singleCommandResult.StartsWith("Password: Authenticated=1"))
-                            singleCommandResult = singleCommandResult.Replace("Password: Authenticated=1", "");
-
-
-                        if (singleCommandResult.Contains(command))
-                            singleCommandResult = singleCommandResult.Replace(command, "");
-
-                        await SendCommandForShell("Disconect", stream);
-                        result.answer = singleCommandResult;
-
-                    }
-                    else
-                    {
-                        result.errors.Add(
-                            "After the ssh connection the telnet connection can not login. Can not send command!");
-                    }
-                }
-                else
-                {
-                    result.errors.Add(
-                        "After the ssh connection the telnet connection gives strange answers. Can not send command!");
-                }
-
-                await SendCommandForShell("Disconect", stream);
-                stream.Close();
-            }
-            catch (Exception e)
-            {
-                switch (e)
-                {
-                    case SshAuthenticationException _:
-                        result.errors.Add("Could not Login over ssh!");
-                        break;
-                    case SshConnectionException _:
-                        result.errors.Add("Could not connect to host over ssh!");
-                        break;
-                    case SshOperationTimeoutException _:
-                        result.errors.Add("Could not connect to host cause of timeout over ssh!");
-                        break;
-                    case SocketException _:
-                        result.errors.Add("Could not connect to host!");
-                        break;
-                    default:
-                    {
-                        client.Disconnect();
-                        throw;
-                    }
-                }
-
-            }
-            finally
-            {
-                client.Disconnect();
-            }
-
-            if (result.errors.Count > 0 || result.answer == "")
-                return result;
-
-            result.Success = true;
+            var result = await SShTunnelMultipleCommands(server, type, new[] {command}, sshServer);
             return result;
         }
 
@@ -412,175 +340,152 @@ namespace PavlovRconWebserver.Services
             try
             {
                 client.Connect();
-                ShellStream stream = client.CreateShellStream("pavlovRconWebserverSShTunnelMultipleCommands", 80, 24, 800, 600, 1024);
-                var telnetConnectResult = await SendCommandForShell("nc localhost " + server.TelnetPort, stream);
-                if (telnetConnectResult.ToString().Contains("Password:"))
+                
+                 if (client.IsConnected)
                 {
-                    var authResult = await SendCommandForShell(server.TelnetPassword, stream);
-                    if (authResult.ToString().Contains("Authenticated=1"))
+                    var portToForward = server.TelnetPort + 50;
+                    var portForwarded = new ForwardedPortLocal("127.0.0.1",(uint) portToForward , "127.0.0.1", (uint)server.TelnetPort);
+                    client.AddForwardedPort(portForwarded);
+                    portForwarded.Start();
+                    using (Client client2 = new Client("127.0.0.1", portToForward, new System.Threading.CancellationToken()))
                     {
-                        // Get PlayerList:
-                        var commandOne = "RefreshList";
-                        var commandResultOne = await SendCommandForShell(commandOne, stream);
-                        
-                        string singleCommandResultOne = "";
-                        if (commandResultOne.ToString().Contains("{"))
+                        if (client2.IsConnected)
                         {
-                            singleCommandResultOne = commandResultOne.ToString()
-                                .Substring(commandResultOne.ToString().IndexOf("{", StringComparison.Ordinal));
-                        }
-                        
-                        if (singleCommandResultOne.StartsWith("Password: Authenticated=1"))
-                            singleCommandResultOne = singleCommandResultOne.Replace("Password: Authenticated=1", "");
-                        
-                        
-                        if (singleCommandResultOne.Contains(commandOne))
-                            singleCommandResultOne = singleCommandResultOne.Replace(commandOne, "");
-                        
-                        
-                        var playersList = JsonConvert.DeserializeObject<PlayerListClass>(singleCommandResultOne);
-                        var steamIds = playersList.PlayerList.Select(x => x.UniqueId);
-                        //Inspect PlayerList
-                        List<string> commands = new List<string>(); 
-                        if (steamIds != null)
-                        {
-                            foreach (var steamId in steamIds)
+                            var password = await client2.ReadAsync();
+                            if (password.Contains("Password"))
                             {
-                                commands.Add("InspectPlayer " + steamId);
-                            }
-                        }
-
-                        List<string> playerListRaw = new List<string>();
-                        foreach (var command in commands)
-                        {
-                            var commandResult = await SendCommandForShell(command, stream);
-                        
-                            string singleCommandResult = "";
-                            if (commandResult.ToString().Contains("{"))
-                            {
-                                singleCommandResult = commandResult.ToString()
-                                    .Substring(commandResult.ToString().IndexOf("{", StringComparison.Ordinal));
-                            }
-                        
-                            if (singleCommandResult.StartsWith("Password: Authenticated=1"))
-                                singleCommandResult = singleCommandResult.Replace("Password: Authenticated=1", "");
-                        
-                        
-                            if (singleCommandResult.Contains(command))
-                                singleCommandResult = singleCommandResult.Replace(command, "");
-                        
-                            playerListRaw.Add(singleCommandResult);
-                        
-                        }
-                        var playerListJson = string.Join(",", playerListRaw);
-                        playerListJson = "[" + playerListJson + "]";
-                        var finsihedPlayerList = new List<PlayerModelExtended>();
-                        var tmpPlayers = JsonConvert.DeserializeObject<List<PlayerModelExtendedRconModel>>(playerListJson,new JsonSerializerSettings{CheckAdditionalContent = false});
-                        var steamIdentities = await _steamIdentityService.FindAll();
-                        
-                        if (tmpPlayers != null)
-                        {
-                            foreach (var player in tmpPlayers)
-                            {
-                                player.PlayerInfo.Username = player.PlayerInfo.PlayerName;
-                                var identity = steamIdentities?.FirstOrDefault(x => x.Id == player.PlayerInfo.UniqueId);
-                                if (identity != null && (identity.Costume != "None" || !string.IsNullOrEmpty(identity.Costume)))
+                                await client2.WriteLine(server.TelnetPassword);
+                                var auth = await client2.ReadAsync();
+                                if (auth.Contains("Authenticated=1"))
                                 {
-                                    costumesToSet.Add(identity.Id,identity.Costume);
-                                }
+                                   // it is authetificated
+                                   var commandOne = "RefreshList";
+                                   var singleCommandResult1 = await SingleCommandResult(client2, commandOne);
+                                    
+                                   var playersList = JsonConvert.DeserializeObject<PlayerListClass>(singleCommandResult1);
+                                   var steamIds = playersList.PlayerList.Select(x => x.UniqueId);
+                                   //Inspect PlayerList
+                                   List<string> commands = new List<string>(); 
+                                   if (steamIds != null)
+                                   {
+                                       foreach (var steamId in steamIds)
+                                       {
+                                           commands.Add("InspectPlayer " + steamId);
+                                       }
+                                   }
+
+                                   List<string> playerListRaw = new List<string>();
+                                   foreach (var command in commands)
+                                   {
+                                       var commandResult = await SingleCommandResult(client2, command);
+                                       playerListRaw.Add(commandResult);
+                        
+                                   }
+                                   
+                                   var playerListJson = string.Join(",", playerListRaw);
+                                   playerListJson = "[" + playerListJson + "]";
+                                   var finsihedPlayerList = new List<PlayerModelExtended>();
+                                   var tmpPlayers = JsonConvert.DeserializeObject<List<PlayerModelExtendedRconModel>>(playerListJson,new JsonSerializerSettings{CheckAdditionalContent = false});
+                                   var steamIdentities = await _steamIdentityService.FindAll();
+                        
+                                   if (tmpPlayers != null)
+                                   {
+                                       foreach (var player in tmpPlayers)
+                                       {
+                                           player.PlayerInfo.Username = player.PlayerInfo.PlayerName;
+                                           var identity = steamIdentities?.FirstOrDefault(x => x.Id == player.PlayerInfo.UniqueId);
+                                           if (identity != null && (identity.Costume != "None" || !string.IsNullOrEmpty(identity.Costume)))
+                                           {
+                                               costumesToSet.Add(identity.Id,identity.Costume);
+                                           }
                                 
+                                       }
+
+                                       finsihedPlayerList = tmpPlayers.Select(x => x.PlayerInfo).ToList();
+                                   }
+
+                                   var pavlovServerPlayerList = finsihedPlayerList.Select(x => new PavlovServerPlayer
+                                   {
+                                       Username = x.Username,
+                                       UniqueId = x.UniqueId,
+                                       KDA = x.KDA,
+                                       Cash = x.Cash,
+                                       TeamId = x.TeamId,
+                                       Score = x.Score,
+                                       ServerId = server.Id
+                                   }).ToList();
+                                   await _pavlovServerPlayerService.Upsert(pavlovServerPlayerList, server.Id);
+                                   await _pavlovServerPlayerHistoryService.Upsert(pavlovServerPlayerList.Select(x=>new PavlovServerPlayerHistory
+                                   {
+                                       Username = x.Username,
+                                       UniqueId = x.UniqueId,
+                                       PlayerName = x.PlayerName,
+                                       KDA = x.KDA,
+                                       Cash = x.Cash,
+                                       TeamId = x.TeamId,
+                                       Score = x.Score,
+                                       ServerId = x.ServerId,
+                                       date = DateTime.Now
+                                   }).ToList(), server.Id,1);
+                        
+                                    var singleCommandResultTwo = await SingleCommandResult(client2, "ServerInfo");
+                                    var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(singleCommandResultTwo.Replace("\"\"","\"ServerInfo\""));
+                                    var map = await _mapsService.FindOne(tmp.ServerInfo.MapLabel.Replace("UGC",""));
+                                    if(map!=null)
+                                        tmp.ServerInfo.MapPictureLink = map.ImageUrl;
+
+
+                                    var tmpinfo = new PavlovServerInfo
+                                    {
+                                        MapLabel = tmp.ServerInfo.MapLabel,
+                                        MapPictureLink = tmp.ServerInfo.MapPictureLink,
+                                        GameMode = tmp.ServerInfo.GameMode,
+                                        ServerName = tmp.ServerInfo.ServerName,
+                                        RoundState = tmp.ServerInfo.RoundState,
+                                        PlayerCount = tmp.ServerInfo.PlayerCount,
+                                        Teams = tmp.ServerInfo.Teams,
+                                        Team0Score = tmp.ServerInfo.Team0Score,
+                                        Team1Score = tmp.ServerInfo.Team1Score,
+                                        ServerId = server.Id
+                                    };
+                                    
+                                    await _pavlovServerInfoService.Upsert(tmpinfo);
+
+                                    result.Success = true;
+
+
+                                    foreach (var customToSet in costumesToSet)
+                                    {
+                                        await SendCommand(server, "SetPlayerSkin "+customToSet.Key+" "+customToSet.Value);
+                                    }
+                                   
+                                }
+                                else
+                                {
+                                    result.errors.Add("Telnet Client could not authenticate ...");
+                                }
+                                    
+                            }
+                            else
+                            {
+                                result.errors.Add("Telnet Client did not ask for Password ...");
                             }
 
-                            finsihedPlayerList = tmpPlayers.Select(x => x.PlayerInfo).ToList();
                         }
-
-                        var pavlovServerPlayerList = finsihedPlayerList.Select(x => new PavlovServerPlayer
+                        else
                         {
-                            Username = x.Username,
-                            UniqueId = x.UniqueId,
-                            KDA = x.KDA,
-                            Cash = x.Cash,
-                            TeamId = x.TeamId,
-                            Score = x.Score,
-                            ServerId = server.Id
-                        }).ToList();
-                        await _pavlovServerPlayerService.Upsert(pavlovServerPlayerList, server.Id);
-                        await _pavlovServerPlayerHistoryService.Upsert(pavlovServerPlayerList.Select(x=>new PavlovServerPlayerHistory
-                        {
-                            Username = x.Username,
-                            UniqueId = x.UniqueId,
-                            PlayerName = x.PlayerName,
-                            KDA = x.KDA,
-                            Cash = x.Cash,
-                            TeamId = x.TeamId,
-                            Score = x.Score,
-                            ServerId = x.ServerId,
-                            date = DateTime.Now
-                        }).ToList(), server.Id,1);
-                        
-                        
-                        var commandTwo = "ServerInfo";
-                        var commandResultTwo = await SendCommandForShell(commandTwo, stream);
-                        
-                        string singleCommandResultTwo = "";
-                        if (commandResultTwo.ToString().Contains("{"))
-                        {
-                            singleCommandResultTwo = commandResultTwo.ToString()
-                                .Substring(commandResultTwo.ToString().IndexOf("{", StringComparison.Ordinal));
+                            result.errors.Add("Telnet Client could not connect ...");
                         }
-                        
-                        if (singleCommandResultTwo.StartsWith("Password: Authenticated=1"))
-                            singleCommandResultTwo = singleCommandResultTwo.Replace("Password: Authenticated=1", "");
-                        
-                        
-                        if (singleCommandResultTwo.Contains(commandTwo))
-                            singleCommandResultTwo = singleCommandResultTwo.Replace(commandTwo, "");
-                        
-                        
-                        var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(singleCommandResultTwo.Replace("\"\"","\"ServerInfo\""));
-                        var map = await _mapsService.FindOne(tmp.ServerInfo.MapLabel.Replace("UGC",""));
-                        if(map!=null)
-                            tmp.ServerInfo.MapPictureLink = map.ImageUrl;
-
-
-                        var tmpinfo = new PavlovServerInfo
-                        {
-                            MapLabel = tmp.ServerInfo.MapLabel,
-                            MapPictureLink = tmp.ServerInfo.MapPictureLink,
-                            GameMode = tmp.ServerInfo.GameMode,
-                            ServerName = tmp.ServerInfo.ServerName,
-                            RoundState = tmp.ServerInfo.RoundState,
-                            PlayerCount = tmp.ServerInfo.PlayerCount,
-                            Teams = tmp.ServerInfo.Teams,
-                            Team0Score = tmp.ServerInfo.Team0Score,
-                            Team1Score = tmp.ServerInfo.Team1Score,
-                            ServerId = server.Id
-                        };
-                        
-                        await _pavlovServerInfoService.Upsert(tmpinfo);
-
-                        result.Success = true;
-
-
-                        foreach (var customToSet in costumesToSet)
-                        {
-                            await SendCommand(server, "SetPlayerSkin "+customToSet.Key+" "+customToSet.Value);
-                        }
+                        client2.Dispose();
                     }
-                    else
-                    {
-                        result.errors.Add(
-                            "After the ssh connection the telnet connection can not login. Can not send command!");
-                    }
+                    
+                    client.Disconnect();
                 }
                 else
                 {
-                    result.errors.Add(
-                        "After the ssh connection the telnet connection gives strange answers. Can not send command!");
+                    result.errors.Add("Telnet Client cannot be reached...");
+                    Console.WriteLine("Telnet Client cannot be reached...");
                 }
-
-                await SendCommandForShell("Disconect", stream);
-                stream.Close();
 
             }catch (Exception e)
             {
@@ -597,6 +502,9 @@ namespace PavlovRconWebserver.Services
                         break;
                     case SocketException _:
                         result.errors.Add("Could not connect to host!");
+                        break;
+                    case InvalidOperationException _:
+                        result.errors.Add(e.Message+" <- most lily this error is from telnet");
                         break;
                     default:
                     {
