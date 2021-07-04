@@ -53,7 +53,7 @@ namespace PavlovRconWebserver.Services
                 .Insert(sshServer);
         }
 
-        public async Task validateSshServer(PavlovServer pavlovServer,RconService rconService)
+        public async Task<PavlovServer> validateSshServer(PavlovServer pavlovServer,RconService rconService)
         {
             if (String.IsNullOrEmpty(pavlovServer.TelnetPassword)&&pavlovServer.Id!=0)
             {
@@ -83,6 +83,16 @@ namespace PavlovRconWebserver.Services
             {
                 throw new SaveServerException("SshPassword","You need at least a password or a key file!");
             }
+                        
+            //try if the service realy exist
+            try
+            {
+                pavlovServer = await SystemdService.GetServerServiceState(pavlovServer, rconService);
+            }
+            catch (CommandException e)
+            {
+                throw new SaveServerException("",e.Message);
+            }
             //try to send Command ServerInfo
             try
             {
@@ -101,8 +111,13 @@ namespace PavlovRconWebserver.Services
             {
                 throw new SaveServerException("",e.Message);
             }
+            
 
+
+            return pavlovServer;
         }
+
+
 
         public async Task<bool> Update(SshServer sshServer,RconService rconService)
         {

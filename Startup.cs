@@ -138,6 +138,9 @@ namespace PavlovRconWebserver
          
          BackgroundJob.Schedule( 
             () => RconStatic.ReloadPlayerListFromServerAndTheServerInfo(connectionString,true),new TimeSpan(0,1,0)); // Check for bans and remove them is necessary
+         
+         BackgroundJob.Schedule( 
+            () => SystemdService.CheckServiceStateForAll(connectionString),new TimeSpan(0,1,0)); // Check for bans and remove them is necessary
 
 
             

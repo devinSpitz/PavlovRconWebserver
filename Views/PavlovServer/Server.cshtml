@@ -65,7 +65,12 @@
         <div class="form-group col-xs-3">
             <label asp-for="DeletAfter"></label>
             <input asp-for="DeletAfter" class="form-control" value="@Model.DeletAfter"/>
-            <span asp-validation-for="ServerFolderPath" class="text-danger"></span>
+            <span asp-validation-for="DeletAfter" class="text-danger"></span>
+        </div> 
+        <div class="form-group col-xs-3">
+            <label asp-for="ServerSystemdServiceName"></label>
+            <input asp-for="ServerSystemdServiceName" class="form-control" value="@Model.ServerSystemdServiceName"/>
+            <span asp-validation-for="ServerSystemdServiceName" class="text-danger"></span>
         </div>  
     </div>  
 <div class="row">

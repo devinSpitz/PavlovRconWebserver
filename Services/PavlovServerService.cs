@@ -37,7 +37,7 @@ namespace PavlovRconWebserver.Services
         public async Task<bool> Upsert(PavlovServer pavlovServer,RconService service,SshServerSerivce sshServerSerivce)
         {
             
-            await sshServerSerivce.validateSshServer(pavlovServer,service);
+            pavlovServer = await sshServerSerivce.validateSshServer(pavlovServer,service);
             return _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer")
                 .Upsert(pavlovServer);
         }
