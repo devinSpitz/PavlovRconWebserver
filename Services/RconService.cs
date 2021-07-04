@@ -80,19 +80,19 @@ namespace PavlovRconWebserver.Services
                                 }
                                 else
                                 {
-                                    result.errors.Add("Telnet Client could not authenticate ...");
+                                    result.errors.Add("Telnet Client could not authenticate ..."+server.Name);
                                 }
                                     
                             }
                             else
                             {
-                                result.errors.Add("Telnet Client did not ask for Password ...");
+                                result.errors.Add("Telnet Client did not ask for Password ..."+server.Name);
                             }
 
                         }
                         else
                         {
-                            result.errors.Add("Telnet Client could not connect ...");
+                            result.errors.Add("Telnet Client could not connect ..."+server.Name);
                         }
                         client2.Dispose();
                     }
@@ -101,8 +101,8 @@ namespace PavlovRconWebserver.Services
                 }
                 else
                 {
-                    result.errors.Add("Telnet Client cannot be reached...");
-                    Console.WriteLine("Telnet Client cannot be reached...");
+                    result.errors.Add("Telnet Client cannot be reached..."+server.Name);
+                    Console.WriteLine("Telnet Client cannot be reached..."+server.Name);
                 }
               
 
@@ -111,19 +111,19 @@ namespace PavlovRconWebserver.Services
                 switch (e)
                 {
                     case SshAuthenticationException _:
-                        result.errors.Add("Could not Login over ssh!");
+                        result.errors.Add("Could not Login over ssh!"+server.Name);
                         break;
                     case SshConnectionException _:
-                        result.errors.Add("Could not connect to host over ssh!");
+                        result.errors.Add("Could not connect to host over ssh!"+server.Name);
                         break;
                     case SshOperationTimeoutException _:
-                        result.errors.Add("Could not connect to host cause of timeout over ssh!");
+                        result.errors.Add("Could not connect to host cause of timeout over ssh!"+server.Name);
                         break;
                     case SocketException _:
-                        result.errors.Add("Could not connect to host!");
+                        result.errors.Add("Could not connect to host!"+server.Name);
                         break;
                     case InvalidOperationException _:
-                        result.errors.Add(e.Message+" <- most lily this error is from telnet");
+                        result.errors.Add(e.Message+" <- most lily this error is from telnet"+server.Name);
                         break;
                     default:
                     {
@@ -149,7 +149,7 @@ namespace PavlovRconWebserver.Services
             }
             else
             {
-                result.errors.Add("there was no answer");  
+                result.errors.Add("there was no answer"+server.Name);  
             }
             if (result.errors.Count <= 0 || result.answer != "")
             {
@@ -240,7 +240,7 @@ namespace PavlovRconWebserver.Services
                     catch (SftpPermissionDeniedException e)
                     {
                         sftp.Disconnect();
-                        throw new CommandException("Could not create file: " + path + " " + e.Message);
+                        throw new CommandException(server.Name+": Could not create file: " + path + " " + e.Message);
                     }
                 }
 
@@ -304,12 +304,12 @@ namespace PavlovRconWebserver.Services
                 if (fileContent == content)
                 {
                     connectionResult.Success = true;
-                    connectionResult.answer = "File upload successfully";
+                    connectionResult.answer = "File upload successfully "+server.Name;
                 }
                 else
                 {
                     connectionResult.Success = false;
-                    connectionResult.answer = "File in not the same as uploaded. So upload failed!";
+                    connectionResult.answer = "File in not the same as uploaded. So upload failed! "+server.Name;
                 }
 
 
@@ -462,19 +462,19 @@ namespace PavlovRconWebserver.Services
                                 }
                                 else
                                 {
-                                    result.errors.Add("Telnet Client could not authenticate ...");
+                                    result.errors.Add("Telnet Client could not authenticate ..."+server.Name);
                                 }
                                     
                             }
                             else
                             {
-                                result.errors.Add("Telnet Client did not ask for Password ...");
+                                result.errors.Add("Telnet Client did not ask for Password ..."+server.Name);
                             }
 
                         }
                         else
                         {
-                            result.errors.Add("Telnet Client could not connect ...");
+                            result.errors.Add("Telnet Client could not connect ..."+server.Name);
                         }
                         client2.Dispose();
                     }
@@ -483,8 +483,8 @@ namespace PavlovRconWebserver.Services
                 }
                 else
                 {
-                    result.errors.Add("Telnet Client cannot be reached...");
-                    Console.WriteLine("Telnet Client cannot be reached...");
+                    result.errors.Add("Telnet Client cannot be reached..."+server.Name);
+                    Console.WriteLine("Telnet Client cannot be reached..."+server.Name);
                 }
 
             }catch (Exception e)
@@ -492,19 +492,19 @@ namespace PavlovRconWebserver.Services
                 switch (e)
                 {
                     case SshAuthenticationException _:
-                        result.errors.Add("Could not Login over ssh!");
+                        result.errors.Add("Could not Login over ssh!"+server.Name);
                         break;
                     case SshConnectionException _:
-                        result.errors.Add("Could not connect to host over ssh!");
+                        result.errors.Add("Could not connect to host over ssh!"+server.Name);
                         break;
                     case SshOperationTimeoutException _:
-                        result.errors.Add("Could not connect to host cause of timeout over ssh!");
+                        result.errors.Add("Could not connect to host cause of timeout over ssh!"+server.Name);
                         break;
                     case SocketException _:
-                        result.errors.Add("Could not connect to host!");
+                        result.errors.Add("Could not connect to host!"+server.Name);
                         break;
                     case InvalidOperationException _:
-                        result.errors.Add(e.Message+" <- most lily this error is from telnet");
+                        result.errors.Add(e.Message+" <- most lily this error is from telnet"+server.Name);
                         break;
                     default:
                     {
@@ -625,13 +625,13 @@ namespace PavlovRconWebserver.Services
                         {
 
                             sftp.Disconnect();
-                            throw new CommandException("Permission denied to delet map");
+                            throw new CommandException("Permission denied to delet map"+server.Name);
                         }
 
                         if (sftp.Exists(map.FullName))
                         {
                             sftp.Disconnect();
-                            throw new CommandException("Could not delete map!");
+                            throw new CommandException("Could not delete map!"+server.Name);
                         }
                     }
 

@@ -8,7 +8,6 @@ namespace PavlovRconWebserver.Models
 {
     public class RconViewModel
     {
-        //ToDO: Need to save Baned players to make Unban ane usfull cause will will be resetted if you restart your server when you set this option via rcon!
         public RconViewModel()
         {
             SpecialCommands = new List<Command>()
