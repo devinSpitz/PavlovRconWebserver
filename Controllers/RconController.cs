@@ -295,7 +295,7 @@ namespace PavlovRconWebserver.Controllers
             }
             catch (CommandException e)
             {
-                throw  new PavlovServerPlayerException(e.Message);
+                return BadRequest(e.Message);
             }
             
             var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(serverInfo.Replace("\"\"","\"ServerInfo\""));
