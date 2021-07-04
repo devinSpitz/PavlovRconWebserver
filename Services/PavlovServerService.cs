@@ -34,10 +34,11 @@ namespace PavlovRconWebserver.Services
                 .Find(x => x.Id == id).FirstOrDefault();
             return pavlovServer;
         }
-        public async Task<bool> Upsert(PavlovServer pavlovServer,RconService service,SshServerSerivce sshServerSerivce)
+        public async Task<bool> Upsert(PavlovServer pavlovServer,RconService service,SshServerSerivce sshServerSerivce,bool withCheck = true)
         {
-            
-            pavlovServer = await sshServerSerivce.validateSshServer(pavlovServer,service);
+            //Todo: Important disabled server can not save right now
+            if(withCheck)
+                pavlovServer = await sshServerSerivce.validateSshServer(pavlovServer,service);
             return _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer")
                 .Upsert(pavlovServer);
         }

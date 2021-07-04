@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Services;
@@ -42,10 +43,12 @@ namespace PavlovRconWebserver.Models
                     first = false;
                     continue;
                 }
+
+                var tmpLine = line.Replace(Environment.NewLine, "").Replace("\r", "").Replace("\n", "");
                 //Bools
-                if (line.Contains("bEnabled="))
+                if (tmpLine.Contains("bEnabled="))
                 {
-                    var tmp = line.Replace("bEnabled=", "");
+                    var tmp = tmpLine.Replace("bEnabled=", "");
                     bEnabled = tmp switch
                     {
                         "true" => true,
@@ -53,9 +56,9 @@ namespace PavlovRconWebserver.Models
                         _ => bEnabled
                     };
                 }
-                else if (line.Contains("bSecured="))
+                else if (tmpLine.Contains("bSecured="))
                 {
-                    var tmp = line.Replace("bSecured=", "");
+                    var tmp = tmpLine.Replace("bSecured=", "");
                     bSecured = tmp switch
                     {
                         "true" => true,
@@ -63,9 +66,9 @@ namespace PavlovRconWebserver.Models
                         _ => bSecured
                     };
                 }
-                else if (line.Contains("bCustomServer="))
+                else if (tmpLine.Contains("bCustomServer="))
                 {
-                    var tmp = line.Replace("bCustomServer=", "");
+                    var tmp = tmpLine.Replace("bCustomServer=", "");
                     bCustomServer = tmp switch
                     {
                         "true" => true,
@@ -73,9 +76,9 @@ namespace PavlovRconWebserver.Models
                         _ => bCustomServer
                     };
                 }
-                else if (line.Contains("bWhitelist="))
+                else if (tmpLine.Contains("bWhitelist="))
                 {
-                    var tmp = line.Replace("bWhitelist=", "");
+                    var tmp = tmpLine.Replace("bWhitelist=", "");
                     bWhitelist = tmp switch
                     {
                         "true" => true,
@@ -84,55 +87,42 @@ namespace PavlovRconWebserver.Models
                     };
                 }
                 //String
-                else if (line.Contains("ServerName="))
+                else if (tmpLine.Contains("ServerName="))
                 {
-                    ServerName = line.Replace("ServerName=", "");
+                    ServerName = tmpLine.Replace("ServerName=", "");
                 }
-                else if (line.Contains("Password="))
+                else if (tmpLine.Contains("Password="))
                 {
-                    Password = line.Replace("Password=", "");
+                    Password = tmpLine.Replace("Password=", "");
                 }
-                else if (line.Contains("BalanceTableURL="))
+                else if (tmpLine.Contains("BalanceTableURL="))
                 {
-                    BalanceTableURL = line.Replace("BalanceTableURL=", "");
-                }
-                else if (line.Contains("MapRotation="))
-                {
-                    var tmpPavlovServerGameIniMap = new PavlovServerGameIniMap();
-                    
-                    var tmp = line.Replace("MapRotation=(MapId=\"", "");
-                    var indexToStartForGameMode = tmp.IndexOf(',');
-                    tmpPavlovServerGameIniMap.MapLabel = tmp.Substring(0, indexToStartForGameMode);
-                    var gameMode = tmp.Substring(indexToStartForGameMode);
-                    gameMode = gameMode.Replace(" GameMode=\"", "");
-                    gameMode = gameMode.Replace("\")", "");
-                    tmpPavlovServerGameIniMap.GameMode = gameMode;
-                    MapRotation.Add(tmpPavlovServerGameIniMap);
+                    BalanceTableURL = tmpLine.Replace("BalanceTableURL=", "");
                 }
                 //ints
-                else if (line.Contains("MaxPlayers="))
+                else if (tmpLine.Contains("MaxPlayers="))
                 {
-                    var tmp = line.Replace("MaxPlayers=", "");
+                    var tmp = tmpLine.Replace("MaxPlayers=", "");
                     MaxPlayers = Int32.Parse(tmp);
                 }
-                else if (line.Contains("RefreshListTime="))
+                else if (tmpLine.Contains("RefreshListTime="))
                 {
-                    var tmp = line.Replace("RefreshListTime=", "");
+                    var tmp = tmpLine.Replace("RefreshListTime=", "");
                     RefreshListTime = Int32.Parse(tmp);
                 }
-                else if (line.Contains("LimitedAmmoType="))
+                else if (tmpLine.Contains("LimitedAmmoType="))
                 {
-                    var tmp = line.Replace("LimitedAmmoType=", "");
+                    var tmp = tmpLine.Replace("LimitedAmmoType=", "");
                     LimitedAmmoType = Int32.Parse(tmp);
                 }
-                else if (line.Contains("TickRate="))
+                else if (tmpLine.Contains("TickRate="))
                 {
                     var tmp = line.Replace("TickRate=", "");
                     TickRate = Int32.Parse(tmp);
                 }
-                else if (line.Contains("TimeLimit="))
+                else if (tmpLine.Contains("TimeLimit="))
                 {
-                    var tmp = line.Replace("TimeLimit=", "");
+                    var tmp = tmpLine.Replace("TimeLimit=", "");
                     TimeLimit = Int32.Parse(tmp);
                 }
             }
@@ -162,7 +152,14 @@ namespace PavlovRconWebserver.Models
             
             foreach (var serverSelectedMap in serverSelectedMaps)
             {
-                lines.Add("MapRotation=(MapId=\""+serverSelectedMap.Map.Id+"\", GameMode=\""+serverSelectedMap.GameMode+"\")");
+                if (Regex.IsMatch(serverSelectedMap.Map.Id, @"^\d+$"))
+                {
+                    lines.Add("MapRotation=(MapId=\"UGC"+serverSelectedMap.Map.Id+"\", GameMode=\""+serverSelectedMap.GameMode+"\")"); 
+                }
+                else
+                {
+                    lines.Add("MapRotation=(MapId=\""+serverSelectedMap.Map.Id+"\", GameMode=\""+serverSelectedMap.GameMode+"\")"); 
+                }
             }
             var content = string.Join(Environment.NewLine, lines);
             await rconService.SendCommand(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.GameIni, false, false,

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using PavlovRconWebserver.Exceptions;
+using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
 using PavlovRconWebserver.Services;
 
@@ -124,7 +125,27 @@ namespace PavlovRconWebserver.Controllers
             await viewModel.ReadFromFile(server,_rconService);
             viewModel.serverId = serverId;
             return View("ServerSettings",viewModel);
-        }        
+        }     
+        
+        [HttpGet("[controller]/StartSystemdService/{serverId}")]
+        public async Task<IActionResult> StartSystemdService(int serverId)
+        {
+            if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
+            
+            var server = await _pavlovServerService.FindOne(serverId);
+            await SystemdService.StartServerService(server, _rconService,_pavlovServerService,_service);
+            return RedirectToAction("Index","SshServer");
+        }   
+                
+        [HttpGet("[controller]/StopSystemdService/{serverId}")]
+        public async Task<IActionResult> StopSystemdService(int serverId)
+        {
+            if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
+            
+            var server = await _pavlovServerService.FindOne(serverId);
+            await SystemdService.StopServerService(server, _rconService,_pavlovServerService,_service);
+            return RedirectToAction("Index","SshServer");
+        }    
         
         [HttpPost("[controller]/SaveServerSettings/")]
         public async Task<IActionResult> SaveServerSettings(PavlovServerGameIni pavlovServerGameIni)

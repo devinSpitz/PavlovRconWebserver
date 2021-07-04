@@ -164,6 +164,137 @@ namespace PavlovRconWebserver.Services
 
         }
 
+        //Todo: function
+        public async Task<ConnectionResult> SystemDStart(PavlovServer server, AuthType type, SshServer sshServer)
+        {
+            var connectionInfo = ConnectionInfo(server, type, out var result, sshServer);
+            using var client = new SshClient(connectionInfo);
+            try
+            {
+                client.Connect();
+                ShellStream stream = client.CreateShellStream("pavlovRconWebserverSShTunnelSystemdCheck", 80, 24, 800, 600, 1024);
+                var disabled = await SendCommandForShell("systemctl list-unit-files --type service | grep "+server.ServerSystemdServiceName+".service", stream,@".*disabled.*");
+                if (disabled!=null)
+                {
+                    var enable = await SendCommandForShell("systemctl enable "+server.ServerSystemdServiceName+".service", stream,@".*Created.*");
+                    if (enable == null)
+                    {
+                        result.errors.Add("Could not enable service "+server.Name);
+                    }
+                }
+
+                var start = await SendCommandForShell("systemctl restart "+server.ServerSystemdServiceName+".service", stream,null);
+                if (start == null)
+                {
+                    result.errors.Add("Could not start service "+server.Name);
+                }
+
+            }catch (Exception e)
+            {
+                switch (e)
+                {
+                    case SshAuthenticationException _:
+                        result.errors.Add("Could not Login over ssh!"+server.Name);
+                        break;
+                    case SshConnectionException _:
+                        result.errors.Add("Could not connect to host over ssh!"+server.Name);
+                        break;
+                    case SshOperationTimeoutException _:
+                        result.errors.Add("Could not connect to host cause of timeout over ssh!"+server.Name);
+                        break;
+                    case SocketException _:
+                        result.errors.Add("Could not connect to host!"+server.Name);
+                        break;
+                    case InvalidOperationException _:
+                        result.errors.Add(e.Message+" <- most lily this error is from telnet"+server.Name);
+                        break;
+                    default:
+                    {
+                        client.Disconnect();
+                        throw;
+                    }
+                }
+
+            }
+            finally
+            {
+                client.Disconnect();
+            }
+            if (result.errors.Count <= 0 || result.answer != "")
+            {
+                result.Success = true;
+            }
+
+            return result;
+
+        }
+
+        //Todo function
+        public async Task<ConnectionResult> SystemDStop(PavlovServer server, AuthType type, SshServer sshServer)
+        {
+            var connectionInfo = ConnectionInfo(server, type, out var result, sshServer);
+            using var client = new SshClient(connectionInfo);
+            try
+            {
+                client.Connect();
+                ShellStream stream = client.CreateShellStream("pavlovRconWebserverSShTunnelSystemdCheck", 80, 24, 800, 600, 1024);
+                var disabled = await SendCommandForShell("systemctl list-unit-files --type service | grep "+server.ServerSystemdServiceName+".service", stream,@".*enabled.*");
+                if (disabled!=null)
+                {
+                    var enable = await SendCommandForShell("systemctl disable "+server.ServerSystemdServiceName+".service", stream,@".*Removed.*");
+                    if (enable == null)
+                    {
+                        result.errors.Add("Could not disable service "+server.Name);
+                    }
+                }
+
+                var start = await SendCommandForShell("systemctl stop "+server.ServerSystemdServiceName+".service", stream,null);
+                if (start == null)
+                {
+                    result.errors.Add("Could not start service "+server.Name);
+                }
+                
+
+            }catch (Exception e)
+            {
+                switch (e)
+                {
+                    case SshAuthenticationException _:
+                        result.errors.Add("Could not Login over ssh!"+server.Name);
+                        break;
+                    case SshConnectionException _:
+                        result.errors.Add("Could not connect to host over ssh!"+server.Name);
+                        break;
+                    case SshOperationTimeoutException _:
+                        result.errors.Add("Could not connect to host cause of timeout over ssh!"+server.Name);
+                        break;
+                    case SocketException _:
+                        result.errors.Add("Could not connect to host!"+server.Name);
+                        break;
+                    case InvalidOperationException _:
+                        result.errors.Add(e.Message+" <- most lily this error is from telnet"+server.Name);
+                        break;
+                    default:
+                    {
+                        client.Disconnect();
+                        throw;
+                    }
+                }
+
+            }
+            finally
+            {
+                client.Disconnect();
+            }
+            if (result.errors.Count <= 0 || result.answer != "")
+            {
+                result.Success = true;
+            }
+
+            return result;
+
+        }
+
         private async Task<ConnectionResult> SShTunnelMultipleCommands(PavlovServer server, AuthType type,string[] commands, SshServer sshServer)
         {
             var connectionInfo = ConnectionInfo(server, type, out var result, sshServer);
@@ -392,6 +523,7 @@ namespace PavlovRconWebserver.Services
             var connectionInfo = ConnectionInfo(server, type, out var result, sshServer);
             //check if first scripts exist
             using var sftp = new SftpClient(connectionInfo);
+            sftp.BufferSize = 4 * 1024; // bypass Payload error large files
             try
             {
                 sftp.Connect();
@@ -399,15 +531,17 @@ namespace PavlovRconWebserver.Services
                 //check if file exist
                 if (sftp.Exists(path))
                 {
-                    sftp.DeleteFile(path);
+                    sftp.WriteAllLines(path, content.Split(Environment.NewLine).Where(x=>!string.IsNullOrEmpty(x)));
                 }
-
-
-                using (var fileStream = new MemoryStream(Encoding.ASCII.GetBytes(content)))
+                else
                 {
-                    sftp.BufferSize = 4 * 1024; // bypass Payload error large files
-                    sftp.UploadFile(fileStream, path);
+                    using (var fileStream = new MemoryStream(Encoding.ASCII.GetBytes(content)))
+                    {
+                        sftp.UploadFile(fileStream, path);
+                    }
                 }
+
+
 
                 //Download file again to valid result
                 var outPutStream = new MemoryStream();
@@ -419,7 +553,7 @@ namespace PavlovRconWebserver.Services
                 var fileContentArray = outPutStream.ToArray();
                 var fileContent = System.Text.Encoding.Default.GetString(fileContentArray);
 
-                if (fileContent == content)
+                if (fileContent.Replace(Environment.NewLine,"") == content.Replace(Environment.NewLine,""))
                 {
                     connectionResult.Success = true;
                     connectionResult.answer = "File upload successfully "+server.Name;
@@ -795,11 +929,11 @@ namespace PavlovRconWebserver.Services
         //Todo Write this function nice its just a mess but it works for now
         public async Task<string> SendCommand(PavlovServer server, string command, bool deleteUnusedMaps = false,
             bool getFile = false, string writeContent = "", bool writeFile = false, bool multiCommand = false,
-            List<string> multiCommands = null, bool reloadServerInfo = false, bool checkSystemd = false)
+            List<string> multiCommands = null, bool reloadServerInfo = false, bool checkSystemd = false, bool startSystemd =false, bool stopSystemd = false)
         {
             var connectionResult = new ConnectionResult();
 
-            if (server.ServerServiceState != ServerServiceState.active &&( !checkSystemd || !getFile || !writeFile || !deleteUnusedMaps  ))
+            if (server.ServerServiceState != ServerServiceState.active &&( !checkSystemd && !getFile && !writeFile && !deleteUnusedMaps && !startSystemd && !stopSystemd  ))
             {
                 throw new CommandException("will not do command while server service is inactive!");
             }
@@ -823,6 +957,10 @@ namespace PavlovRconWebserver.Services
                     connectionResult = await SShTunnelGetAllInfoFromPavlovServer(server, AuthType.PrivateKeyPassphrase, server.SshServer);
                 else if (checkSystemd)
                     connectionResult = await SystemDCheckState(server, AuthType.PrivateKeyPassphrase, server.SshServer);
+                else if (startSystemd)
+                    connectionResult = await SystemDStart(server, AuthType.PrivateKeyPassphrase, server.SshServer);
+                else if (stopSystemd)
+                    connectionResult = await SystemDStop(server, AuthType.PrivateKeyPassphrase, server.SshServer);
                 else
                     connectionResult =
                         await SShTunnel(server, AuthType.PrivateKeyPassphrase, command, server.SshServer);
@@ -846,6 +984,10 @@ namespace PavlovRconWebserver.Services
                     connectionResult = await SShTunnelGetAllInfoFromPavlovServer(server, AuthType.PrivateKey, server.SshServer);
                 else if (checkSystemd)
                     connectionResult = await SystemDCheckState(server, AuthType.PrivateKey, server.SshServer);
+                else if (startSystemd)
+                    connectionResult = await SystemDStart(server, AuthType.PrivateKey, server.SshServer);
+                else if (stopSystemd)
+                    connectionResult = await SystemDStop(server, AuthType.PrivateKey, server.SshServer);
                 else connectionResult = await SShTunnel(server, AuthType.PrivateKey, command, server.SshServer);
             }
 
@@ -866,6 +1008,10 @@ namespace PavlovRconWebserver.Services
                     connectionResult = await SShTunnelGetAllInfoFromPavlovServer(server, AuthType.UserPass, server.SshServer);
                 else if (checkSystemd)
                     connectionResult = await SystemDCheckState(server, AuthType.UserPass, server.SshServer);
+                else if (startSystemd)
+                    connectionResult = await SystemDStart(server, AuthType.UserPass, server.SshServer);
+                else if (stopSystemd)
+                    connectionResult = await SystemDStop(server, AuthType.UserPass, server.SshServer);
                 else connectionResult = await SShTunnel(server, AuthType.UserPass, command, server.SshServer);
             }
 
