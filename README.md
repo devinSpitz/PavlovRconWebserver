@@ -69,9 +69,9 @@ https://dev.to/ianknighton/hosting-a-net-core-app-with-nginx-and-let-s-encrypt-1
 
 What are the features?
 newly added:  
-* Server handle Stop and Start
-* Chosen maps not only have effect on deleting also has effect on the server settings.
-* You can edit the server settings now
+* Server handle Stop and Start  
+* Chosen maps not only have effect on deleting also has effect on the server settings.  
+* You can edit the server settings now  
 * The system knows which state the server of a pavlov server has 
 * Player list with stats etc.
 * Ban list over time. You can now ban People for a specific time.
@@ -123,6 +123,9 @@ An easy and reliable way to perform fire-and-forget, delayed and recurring, long
 CPU or I/O intensive tasks inside ASP.NET applications. No Windows Service / Task Scheduler required. Even ASP.NET is not required. Backed by Redis, SQL Server, SQL Azure or MSMQ. This is a .NET alternative to Sidekiq, Resque and Celery. 
 https://www.hangfire.io/   
 
+Telnet  
+A minimal open-source C# 3.5/4.0/4.5/4.5.1/NetStandard1.6/NetStandard2.0 Telnet client library implementation; just enough to send simple text commands and retrieve the response.  
+https://github.com/9swampy/Telnet/
 
 
 =====================  
