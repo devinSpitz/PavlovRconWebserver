@@ -799,7 +799,7 @@ namespace PavlovRconWebserver.Services
         {
             var connectionResult = new ConnectionResult();
 
-            if (server.ServerServiceState != ServerServiceState.active && !checkSystemd)
+            if (server.ServerServiceState != ServerServiceState.active &&( !checkSystemd || !getFile || !writeFile || !deleteUnusedMaps  ))
             {
                 throw new CommandException("will not do command while server service is inactive!");
             }

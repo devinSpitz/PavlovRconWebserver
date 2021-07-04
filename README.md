@@ -27,8 +27,11 @@ sudo usermod -a -G pavlovRconWebserver UserNameWhichIsEnteredAsSshUserInPavlovRc
 sudo usermod -a -G pavlovRconWebserver steam && 
 sudo chown :pavlovRconWebserver /tmp/workshop/7777/content/555160/ && 
 sudo chown :pavlovRconWebserver /home/steam/pavlovserver/Pavlov/Saved/Config/ &&
+sudo chown :pavlovRconWebserver /home/steam/pavlovserver/Pavlov/Saved/Config/LinuxServer/ &&
+sudo chown :pavlovRconWebserver /home/steam/pavlovserver/Pavlov/Saved/Config/LinuxServer/* &&
 sudo setfacl -m g:pavlovRconWebserver:rwx,d:g:pavlovRconWebserver:rwx /tmp/workshop/7777/content/555160/ &&
-sudo setfacl -m g:pavlovRconWebserver:rwx,d:g:pavlovRconWebserver:rwx /home/steam/pavlovserver/Pavlov/Saved/Config/
+sudo setfacl -m g:pavlovRconWebserver:rwx,d:g:pavlovRconWebserver:rwx /home/steam/pavlovserver/Pavlov/Saved/Config/ &&
+sudo setfacl -m g:pavlovRconWebserver:rwx,d:g:pavlovRconWebserver:rwx /home/steam/pavlovserver/Pavlov/Saved/Config/LinuxServer/ &&
 ```
 
 you may also need this for all the files which already be there (This is way to powerfull but works)
