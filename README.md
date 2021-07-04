@@ -69,6 +69,7 @@ https://dev.to/ianknighton/hosting-a-net-core-app-with-nginx-and-let-s-encrypt-1
 
 What are the features?
 newly added:  
+* Users can now change there skin
 * Server handle Stop and Start  
 * Chosen maps not only have effect on deleting also has effect on the server settings.  
 * You can edit the server settings now  
