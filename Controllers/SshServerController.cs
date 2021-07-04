@@ -134,22 +134,51 @@ namespace PavlovRconWebserver.Controllers
         [HttpGet]
         public async Task<bool> SaveServerSelectedMap(int serverId, string mapId,string gameMode)
         {
-            var map = await _serverSelectedMapService.FindSelectedMap(serverId, mapId);
-            if (map != null) return true;
-            var NewMap = new ServerSelectedMap()
+            var realMap = await _mapsService.FindOne(mapId);
+            var pavlovServer = await _pavlovServerService.FindOne(serverId);
+            var mapsSelected = await _serverSelectedMapService.FindAllFrom(pavlovServer);
+            if (mapsSelected != null)
             {
-                Map = await _mapsService.FindOne(mapId),
-                PavlovServer = await _pavlovServerService.FindOne(serverId)
-            };
-            await _serverSelectedMapService.Insert(NewMap);
+                var toUpdate = mapsSelected.FirstOrDefault(x => x.Map.Id == realMap.Id);
+                if (toUpdate == null)
+                {
+                   
+                    var NewMap = new ServerSelectedMap()
+                    {
+                        Map = realMap,
+                        PavlovServer = pavlovServer
+                    };
+                    await _serverSelectedMapService.Insert(NewMap); 
+                }
+                else
+                {
+                    toUpdate.GameMode = gameMode;
+                    await _serverSelectedMapService.Update(toUpdate);
+                }
+            }
+            else
+            {
+                var NewMap = new ServerSelectedMap()
+                {
+                    Map = realMap,
+                    PavlovServer = pavlovServer
+                };
+                await _serverSelectedMapService.Insert(NewMap);
+            }
             return true;
         }
         [HttpGet]
         public async Task<bool>  DeleteServerSelectedMap(int serverId, string mapId,string gameMode)
         {
-            var map = await _serverSelectedMapService.FindSelectedMap(serverId, mapId);
-            if (map == null) return true;
-            await _serverSelectedMapService.Delete(map.Id);
+            var realMap = await _mapsService.FindOne(mapId);
+            var pavlovServer = await _pavlovServerService.FindOne(serverId);
+            var mapsSelected = await _serverSelectedMapService.FindAllFrom(pavlovServer);
+            var list = mapsSelected.ToList();
+            if (mapsSelected != null)
+            {
+                var toUpdate = mapsSelected.FirstOrDefault(x => x.Map.Id == realMap.Id);
+                await _serverSelectedMapService.Delete(toUpdate.Id);
+            }
             return true;
         }
         

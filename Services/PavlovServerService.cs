@@ -28,7 +28,7 @@ namespace PavlovRconWebserver.Services
             return _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer").Include(x=>x.SshServer)
                 .Find(x=>x.SshServer.Id==sshServerId).ToList();
         }
-        public async Task<PavlovServer> FindOne(long id)
+        public async Task<PavlovServer> FindOne(int id)
         {
             var pavlovServer =  _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer").Include(x=>x.SshServer)
                 .Find(x => x.Id == id).FirstOrDefault();

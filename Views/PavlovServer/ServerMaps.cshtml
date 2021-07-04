@@ -30,7 +30,7 @@ So all maps you choose here will not be removed wile cleaning the cache which ha
             </div>
             @foreach (var map in @Model.AllMaps)
             {
-                var selectedMap = Model.SelectedMaps.FirstOrDefault(x => x.Map.Id == map.Id);
+                var selectedMap = Model.SelectedMaps.FirstOrDefault(x => x.Map?.Id == map.Id);
                 if (selectedMap != null)
                 {
                     continue; // This map is selected
@@ -61,7 +61,7 @@ So all maps you choose here will not be removed wile cleaning the cache which ha
                                 <br><b>by @map.Author</b>
                             }
                             
-                            @Html.DropDownList("TDM", new SelectList(gameModes,"TDM"), new { @class = "gameMode form-control form-control-sm", @onchange = "ChangeMap($(this).parent().find('.mapId').val(),this,$(this).parent().find('.gameMode').val())" })
+                            @Html.DropDownList("TDM", new SelectList(gameModes,"TDM"), new { @class = "gameMode form-control form-control-sm", @onchange = "ChangeMap($(this).parent().find('.mapId').val(),this,$(this).parent().find('.gameMode').val(),true)" })
 
                         </div>
                     </div>
@@ -78,7 +78,7 @@ So all maps you choose here will not be removed wile cleaning the cache which ha
         <div class="panel-body" id="DeletePanelBody">
             @foreach (var map in @Model.SelectedMaps)
             {
-                    map.Map = Model.AllMaps.FirstOrDefault(x => x.Id == map.Map.Id);
+                    map.Map = Model.AllMaps.FirstOrDefault(x => x.Id == map.Map?.Id);
                     if (map.Map == null)
                     {
                         continue; // have to delete the map some when cause its no longer on steam workskhops :(
@@ -93,7 +93,7 @@ So all maps you choose here will not be removed wile cleaning the cache which ha
                         @map.Map.Id
                     </div>
                     <div class="panel-body">
-                        <input class="mapId" value="@map.Id" type="hidden"/>
+                        <input class="mapId" value="@map.Map.Id" type="hidden"/>
                         @if (@map.Map.Name?.Length > maxLength)
                         {
                             <b>@map.Map.Name.Substring(0, maxLength) ...</b>
@@ -103,7 +103,7 @@ So all maps you choose here will not be removed wile cleaning the cache which ha
                             <b>@map.Map.Name</b>
                         }
                         <br>
-                        <button data-dismiss="modal" onclick="ChangeMap('@map.Id',this,$(this).parent().find('.gameMode').val())"><img style="width: 150px;height: 150px" src="@map.Map.ImageUrl"></button>
+                        <button data-dismiss="modal" onclick="ChangeMap('@map.Map.Id',this,$(this).parent().find('.gameMode').val())"><img style="width: 150px;height: 150px" src="@map.Map.ImageUrl"></button>
                         @if (@map.Map.Author?.Length > maxLength)
                         {
                             <br><b>by @map.Map.Author.Substring(0, maxLength) ...</b>
@@ -112,7 +112,7 @@ So all maps you choose here will not be removed wile cleaning the cache which ha
                         {
                             <br><b>by @map.Map.Author</b>
                         }
-                        @Html.DropDownList(map.GameMode, new SelectList(gameModes, map.GameMode), new {@class = "gameMode form-control form-control-sm", @onchange = "ChangeMap($(this).parent().find('.mapId').val(),this,$(this).parent().find('.gameMode').val())" })
+                        @Html.DropDownList(map.GameMode, new SelectList(gameModes, map.GameMode), new {@class = "gameMode form-control form-control-sm", @onchange = "ChangeMap($(this).parent().find('.mapId').val(),this,$(this).parent().find('.gameMode').val(),true)" })
 
                     </div>
                 </div>
