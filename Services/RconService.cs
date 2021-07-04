@@ -159,7 +159,6 @@ namespace PavlovRconWebserver.Services
             {
                 result.Success = true;
             }
-
             return result;
 
         }
@@ -933,7 +932,7 @@ namespace PavlovRconWebserver.Services
         {
             var connectionResult = new ConnectionResult();
 
-            if (server.ServerServiceState != ServerServiceState.active &&( !checkSystemd && !getFile && !writeFile && !deleteUnusedMaps && !startSystemd && !stopSystemd  ))
+            if (server.ServerServiceState != ServerServiceState.active && !string.IsNullOrEmpty(server.ServerSystemdServiceName) && ( (!checkSystemd && !getFile && !writeFile && !deleteUnusedMaps && !startSystemd && !stopSystemd) ))
             {
                 throw new CommandException("will not do command while server service is inactive!");
             }

@@ -55,6 +55,7 @@ namespace PavlovRconWebserver.Services
 
         public async Task<PavlovServer> validateSshServer(PavlovServer pavlovServer,RconService rconService)
         {
+            var hasToStop = false;
             if (String.IsNullOrEmpty(pavlovServer.TelnetPassword)&&pavlovServer.Id!=0)
             {
                 pavlovServer.TelnetPassword = (await _pavlovServer.FindOne(pavlovServer.Id)).TelnetPassword;
@@ -88,6 +89,12 @@ namespace PavlovRconWebserver.Services
             try
             {
                 pavlovServer = await SystemdService.GetServerServiceState(pavlovServer, rconService);
+                if (pavlovServer.ServerServiceState != ServerServiceState.active)
+                {
+                    hasToStop = true;
+                    await SystemdService.StartServerService(pavlovServer, rconService,_pavlovServer,this);
+                    pavlovServer = await SystemdService.GetServerServiceState(pavlovServer, rconService);
+                }
             }
             catch (CommandException e)
             {
@@ -111,8 +118,12 @@ namespace PavlovRconWebserver.Services
             {
                 throw new SaveServerException("",e.Message);
             }
-            
 
+            if (hasToStop)
+            {
+                await SystemdService.StopServerService(pavlovServer, rconService,_pavlovServer,this);
+                pavlovServer.ServerServiceState = ServerServiceState.disabled;
+            }
 
             return pavlovServer;
         }
