@@ -160,6 +160,8 @@ namespace PavlovRconWebserver.Controllers
             {
                 var NewMap = new ServerSelectedMap()
                 {
+                    
+                    GameMode = gameMode,
                     Map = realMap,
                     PavlovServer = pavlovServer
                 };
