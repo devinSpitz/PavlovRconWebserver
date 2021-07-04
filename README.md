@@ -15,7 +15,7 @@ Videos:
 [Feature Guide](https://youtu.be/iSmAP6_DAyM)  
 [How To Install/Build](https://youtu.be/GBgW4mP2zgI)    
 
-Since last commit the ssh user will need following premissions for this folder and everything in there:  
+Since last commit the ssh user will need following premissions and the priviliges to start/stop/enable services (root) for this folder and everything in there:  
   
 Read+Write /home/steam/pavlovserver/   // path of your pavlov server: for now only to manage the blacklist but will be more in the future.  
 Read+Write /tmp/workshop/7777/content/555160/   // path to the pavlov maps: 7777 could be different on your system. It is the port your pavlov server uses!  
@@ -69,6 +69,10 @@ https://dev.to/ianknighton/hosting-a-net-core-app-with-nginx-and-let-s-encrypt-1
 
 What are the features?
 newly added:  
+* Server handle Stop and Start
+* Chosen maps not only have effect on deleting also has effect on the server settings.
+* You can edit the server settings now
+* The system knows which state the server of a pavlov server has 
 * Player list with stats etc.
 * Ban list over time. You can now ban People for a specific time.
 * You can select maps that will not get deleted, when the cache will get cleaned.
