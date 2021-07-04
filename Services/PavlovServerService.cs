@@ -36,7 +36,6 @@ namespace PavlovRconWebserver.Services
         }
         public async Task<bool> Upsert(PavlovServer pavlovServer,RconService service,SshServerSerivce sshServerSerivce,bool withCheck = true)
         {
-            //Todo: Important disabled server can not save right now
             if(withCheck)
                 pavlovServer = await sshServerSerivce.validateSshServer(pavlovServer,service);
             return _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer")

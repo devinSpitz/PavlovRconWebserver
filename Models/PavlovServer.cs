@@ -25,6 +25,8 @@ namespace PavlovRconWebserver.Models
     {
         public int Id { get; set; }
         [Required]
+        
+        [DisplayName("Gui Name")]
         public string Name { get; set; }
         [Required]
         [DisplayName("Rcon port")]
