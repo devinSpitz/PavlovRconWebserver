@@ -1,6 +1,14 @@
 ﻿@model System.Collections.Generic.IEnumerable<LiteDB.Identity.Models.LiteDbRole>
-<h1 class="bg-info text-white">All Roles</h1>
-
+<h1 class="">All Roles</h1>
+<div class="bg-info">
+    hirarchy: 
+    <ul>
+        <li>Admin</li>
+        <li>Mod</li>
+        <li>Captain</li>
+        <li>User</li>
+    </ul>
+</div>
 <table class="table table-sm table-bordered table-bordered">
     <tr><th>ID</th><th>Name</th><th>Users</th></tr>
     @foreach (var role in Model)

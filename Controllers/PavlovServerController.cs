@@ -17,8 +17,20 @@ namespace PavlovRconWebserver.Controllers
         private readonly PavlovServerService _pavlovServerService;        
         private readonly MapsService _mapsService;
         private readonly ServerSelectedMapService _serverSelectedMapService;
+        private readonly ServerSelectedWhitelistService _whitelistService;
+        private readonly ServerSelectedModsService _serverSelectedModsService;
+        private readonly SteamIdentityService _steamIdentityService;
         
-        public PavlovServerController(SshServerSerivce service,UserService userService,PavlovServerService pavlovServerService,RconService rconService,ServerSelectedMapService serverSelectedMapService,MapsService mapsService)
+        
+        public PavlovServerController(SshServerSerivce service,
+            UserService userService,
+            PavlovServerService pavlovServerService,
+            RconService rconService,
+            ServerSelectedMapService serverSelectedMapService,
+            MapsService mapsService,
+            ServerSelectedWhitelistService whitelistService,
+            ServerSelectedModsService serverSelectedModsService,
+                SteamIdentityService steamIdentityService)
         {
             _service = service;
             _userservice = userService;
@@ -26,6 +38,9 @@ namespace PavlovRconWebserver.Controllers
             _rconService = rconService;
             _serverSelectedMapService = serverSelectedMapService;
             _mapsService = mapsService;
+            _whitelistService = whitelistService;
+            _steamIdentityService = steamIdentityService;
+            _serverSelectedModsService = serverSelectedModsService;
 
         }
         
@@ -155,6 +170,66 @@ namespace PavlovRconWebserver.Controllers
             var server = await _pavlovServerService.FindOne(pavlovServerGameIni.serverId);
             var selectedMaps = await _serverSelectedMapService.FindAllFrom(server);
             await pavlovServerGameIni.SaveToFile(server,selectedMaps.ToList(),_rconService);
+            return RedirectToAction("Index","SshServer");
+        }
+        
+                
+        [HttpGet("[controller]/EditWhiteList/{serverId}")]
+        public async Task<IActionResult> EditWhiteList(int serverId)
+        {
+            if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
+            
+            var server = await _pavlovServerService.FindOne(serverId);
+            var steamIds =  (await _steamIdentityService.FindAll()).ToList();
+            var selectedSteamIds =  (await _whitelistService.FindAllFrom(server)).ToList();
+            //service
+            var model = new PavlovServerWhitelistViewModel()
+            {
+                steamIds = selectedSteamIds.Select(x=>x.SteamIdentityId).ToList(),
+                pavlovServerId = server.Id
+            };
+
+            ViewBag.SteamIdentities = steamIds.Select(x=>x.Id).ToList();
+            return View("WhiteList",model);
+        }
+                
+        [HttpPost("[controller]/SaveWhiteList/")]
+        public async Task<IActionResult> SaveWhiteList(PavlovServerWhitelistViewModel pavlovServerWhitelistViewModel)
+        {
+            if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
+            var server = await _pavlovServerService.FindOne(pavlovServerWhitelistViewModel.pavlovServerId);
+            await _whitelistService.SaveWhiteListToFileAndDb(pavlovServerWhitelistViewModel.steamIds, server);
+            //service
+            return RedirectToAction("Index","SshServer");
+        }
+        
+                        
+        [HttpGet("[controller]/EditModList/{serverId}")]
+        public async Task<IActionResult> EditModList(int serverId)
+        {
+            if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
+            
+            var server = await _pavlovServerService.FindOne(serverId);
+            var userIds =  _userservice.FindAll().ToList();
+            var selectedUserIds =  (await _serverSelectedModsService.FindAllFrom(server)).ToList();
+            //service
+            var model = new PavlovServerModlistViewModel()
+            {
+                userIds = selectedUserIds.Select(x=>x.LiteDbUser.Id.ToString()).ToList(),
+                pavlovServerId = server.Id
+            };
+
+            ViewBag.Users = userIds.ToList();
+            return View("ModList",model);
+        }
+                
+        [HttpPost("[controller]/SaveModList/")]
+        public async Task<IActionResult> SaveModList(PavlovServerModlistViewModel pavlovServerModlistViewModel)
+        {
+            if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
+            var server = await _pavlovServerService.FindOne(pavlovServerModlistViewModel.pavlovServerId);
+            await _serverSelectedModsService.SaveWhiteListToFileAndDb(pavlovServerModlistViewModel.userIds, server);
+            //service
             return RedirectToAction("Index","SshServer");
         }
     }

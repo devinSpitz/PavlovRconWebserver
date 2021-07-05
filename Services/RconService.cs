@@ -530,14 +530,12 @@ namespace PavlovRconWebserver.Services
                 //check if file exist
                 if (sftp.Exists(path))
                 {
-                    sftp.WriteAllLines(path, content.Split(Environment.NewLine).Where(x=>!string.IsNullOrEmpty(x)));
+                    sftp.DeleteFile(path);
                 }
-                else
+                
+                using (var fileStream = new MemoryStream(Encoding.ASCII.GetBytes(content)))
                 {
-                    using (var fileStream = new MemoryStream(Encoding.ASCII.GetBytes(content)))
-                    {
-                        sftp.UploadFile(fileStream, path);
-                    }
+                    sftp.UploadFile(fileStream, path);
                 }
 
 

@@ -20,6 +20,19 @@ namespace PavlovRconWebserver.Services
             _roleManager = roleMgr;
             _liteDb = liteDbContext;
         }
+        public async Task<IEnumerable<LiteDbUser>> FindAllInRole(string roleId)
+        {
+            var liteDbUsers = new List<LiteDbUser>();
+            foreach (LiteDbUser user in FindAll())
+            {
+                if (await _userManager.IsInRoleAsync(user, roleId))
+                {
+                    liteDbUsers.Add(user);
+                }
+            }
+
+            return liteDbUsers;
+        }
 
         public IEnumerable<LiteDbUser> FindAll()
         {

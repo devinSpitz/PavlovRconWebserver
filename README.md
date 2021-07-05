@@ -67,13 +67,19 @@ https://dev.to/ianknighton/hosting-a-net-core-app-with-nginx-and-let-s-encrypt-1
 
 [Commands](https://pastebin.com/dbGUsvUn)
 
-What are the features?
+
+Features:
+=======
 newly added:  
 * Users can now change there skin
 * Server handle Stop and Start  
 * Chosen maps not only have effect on deleting also has effect on the server settings.  
-* You can edit the server settings now  
-* The system knows which state the server of a pavlov server has 
+* You can edit the server settings now
+* The system knows which state the server of a pavlov server has
+* You can now edit the Mod and White list of a pavlov server
+
+ older:   
+
 * Player list with stats etc.
 * Ban list over time. You can now ban People for a specific time.
 * You can select maps that will not get deleted, when the cache will get cleaned.
@@ -86,7 +92,9 @@ newly added:
 
 [Feature Guide](https://youtu.be/iSmAP6_DAyM)
 
-Note:   
+
+Note:
+======= 
 - If you build it by yourself be sure to add the database.db file and the other riquired folders(see release) befor start the application.  
 - The old user and roles system ist not compatible to the new one. So you have to restart with a new database, if you are from the version 0.0.1!  
 
@@ -96,8 +104,13 @@ Help:
 =======
 1. If you expirience any problem first press "CTRL"+"F5" to reload JavaScript.  
 2. Known issues found by makupi/pavlov-bot: https://github.com/makupi/pavlov-bot#known-issues-with-rcon-that-bot-cant-fix
+3. Under Windows(on my system) there is the problem that the background services can not access the db even if it is shared.  
+   Then you will get the following exception:  
+```The process cannot access the file '...\Database.db' because it is being used by another process.```  
+   I dont know how to fix this problem. It works under linux xD
 
-Credits: 
+Credits:
+=======
 
 Implementation of AspNetCore.Identity for LiteDB database engine.   
 https://github.com/quicksln/LiteDB.Identity

@@ -48,7 +48,7 @@ namespace PavlovRconWebserver.Models
 
         [Required]
         
-        [DisplayName("Server service name () without .service")]
+        [DisplayName("Server service name (without .service)")]
         public string ServerSystemdServiceName { get; set; }
         
         
@@ -56,7 +56,7 @@ namespace PavlovRconWebserver.Models
         public ServerType ServerType { get; set; }
         
         [DisplayName("Server service state")]
-        public ServerServiceState ServerServiceState { get; set; } = ServerServiceState.disabled;
+        public ServerServiceState ServerServiceState { get; set; } = ServerServiceState.none;
         
         [BsonRef("SshServer")]
         public SshServer SshServer { get; set; }

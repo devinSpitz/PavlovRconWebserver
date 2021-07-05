@@ -35,7 +35,7 @@
                 @sshServer.Id
             </td>
             <td>
-                <a href="@Url.Action("EditServer", "SshServer", new {serverId = sshServer.Id})"><span>Server &#9998;</span></a>
+                <a href="@Url.Action("EditServer", "SshServer", new {serverId = sshServer.Id})"><span>&#9998;</span></a>
             </td>
             <td>
                 @sshServer.Name
@@ -53,7 +53,7 @@
                             <tr>
                                 <th>Gui Name</th>
                                 <th>Service state</th>
-                                <th>Delete</th>
+                                <th>Delete from list</th>
                                 <th>System</th>
                                 <th>Maps</th>
                                 <th>ServerSettings</th>
@@ -67,7 +67,9 @@
                                         <td><a href="@Url.Action("DeleteServer", "PavlovServer", new {pavlovServer.Id})" onclick="return confirm('Are you sure you want to Delete?')"><span>&#10060;</span></a></td>
                                         <td><a href="@Url.Action("EditServer", "PavlovServer", new {serverId = pavlovServer.Id, sshServerId = sshServer.Id})"><span>&#9998;</span></a></td>
                                         <td><a href="@Url.Action("EditServerSelectedMaps", "PavlovServer", new {serverId = pavlovServer.Id})"><span> &#128506;</span></a></td>
-                                        <td><a href="@Url.Action("EditServerSettings", "PavlovServer", new {serverId = pavlovServer.Id})"><span> &#9881;</span></a></td>
+                                        <td><a href="@Url.Action("EditServerSettings", "PavlovServer", new {serverId = pavlovServer.Id})"><span> &#9881;</span></a>
+                                            <a href="@Url.Action("EditWhiteList", "PavlovServer", new {serverId = pavlovServer.Id})"><span>WhiteList</span></a>
+                                            <a href="@Url.Action("EditModList", "PavlovServer", new {serverId = pavlovServer.Id})"><span>Mods</span></a></td>
                                         <td><a href="@Url.Action("StopSystemdService", "PavlovServer", new {serverId = pavlovServer.Id})" onclick="return confirm('Are you sure you want to stop the server?')"><span> &#9209;</span></a>
                                             <a href="@Url.Action("StartSystemdService", "PavlovServer", new {serverId = pavlovServer.Id})"><span> &#9654;</span></a></td>
                                     </tr>

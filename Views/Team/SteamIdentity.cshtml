@@ -8,7 +8,7 @@
     ViewBag.Title = "Add/Update SteamIdentity";
     Layout = "_Layout";
     var users = new List<LiteDbUser>();
-    @if (ViewBag.IsOwnSteamIdentity != null && !ViewBag.IsOwnSteamIdentity)
+    @if (ViewBag.IsOwnSteamIdentity == null || !ViewBag.IsOwnSteamIdentity)
     {
         users = Model.LiteDbUsers;
         users = users.Prepend(new LiteDbUser()
@@ -42,7 +42,7 @@
         @Html.DropDownListFor(m => m.Costume, new SelectList(Statics.Models, Model.Costume), new {@class = "form-control form-control-sm"})
     </div>
     
-    @if (ViewBag.IsOwnSteamIdentity != null && !ViewBag.IsOwnSteamIdentity)
+    @if (ViewBag.IsOwnSteamIdentity == null || !ViewBag.IsOwnSteamIdentity)
     {
         <div class="form-group col-md-12">
             <label asp-for="LiteDbUserId"></label>

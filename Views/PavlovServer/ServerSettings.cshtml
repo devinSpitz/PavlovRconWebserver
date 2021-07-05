@@ -9,13 +9,19 @@
 }
 
 <h2>@ViewBag.Title</h2>
+<div class="bg-info">
+    <ul>
+        <li>When you save the server settings, they are written directly to Game.ini, including the maps and game modes you have already selected.</li>
+        <li>To apply the server settings you have to stop the server and start it again.</li>
+    </ul>
+</div>
 
 <form asp-controller="PavlovServer" asp-action="SaveServerSettings" method="post">
     <div asp-validation-summary="All" class="text-danger"></div>
 
     <input asp-for="serverId" class="form-control" value="@Model.serverId" type="hidden"/>
-    <span asp-validation-for="serverId" class="text-danger"></span>  
-    
+    <span asp-validation-for="serverId" class="text-danger"></span>
+
     <div class="row">
         <div class="form-group col-md-12">
             <label asp-for="ServerName"></label>
@@ -77,17 +83,17 @@
             <span asp-validation-for="Password" class="text-danger"></span>
         </div>
     </div>
-        <div class="row">
-            <div class="form-group col-md-12">
-                <label asp-for="BalanceTableURL"></label>
-                <input asp-for="BalanceTableURL" class="form-control" value="@Model.BalanceTableURL"/>
-                <span asp-validation-for="BalanceTableURL" class="text-danger"></span>
-            </div>
+    <div class="row">
+        <div class="form-group col-md-12">
+            <label asp-for="BalanceTableURL"></label>
+            <input asp-for="BalanceTableURL" class="form-control" value="@Model.BalanceTableURL"/>
+            <span asp-validation-for="BalanceTableURL" class="text-danger"></span>
         </div>
-<div class="row">
-    <div class="col-md-1">
-            <button type="submit" class="btn btn-primary btn-default col-md-12">Save</button>
     </div>
-</div>
+    <div class="row">
+        <div class="col-md-1">
+            <button type="submit" class="btn btn-primary btn-default col-md-12">Save</button>
+        </div>
+    </div>
 
 </form>

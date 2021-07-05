@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi.Models;
 using PavlovRconWebserver.Extensions;
+using PavlovRconWebserver.Models;
 
 namespace PavlovRconWebserver
 {
@@ -48,6 +49,8 @@ namespace PavlovRconWebserver
          services.AddTransient<PavlovServerPlayerHistoryService>();
          services.AddTransient<MatchSelectedSteamIdentitiesService>();
          services.AddTransient<MatchSelectedTeamSteamIdentitiesService>();
+         services.AddTransient<ServerSelectedWhitelistService>();
+         services.AddTransient<ServerSelectedModsService>();
          // services
          //    .AddAuthentication(cfg =>
          //    {

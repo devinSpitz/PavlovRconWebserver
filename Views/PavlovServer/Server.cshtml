@@ -13,6 +13,16 @@
 }
 
 <h2>@ViewBag.Title</h2>
+<div class="bg-info">
+    <ul>
+        <li>Each field is a mandatory field</li>
+        <li>The Pavlov server and the service must already exist (but the service can be disabled).</li>
+        <li>When saving, a validation is performed at the same time. This means that the pavlov server is also started for a short time if it is not yet running.</li>
+    </ul>
+</div>
+
+
+
 
 <form asp-controller="PavlovServer" asp-action="SaveServer" method="post">
     <div asp-validation-summary="All" class="text-danger"></div>
