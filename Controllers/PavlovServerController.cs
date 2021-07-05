@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using LiteDB.Identity.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using PavlovRconWebserver.Exceptions;
 using PavlovRconWebserver.Extensions;
@@ -20,6 +22,7 @@ namespace PavlovRconWebserver.Controllers
         private readonly ServerSelectedWhitelistService _whitelistService;
         private readonly ServerSelectedModsService _serverSelectedModsService;
         private readonly SteamIdentityService _steamIdentityService;
+        private UserManager<LiteDbUser> UserManager;
         
         
         public PavlovServerController(SshServerSerivce service,
@@ -30,7 +33,8 @@ namespace PavlovRconWebserver.Controllers
             MapsService mapsService,
             ServerSelectedWhitelistService whitelistService,
             ServerSelectedModsService serverSelectedModsService,
-                SteamIdentityService steamIdentityService)
+                SteamIdentityService steamIdentityService,
+            UserManager<LiteDbUser> userManager)
         {
             _service = service;
             _userservice = userService;
@@ -41,6 +45,7 @@ namespace PavlovRconWebserver.Controllers
             _whitelistService = whitelistService;
             _steamIdentityService = steamIdentityService;
             _serverSelectedModsService = serverSelectedModsService;
+            UserManager = userManager;
 
         }
         
@@ -210,7 +215,24 @@ namespace PavlovRconWebserver.Controllers
             if(await _userservice.IsUserNotInRole("Admin",HttpContext.User)) return new UnauthorizedResult();
             
             var server = await _pavlovServerService.FindOne(serverId);
-            var userIds =  _userservice.FindAll().ToList();
+            var tmpUserIds =  _userservice.FindAll().ToList();
+            List<LiteDbUser> userIds =  new List<LiteDbUser>();
+            var isAdmin = false;
+            var isMod = false;
+            
+            foreach (var user in tmpUserIds)
+            {
+                if (user != null)
+                {
+                    isAdmin = await UserManager.IsInRoleAsync(user,"Admin");
+                    isMod = await UserManager.IsInRoleAsync(user,"Mod");
+
+                    if (!isAdmin && !isMod)
+                    {
+                        userIds.Add(user); 
+                    }
+                }
+            }
             var selectedUserIds =  (await _serverSelectedModsService.FindAllFrom(server)).ToList();
             //service
             var model = new PavlovServerModlistViewModel()
