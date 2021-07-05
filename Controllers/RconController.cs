@@ -97,7 +97,7 @@ namespace PavlovRconWebserver.Controllers
             var singleServer = new PavlovServer();
             singleServer = await _pavlovServerService.FindOne(server);
             var isModOnTheServer = await IsModOnTheServer(server);
-            if(!await RightsHandler.IsUserAtLeastInRole("Captain", HttpContext.User, _userservice)||!isModOnTheServer)  return Unauthorized();
+            if(!await RightsHandler.IsUserAtLeastInRole("Captain", HttpContext.User, _userservice)&&!isModOnTheServer)  return Unauthorized();
             if(!await RightsHandler.IsUserAtLeastInRoleForCommand(command, HttpContext.User, _userservice,isModOnTheServer)) return Unauthorized();
             
             var response = "";
@@ -118,7 +118,7 @@ namespace PavlovRconWebserver.Controllers
         public async Task<IActionResult> SingleServerInfoPartialView(string server,int serverId)
         {
             var isModOnTheServer = await IsModOnTheServer(serverId);
-            if(!await RightsHandler.IsUserAtLeastInRole("Captain", HttpContext.User, _userservice)||!isModOnTheServer)  return Unauthorized();
+            if(!await RightsHandler.IsUserAtLeastInRole("Captain", HttpContext.User, _userservice)&&!isModOnTheServer)  return Unauthorized();
             var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(server.Replace("\"\"","\"ServerInfo\""));
             tmp.Name = (await _pavlovServerService.FindOne(serverId)).Name;
 
@@ -166,7 +166,7 @@ namespace PavlovRconWebserver.Controllers
         public async Task<IActionResult> GetBansFromServers(int serverId)
         {
             var isModOnTheServer = await IsModOnTheServer(serverId);
-            if(!await RightsHandler.IsUserAtLeastInRole("Captain", HttpContext.User, _userservice)||!isModOnTheServer)  return Unauthorized();
+            if(!await RightsHandler.IsUserAtLeastInRole("Captain", HttpContext.User, _userservice)&&!isModOnTheServer)  return Unauthorized();
             if (serverId<=0) return BadRequest("Please choose a server!");
             var server = await _pavlovServerService.FindOne(serverId);
             var banlist = await _serverBansService.FindAllFromPavlovServerId(serverId,true);
@@ -178,7 +178,7 @@ namespace PavlovRconWebserver.Controllers
         public async Task<IActionResult> AddBanPlayer(int serverId,string steamId,string timespan)
         {
             var isModOnTheServer = await IsModOnTheServer(serverId);
-            if(!await RightsHandler.IsUserAtLeastInRole("Mod", HttpContext.User, _userservice)||!isModOnTheServer)  return Unauthorized();
+            if(!await RightsHandler.IsUserAtLeastInRole("Mod", HttpContext.User, _userservice)&&!isModOnTheServer)  return Unauthorized();
             if (serverId<=0) return BadRequest("Please choose a server!");
             if (string.IsNullOrEmpty(steamId) || steamId == "-") return BadRequest("SteamId must be set!");
             if (string.IsNullOrEmpty(timespan)) return BadRequest("TimeSpan  must be set!");
@@ -296,7 +296,7 @@ namespace PavlovRconWebserver.Controllers
         public async Task<IActionResult> GetAllPlayers(int serverId)
         {
             var isModOnTheServer = await IsModOnTheServer(serverId);
-            if(!await RightsHandler.IsUserAtLeastInRole("Captain", HttpContext.User, _userservice)||!isModOnTheServer)  return Unauthorized();
+            if(!await RightsHandler.IsUserAtLeastInRole("Captain", HttpContext.User, _userservice)&&!isModOnTheServer)  return Unauthorized();
             if (serverId<=0) return BadRequest("Please choose a server!");
             PlayerListClass playersList = new PlayerListClass();
 
@@ -325,7 +325,7 @@ namespace PavlovRconWebserver.Controllers
         {
             
             var isModOnTheServer = await IsModOnTheServer(serverId);
-            if(!await RightsHandler.IsUserAtLeastInRole("Captain", HttpContext.User, _userservice)||!isModOnTheServer)  return Unauthorized();
+            if(!await RightsHandler.IsUserAtLeastInRole("Captain", HttpContext.User, _userservice)&&!isModOnTheServer)  return Unauthorized();
             if (serverId<=0) return BadRequest("Please choose a server!");
 
             var server = await _pavlovServerService.FindOne(serverId);
