@@ -1,9 +1,11 @@
 
 @using LiteDB.Identity.Models
 @using LiteDB
+@using Microsoft.AspNetCore.Identity
 @using PavlovRconWebserver.Extensions
 @model SteamIdentity
 
+@inject UserManager<LiteDbUser> UserManager
 @{
     ViewBag.Title = "Add/Update SteamIdentity";
     Layout = "_Layout";
@@ -16,6 +18,15 @@
             NormalizedUserName = "nothingSet",
             Id = new ObjectId()
         }).ToList();
+    }
+    var user = await UserManager.GetUserAsync(User);
+    var isAdmin = false;
+    var isMod = false;
+    if (user != null)
+    {
+        isAdmin = await UserManager.IsInRoleAsync(user,"Admin");
+        isMod = await UserManager.IsInRoleAsync(user,"Mod");
+    
     }
     // IsOwnSteamIdentity
     
@@ -39,7 +50,7 @@
     </div>
     <div class="form-group col-md-12">
         <label asp-for="Costume"></label>
-            @if (ViewBag.IsOwnSteamIdentity == null || !ViewBag.IsOwnSteamIdentity)
+            @if (isAdmin||isMod)
             {
                 @Html.DropDownListFor(m => m.Costume, new SelectList(Statics.Models, Model.Costume), new {@class = "form-control form-control-sm"})
             }
