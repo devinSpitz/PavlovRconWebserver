@@ -22,7 +22,7 @@ namespace PavlovRconWebserver.Services
 
         public async Task<bool> CheckRightsTeamCaptainOrCaptain(int teamId,TeamSelectedSteamIdentityService teamSelectedSteamIdentityService,UserService userService,ClaimsPrincipal cp,SteamIdentity steamIdentity = null)
         {
-            
+            if (cp == null) return false;
             if (steamIdentity == null)
             {
                 return await RightsHandler.IsUserAtLeastInRole("Captain", cp, userService);

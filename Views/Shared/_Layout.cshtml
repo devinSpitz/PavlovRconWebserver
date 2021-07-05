@@ -14,7 +14,9 @@
 @inject TeamSelectedSteamIdentityService _teamSelectedSteamIdentityService;
 @{
     var user = await UserManager.GetUserAsync(User);
-    var isAdmin = await UserManager.IsInRoleAsync(user,"Admin");
+    var isAdmin = false;
+    if(user!= null)
+        isAdmin = await UserManager.IsInRoleAsync(user,"Admin");
 }
 <!DOCTYPE html>
 <html>
