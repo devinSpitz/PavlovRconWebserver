@@ -39,7 +39,14 @@
     </div>
     <div class="form-group col-md-12">
         <label asp-for="Costume"></label>
-        @Html.DropDownListFor(m => m.Costume, new SelectList(Statics.Models, Model.Costume), new {@class = "form-control form-control-sm"})
+            @if (ViewBag.IsOwnSteamIdentity == null || !ViewBag.IsOwnSteamIdentity)
+            {
+                @Html.DropDownListFor(m => m.Costume, new SelectList(Statics.Models, Model.Costume), new {@class = "form-control form-control-sm"})
+            }
+            else
+            {
+                @Html.DropDownListFor(m => m.Costume, new SelectList(Statics.Models.Where(x=>x!="clown"), Model.Costume), new {@class = "form-control form-control-sm"})
+            }
     </div>
     
     @if (ViewBag.IsOwnSteamIdentity == null || !ViewBag.IsOwnSteamIdentity)
