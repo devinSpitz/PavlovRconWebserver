@@ -1,7 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using LiteDB.Identity.Database;
+using Microsoft.AspNetCore.Http;
+using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
 
 namespace PavlovRconWebserver.Services
@@ -17,6 +20,29 @@ namespace PavlovRconWebserver.Services
             _liteDb = liteDbContext;
         }
 
+        public async Task<bool> CheckRightsTeamCaptainOrCaptain(int teamId,TeamSelectedSteamIdentityService teamSelectedSteamIdentityService,UserService userService,ClaimsPrincipal cp,SteamIdentity steamIdentity = null)
+        {
+            
+            if (steamIdentity == null)
+            {
+                return await RightsHandler.IsUserAtLeastInRole("Captain", cp, userService);
+            }
+            var steamIdentityOnTeam = new TeamSelectedSteamIdentity();
+            if (teamId==0)
+            {
+                
+                steamIdentityOnTeam = await teamSelectedSteamIdentityService.FindOne(steamIdentity.Id);
+            }
+            else
+            {
+                steamIdentityOnTeam = await teamSelectedSteamIdentityService.FindOne(teamId,steamIdentity.Id);
+            }
+            if(await RightsHandler.IsUserAtLeastInRole("Captain", cp, userService))  return true;
+            if (steamIdentityOnTeam == null) return false;
+            return await RightsHandler.IsUserAtLeastInTeamRole("Captain", steamIdentityOnTeam.RoleOverwrite);
+
+        }
+        
         public async Task<IEnumerable<Team>> FindAll()
         {
             return _liteDb.LiteDatabase.GetCollection<Team>("Team")

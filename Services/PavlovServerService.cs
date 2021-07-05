@@ -1,7 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using LiteDB.Identity.Database;
+using LiteDB.Identity.Models;
+using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
 
 namespace PavlovRconWebserver.Services
@@ -17,6 +20,22 @@ namespace PavlovRconWebserver.Services
             _liteDb = liteDbContext;
         }
 
+                
+        public async Task<bool> IsModSomeWhere(LiteDbUser user,ServerSelectedModsService serverSelectedModsService)
+        {
+            var servers = (await FindAll()).Where(x=>x.ServerServiceState == ServerServiceState.active).ToList();
+            bool isModSomeWhere = false;
+            foreach (var pavlovServer in servers)
+            {
+                if (isModSomeWhere || await RightsHandler.IsModOnTheServer(serverSelectedModsService, pavlovServer, user.Id))
+                {
+                    isModSomeWhere = true;
+                }
+            }
+
+            return isModSomeWhere;
+        }
+        
         public async Task<IEnumerable<PavlovServer>> FindAll()
         {
             return _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer").Include(x=>x.SshServer)

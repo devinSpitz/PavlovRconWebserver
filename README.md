@@ -77,6 +77,8 @@ newly added:
 * You can edit the server settings now
 * The system knows which state the server of a pavlov server has
 * You can now edit the Mod and White list of a pavlov server
+* Mod on a pavlov server now also means Mod in case of commands for this single server in the GUI
+* Users are now no longer able to inspect server where they are not a mod. (they can get the infos from a website which gets the HTML from /PublicViewLists/PlayersFromServers/*)
 
  older:   
 

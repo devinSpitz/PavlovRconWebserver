@@ -55,6 +55,10 @@ namespace PavlovRconWebserver.Services
         {
             return (await _userManager.IsInRoleAsync((await _userManager.GetUserAsync(principal)),role)); 
         }
+        public async Task<LiteDbUser> getUserFromCp(ClaimsPrincipal principal)
+        {
+            return (await _userManager.GetUserAsync(principal)); 
+        }
 
         public async Task CreateDefaultRoles()
         {

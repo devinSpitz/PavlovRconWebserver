@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using LiteDB;
 using LiteDB.Identity.Models;
 using Microsoft.AspNetCore.Identity;
 using PavlovRconWebserver.Models;
@@ -37,7 +38,7 @@ namespace PavlovRconWebserver.Extensions
                 
         }
         
-        public static async Task<bool> IsUserAtLeastInRoleForCommand(string command,ClaimsPrincipal cp,UserService userService)
+        public static async Task<bool> IsUserAtLeastInRoleForCommand(string command,ClaimsPrincipal cp,UserService userService,bool isMod)
         {
             var commandOnly = "";
             if (command.Contains(" "))
@@ -50,9 +51,19 @@ namespace PavlovRconWebserver.Extensions
             }
             var commandRights = GetCommandRights();
             var tmpCommand = commandRights.FirstOrDefault(x => x.Key == commandOnly);
-            return  await IsUserAtLeastInRole(tmpCommand.Value, cp,userService);
-        }    
+            var isInRole = await IsUserAtLeastInRole(tmpCommand.Value, cp, userService);
+            var modStateIsEnough = false;
+            if (isMod)
+            {
+                modStateIsEnough =  await IsUserAtLeastInTeamRole("Mod", tmpCommand.Value);
+            }
+                
+            // Todo: Being mod on the server also means its ok
             
+            return isInRole || modStateIsEnough;
+        }    
+         
+        
         public static async Task<bool> IsUserAtLeastInRole(string role,ClaimsPrincipal cp,UserService userService)
         {
             var result = false;
@@ -65,8 +76,8 @@ namespace PavlovRconWebserver.Extensions
                 if(checkRole.Value==role) return result;
             }
             return result;
-        }  
-        
+        }
+
         public static async Task<bool> IsUserAtLeastInTeamRole(string role,string TeamRole)
         {
             var result = false;
@@ -79,24 +90,31 @@ namespace PavlovRconWebserver.Extensions
                 if(checkRole.Value==role) return result;
             }
             return result;
+        }         
+        
+        public static async Task<bool> IsModOnTheServer(ServerSelectedModsService serverSelectedModsService,PavlovServer server,ObjectId id)
+        {
+            var mods = (await serverSelectedModsService.FindAllFrom(server)).ToList();
+            return mods.FirstOrDefault(x => x.LiteDbUser.Id == id) != null;
         }   
         
-        public static async Task<List<string>> GetAllowCommands(RconViewModel viewModel,ClaimsPrincipal cp,UserService userService)
+        
+        public static async Task<List<string>> GetAllowCommands(RconViewModel viewModel,ClaimsPrincipal cp,UserService userService,bool isMod)
         {
             List<string> allowCommands = new List<string>();
             foreach (var command in viewModel.PlayerCommands)
             {
-                if(await RightsHandler.IsUserAtLeastInRoleForCommand(command.Name, cp, userService))
+                if(await IsUserAtLeastInRoleForCommand(command.Name, cp, userService,isMod))
                     allowCommands.Add(command.Name);
             }
             foreach (var command in viewModel.SpecialCommands)
             {
-                if(await RightsHandler.IsUserAtLeastInRoleForCommand(command.Name, cp, userService))
+                if(await IsUserAtLeastInRoleForCommand(command.Name, cp, userService,isMod))
                     allowCommands.Add(command.Name);
             }            
             foreach (var command in viewModel.TwoValueCommands)
             {
-                if(await RightsHandler.IsUserAtLeastInRoleForCommand(command.Name, cp, userService))
+                if(await IsUserAtLeastInRoleForCommand(command.Name, cp, userService,isMod))
                     allowCommands.Add(command.Name);
             }
 

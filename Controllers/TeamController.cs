@@ -40,23 +40,8 @@ namespace PavlovRconWebserver.Controllers
 
         public async Task<bool> CheckRightsTeamCaptainOrCaptain(int teamId,SteamIdentity steamIdentity = null)
         {
-            if (steamIdentity == null)
-            {
-                return await RightsHandler.IsUserAtLeastInRole("Captain", HttpContext.User, _userService);
-            }
-            var steamIdentityOnTeam = new TeamSelectedSteamIdentity();
-            if (teamId==0)
-            {
-                
-                steamIdentityOnTeam = await _teamSelectedSteamIdentityService.FindOne(steamIdentity.Id);
-            }
-            else
-            {
-                steamIdentityOnTeam = await _teamSelectedSteamIdentityService.FindOne(teamId,steamIdentity.Id);
-            }
-            if(await RightsHandler.IsUserAtLeastInRole("Captain", HttpContext.User, _userService))  return true;
-            if (steamIdentityOnTeam == null) return false;
-            return await RightsHandler.IsUserAtLeastInTeamRole("Captain", steamIdentityOnTeam.RoleOverwrite);
+            return await _teamService.CheckRightsTeamCaptainOrCaptain(teamId, _teamSelectedSteamIdentityService, _userService,
+                HttpContext.User, steamIdentity);
         }
         
         
@@ -190,8 +175,6 @@ namespace PavlovRconWebserver.Controllers
                     LiteDbUser = _userService.FindAll().FirstOrDefault(x => x.Id == new ObjectId(userId))
                 };
             }
-            
-            if(!await CheckRightsTeamCaptainOrCaptain(0,bla)) return Unauthorized();
             //Handle more stuff can be seen in model
 
             ViewBag.IsOwnSteamIdentity = true;
@@ -206,11 +189,12 @@ namespace PavlovRconWebserver.Controllers
             
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var bla = await _steamIdentityService.FindOne(new ObjectId(userId));
+            var hisOwn = userId == steamIdentity.LiteDbUserId;
             var currentOwner = await _steamIdentityService.FindOne(steamIdentity.Id);
             steamIdentity.LiteDbUsers = _userService.FindAll().ToList();
             if (steamIdentity.Id == null || steamIdentity.Id == "0")
             {
-                if(!await CheckRightsTeamCaptainOrCaptain(0,bla)) return Unauthorized();
+                if(!await CheckRightsTeamCaptainOrCaptain(0,bla)||!hisOwn) return Unauthorized();
             }
             else
             {
@@ -226,7 +210,7 @@ namespace PavlovRconWebserver.Controllers
             if (steamIdentity.Id == null || steamIdentity.Id == "0")
             {
                 userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if(!await CheckRightsTeamCaptainOrCaptain(0,bla)) return Unauthorized();
+                if(!await CheckRightsTeamCaptainOrCaptain(0,bla)||!hisOwn) return Unauthorized();
             }
             else
             {
@@ -250,7 +234,8 @@ namespace PavlovRconWebserver.Controllers
                 return await EditSteamIdentity(steamIdentity);
             }
             
-            
+            if(hisOwn)
+                return RedirectToAction("Index","Manage");
             return await Index();
         }
         [HttpGet]

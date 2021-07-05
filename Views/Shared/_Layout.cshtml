@@ -1,7 +1,21 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using LiteDB.Identity.Models
+@using PavlovRconWebserver.Controllers
+@using PavlovRconWebserver.Extensions
+@using LiteDB
+@using PavlovRconWebserver.Services
 @inject SignInManager<LiteDbUser> SignInManager
 @inject UserManager<LiteDbUser> UserManager
+@inject SteamIdentityService _steamIdentityService;
+@inject TeamService _teamService;
+@inject PavlovServerService _pavlovServerService;
+@inject ServerSelectedModsService _serverSelectedModsService;
+@inject UserService _userService;
+@inject TeamSelectedSteamIdentityService _teamSelectedSteamIdentityService;
+@{
+    var user = await UserManager.GetUserAsync(User);
+    var isAdmin = await UserManager.IsInRoleAsync(user,"Admin");
+}
 <!DOCTYPE html>
 <html>
 <head>
@@ -37,7 +51,7 @@
             <ul class="nav navbar-nav">
                 @if (SignInManager.IsSignedIn(User))
                 {
-                    if((await UserManager.IsInRoleAsync(await UserManager.GetUserAsync(User),"Admin")))
+                    if((isAdmin))
                     {
                         <li class="dropdown">
                             <a class="dropdown-toggle" data-toggle="dropdown" href="#">User Management<span class="caret"></span></a>
@@ -54,28 +68,35 @@
                             <a asp-area="" asp-controller="SshServer" asp-action="Index">Servers</a>
                         </li>
                     }
-                    <li class="dropdown">
-                        <li>
-                            <a asp-area="" asp-controller="Rcon" asp-action="Index">Commands</a>
-                        </li>
-                    </li>
-                    <li class="dropdown">
-                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">Matchmaking (WIP)<span class="caret"></span></a>
-                        <ul class="dropdown-menu">
+                    if (await _pavlovServerService.IsModSomeWhere(user,_serverSelectedModsService))
+                    {
+                        <li class="dropdown">
                             <li>
-                                <a asp-area="" asp-controller="Team" asp-action="Index">Teams</a>
+                                <a asp-area="" asp-controller="Rcon" asp-action="Index">Commands</a>
                             </li>
-                            @if ((await UserManager.IsInRoleAsync(await UserManager.GetUserAsync(User), "Admin")))
-                            {
+                        </li>
+                    }
+                    if (await _teamService.CheckRightsTeamCaptainOrCaptain(0,_teamSelectedSteamIdentityService,_userService,User,await _steamIdentityService.FindOne(user.Id)))
+                    {
+                        <li class="dropdown">
+                            <a class="dropdown-toggle" data-toggle="dropdown" href="#">Matchmaking (WIP)<span class="caret"></span></a>
+                            <ul class="dropdown-menu">
                                 <li>
-                                    <a asp-area="" asp-controller="Team" asp-action="SteamIdentitiesIndex">Steam Identities</a>
+                                    <a asp-area="" asp-controller="Team" asp-action="Index">Teams</a>
                                 </li>
-                                <li>
-                                    <a asp-area="" asp-controller="MatchMaking" asp-action="Index">Matches</a>
-                                </li>
-                            }
-                        </ul>
-                    </li>
+                                @if (isAdmin)
+                                {
+                                    <li>
+                                        <a asp-area="" asp-controller="Team" asp-action="SteamIdentitiesIndex">Steam Identities</a>
+                                    </li>
+                                    <li>
+                                        <a asp-area="" asp-controller="MatchMaking" asp-action="Index">Matches</a>
+                                    </li>
+                                }
+                            </ul>
+                        </li>
+                    }
+                }
                 }
             </ul>
             @await Html.PartialAsync("_LoginPartial")
