@@ -15,8 +15,15 @@
 @{
     var user = await UserManager.GetUserAsync(User);
     var isAdmin = false;
-    if(user!= null)
+    var isCaptain = false;
+    var isMod = false;
+    if (user != null)
+    {
         isAdmin = await UserManager.IsInRoleAsync(user,"Admin");
+        isCaptain = await UserManager.IsInRoleAsync(user,"Captain");
+        isMod = await UserManager.IsInRoleAsync(user,"Mod");
+        
+    }
 }
 <!DOCTYPE html>
 <html>
@@ -70,7 +77,7 @@
                             <a asp-area="" asp-controller="SshServer" asp-action="Index">Servers</a>
                         </li>
                     }
-                    if (await _pavlovServerService.IsModSomeWhere(user,_serverSelectedModsService))
+                    if (await _pavlovServerService.IsModSomeWhere(user,_serverSelectedModsService)||isCaptain||isMod||isAdmin)
                     {
                         <li class="dropdown">
                             <li>
