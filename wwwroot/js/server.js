@@ -9,6 +9,15 @@ function init(){
     });
 };
 
+function duplicateButton(object)
+{
+    debugger;
+    let clone = $(object).parent().parent().parent().clone();
+    $(object).parent().parent().parent().parent().prepend(clone);
+    
+}
+
+
 function ChangeMap(mapId,object,gameMode,onlyChange = false)
 {
     //Todo fix gameMode has to specific the if  if its only change the gametype do not remove the stuff soo may add and remove a callback?

@@ -142,14 +142,15 @@ namespace PavlovRconWebserver.Controllers
             var mapsSelected = await _serverSelectedMapService.FindAllFrom(pavlovServer);
             if (mapsSelected != null)
             {
-                var toUpdate = mapsSelected.FirstOrDefault(x => x.Map.Id == realMap.Id);
+                var toUpdate = mapsSelected.FirstOrDefault(x => x.Map.Id == realMap.Id && x.GameMode == gameMode);
                 if (toUpdate == null)
                 {
                    
                     var NewMap = new ServerSelectedMap()
                     {
                         Map = realMap,
-                        PavlovServer = pavlovServer
+                        PavlovServer = pavlovServer,
+                        GameMode = gameMode
                     };
                     await _serverSelectedMapService.Insert(NewMap); 
                 }
@@ -181,7 +182,7 @@ namespace PavlovRconWebserver.Controllers
             var list = mapsSelected.ToList();
             if (mapsSelected != null)
             {
-                var toUpdate = mapsSelected.FirstOrDefault(x => x.Map.Id == realMap.Id);
+                var toUpdate = mapsSelected.FirstOrDefault(x => x.Map.Id == realMap.Id && x.GameMode == gameMode);
                 await _serverSelectedMapService.Delete(toUpdate.Id);
             }
             return true;

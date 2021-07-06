@@ -44,6 +44,7 @@
                     <div class="panel panel-default mapPanel" data-Author="@map.Author" data-Name="@map.Name">
                         <div class="panel-heading">
                             @map.Id
+                            <button onclick="duplicateButton(this)">clone</button>
                         </div>
                         <div class="panel-body">
                             <input class="mapId" value="@map.Id" type="hidden"/>
@@ -96,6 +97,8 @@
                     }
                     <div class="panel-heading">
                         @map.Map.Id
+                        
+                            <button onclick="duplicateButton(this)">clone</button>
                     </div>
                     <div class="panel-body">
                         <input class="mapId" value="@map.Map.Id" type="hidden"/>
