@@ -32,7 +32,19 @@
                 <a href="@Url.Action("EditServer", "rconServer", new {serverId = rconServer.Id})"><span>Server &#8505;</span></a> or
                 <a href="@Url.Action("EditServerSelectedMaps", "rconServer", new {serverId = rconServer.Id})"><span>Maps &#128506;</span></a>*@
                 @match.Id
-                <a href="@Url.Action("EditMatch",new{ match.Id })"><span>&#9998;</span></a>
+                @if (match.Status == Status.Preparing)
+                {
+                    <a href="@Url.Action("EditMatch",new{ match.Id })"><span>&#9998;</span></a>
+                    <a href="@Url.Action("StartMatch",new{ match.Id })"><span>&#9654;</span></a>
+                }else if (match.Status == Status.StartetWaitingForPlayer)
+                {
+                    <a href="@Url.Action("ForceStartMatch",new{ match.Id })"><span>Force &#9654;</span></a>
+                    <a href="@Url.Action("ForceStopMatch",new{ match.Id })" onclick="return confirm('Are you sure you want to stop the server?')"><span>&#9209;</span></a>
+                }
+                else
+                {
+                    <a href="@Url.Action("ForceStopMatch",new{ match.Id })" onclick="return confirm('Are you sure you want to stop the server?')"><span>&#9209;</span></a>
+                }
             </td>
             <td>
                 @match.Name

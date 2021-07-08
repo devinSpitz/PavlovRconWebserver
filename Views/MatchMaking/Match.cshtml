@@ -47,8 +47,18 @@
                 </div>
                 <div class="form-group col-md-3">
                     <label asp-for="GameMode"></label>
-                   @Html.DropDownListFor(m => m.GameMode, new SelectList(GameModes.ModesString,Model.GameMode), new { @class = "form-control form-control-sm" })
-                   <span asp-validation-for="Name" class="text-danger"></span>
+                    @Html.DropDownListFor(m => m.GameMode, new SelectList(GameModes.ModesString,Model.GameMode), new { @class = "form-control form-control-sm" })
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <div class="form-group col-md-3">
+                    <label asp-for="TimeLimit"></label>
+                    <input asp-for="TimeLimit" class="form-control" value="@Model.TimeLimit"/>
+                    <span asp-validation-for="TimeLimit" class="text-danger"></span>
+                </div>
+                <div class="form-group col-md-3">
+                    <label asp-for="PlayerSlots"></label>
+                    <input asp-for="PlayerSlots" class="form-control" value="@Model.PlayerSlots"/>
+                    <span asp-validation-for="PlayerSlots" class="text-danger"></span>
                 </div>
             </div>
         </div>

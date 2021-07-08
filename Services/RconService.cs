@@ -312,11 +312,11 @@ namespace PavlovRconWebserver.Services
                     {
                         if (client2.IsConnected)
                         {
-                            var password = await client2.ReadAsync(TimeSpan.FromMilliseconds(200));
+                            var password = await client2.ReadAsync(TimeSpan.FromMilliseconds(300));
                             if (password.Contains("Password"))
                             {
                                 await client2.WriteLine(server.TelnetPassword);
-                                var auth = await client2.ReadAsync(TimeSpan.FromMilliseconds(200));
+                                var auth = await client2.ReadAsync(TimeSpan.FromMilliseconds(300));
                                 if (auth.Contains("Authenticated=1"))
                                 {
                                     foreach (var command in commands)
@@ -411,7 +411,7 @@ namespace PavlovRconWebserver.Services
         private static async Task<string> SingleCommandResult(Client client2, string command)
         {
             await client2.WriteLine(command);
-            var commandResult = await client2.ReadAsync();
+            var commandResult = await client2.ReadAsync(TimeSpan.FromMilliseconds(300));
 
 
             string singleCommandResult = "";
@@ -514,7 +514,7 @@ namespace PavlovRconWebserver.Services
 
         }
 
-        private async Task<ConnectionResult> WriteFile(PavlovServer server, AuthType type, string path,
+        public async Task<ConnectionResult> WriteFile(PavlovServer server, AuthType type, string path,
             SshServer sshServer, string content)
         {
 
@@ -707,6 +707,7 @@ namespace PavlovRconWebserver.Services
                                     {
                                         await SendCommand(server, "SetPlayerSkin "+customToSet.Key+" "+customToSet.Value);
                                     }
+                                    
                                    
                                 }
                                 else

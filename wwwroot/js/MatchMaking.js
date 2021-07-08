@@ -171,6 +171,8 @@ function SaveMatch()
     match.PavlovServerId = $("#PavlovServerId").val();
     match.MapId = $("#MapId").val();
     match.GameMode = $("#GameMode").val();
+    match.TimeLimit = $("#TimeLimit").val();
+    match.PlayerSlots = $("#PlayerSlots").val();
     match.Team0Id = $("#Team0Id").val();
     match.Team1Id = $("#Team1Id").val();
     if($("#MatchTeam0SelectedSteamIdentitiesStrings").length) // Teams

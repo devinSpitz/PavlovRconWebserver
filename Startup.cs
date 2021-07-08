@@ -51,6 +51,7 @@ namespace PavlovRconWebserver
          services.AddTransient<MatchSelectedTeamSteamIdentitiesService>();
          services.AddTransient<ServerSelectedWhitelistService>();
          services.AddTransient<ServerSelectedModsService>();
+         services.AddSingleton(Configuration);
          // services
          //    .AddAuthentication(cfg =>
          //    {

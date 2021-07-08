@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -9,6 +10,7 @@ using System.Threading.Tasks;
 using Hangfire;
 using HtmlAgilityPack;
 using LiteDB.Identity.Database;
+using Microsoft.VisualBasic;
 using PavlovRconWebserver.Exceptions;
 using PavlovRconWebserver.Models;
 using PavlovRconWebserver.Services;
@@ -99,72 +101,89 @@ namespace PavlovRconWebserver.Extensions
 
         }
         
-        
-        public static async Task StartMatch(string connectionString,int matchId)
+
+        public static async Task<ConnectionResult> StartMatchWithAuth(RconService.AuthType authType,
+            PavlovServer server,
+            Match match,string connectionString)
         {
-            var exceptions = new List<Exception>();
-            try
-            {
-                var pavlovServerService = new PavlovServerService(new LiteDbIdentityContext(connectionString));
-                var matchService = new MatchService(new LiteDbIdentityContext(connectionString));
-                var match = await matchService.FindOne(matchId);
-                var server = await pavlovServerService.FindOne(match.PavlovServer.Id);
-                
-                var connectionResult = new ConnectionResult();
-                 if (!string.IsNullOrEmpty(server.SshServer.SshPassphrase) &&
-                !string.IsNullOrEmpty(server.SshServer.SshKeyFileName) &&
-                File.Exists("KeyFiles/" + server.SshServer.SshKeyFileName) &&
-                !string.IsNullOrEmpty(server.SshServer.SshUsername))
-                 {
+            var steamIdentityService = new SteamIdentityService(new LiteDbIdentityContext(connectionString));
+            var serverSelectedMapService = new ServerSelectedMapService(new LiteDbIdentityContext(connectionString));
+            var pavlovServerService = new PavlovServerService(new LiteDbIdentityContext(connectionString));
+            var mapsService = new MapsService(new LiteDbIdentityContext(connectionString));
+            var matchSelectedTeamSteamIdentitiesService = new MatchSelectedTeamSteamIdentitiesService(new LiteDbIdentityContext(connectionString));
+            var pavlovServerInfoService = new PavlovServerInfoService(new LiteDbIdentityContext(connectionString),pavlovServerService,mapsService);
+            var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString),pavlovServerService,pavlovServerInfoService);
+            var pavlovServerPlayerHistoryService = new PavlovServerPlayerHistoryService(new LiteDbIdentityContext(connectionString));
+            var rconService = new RconService(steamIdentityService,serverSelectedMapService,mapsService,pavlovServerInfoService,pavlovServerPlayerService,pavlovServerPlayerHistoryService);
+            var matchService = new MatchService(new LiteDbIdentityContext(connectionString),matchSelectedTeamSteamIdentitiesService,pavlovServerService,rconService,mapsService,pavlovServerPlayerService,pavlovServerInfoService);
 
-                     connectionResult = await StartMatchWithAuth(
-                         RconService.AuthType.PrivateKeyPassphrase,server,match);
-                }
-
-                if (!connectionResult.Success && !string.IsNullOrEmpty(server.SshServer.SshKeyFileName) &&
-                    File.Exists("KeyFiles/" + server.SshServer.SshKeyFileName) &&
-                    !string.IsNullOrEmpty(server.SshServer.SshUsername))
-                {
-                    connectionResult = await StartMatchWithAuth(
-                        RconService.AuthType.PrivateKey,server,match);
-                }
-
-                if (!connectionResult.Success && !string.IsNullOrEmpty(server.SshServer.SshUsername) &&
-                    !string.IsNullOrEmpty(server.SshServer.SshPassword))
-                {
-                    connectionResult = await StartMatchWithAuth(
-                        RconService.AuthType.UserPass,server,match);
-                }
-
-                if (!connectionResult.Success)
-                {
-                    if (connectionResult.errors.Count <= 0) throw new CommandException("Could not connect to server!");
-                }
-
-
-            }
-            catch (Exception e)
-            {
-                exceptions.Add(e);
-            }
-            
-        }
-
-        public static async Task<ConnectionResult> StartMatchWithAuth(RconService.AuthType authType,PavlovServer server,Match match)
-        {
             var connectionInfo = RconService.ConnectionInfo(server, authType, out var result, server.SshServer);
             using var clientSsh = new SshClient(connectionInfo);
             using var clientSftp = new SftpClient(connectionInfo);
             try
             {
-                clientSsh.Connect();
-                ShellStream stream = clientSsh.CreateShellStream("pavlovRconWebserverSShTunnelMultipleCommands", 80, 24,
-                    800, 600, 1024);
-                // var telnetConnectResult = await RconService.SendCommandForShell("nc localhost " + server.TelnetPort, stream);
-                // if (telnetConnectResult.ToString().Contains("Password:"))
-                // {
-                //     
-                // }
+                var listOfSteamIdentietiesWhichCanPlay = match.MatchTeam0SelectedSteamIdentities;
+                listOfSteamIdentietiesWhichCanPlay.AddRange(match.MatchTeam1SelectedSteamIdentities);
+                if (listOfSteamIdentietiesWhichCanPlay.Count <= 0)
+                {
+                    result.errors.Add("There are no team members so no match will start!");
+                    Console.WriteLine("There are no team members so no match will start!");
+                    return result;
+                }
+
+                //Write whitelist and set server settings
+                var whitelist = await rconService.WriteFile(server, authType, server.ServerFolderPath+FilePaths.WhiteList, server.SshServer, Strings.Join(listOfSteamIdentietiesWhichCanPlay.Select(x=>x.SteamIdentityId).ToArray(),";"+Environment.NewLine));
+                if (!whitelist.Success)
+                {
+                    result.errors.Add("Could not write whitelist for the match! "+Strings.Join(whitelist.errors.ToArray(),";"));
+                    Console.WriteLine("Could not write whitelist for the match! "+Strings.Join(whitelist.errors.ToArray(),";"));
+                    return result;
+                }
+                
+                var serverSettings = new PavlovServerGameIni
+                {
+                    bEnabled = false,
+                    ServerName = match.Name,
+                    MaxPlayers = match.PlayerSlots, //Todo get real time
+                    bSecured = true,
+                    bCustomServer = true,
+                    bWhitelist = true,
+                    RefreshListTime = 120,
+                    LimitedAmmoType = 0,
+                    TickRate = 90,
+                    TimeLimit = match.TimeLimit, //Todo get real time
+                    Password = null,
+                    BalanceTableURL = null,
+                    MapRotation = new List<PavlovServerGameIniMap>()
+                    {
+                        {
+                            new PavlovServerGameIniMap()
+                            {
+                                MapLabel = match.MapId,
+                                GameMode = match.GameMode
+                            }
+                        }
+                    }
+                };
+                var map = await mapsService.FindOne(match.MapId.Replace("UGC",""));
+                await serverSettings.SaveToFile(server, new List<ServerSelectedMap>()
+                {
+                    new ServerSelectedMap()
+                    {
+                        Map = map,
+                        GameMode = match.GameMode
+                    }
+                }, rconService);
+                await rconService.SystemDStart(server, authType, server.SshServer);
+                
+                //StartWatchServiceForThisMatch
+                match.Status = Status.StartetWaitingForPlayer;
+                await matchService.Upsert(match);
+                Console.WriteLine("Start backgroundjob");
+                BackgroundJob.Schedule( 
+                    () => MatchInspector(authType,server,match.Id,connectionString),new TimeSpan(0,0,5)); // ChecjServerState
+
+
             }catch (Exception e)
             {
                 switch (e)
@@ -197,6 +216,152 @@ namespace PavlovRconWebserver.Extensions
             }
 
             return result;
+        }
+
+        public static async Task MatchInspector(RconService.AuthType authType,
+            PavlovServer server,
+            int matchId,string connectionString)
+        {
+            
+            var steamIdentityService = new SteamIdentityService(new LiteDbIdentityContext(connectionString));
+            var serverSelectedMapService = new ServerSelectedMapService(new LiteDbIdentityContext(connectionString));
+            var pavlovServerService = new PavlovServerService(new LiteDbIdentityContext(connectionString));
+            var mapsService = new MapsService(new LiteDbIdentityContext(connectionString));
+            var matchSelectedTeamSteamIdentitiesService = new MatchSelectedTeamSteamIdentitiesService(new LiteDbIdentityContext(connectionString));
+            var pavlovServerInfoService = new PavlovServerInfoService(new LiteDbIdentityContext(connectionString),pavlovServerService,mapsService);
+            var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString),pavlovServerService,pavlovServerInfoService);
+            var pavlovServerPlayerHistoryService = new PavlovServerPlayerHistoryService(new LiteDbIdentityContext(connectionString));
+            var rconService = new RconService(steamIdentityService,serverSelectedMapService,mapsService,pavlovServerInfoService,pavlovServerPlayerService,pavlovServerPlayerHistoryService);
+            var matchService = new MatchService(new LiteDbIdentityContext(connectionString),matchSelectedTeamSteamIdentitiesService,pavlovServerService,rconService,mapsService,pavlovServerPlayerService,pavlovServerInfoService);
+            Console.WriteLine("MatchInspector started!");
+            var match = await matchService.FindOne(matchId);
+            
+            try
+            {
+                if (match.ForceSop)
+                {
+                    Console.WriteLine("Endmatch!");
+                    await EndMatch(authType, server, match, rconService, matchService);
+                    return;
+                }
+                
+                await rconService.SShTunnelGetAllInfoFromPavlovServer(server, authType, server.SshServer);
+                switch (match.Status)
+                {
+                    case Status.StartetWaitingForPlayer:
+                        
+                        Console.WriteLine("TryToStartMatch started!");
+                        await TryToStartMatch(server, match, rconService, matchService, pavlovServerPlayerService);
+                        break;
+                    case Status.OnGoing:
+                        
+                        Console.WriteLine("OnGoing!");
+                        var serverInfo = await pavlovServerInfoService.FindServer(server.Id);
+                        match.PlayerResults = (await pavlovServerPlayerService.FindAllFromServer(server.Id)).ToList();
+                        match.EndInfo = serverInfo;
+                        await matchService.Upsert(match);
+                        
+                        if (serverInfo.RoundState == "Ended")
+                        {
+                            
+                            Console.WriteLine("Round ended!");
+                            await EndMatch(authType,server, match, rconService, matchService);
+                            return;
+                        }
+                     
+                        break;
+                     
+                
+                }
+
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+            if (match.Status!=Status.Finshed)
+            {
+                
+                BackgroundJob.Schedule(
+                    () => MatchInspector(authType, server, match.Id,connectionString),
+                    new TimeSpan(0, 0, 5)); // ChecjServerState
+            }
+        }
+
+        private static async Task EndMatch(RconService.AuthType authType, PavlovServer server, Match match, RconService rconService,
+            MatchService matchService)
+        {
+            
+            match.Status = Status.Finshed;
+            //ToDo get stats and save them
+            await matchService.Upsert(match);
+
+            await rconService.SystemDStop(server, authType, server.SshServer);
+            Console.WriteLine("Stopped server!");
+        }
+
+        private static async Task TryToStartMatch(PavlovServer server, Match match, RconService rconService,
+            MatchService matchService, PavlovServerPlayerService pavlovServerPlayerService)
+        {
+            var playerList = (await pavlovServerPlayerService.FindAllFromServer(server.Id)).ToList();
+            if (playerList.Count() == match.PlayerSlots || match.ForceStart) //All Player are here
+            {
+                //Do Players in the right team
+                foreach (var pavlovServerPlayer in playerList)
+                {
+                    
+                    var team0 = match.MatchTeam0SelectedSteamIdentities.FirstOrDefault(x =>
+                        x.SteamIdentityId == pavlovServerPlayer.UniqueId);
+                    var team1 = match.MatchTeam1SelectedSteamIdentities.FirstOrDefault(x =>
+                        x.SteamIdentityId == pavlovServerPlayer.UniqueId);
+                    if (team0 != null)
+                    {
+                        Console.WriteLine("SwitchTeam 0 " + pavlovServerPlayer.UniqueId);
+                        await SendCommandTillDone(server, rconService, "SwitchTeam 0 " + pavlovServerPlayer.UniqueId);
+                    }
+                    else if (team1 != null)
+                    {
+                        
+                        Console.WriteLine("SwitchTeam 1 " + pavlovServerPlayer.UniqueId);
+                        await SendCommandTillDone(server, rconService, "SwitchTeam 1 " + pavlovServerPlayer.UniqueId);
+                    }
+                }
+                //All Players are on the right team now
+                //ResetSND
+
+                Console.WriteLine("start ResetSND!");
+                await SendCommandTillDone(server, rconService, "ResetSND");
+                match.Status = Status.OnGoing;
+                await matchService.Upsert(match);
+            }
+        }
+
+        private static async Task<string> SendCommandTillDone(PavlovServer server, RconService rconService,string command,int timeoutInSeconds = 60)
+        {
+            var task = Task.Run(() => SendCommandTillDoneChild(server,rconService,command));
+            if (task.Wait(TimeSpan.FromSeconds(timeoutInSeconds)))
+                return task.Result;
+            else
+                throw new Exception("Timed out");
+        }
+
+        private static async Task<string> SendCommandTillDoneChild(PavlovServer server, RconService rconService,string command)
+        {
+            while (true)
+            {
+                try
+                {
+                    var result = await rconService.SendCommand(server, command);
+                    return result;
+                }
+                catch (CommandException e)
+                {
+                    Console.WriteLine(e);
+                    throw;
+                }
+            }
         }
     }
 }

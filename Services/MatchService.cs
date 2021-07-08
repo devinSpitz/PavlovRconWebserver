@@ -1,7 +1,11 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using LiteDB.Identity.Database;
+using PavlovRconWebserver.Exceptions;
+using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
 
 namespace PavlovRconWebserver.Services
@@ -10,12 +14,86 @@ namespace PavlovRconWebserver.Services
     {
         private ILiteDbIdentityContext _liteDb;
         
+        private readonly MatchSelectedTeamSteamIdentitiesService _matchSelectedTeamSteamIdentitiesService;
+        private readonly PavlovServerService _pavlovServerService;
+        private readonly RconService _rconService;
+        private readonly MapsService _mapsService;
+        private readonly PavlovServerPlayerService _pavlovServerPlayerService;
+        private readonly PavlovServerInfoService _pavlovServerInfoService;
         
-        public MatchService(ILiteDbIdentityContext liteDbContext)
+        public MatchService(ILiteDbIdentityContext liteDbContext,
+            MatchSelectedTeamSteamIdentitiesService matchSelectedTeamSteamIdentitiesService,
+            PavlovServerService pavlovServerService,
+            RconService rconService,
+            MapsService mapsService,
+            PavlovServerPlayerService pavlovServerPlayerService,
+            PavlovServerInfoService pavlovServerInfoService
+        )
         {
             _liteDb = liteDbContext;
+            _matchSelectedTeamSteamIdentitiesService = matchSelectedTeamSteamIdentitiesService;
+            _pavlovServerService = pavlovServerService;
+            _rconService = rconService;
+            _mapsService = mapsService;
+            _pavlovServerPlayerService = pavlovServerPlayerService;
+            _pavlovServerInfoService = pavlovServerInfoService;
+
         }
 
+        
+        
+        public async Task StartMatch(int matchId,string connectionString)
+        {
+            var exceptions = new List<Exception>();
+            try
+            {
+                var match = await FindOne(matchId);
+                //Todo: get selected steamidentitys
+                match.MatchTeam0SelectedSteamIdentities = (await _matchSelectedTeamSteamIdentitiesService.FindAllSelectedForMatchAndTeam(matchId, 0)).ToList();
+                match.MatchTeam1SelectedSteamIdentities = (await _matchSelectedTeamSteamIdentitiesService.FindAllSelectedForMatchAndTeam(matchId, 1)).ToList();
+                var server = await _pavlovServerService.FindOne(match.PavlovServer.Id);
+                
+                var connectionResult = new ConnectionResult();
+                 if (!string.IsNullOrEmpty(server.SshServer.SshPassphrase) &&
+                !string.IsNullOrEmpty(server.SshServer.SshKeyFileName) &&
+                File.Exists("KeyFiles/" + server.SshServer.SshKeyFileName) &&
+                !string.IsNullOrEmpty(server.SshServer.SshUsername))
+                 {
+
+                     connectionResult = await RconStatic.StartMatchWithAuth(
+                         RconService.AuthType.PrivateKeyPassphrase,server,match,connectionString);
+                }
+
+                if (!connectionResult.Success && !string.IsNullOrEmpty(server.SshServer.SshKeyFileName) &&
+                    File.Exists("KeyFiles/" + server.SshServer.SshKeyFileName) &&
+                    !string.IsNullOrEmpty(server.SshServer.SshUsername))
+                {
+                    connectionResult = await RconStatic.StartMatchWithAuth(
+                        RconService.AuthType.PrivateKey,server,match,connectionString);
+                }
+
+                if (!connectionResult.Success && !string.IsNullOrEmpty(server.SshServer.SshUsername) &&
+                    !string.IsNullOrEmpty(server.SshServer.SshPassword))
+                {
+                    connectionResult = await RconStatic.StartMatchWithAuth(
+                        RconService.AuthType.UserPass,server,match,connectionString);
+                }
+
+                if (!connectionResult.Success)
+                {
+                    if (connectionResult.errors.Count <= 0) throw new CommandException("Could not connect to server!");
+                }
+
+
+            }
+            catch (Exception e)
+            {
+                exceptions.Add(e);
+            }
+            
+        }
+        
+        
         public async Task<IEnumerable<Match>> FindAll()
         {
             return _liteDb.LiteDatabase.GetCollection<Match>("Match")
@@ -33,8 +111,19 @@ namespace PavlovRconWebserver.Services
 
         public async Task<bool> Upsert(Match match)
         {
-            return _liteDb.LiteDatabase.GetCollection<Match>("Match")
-                .Upsert(match);
+            var result = false;
+            if (match.Id == 0 || match.Id == null)
+            {
+                result = _liteDb.LiteDatabase.GetCollection<Match>("Match")
+                    .Insert(match);
+            }
+            else
+            {
+                result = _liteDb.LiteDatabase.GetCollection<Match>("Match")
+                    .Update(match);
+            }
+
+            return result;
         }
 
         public async Task<bool> Delete(string id)

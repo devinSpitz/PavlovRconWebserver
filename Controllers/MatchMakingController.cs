@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
 using PavlovRconWebserver.Services;
@@ -21,13 +23,15 @@ namespace PavlovRconWebserver.Controllers
         private readonly MatchSelectedSteamIdentitiesService _matchSelectedSteamIdentitiesService;
         private readonly MatchSelectedTeamSteamIdentitiesService _matchSelectedTeamSteamIdentitiesService;
         private readonly TeamSelectedSteamIdentityService _teamSelectedSteamIdentityService;
+        private readonly IConfiguration _configuration;
         public MatchMakingController(UserService userService,
             MatchService matchService,
             PavlovServerService pavlovServerService,TeamService teamService,
             MatchSelectedSteamIdentitiesService matchSelectedSteamIdentities,
             SteamIdentityService steamIdentityService,
             TeamSelectedSteamIdentityService teamSelectedSteamIdentityService,
-            MatchSelectedTeamSteamIdentitiesService matchSelectedTeamSteamIdentitiesService)
+            MatchSelectedTeamSteamIdentitiesService matchSelectedTeamSteamIdentitiesService,
+            IConfiguration config)
         {
             _userservice = userService;
             _matchService = matchService;
@@ -37,6 +41,7 @@ namespace PavlovRconWebserver.Controllers
             _matchSelectedSteamIdentitiesService = matchSelectedSteamIdentities;
             _matchSelectedTeamSteamIdentitiesService = matchSelectedTeamSteamIdentitiesService;
             _teamSelectedSteamIdentityService = teamSelectedSteamIdentityService;
+            _configuration = config;
         }
 
 
@@ -55,10 +60,13 @@ namespace PavlovRconWebserver.Controllers
                 Id = oldMatch.Id,
                 Name = oldMatch.Name,
                 MapId = oldMatch.MapId,
+                ForceSop = oldMatch.ForceSop,
+                ForceStart = oldMatch.ForceStart,
+                TimeLimit = oldMatch.TimeLimit,
+                PlayerSlots = oldMatch.PlayerSlots,
                 GameMode = oldMatch.GameMode,
                 Team0 = oldMatch.Team0,
                 Team1 = oldMatch.Team1,
-                MatchRound = oldMatch.MatchRound,
                 PavlovServer = oldMatch.PavlovServer,
                 Status = (Status) oldMatch.Status,
                 Team0Id = oldMatch.Team0?.Id,
@@ -111,6 +119,33 @@ namespace PavlovRconWebserver.Controllers
             var result = new JsonResult(list);
             return result;
         }
+        
+        [HttpGet("[controller]/ForceStartMatch")]
+        public async Task<IActionResult> ForceStartMatch(int id)
+        {
+            var match = await _matchService.FindOne(id);
+            if (match == null) return BadRequest("No match found!");
+            match.ForceStart = true;
+            await _matchService.Upsert(match);
+            return RedirectToAction("Index","MatchMaking");
+        }       
+        [HttpGet("[controller]/StartMatch")]
+        public async Task<IActionResult> StartMatch(int id)
+        {
+            var match = await _matchService.FindOne(id);
+            if (match == null) return BadRequest("No match found!");
+            await _matchService.StartMatch(id,_configuration.GetConnectionString("DefaultConnection"));
+            return RedirectToAction("Index","MatchMaking");
+        }     
+        [HttpGet("[controller]/ForceSopMatch")]
+        public async Task<IActionResult> ForceStopMatch(int id)
+        {
+            var match = await _matchService.FindOne(id);
+            if (match == null) return BadRequest("No match found!");
+            match.ForceSop = true;
+            await _matchService.Upsert(match);
+            return RedirectToAction("Index","MatchMaking");
+        }
                 
         [HttpPost("[controller]/SaveMatch")]
         public async Task<IActionResult> SaveMatch(MatchViewModel match)
@@ -120,7 +155,7 @@ namespace PavlovRconWebserver.Controllers
             if (match.Id != 0 && match.Id != null) //edit or new
             {
                 realmatch = await _matchService.FindOne(match.Id);
-                if (realmatch.Status == Status.Finshed || realmatch.Status == Status.OnGoing)
+                if (realmatch.Status != Status.Preparing)
                 {
                     return BadRequest("The match already started so you can not change anything!");
                 }
@@ -129,6 +164,8 @@ namespace PavlovRconWebserver.Controllers
             realmatch.Name = match.Name;
             realmatch.MapId = match.MapId;
             realmatch.GameMode = match.GameMode;
+            realmatch.TimeLimit = match.TimeLimit;
+            realmatch.PlayerSlots = match.PlayerSlots;
             
             var gotAnswer = GameModes.HasTeams.TryGetValue(realmatch.GameMode, out var hasTeams);
             if (gotAnswer)
@@ -213,7 +250,7 @@ namespace PavlovRconWebserver.Controllers
             {
                 return BadRequest("Could not cast GameMode!");
             }
-            
+
 
             //
             
