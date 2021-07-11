@@ -144,6 +144,13 @@ namespace PavlovRconWebserver.Extensions
                 ImageUrl = "",
                 Author = "Vankrupt Games"
             }).ToList();
+            rconMapsViewModels = maps.Prepend(new Map()
+            {
+                Id = "ogcontainers",
+                Name = "ogcontainers",
+                ImageUrl = "",
+                Author = "Vankrupt Games"
+            }).ToList();
             //g
 
             var tmpRconMaps = new List<Map>();
