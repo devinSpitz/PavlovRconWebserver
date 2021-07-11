@@ -32,7 +32,7 @@
     <div class="row">
         <div class="form-group col-md-2">
             <label asp-for="bEnabled"></label>
-            <input asp-for="bEnabled" class="form-control" value="@Model.bEnabled"/>
+            <input asp-for="bEnabled" class="form-control form-check-input" value="@Model.bEnabled"/>
             <span asp-validation-for="bEnabled" class="text-danger"></span>
         </div>
         <div class="form-group col-md-2">
@@ -42,17 +42,17 @@
         </div>
         <div class="form-group col-md-2">
             <label asp-for="bSecured"></label>
-            <input asp-for="bSecured" class="form-control" value="@Model.bSecured"/>
+            <input asp-for="bSecured" class="form-control form-check-input" value="@Model.bSecured"/>
             <span asp-validation-for="bSecured" class="text-danger"></span>
         </div>
         <div class="form-group col-md-2">
             <label asp-for="bCustomServer"></label>
-            <input asp-for="bCustomServer" class="form-control" value="@Model.bCustomServer"/>
+            <input asp-for="bCustomServer" class="form-control form-check-input" value="@Model.bCustomServer"/>
             <span asp-validation-for="bCustomServer" class="text-danger"></span>
         </div>
         <div class="form-group col-md-2">
             <label asp-for="bWhitelist"></label>
-            <input asp-for="bWhitelist" class="form-control" value="@Model.bWhitelist"/>
+            <input asp-for="bWhitelist" class="form-control form-check-input" value="@Model.bWhitelist"/>
             <span asp-validation-for="bWhitelist" class="text-danger"></span>
         </div>
         <div class="form-group col-md-2">
@@ -91,8 +91,8 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-md-1">
-            <button type="submit" class="btn btn-primary btn-default col-md-12">Save</button>
+        <div class="col-md-1 mt-3">
+            <button type="submit" class="btn btn-success col-md-12">Save</button>
         </div>
     </div>
 

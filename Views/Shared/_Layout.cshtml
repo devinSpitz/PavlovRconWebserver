@@ -1,8 +1,5 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using LiteDB.Identity.Models
-@using PavlovRconWebserver.Controllers
-@using PavlovRconWebserver.Extensions
-@using LiteDB
 @using PavlovRconWebserver.Services
 @inject SignInManager<LiteDbUser> SignInManager
 @inject UserManager<LiteDbUser> UserManager
@@ -17,14 +14,16 @@
     var isAdmin = false;
     var isCaptain = false;
     var isMod = false;
+    var isModSomeWhere = false;
     if (user != null)
     {
         isAdmin = await UserManager.IsInRoleAsync(user,"Admin");
         isCaptain = await UserManager.IsInRoleAsync(user,"Captain");
         isMod = await UserManager.IsInRoleAsync(user,"Mod");
-        
+        isModSomeWhere = await _pavlovServerService.IsModSomeWhere(user, _serverSelectedModsService);
     }
 }
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -33,86 +32,83 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>@ViewData["Title"] - Pavlov Rcon Webserver</title>
 
-    <environment include="Development">
-        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
-        <link rel="stylesheet" href="~/css/site.css"/>
-    </environment>
-    <environment exclude="Development">
-        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"
-              asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute"/>
-        <link rel="stylesheet" href="~/css/site.css"/>
-    </environment>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" asp-append-version="true"/>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap-theme.css" asp-append-version="true"/>
+    <link rel="stylesheet" href="~/lib/fontawesome-free/dist/css/all.min.css" asp-append-version="true"/>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
+
 </head>
 <body>
-
-<nav class="navbar navbar-inverse navbar-fixed-top">
-    <div class="container">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a asp-area="" asp-controller="Home" asp-action="Index" class="navbar-brand">Pavlov Rcon Webserver</a>
-        </div>
-        <div class="navbar-collapse collapse">
-            <ul class="nav navbar-nav">
-                @if (SignInManager.IsSignedIn(User))
+<nav class="navbar navbar-inverse fixed-top navbar-expand-sm navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index" >Pavlov Rcon Webserver</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="true" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            @if (SignInManager.IsSignedIn(User))
+            {
+                if (isAdmin)
                 {
-                    if((isAdmin))
-                    {
-                        <li class="dropdown">
-                            <a class="dropdown-toggle" data-toggle="dropdown" href="#">User Management<span class="caret"></span></a>
-                            <ul class="dropdown-menu">
-                                <li>
-                                    <a asp-area="" asp-controller="User" asp-action="Index">Users</a>
-                                </li>
-                                <li>
-                                    <a asp-area="" asp-controller="Role" asp-action="Index">Roles</a>
-                                </li>
-                            </ul>
-                        </li>
-                        <li>
-                            <a asp-area="" asp-controller="SshServer" asp-action="Index">Servers</a>
-                        </li>
-                    }
-                    if (await _pavlovServerService.IsModSomeWhere(user,_serverSelectedModsService)||isCaptain||isMod||isAdmin)
-                    {
-                        <li class="dropdown">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            User Management
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                               
+                            <li><a class="btn navbar-btn navbar-link" asp-area="" asp-controller="User" asp-action="Index">Users</a></li>
+                            <li><a class="btn navbar-btn navbar-link" asp-area="" asp-controller="Role" asp-action="Index">Roles</a></li>
+                        </ul>
+                    </li>
+                }
+                if (isModSomeWhere||isCaptain||isMod||isAdmin)
+                {
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Servers
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            @if (isAdmin)
+                            {
+                                <li><a class="btn navbar-btn navbar-link" asp-area="" asp-controller="SshServer" asp-action="Index">Servers</a></li>
+                            }
+                            <li><a class="btn navbar-btn navbar-link" asp-area="" asp-controller="Rcon" asp-action="Index">Commands</a></li>
+                        </ul>
+                    </li>
+                }
+                if (await _teamService.CheckRightsTeamCaptainOrCaptain(0,_teamSelectedSteamIdentityService,_userService,User,await _steamIdentityService.FindOne(user.Id)))
+                {
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Matchmaking (WIP)
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <li><a class="btn navbar-btn navbar-link" asp-area="" asp-controller="Team" asp-action="Index">Teams</a></li>
                             <li>
-                                <a asp-area="" asp-controller="Rcon" asp-action="Index">Commands</a>
+                                <a class="btn navbar-btn navbar-link" asp-area="" asp-controller="Team" asp-action="SteamIdentitiesIndex">Steam Identities</a>
                             </li>
-                        </li>
-                    }
-                    if (await _teamService.CheckRightsTeamCaptainOrCaptain(0,_teamSelectedSteamIdentityService,_userService,User,await _steamIdentityService.FindOne(user.Id)))
-                    {
-                        <li class="dropdown">
-                            <a class="dropdown-toggle" data-toggle="dropdown" href="#">Matchmaking (WIP)<span class="caret"></span></a>
-                            <ul class="dropdown-menu">
-                                <li>
-                                    <a asp-area="" asp-controller="Team" asp-action="Index">Teams</a>
-                                </li>
-                                @if (isAdmin)
-                                {
-                                    <li>
-                                        <a asp-area="" asp-controller="Team" asp-action="SteamIdentitiesIndex">Steam Identities</a>
-                                    </li>
-                                    <li>
-                                        <a asp-area="" asp-controller="MatchMaking" asp-action="Index">Matches</a>
-                                    </li>
-                                }
-                            </ul>
-                        </li>
-                    }
+                            <li>
+                                <a class="btn navbar-btn navbar-link" asp-area="" asp-controller="MatchMaking" asp-action="Index">Matches</a>
+                            </li>
+                        </ul>
+                    </li>
                 }
-                }
-            </ul>
-            @await Html.PartialAsync("_LoginPartial")
-        </div>
+                      
+            }
+                    
+
+            
+            
+            
+            
+        </ul>
+        @await Html.PartialAsync("_LoginPartial")
     </div>
+  </div>
 </nav>
-<div class="container body-content">
+
+<div class="container body-content na">
     <div class="overlay">
         <div id="loadingDiv">
         </div>
@@ -122,7 +118,6 @@
 <div id="modal-placeholder"></div>
     @RenderBody()
     <footer class="col-md-12">
-
         <hr/>
         <p>Pavlov Rcon Webserver</p>
     </footer>
@@ -158,10 +153,11 @@
 
  
 </style>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.js" asp-append-version="true"></script>
+    <script src="~/lib/fontawesome-free/dist/js/all.min.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-<script src="~/js/Init.js" asp-append-version="true"></script>
-@RenderSection("Scripts", false)
+    <script src="~/js/Init.js" asp-append-version="true"></script>
+    @RenderSection("Scripts", false)
 </body>
 </html>

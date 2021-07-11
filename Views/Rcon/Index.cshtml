@@ -6,7 +6,7 @@
     var twoValueCommands = Model.TwoValueCommands.Where(x => commandsAllow.Contains(x.Name)).ToList();
     var playerCommands = Model.PlayerCommands.Where(x => commandsAllow.Contains(x.Name)).ToList();
     var server = ViewBag.Servers;
-    ViewData["Title"] = "Rcon Page";
+    ViewData["Title"] = "Commands";
 }
 @section Scripts{
     <script>
@@ -25,6 +25,7 @@
     }
     </script>
 }
+
 @Html.LabelFor(x=>x.SingleServer)
 @if (Model.MultiRcon)
 {
@@ -32,42 +33,36 @@
 }
 else
 {
-    @Html.DropDownListFor(m => m.SingleServer, new SelectList(server,"Id","Name",Model.SingleServer), new { @class = "form-control form-control-sm" })
+    @Html.DropDownListFor(m => m.SingleServer, new SelectList(server,"Id","Name",Model.SingleServer), new { @class = "form-control form-control-sm form-select " })
 }
 
 <br>
-<div class="panel panel-default">
-    <div class="panel-heading">
+<div class="card m-1 ">
+    <div class="card-header">
         Signle paramter actions
     </div>
-    <div class="panel-body">
+    <div class="card-body">
         <div class="row">
-            <div class="col-xs-12 responsive nowrap">
                 @if (commandsAllow.Contains("ServerInfo"))
                 {
-                    <button type="button" class="center-block btn btn-success btn-responsive col-xs-3" onclick="sendSingleCommand('ServerInfo')">ServerInfo</button>
-                }
-            <div class="col-xs-1"></div>
+                    <button type="button" class="center-block btn btn-primary btn-responsive col-sm-3 m-1" onclick="sendSingleCommand('ServerInfo')">ServerInfo</button>
+                }<div class="col-sm-1"></div>
                 @if (commandsAllow.Contains("ResetSND"))
                 {
-                    <button type="button" class="center-block btn btn-success btn-responsive  col-xs-3" onclick="sendSingleCommand('ResetSND')">ResetSND</button>
-                }
-            <div class="col-xs-1"></div>
+                    <button type="button" class="center-block btn btn-primary btn-responsive  col-sm-3 m-1" onclick="sendSingleCommand('ResetSND')">ResetSND</button>
+                }<div class="col-sm-1"></div>
                 @if (commandsAllow.Contains("RotateMap"))
                 {
-                    <button type="button" class="center-block btn btn-success btn-responsive  col-xs-3" onclick="sendSingleCommand('RotateMap')">RotateMap</button>
+                    <button type="button" class="center-block btn btn-primary btn-responsive  col-sm-3 m-1" onclick="sendSingleCommand('RotateMap')">RotateMap</button>
                 }
-            </div>
         </div>
             <div class="row">
-                <div class="col-xs-12 responsive nowrap" style="margin-top: 1px;">
-                    <button type="button" class="center-block btn btn-success btn-responsive col-xs-3" onclick="BanMenu()">Ban Menu</button>
-                    <div class="col-xs-1"></div>
-                    @if (commandsAllow.Contains("Blacklist"))
-                    {
-                        <button type="button" class="center-block btn btn-success btn-responsive col-xs-3" onclick="sendSingleCommand('Blacklist')">InMemory Blacklist</button>
-                    }
-                </div>
+                <button type="button" class="center-block btn btn-primary btn-responsive col-sm-3 m-1" onclick="BanMenu()">Ban Menu</button>
+                <div class="col-sm-1"></div>
+                @if (commandsAllow.Contains("Blacklist"))
+                {
+                    <button type="button" class="center-block btn btn-primary btn-responsive col-sm-3 m-1" onclick="sendSingleCommand('Blacklist')">InMemory Blacklist</button>
+                }
             </div>
         
         @*// Buttons*@
@@ -76,12 +71,12 @@ else
 
 
 @* PlayerList *@
-    <div class="panel panel-default">
-        <div class="panel-heading">
+    <div class="card m-1 ">
+        <div class="card-header">
             Player List *
-            <button type="button" class="btn btn-success btn-group" onclick="UpdatePlayerList()">Update</button>
+            <button type="button" class="btn btn-primary btn-group" onclick="UpdatePlayerList()">Update</button>
         </div>
-        <div class="panel-body" id="PlayerListBig">
+        <div class="card-body" id="PlayerListBig">
             @* Gets autopopulated *@
             
         </div>
@@ -91,30 +86,30 @@ else
 @if (!Model.MultiRcon && playerCommands.Count > 0)
 {
    
-    <div class="panel panel-default">
-        <div class="panel-heading">
+    <div class="card m-1 ">
+        <div class="card-header">
             Player/Server Actions *
-            <button type="button" class="btn btn-success btn-group" onclick="UpdatePlayers()">Update</button>
+            <button type="button" class="btn btn-primary btn-group" onclick="UpdatePlayers()">Update</button>
         </div>
-        <div class="panel-body" id="PlayerAction">
+        <div class="card-body" id="PlayerAction">
             <div class="row">
                 <div class="col-sm-4">
                     @Html.LabelFor(x=>x.Players)
-                    @Html.DropDownListFor(m => m.Players, new SelectList(Model.Players,"Name","SteamId",Model.PlayersSelected), new { @class = "form-control form-control-sm", size = 10 })
+                    @Html.DropDownListFor(m => m.Players, new SelectList(Model.Players,"Name","SteamId",Model.PlayersSelected), new { @class = "form-control form-control-sm form-select ", size = 10 })
                 </div>
                 <div class="col-sm-4">
                     <div class="tooltipHover">
                     @Html.LabelFor(x => x.PlayerCommands)
                     <span class="tooltiptext">Server comamnds doesn't need a selected player</span>
                     </div>
-                    @Html.DropDownListFor(m => playerCommands, new SelectList(playerCommands, "Name", "Name", playerCommands, "Group"), new {@class = "form-control form-control-sm"})
+                    @Html.DropDownListFor(m => playerCommands, new SelectList(playerCommands, "Name", "Name", playerCommands, "Group"), new {@class = "form-control form-control-sm form-select "})
                 </div>
                 <div class="col-sm-2" id="PlayerValueParent">
                     <label asp-for="PlayerValue"></label>
                     @* Gets autopopulated *@
                 </div>
                 <div class="col-sm-2 buttonParent">
-                    <button id="Do" name="Do" type="button" class="btn btn-success btn-group center" onclick="PlayerAction()">Do</button>
+                    <button id="Do" name="Do" type="button" class="btn btn-primary btn-group center" onclick="PlayerAction()">Do</button>
                 </div>
             </div>
         </div>
@@ -126,15 +121,15 @@ else
 }
 @if (twoValueCommands.Count > 0)
 {
-    <div class="panel panel-default">
-        <div class="panel-heading">
+    <div class="card m-1 ">
+        <div class="card-header">
             Actions with two values
         </div>
-        <div class="panel-body" id="TwoValueInputs">
+        <div class="card-body" id="TwoValueInputs">
             <div class="row">
                 <div class="col-sm-4">
                     @Html.LabelFor(x => x.TwoValueCommands)
-                    @Html.DropDownListFor(m => twoValueCommands, new SelectList(twoValueCommands, "Name", "Name", twoValueCommands), new {@class = "form-control form-control-sm"})
+                    @Html.DropDownListFor(m => twoValueCommands, new SelectList(twoValueCommands, "Name", "Name", twoValueCommands), new {@class = "form-control form-control-sm form-select "})
                 </div>
                 <div class="col-sm-4" id="PlayerValueParent">
                     <label asp-for="PlayerValue"></label>
@@ -145,7 +140,7 @@ else
                     @* Gets autopopulated *@
                 </div>
                 <div class="col-sm-2 buttonParent">
-                    <button id="Do" name="Do" type="button" class="btn btn-success btn-group center" onclick="TwoValuesSendCommand()">Do</button>
+                    <button id="Do" name="Do" type="button" class="btn btn-primary btn-group center" onclick="TwoValuesSendCommand()">Do</button>
                 </div>
             </div>
         </div>
@@ -154,12 +149,15 @@ else
 }
 * Updates every 30 secs automaticly
 <style>
+
+option,.form-select{
+    font-size: 1.25em!important;
+}
     .buttonParent{
         margin-top: 40px;
     }
     .center {
       margin: 0;
-      position: absolute;
       left: 50%;
       -ms-transform: translate(-50%, -50%);
       transform: translate(-50%, -50%);

@@ -15,7 +15,7 @@
       }
       if (command.valuesOptions != null && command.valuesOptions.Count > 0 && command.InputValue)
       {
-         @Html.DropDownListFor(m => new RconViewModel().PlayerValue, new SelectList(command.valuesOptions, "Name"), new {@class = "form-control form-control-sm"})
+         @Html.DropDownListFor(m => new RconViewModel().PlayerValue, new SelectList(command.valuesOptions, "Name"), new {@class = "form-control form-control-sm form-select "})
       }
       else if (command.InputValue)
       {
@@ -41,18 +41,18 @@ else
       {
          if (Model.firstValue)
          {
-            @Html.DropDownListFor(m => new RconViewModel().PlayerValue, new SelectList(command.valuesOptions, "Name"), new {@class = "form-control form-control-sm"})
+            @Html.DropDownListFor(m => new RconViewModel().PlayerValue, new SelectList(command.valuesOptions, "Name"), new {@class = "form-control form-control-sm form-select "})
          }
          else
          {
-            @Html.DropDownListFor(m => new RconViewModel().PlayerValueTwo, new SelectList(command.valuesTwoOptions, "Name"), new {@class = "form-control form-control-sm"})
+            @Html.DropDownListFor(m => new RconViewModel().PlayerValueTwo, new SelectList(command.valuesTwoOptions, "Name"), new {@class = "form-control form-control-sm form-select "})
          }
       }
       else
       {
          if (command.Name == "GiveTeamCash")
          {
-            @Html.DropDownListFor(m => new RconViewModel().PlayerValueTwo, new SelectList(command.valuesTwoOptions, "Name"), new {@class = "form-control form-control-sm"})
+            @Html.DropDownListFor(m => new RconViewModel().PlayerValueTwo, new SelectList(command.valuesTwoOptions, "Name"), new {@class = "form-control form-control-sm form-select "})
 
          }
          else

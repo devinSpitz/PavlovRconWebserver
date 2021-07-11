@@ -13,7 +13,7 @@
 }
 
 <h2>@ViewBag.Title</h2>
-<div class="bg-info">
+<div class="card bg-info">
     <ul>
         <li>Each field is a mandatory field</li>
         <li>The Pavlov server and the service must already exist (but the service can be disabled).</li>
@@ -47,7 +47,7 @@
         <div class="form-group  col-md-7">
             <label asp-for="TelnetPassword"></label>
             <input asp-for="TelnetPassword" class="form-control" placeholder="@placeholder" type="password" value="" autocomplete="off"/>
-            <p class="help-block">
+            <p class="form-text">
                 @ViewData.ModelMetadata.Properties.Where(m => m.PropertyName == "TelnetPassword").FirstOrDefault().Description
             </p>
             <span asp-validation-for="TelnetPassword" class="text-danger"></span>
@@ -72,20 +72,20 @@
         </div>    
         </div>    
     <div class="row">
-        <div class="form-group col-xs-3">
+        <div class="form-group col-sm-3">
             <label asp-for="DeletAfter"></label>
             <input asp-for="DeletAfter" class="form-control" value="@Model.DeletAfter"/>
             <span asp-validation-for="DeletAfter" class="text-danger"></span>
         </div> 
-        <div class="form-group col-xs-3">
+        <div class="form-group col-sm-3">
             <label asp-for="ServerSystemdServiceName"></label>
             <input asp-for="ServerSystemdServiceName" class="form-control" value="@Model.ServerSystemdServiceName"/>
             <span asp-validation-for="ServerSystemdServiceName" class="text-danger"></span>
         </div>  
     </div>  
 <div class="row">
-    <div class="saveButton col-md-1">
-            <button type="submit" class="btn btn-primary btn-default col-md-12">Save</button>
+    <div class="saveButton col-md-1 mt-3">
+            <button type="submit" class="btn btn-success col-md-12">Save</button>
     </div>
 </div>
 

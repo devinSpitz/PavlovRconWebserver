@@ -5,7 +5,7 @@ function init(){
     $("#GameMode").change(function(){
         GetPlayerTeamSelectPartialView($(this).val(),
             function (data) {
-                $("#GameModeSpecificPanel").html(data);
+                $("#GameModeSpecificcard").html(data);
             });
     });
 
@@ -16,7 +16,7 @@ function init(){
 
     GetPlayerTeamSelectPartialView($("#GameMode").val(),
         function (data) {
-            $("#GameModeSpecificPanel").html(data);
+            $("#GameModeSpecificcard").html(data);
         });
 };
 
@@ -57,7 +57,6 @@ function bindSelectButtons()
 
 function PopulateTeamsSteamIdentities(chosenTeam,toId,toremove,first=false)
 {
-
     let matchId = $("#Id").val();
     if(!first)
         $(toremove).empty();

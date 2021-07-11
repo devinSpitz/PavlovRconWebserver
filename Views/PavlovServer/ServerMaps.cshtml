@@ -6,6 +6,7 @@
     Layout = "_Layout";
     var maxLength = 20;
     var gameModes = GameModes.ModesString;
+    var count = 0;
 }
 <style>
     .bigFont{
@@ -22,113 +23,124 @@
     </ul>
 </div>
 
-<a class="bigFont" href="@Url.Action("Index","SshServer")"><span> &#128281;</span></a><br>
-<div class="col-sm-6" id="Save">
-    <div class="panel panel-default" >
-        <div class="panel-heading">
-            Select the maps you wanne play on the server
-        </div>
-        <div class="panel-body" id="SavePanelBody">
-            <div class='search' style="margin-bottom: 15px;padding-bottom: 15px;">
-                <input  class="col-xs-6" id='searchAuthor' type="text" placeholder='Search for authors' name="search"> 
-                <input class="col-xs-6" id='searchName' type="text" placeholder='Search for map name' name="search"> 
+<div class="row">
+    <div class="col-sm-6" id="Save">
+        <div class="card m-1 " >
+            <div class="card-header">
+                Select the maps you wanne play on the server
             </div>
-            @foreach (var map in @Model.AllMaps)
-            {
-                var selectedMap = Model.SelectedMaps.FirstOrDefault(x => x.Map?.Id == map.Id);
-                if (selectedMap != null)
+            <div class="card-body" id="SavecardBody">
+                <div class='search row' style="margin-bottom: 15px;padding-bottom: 15px;">
+                    <input  class="col-sm-6" id='searchAuthor' type="text" placeholder='Search for authors' name="search"> 
+                    <input class="col-sm-6" id='searchName' type="text" placeholder='Search for map name' name="search"> 
+                </div>
+                
+                @Html.Raw("<div class='row' id='SavecardBodyAppend'>")
+                @foreach (var map in @Model.AllMaps)
                 {
-                    continue; // This map is selected
-                }
-                <div class="col-xs-6">
-                    <div class="panel panel-default mapPanel" data-Author="@map.Author" data-Name="@map.Name">
-                        <div class="panel-heading">
-                            @map.Id
-                            <button onclick="duplicateButton(this)">clone</button>
-                        </div>
-                        <div class="panel-body">
-                            <input class="mapId" value="@map.Id" type="hidden"/>
-                            @if (@map.Name?.Length > maxLength)
-                            {
-                                <b>@map.Name.Substring(0, maxLength) ...</b>
-                            }
-                            else
-                            {
-                                <b>@map.Name</b>
-                            }
-                            <br>
-                            <button data-dismiss="modal" onclick="ChangeMap('@map.Id',this,$(this).parent().find('.gameMode').val())"><img style="width: 150px;height: 150px" src="@map.ImageUrl"></button>
-                            @if (@map.Author?.Length > maxLength)
-                            {
-                                <br><b>by @map.Author.Substring(0, maxLength) ...</b>
-                            }
-                            else
-                            {
-                                <br><b>by @map.Author</b>
-                            }
+                    var selectedMap = Model.SelectedMaps.FirstOrDefault(x => x.Map?.Id == map.Id);
+                    if (selectedMap != null)
+                    {
+                        continue; // This map is selected
+                    }
+                    <div class="col-sm-6">
+                        <div class="card m-1  mapcard" data-Author="@map.Author" data-Name="@map.Name">
+                            <div class="card-header">
+                                @map.Id
+                                <button class="btn btn-success btn-sm" onclick="duplicateButton(this)">clone</button>
+                            </div>
+                            <div class="card-body">
+                                <input class="mapId" value="@map.Id" type="hidden"/>
+                                @if (@map.Name?.Length > maxLength)
+                                {
+                                    <b>@map.Name.Substring(0, maxLength) ...</b>
+                                }
+                                else
+                                {
+                                    <b>@map.Name</b>
+                                }
+                                <br>
+                                <button onclick="ChangeMap('@map.Id',this,$(this).parent().find('.gameMode').val())"><img class="card-img-top" src="@map.ImageUrl"></button>
+                                @if (@map.Author?.Length > maxLength)
+                                {
+                                    <br><b>by @map.Author.Substring(0, maxLength) ...</b>
+                                }
+                                else
+                                {
+                                    <br><b>by @map.Author</b>
+                                }
                             
-                            @Html.DropDownList("TDM", new SelectList(gameModes,"TDM"), new { @class = "gameMode form-control form-control-sm", @onchange = "ChangeMap($(this).parent().find('.mapId').val(),this,$(this).parent().find('.gameMode').val(),true)" })
+                                @Html.DropDownList("TDM", new SelectList(gameModes,"TDM"), new { @class = "gameMode form-control form-control-sm form-select ", @onchange = "ChangeMap($(this).parent().find('.mapId').val(),this,$(this).parent().find('.gameMode').val(),true)" })
 
+                            </div>
                         </div>
                     </div>
-                </div>
-            }
+                    
+                }
+                @Html.Raw("</div>")
+            </div>
         </div>
     </div>
-</div>
-<div class="col-sm-6" id="Delete">
-    <div class="panel panel-default" >
-        <div class="panel-heading">
-            Here are all selected maps for the server
-        </div>
-        <div class="panel-body" id="DeletePanelBody">
-            @foreach (var map in @Model.SelectedMaps)
-            {
+    <div class="col-sm-6" id="Delete">
+        <div class="card m-1 " >
+            <div class="card-header">
+                Here are all selected maps for the server
+            </div>
+            <div class="card-body" id="DeletecardBody">
+                
+                @Html.Raw("<div class='row' id='DeletecardBodyAppend'>")
+                @foreach (var map in @Model.SelectedMaps)
+                {
                     map.Map = Model.AllMaps.FirstOrDefault(x => x.Id == map.Map?.Id);
                     if (map.Map == null)
                     {
                         continue; // have to delete the map some when cause its no longer on steam workskhops :(
                     }
-            <div class="col-xs-6">
-                <div class="panel panel-default" data-Author="@map.Map.Author" data-Name="@map.Map.Name">
-                    @{
-                        //Backwardscompatibility
-                        if (string.IsNullOrEmpty(map.GameMode)) map.GameMode = "TDM";
-                    }
-                    <div class="panel-heading">
-                        @map.Map.Id
-                        
-                            <button onclick="duplicateButton(this)">clone</button>
-                    </div>
-                    <div class="panel-body">
-                        <input class="mapId" value="@map.Map.Id" type="hidden"/>
-                        @if (@map.Map.Name?.Length > maxLength)
-                        {
-                            <b>@map.Map.Name.Substring(0, maxLength) ...</b>
-                        }
-                        else
-                        {
-                            <b>@map.Map.Name</b>
-                        }
-                        <br>
-                        <button data-dismiss="modal" onclick="ChangeMap('@map.Map.Id',this,$(this).parent().find('.gameMode').val())"><img style="width: 150px;height: 150px" src="@map.Map.ImageUrl"></button>
-                        @if (@map.Map.Author?.Length > maxLength)
-                        {
-                            <br><b>by @map.Map.Author.Substring(0, maxLength) ...</b>
-                        }
-                        else
-                        {
-                            <br><b>by @map.Map.Author</b>
-                        }
-                        @Html.DropDownList(map.GameMode, new SelectList(gameModes, map.GameMode), new {@class = "gameMode form-control form-control-sm", @onchange = "ChangeMap($(this).parent().find('.mapId').val(),this,$(this).parent().find('.gameMode').val(),true)" })
+                    <div class="col-sm-6">
+                        <div class="card m-1 " data-Author="@map.Map.Author" data-Name="@map.Map.Name">
+                            @{
+                                //Backwardscompatibility
+                                if (string.IsNullOrEmpty(map.GameMode)) map.GameMode = "TDM";
+                            }
+                            <div class="card-header">
+                                @map.Map.Id
 
+                                <button class="btn btn-success btn-sm" onclick="duplicateButton(this)">clone</button>
+                            </div>
+                            <div class="card-body">
+                                <input class="mapId" value="@map.Map.Id" type="hidden"/>
+                                @if (@map.Map.Name?.Length > maxLength)
+                                {
+                                    <b>@map.Map.Name.Substring(0, maxLength) ...</b>
+                                }
+                                else
+                                {
+                                    <b>@map.Map.Name</b>
+                                }
+                                <br>
+                                <button onclick="ChangeMap('@map.Map.Id',this,$(this).parent().find('.gameMode').val())"><img class="card-img-top" src="@map.Map.ImageUrl"></button>
+                                @if (@map.Map.Author?.Length > maxLength)
+                                {
+                                    <br><b>by @map.Map.Author.Substring(0, maxLength) ...</b>
+                                }
+                                else
+                                {
+                                    <br><b>by @map.Map.Author</b>
+                                }
+                                @Html.DropDownList(map.GameMode, new SelectList(gameModes, map.GameMode), new {@class = "gameMode form-control form-control-sm form-select ", @onchange = "ChangeMap($(this).parent().find('.mapId').val(),this,$(this).parent().find('.gameMode').val(),true)"})
+
+                            </div>
+                        </div>
                     </div>
-                </div>
-                </div>
-            }
+                    
+                }
+                
+                @Html.Raw("</div>")
+            </div>
         </div>
     </div>
 </div>
+
 
 @section Scripts{
     <script>

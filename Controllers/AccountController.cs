@@ -224,13 +224,12 @@ namespace PavlovRconWebserver.Controllers
          return View(model);
       }
 
-      [HttpPost]
-      [ValidateAntiForgeryToken]
+      [HttpGet]
       public async Task<IActionResult> Logout()
       {
          await _signInManager.SignOutAsync();
          _logger.LogInformation("User logged out.");
-         return RedirectToAction(nameof(HomeController.Index), "Home");
+         return RedirectToAction("Index", "Home");
       }
 
       [HttpPost]

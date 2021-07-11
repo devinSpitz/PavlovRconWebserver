@@ -15,7 +15,7 @@
     <div asp-validation-summary="All" class="text-danger"></div>
     
     <label asp-for="overWriteRole"></label>
-    @Html.DropDownListFor(m => m.overWriteRole, new SelectList(RightsHandler.Roles,"Value","Value",Model.overWriteRole), new { @class = "form-control form-control-sm" })     
+    @Html.DropDownListFor(m => m.overWriteRole, new SelectList(RightsHandler.Roles,"Value","Value",Model.overWriteRole), new { @class = "form-control form-control-sm form-select " })     
 
     
     
@@ -26,8 +26,8 @@
     <span asp-validation-for="teamId" class="text-danger"></span>
     
     
-    <div class="saveButton col-md-1">
-        <button type="submit" class="btn btn-primary btn-default col-md-12">Save</button>
+    <div class="saveButton col-md-1 mt-3">
+        <button type="submit" class="btn btn-success col-md-12">Save</button>
     </div>
     
 

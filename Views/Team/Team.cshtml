@@ -12,9 +12,9 @@
 <form asp-controller="Team" asp-action="SaveTeam" method="post">
     <div asp-validation-summary="All" class="text-danger"></div>
     <div class="col-md-11">
-        <div class="panel panel-default">
-            <div class="panel-heading">Main team settings</div>
-            <div class="panel-body">
+        <div class="card m-1 ">
+            <div class="card-header">Main team settings</div>
+            <div class="card-body">
                 
                 <input asp-for="Id" class="form-control" value="@Model.Id" type="hidden"/>
                 <span asp-validation-for="Id" class="text-danger"></span>  
@@ -27,8 +27,8 @@
 
             </div>
         </div>
-        <div class="saveButton col-md-1">
-            <button type="submit" class="btn btn-primary btn-default col-md-12">Save</button>
+        <div class="saveButton col-md-1 mt-3">
+            <button type="submit" class="btn btn-success col-md-12">Save</button>
         </div>
 </div>
 

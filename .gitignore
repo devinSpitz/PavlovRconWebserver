@@ -5,3 +5,6 @@
 /.git/*
 /bin/*
 /obj/*
+/node_modules/
+/gulpfile.js
+/Folder.DotSettings.user

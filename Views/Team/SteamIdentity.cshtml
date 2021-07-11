@@ -52,11 +52,11 @@
         <label asp-for="Costume"></label>
             @if (isAdmin||isMod)
             {
-                @Html.DropDownListFor(m => m.Costume, new SelectList(Statics.Models, Model.Costume), new {@class = "form-control form-control-sm"})
+                @Html.DropDownListFor(m => m.Costume, new SelectList(Statics.Models, Model.Costume), new {@class = "form-control form-control-sm form-select "})
             }
             else
             {
-                @Html.DropDownListFor(m => m.Costume, new SelectList(Statics.Models.Where(x=>x!="clown"), Model.Costume), new {@class = "form-control form-control-sm"})
+                @Html.DropDownListFor(m => m.Costume, new SelectList(Statics.Models.Where(x=>x!="clown"), Model.Costume), new {@class = "form-control form-control-sm form-select "})
             }
     </div>
     
@@ -64,7 +64,7 @@
     {
         <div class="form-group col-md-12">
             <label asp-for="LiteDbUserId"></label>
-            @Html.DropDownListFor(m => m.LiteDbUserId, new SelectList(users, "Id", "NormalizedUserName", Model.LiteDbUser?.Id), new {@class = "form-control form-control-sm"})
+            @Html.DropDownListFor(m => m.LiteDbUserId, new SelectList(users, "Id", "NormalizedUserName", Model.LiteDbUser?.Id), new {@class = "form-control form-control-sm form-select "})
         </div>
     }
     else
@@ -72,8 +72,8 @@
         <input asp-for="LiteDbUserId" type="hidden" value="@Model.LiteDbUser.Id.ToString()"/>
     }
     
-    <div class="saveButton col-md-1">
-        <button type="submit" class="btn btn-primary btn-default col-md-12">Save</button>
+    <div class="saveButton col-md-1 mt-3">
+        <button type="submit" class="btn btn-success col-md-12">Save</button>
     </div>
     
 

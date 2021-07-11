@@ -48,7 +48,7 @@ namespace PavlovRconWebserver.Controllers
         [HttpGet("[controller]/{showFinished?}")]
         public async Task<IActionResult> Index(bool showFinished = false)
         {
-            return showFinished ? View((await _matchService.FindAll()).Where(x=>x.Status!=Status.Finshed)) : View(await _matchService.FindAll());
+            return showFinished ?  View(await _matchService.FindAll()): View((await _matchService.FindAll()).Where(x=>x.Status!=Status.Finshed));
         }
 
         [HttpGet]
@@ -111,8 +111,11 @@ namespace PavlovRconWebserver.Controllers
                 (await _matchSelectedSteamIdentitiesService.FindAllSelectedForMatch((int)matchId)).ToList();
                 
             }
-            usedSteamIdentities =
-                (await _matchSelectedSteamIdentitiesService.FindAll()).ToList();
+            else
+            {
+                usedSteamIdentities =
+                    (await _matchSelectedSteamIdentitiesService.FindAll()).ToList();
+            }
 
             
             var list = steamIdentities.Where(x=>!usedSteamIdentities.Select(y=>y.SteamIdentityId).Contains(x.SteamIdentity.Id)).ToList();

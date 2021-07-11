@@ -6,11 +6,11 @@
 }
 
 
-<h2>@ViewBag.Title</h2>
+<h2>@ViewBag.Title <a class="btn btn-sm btn-primary" href="@Url.Action("Index",new{ showFinished = true })">Show Finished</a>
+                   <a class="btn btn-sm btn-primary" href="@Url.Action("Index",new{ showFinished = false })">Filter Finished</a>
+                   <a class="btn btn-sm btn-primary" href="@Url.Action("CreateMatch")"><span class="fas fa-plus"></span></a></h2>
 @*<a asp-area="" asp-controller="MatchMaking" asp-action="EditServer">&#10133; Add Server</a>*@
- <a href="@Url.Action("Index",new{ showFinished = true })">Show Finished</a>
- <a href="@Url.Action("Index",new{ showFinished = false })">Filter Finished</a>
- <a href="@Url.Action("CreateMatch")">&#10133;</a>
+
 <table class="table table-striped table-responsive">
     <thead>
     <th>
@@ -34,16 +34,16 @@
                 @match.Id
                 @if (match.Status == Status.Preparing)
                 {
-                    <a href="@Url.Action("EditMatch",new{ match.Id })"><span>&#9998;</span></a>
-                    <a href="@Url.Action("StartMatch",new{ match.Id })"><span>&#9654;</span></a>
+                    <a class="btn btn-sm btn-primary" href="@Url.Action("EditMatch",new{ match.Id })"><span class="fas fa-edit"></span></a>
+                    <a class="btn btn-sm btn-primary" href="@Url.Action("StartMatch",new{ match.Id })"><span class="fas fa-play"></span></a>
                 }else if (match.Status == Status.StartetWaitingForPlayer)
                 {
-                    <a href="@Url.Action("ForceStartMatch",new{ match.Id })"><span>Force &#9654;</span></a>
-                    <a href="@Url.Action("ForceStopMatch",new{ match.Id })" onclick="return confirm('Are you sure you want to stop the server?')"><span>&#9209;</span></a>
+                    <a class="btn btn-sm btn-primary" href="@Url.Action("ForceStartMatch",new{ match.Id })"><span class="fas fa-play"></span></a>
+                    <a class="btn btn-sm btn-danger" href="@Url.Action("ForceStopMatch",new{ match.Id })" onclick="return confirm('Are you sure you want to stop the server?')">Force <span class="fas fa-stop"></span></a>
                 }
-                else
+                else if (match.Status != Status.Finshed)
                 {
-                    <a href="@Url.Action("ForceStopMatch",new{ match.Id })" onclick="return confirm('Are you sure you want to stop the server?')"><span>&#9209;</span></a>
+                    <a class="btn btn-sm btn-danger" href="@Url.Action("ForceStopMatch",new{ match.Id })" onclick="return confirm('Are you sure you want to stop the server?')">Force <span class="fas fa-stop"></span></a>
                 }
             </td>
             <td>

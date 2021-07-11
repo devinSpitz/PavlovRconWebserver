@@ -1,7 +1,7 @@
 @model SteamIdentityMatchTeamViewModel
 
 <div class="row">
-        <div class="col-md-6">
+        <div class="col-sm-6">
     @Html.Partial("TeamSinglePartailView", new SteamIdentityMatchTeamSingleViewModel
     {
         selectedTeam = Model.selectedTeam0,
@@ -13,11 +13,8 @@
         SelectButtonId = "selectButtonTeam0"
     })
         </div>
-    <div class="col-md-2">
-
-    </div>
     
-    <div class="col-md-6">
+    <div class="col-sm-6">
     @Html.Partial("TeamSinglePartailView", new SteamIdentityMatchTeamSingleViewModel
     {
         selectedTeam = Model.selectedTeam1,

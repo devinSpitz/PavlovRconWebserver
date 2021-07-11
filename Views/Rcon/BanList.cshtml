@@ -13,20 +13,20 @@
     }
 </style>
 <!-- Modal -->
-<div class="modal fade" id="add-contact" tabindex="-1" role="dialog" aria-labelledby="addContactLabel" aria-hidden="true">
+<div class="modal" id="add-contact" tabindex="-1" role="dialog" aria-labelledby="addContactLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content cssModalSizeAsChildren">
             <div class="modal-header">
                 <h5 class="modal-title" id="addContactLabel">Banned peoples:</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <button type="button" class="close btn btn-danger" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">×</span>
                 </button>
             </div>
             <div class="modal-body">
-                <div class="panel panel-default col-cs-12">
-                    <div class="panel-heading col-cs-12">Banned Players</div>
-                    <div class="panel-body col-cs-12">
-                        <table class="table table-bordered table-responsive col-xs-12">
+                <div class="card m-1  col-cs-12">
+                    <div class="card-header col-cs-12">Banned Players</div>
+                    <div class="card-body col-cs-12">
+                        <table class="table table-bordered table-responsive col-sm-12">
                             @Html.Raw(tableHeaer)
                             @foreach (var player in Model)
                             {
@@ -38,16 +38,16 @@
                 @if (await UserManager.IsInRoleAsync(await UserManager.GetUserAsync(User), "Mod")||await UserManager.IsInRoleAsync(await UserManager.GetUserAsync(User), "Admin"))
                 {
                     <br>
-                    <div class="panel panel-default">
-                        <div class="panel-heading">Unban SteamId</div>
-                        <div class="panel-body">
+                    <div class="card m-1 ">
+                        <div class="card-header">Unban SteamId</div>
+                        <div class="card-body">
                             <div class="row">
-                                <div class="col-xs-6">
+                                <div class="col-sm-6">
                                     <input name="UnbanSteamId" id="UnbanSteamId" class="form-control" placeholder="76561197960287930">
                                 </div>
-                                <div class="col-xs-3">
+                                <div class="col-sm-3">
                                 </div>
-                                <div class="col-xs-3">
+                                <div class="col-sm-3">
                                     <Button alt="Remove ban" class="btn-success" onclick="RemoveBannedPlayer($('#UnbanSteamId').val())">Unban</Button>
                                 </div>
                             </div>

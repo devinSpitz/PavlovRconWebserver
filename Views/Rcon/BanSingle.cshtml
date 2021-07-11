@@ -26,16 +26,16 @@
         @Model?.SteamId 
           @if (await UserManager.IsInRoleAsync(await UserManager.GetUserAsync(User), "Mod")||await UserManager.IsInRoleAsync(await UserManager.GetUserAsync(User), "Admin"))
           {
-              <Button alt="Remove ban" class="btn-danger" onclick="RemoveBannedPlayer('@Model?.SteamId')"><span >&#128711;</span></Button>
+              <Button alt="Remove ban" class="btn-danger" onclick="RemoveBannedPlayer('@Model?.SteamId')"><span class="fas fa-trash-alt"></span></Button>
           }
     </td>
     <td>
         @Model?.Comment
     </td>
-    <td class='date col-xs-3'>
+    <td class='date col-sm-3'>
         @banDate
     </td>
-    <td class='date col-xs-3'>
+    <td class='date col-sm-3'>
         @{
             var tmp = new DateTime();
             var tmpString = "";

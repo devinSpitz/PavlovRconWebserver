@@ -5,20 +5,20 @@
     var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
 }
 
-<ul class="nav nav-pills nav-stacked">
+<ul class="nav flex-column">
     <li class="@ManageNavPages.IndexNavClass(ViewContext)">
-        <a asp-action="Index">Profile</a>
+        <a class="btn btn-primary m-1" asp-action="Index">Profile</a>
     </li>
     <li class="@ManageNavPages.ChangePasswordNavClass(ViewContext)">
-        <a asp-action="ChangePassword">Password</a>
+        <a class="btn btn-primary m-1" asp-action="ChangePassword">Password</a>
     </li>
     <li class="@ManageNavPages.SteamIdentityNavClass(ViewContext)">
-        <a asp-controller="Team" asp-action="EditOwnSteamIdentity">EditSteamIdentity</a>
+        <a class="btn btn-primary m-1"  asp-controller="Team" asp-action="EditOwnSteamIdentity">EditSteamIdentity</a>
     </li> 
     @if (hasExternalLogins)
     {
         <li class="@ManageNavPages.ExternalLoginsNavClass(ViewContext)">
-            <a asp-action="ExternalLogins">External logins</a>
+            <a class="btn btn-primary m-1" asp-action="ExternalLogins">External logins</a>
         </li>
     }
     @* <li class="@ManageNavPages.TwoFactorAuthenticationNavClass(ViewContext)"> *@

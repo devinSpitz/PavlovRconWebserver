@@ -285,6 +285,7 @@ function SingleServerInfoPartialView(result,ServerIds)
         {
             $('#modal-placeholder').html(data);
             $('#modal-placeholder > .modal').modal('show');
+            
         },
         error: function(XMLHttpRequest)
         {

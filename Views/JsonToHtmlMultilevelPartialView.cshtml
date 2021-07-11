@@ -5,7 +5,7 @@
     JObject json = JsonConvert.DeserializeObject(Model) as JObject;
 }
 
-<table class="display table table-striped table-bordered" cellspacing="0" style="background-color: white;">
+<table class="display table table-bordered" cellspacing="0">
     <tbody>
         @foreach (var property in json.Properties())
         {
@@ -63,7 +63,7 @@
                         {
                             var uniqueClass = data as JObject;
 
-                            <table class="table" style="background-color: white;">
+                            <table class="table">
                                 <thead>
                                     <tr>
                                         @{
