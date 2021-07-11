@@ -144,6 +144,10 @@ A minimal open-source C# 3.5/4.0/4.5/4.5.1/NetStandard1.6/NetStandard2.0 Telnet 
 https://github.com/9swampy/Telnet/
 
 
+Font Awesome  
+Get vector icons and social logos on your website with Font Awesome, the web's most popular icon set and toolkit.   
+https://fontawesome.com/  
+
 =====================  
 Thanks to all this people who worked for this nuget packages. Without that it wouldn't be possible to do this.  
   
