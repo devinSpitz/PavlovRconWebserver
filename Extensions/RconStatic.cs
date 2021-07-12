@@ -115,7 +115,7 @@ namespace PavlovRconWebserver.Extensions
             var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString),pavlovServerService,pavlovServerInfoService);
             var pavlovServerPlayerHistoryService = new PavlovServerPlayerHistoryService(new LiteDbIdentityContext(connectionString));
             var rconService = new RconService(steamIdentityService,serverSelectedMapService,mapsService,pavlovServerInfoService,pavlovServerPlayerService,pavlovServerPlayerHistoryService);
-            var matchService = new MatchService(new LiteDbIdentityContext(connectionString),matchSelectedTeamSteamIdentitiesService,pavlovServerService,rconService,mapsService,pavlovServerPlayerService,pavlovServerInfoService);
+            var matchService = new MatchService(new LiteDbIdentityContext(connectionString),matchSelectedTeamSteamIdentitiesService,pavlovServerService);
 
             var connectionInfo = RconService.ConnectionInfo(server, authType, out var result, server.SshServer);
             using var clientSsh = new SshClient(connectionInfo);
@@ -232,7 +232,7 @@ namespace PavlovRconWebserver.Extensions
             var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString),pavlovServerService,pavlovServerInfoService);
             var pavlovServerPlayerHistoryService = new PavlovServerPlayerHistoryService(new LiteDbIdentityContext(connectionString));
             var rconService = new RconService(steamIdentityService,serverSelectedMapService,mapsService,pavlovServerInfoService,pavlovServerPlayerService,pavlovServerPlayerHistoryService);
-            var matchService = new MatchService(new LiteDbIdentityContext(connectionString),matchSelectedTeamSteamIdentitiesService,pavlovServerService,rconService,mapsService,pavlovServerPlayerService,pavlovServerInfoService);
+            var matchService = new MatchService(new LiteDbIdentityContext(connectionString),matchSelectedTeamSteamIdentitiesService,pavlovServerService);
             Console.WriteLine("MatchInspector started!");
             var match = await matchService.FindOne(matchId);
             

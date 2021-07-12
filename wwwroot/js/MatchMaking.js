@@ -122,6 +122,21 @@ function RconChooseMapPartialView()
     });
 }
 
+function search(searchInput,attr)
+{
+    $( ".mapcard" ).each(function( index ) {
+        if($(this).attr(attr).toLowerCase().indexOf(searchInput)>=0)
+        {
+            $(this).parent().show();
+        }
+        else{
+
+            $(this).parent().hide();
+        }
+
+    });
+}
+
 function setMap(id)
 {
     var mapId = "UGC";

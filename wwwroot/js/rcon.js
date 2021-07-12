@@ -88,7 +88,7 @@ function TwoValuesSendCommand()
 
 function search(searchInput,attr)
 {
-    $( ".mapPanel" ).each(function( index ) {
+    $( ".mapcard" ).each(function( index ) {
         if($(this).attr(attr).toLowerCase().indexOf(searchInput)>=0)
         {
             $(this).parent().show();

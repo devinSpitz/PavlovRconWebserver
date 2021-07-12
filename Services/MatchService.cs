@@ -16,27 +16,15 @@ namespace PavlovRconWebserver.Services
         
         private readonly MatchSelectedTeamSteamIdentitiesService _matchSelectedTeamSteamIdentitiesService;
         private readonly PavlovServerService _pavlovServerService;
-        private readonly RconService _rconService;
-        private readonly MapsService _mapsService;
-        private readonly PavlovServerPlayerService _pavlovServerPlayerService;
-        private readonly PavlovServerInfoService _pavlovServerInfoService;
         
         public MatchService(ILiteDbIdentityContext liteDbContext,
             MatchSelectedTeamSteamIdentitiesService matchSelectedTeamSteamIdentitiesService,
-            PavlovServerService pavlovServerService,
-            RconService rconService,
-            MapsService mapsService,
-            PavlovServerPlayerService pavlovServerPlayerService,
-            PavlovServerInfoService pavlovServerInfoService
+            PavlovServerService pavlovServerService
         )
         {
             _liteDb = liteDbContext;
             _matchSelectedTeamSteamIdentitiesService = matchSelectedTeamSteamIdentitiesService;
             _pavlovServerService = pavlovServerService;
-            _rconService = rconService;
-            _mapsService = mapsService;
-            _pavlovServerPlayerService = pavlovServerPlayerService;
-            _pavlovServerInfoService = pavlovServerInfoService;
 
         }
 
