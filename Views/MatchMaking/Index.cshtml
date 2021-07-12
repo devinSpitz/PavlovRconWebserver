@@ -57,7 +57,7 @@
             </td>
             <td>
                 @match.Status
-                @if (match.Status == Status.OnGoing)
+                @if (match.Status == Status.OnGoing || match.Status == Status.Finshed)
                 {    
                     <a class="btn btn-sm btn-primary" href="@Url.Action("PlayersFromMatches","PublicViewLists",new{ matchIds = new int[1]{match.Id},backgroundColorHex = "#222",fontColorHex = "var(--bs-table-striped-color)" })">View Stats</a>
                 }
