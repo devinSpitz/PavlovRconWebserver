@@ -1,5 +1,7 @@
+@using PavlovRconWebserver.Services
 @model System.Collections.Generic.IEnumerable<PavlovRconWebserver.Models.Match>
 
+@inject MatchService _matchService;
 @{
     ViewBag.Title = "Matches";
     Layout = "_Layout";
@@ -32,6 +34,10 @@
                 <a href="@Url.Action("EditServer", "rconServer", new {serverId = rconServer.Id})"><span>Server &#8505;</span></a> or
                 <a href="@Url.Action("EditServerSelectedMaps", "rconServer", new {serverId = rconServer.Id})"><span>Maps &#128506;</span></a>*@
                 @match.Id
+                @if (await _matchService.CanBedeleted(match.Id))
+                {
+                    <a class="btn btn-sm btn-danger" href="@Url.Action("Delete", new {match.Id})" onclick="return confirm('Are you sure you want to Delete?')"><span class="fas fa-trash-alt"></span></a>
+                }
                 @if (match.Status == Status.Preparing)
                 {
                     <a class="btn btn-sm btn-primary" href="@Url.Action("EditMatch",new{ match.Id })"><span class="fas fa-edit"></span></a>
@@ -51,6 +57,14 @@
             </td>
             <td>
                 @match.Status
+                @if (match.Status == Status.OnGoing)
+                {    
+                    <a class="btn btn-sm btn-primary" href="@Url.Action("PlayersFromMatches","PublicViewLists",new{ matchIds = new int[1]{match.Id},backgroundColorHex = "#222",fontColorHex = "var(--bs-table-striped-color)" })">View Stats</a>
+                }
+                @if (match.Status == Status.Finshed)
+                {    
+                   //for editing <a class="btn btn-sm btn-primary" href="@Url.Action("PlayersFromMatches","PublicViewLists",new{ matchIds = new int[1]{match.Id},backgroundColorHex = "#222",fontColorHex = "var(--bs-table-striped-color)" })"><span class="fas fa-edit"></span> Stats</a>
+                }
             </td>
         </tr>
     }

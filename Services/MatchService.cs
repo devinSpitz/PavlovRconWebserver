@@ -114,8 +114,12 @@ namespace PavlovRconWebserver.Services
             var result = false;
             if (match.Id == 0 || match.Id == null)
             {
-                result = _liteDb.LiteDatabase.GetCollection<Match>("Match")
+                var tmp = _liteDb.LiteDatabase.GetCollection<Match>("Match")
                     .Insert(match);
+                if (tmp > 0)
+                {
+                    result = true;
+                }
             }
             else
             {
@@ -126,9 +130,16 @@ namespace PavlovRconWebserver.Services
             return result;
         }
 
-        public async Task<bool> Delete(string id)
+        public async Task<bool> Delete(int id)
         {
             return _liteDb.LiteDatabase.GetCollection<Match>("Match").Delete(id);
+        }
+        public async Task<bool> CanBedeleted(int id)
+        {
+            var match = await FindOne(id);
+            if (match == null) return false;
+            if (match.Status == Status.OnGoing) return false;
+            return true;
         }
     }
 }

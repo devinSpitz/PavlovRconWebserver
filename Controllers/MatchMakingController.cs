@@ -313,6 +313,17 @@ namespace PavlovRconWebserver.Controllers
             }
             return await PartialViewPerGameMode(gameMode, match);
         }   
+                
+        [HttpGet("[controller]/Delete")]
+        public async Task<IActionResult> Delete(int Id)
+        {
+            if (await _matchService.CanBedeleted(Id))
+            {
+                await _matchService.Delete(Id);
+                return RedirectToAction("Index","MatchMaking");
+            }
+            return RedirectToAction("Index","MatchMaking");
+        }  
         
         [HttpPost("[controller]/PartialViewPerGameMode")]
         public async Task<IActionResult> PartialViewPerGameMode(string gameMode,Match match)

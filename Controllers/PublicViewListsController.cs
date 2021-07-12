@@ -12,22 +12,23 @@ namespace PavlovRconWebserver.Controllers
 {
     public class PublicViewListsController : Controller
     {
-        
-        private readonly PavlovServerPlayerService _pavlovServerPlayerService;
+
+        private readonly PublicViewListsService _publicViewListsService;
         private readonly UserService _userService;
-        private readonly PavlovServerInfoService _pavlovServerInfoService;
         private readonly PavlovServerPlayerHistoryService _pavlovServerPlayerHistoryService;
-        
+        private readonly PavlovServerService _pavlovServerService;
+        private readonly MatchService _matchService;
+        private readonly MapsService _mapsService;
         
         public PublicViewListsController(PavlovServerPlayerHistoryService pavlovServerPlayerHistoryService,
-            UserService userService,
-            PavlovServerInfoService pavlovServerInfoService,
-            PavlovServerPlayerService pavlovServerPlayerService)
+            UserService userService,PavlovServerService pavlovServerService,PublicViewListsService publicViewListsService,MatchService matchService,MapsService mapsService)
         {
-            _pavlovServerInfoService = pavlovServerInfoService;
-            _pavlovServerPlayerService = pavlovServerPlayerService;
             _pavlovServerPlayerHistoryService = pavlovServerPlayerHistoryService;
             _userService = userService;
+            _pavlovServerService = pavlovServerService;
+            _publicViewListsService = publicViewListsService;
+            _matchService = matchService;
+            _mapsService = mapsService;
         }
         
         [HttpGet("[controller]/PlayersFromServers/")]
@@ -37,30 +38,45 @@ namespace PavlovRconWebserver.Controllers
             var result = new List<PavlovServerPlayerListPublicViewModel>();
             foreach (var serverId in servers)
             {
-                
-                var players = await _pavlovServerPlayerService.FindAllFromServer(serverId);
-                var serverInfo = await _pavlovServerInfoService.FindServer(serverId);
-                
-                var model = new PavlovServerPlayerListPublicViewModel()
-                {
-                    ServerInfo = serverInfo,
-                    PlayerList = players.Select(x => new PlayerModelExtended()
-                    {
-                        Cash = x.Cash,
-                        KDA = x.KDA,
-                        Score = x.Score,
-                        TeamId = x.TeamId,
-                        UniqueId = x.UniqueId,
-                        Username = x.Username
-                    }).ToList(),
-                    team0Score = serverInfo.Team0Score,
-                    team1Score = serverInfo.Team1Score
-                };
-                result.Add(model);
+                var server = await _pavlovServerService.FindOne(serverId);
+                if(server==null) continue;
+                if(server.ServerServiceState!=ServerServiceState.active && server.ServerType == ServerType.Community) continue;
+                if(server.ServerType == ServerType.Event) continue;
+                result.Add(await _publicViewListsService.GetPavlovServerPlayerListPublicViewModel(serverId));
             }
             ViewBag.background = backgroundColorHex;
             ViewBag.textColor = fontColorHex;
             return PartialView(result);
+        }
+        
+        [HttpGet("[controller]/PlayersFromMatches/")]
+        // GET
+        public async Task<IActionResult> PlayersFromMatches([FromQuery]int[] matchIds,[FromQuery]string backgroundColorHex,[FromQuery]string fontColorHex)
+        {
+            var result = new List<PavlovServerPlayerListPublicViewModel>();
+            foreach (var matchId in matchIds)
+            {
+                var match = await _matchService.FindOne(matchId);
+                if(match==null) continue;
+                if(match.Status!=Status.OnGoing||match.Status!=Status.Finshed) continue;
+                var map = await _mapsService.FindOne(match.MapId);
+                result.Add(_publicViewListsService.PavlovServerPlayerListPublicViewModel(new PavlovServerInfo
+                {
+                    MapLabel = match.MapId,
+                    MapPictureLink = map.ImageUrl,
+                    GameMode = match.EndInfo.GameMode,
+                    ServerName = match.EndInfo.ServerName,
+                    RoundState = match.EndInfo.RoundState,
+                    PlayerCount = match.EndInfo.PlayerCount,
+                    Teams = match.EndInfo.Teams,
+                    Team0Score = match.EndInfo.Team0Score,
+                    Team1Score = match.EndInfo.Team1Score,
+                    ServerId = match.PavlovServer.Id
+                },match.PlayerResults));
+            }
+            ViewBag.background = backgroundColorHex;
+            ViewBag.textColor = fontColorHex;
+            return PartialView("PlayersFromServers",result);
         }
         
         [HttpGet("[controller]/GetHistoryOfPlayer/{uniqueId}")]

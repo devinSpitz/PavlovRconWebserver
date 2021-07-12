@@ -1,3 +1,4 @@
+@using Microsoft.AspNetCore.Razor.Language.Intermediate
 @model List<PavlovServerPlayerListPublicViewModel>
 
 <style>
@@ -20,6 +21,12 @@
     }
     
 </style>
+@if (!Model.Any())
+{
+    <div class="bg-info">
+        <h1>There is no server available!</h1>
+    </div>
+}
 @foreach (var viewModel in Model)
 {
     <div class="stylePavlovServers">

@@ -11,7 +11,7 @@ function init(){
 
 function duplicateButton(object)
 {
-    debugger;
+  
     let clone = $(object).parent().parent().parent().clone();
     $(object).parent().parent().parent().parent().prepend(clone);
     
@@ -38,10 +38,10 @@ function SaveApiCall(method, serverId, mapId, gameMode, object,Move) {
         data: {serverId: serverId, mapId: mapId, gameMode: gameMode},
         success: function (data) {
             if (method === "Save" && Move) {
-                debugger;
+              
                 $("#DeletecardBodyAppend").append($(object).parent().parent().parent());
             } else if (method === "Delete" && Move) {
-                debugger;
+              
                 $("#SavecardBodyAppend").append($(object).parent().parent().parent());
             }
         },
@@ -77,12 +77,12 @@ function search(searchInput,attr)
         if($(this).attr(attr).toLowerCase().indexOf(searchInput)>=0)
         {
 
-            debugger;
+          
             $(this).parent().show();
         }
         else{
 
-            debugger;
+          
             $(this).parent().hide();
         }
 

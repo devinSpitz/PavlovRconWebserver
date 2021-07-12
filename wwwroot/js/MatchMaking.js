@@ -75,7 +75,7 @@ function PopulateTeamsSteamIdentities(chosenTeam,toId,toremove,first=false)
                 dropdown.append($("<option />").val("-").text("--There are no players--"));
             }
             $(data).each(function (){
-                debugger;
+              
                 dropdown.append($("<option />").val(this.steamIdentity.id).text(this.steamIdentity.name));
             });
 
@@ -198,12 +198,12 @@ function SaveMatch()
         data: {match: match},
         success:  function(data)
         {
-            debugger;
+          
             window.location = "/MatchMaking/";
         },
         error: function(XMLHttpRequest, textStatus, errorThrown)
         {
-            debugger;
+          
             jsonTOHtmlPartialView(JSON.stringify(XMLHttpRequest))
         }
     });
