@@ -2,20 +2,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using PavlovRconWebserver.Exceptions;
-using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
-using PavlovRconWebserver.Services;
 
 namespace PavlovRconWebserver.Services
 {
     public class PublicViewListsService : Controller
     {
-        
-        private readonly PavlovServerPlayerService _pavlovServerPlayerService;
         private readonly PavlovServerInfoService _pavlovServerInfoService;
-        
+
+        private readonly PavlovServerPlayerService _pavlovServerPlayerService;
+
         public PublicViewListsService(
             PavlovServerInfoService pavlovServerInfoService,
             PavlovServerPlayerService pavlovServerPlayerService)
@@ -23,7 +19,6 @@ namespace PavlovRconWebserver.Services
             _pavlovServerInfoService = pavlovServerInfoService;
             _pavlovServerPlayerService = pavlovServerPlayerService;
         }
-        
 
 
         public async Task<PavlovServerPlayerListPublicViewModel> GetPavlovServerPlayerListPublicViewModel(int serverId)
@@ -37,10 +32,10 @@ namespace PavlovRconWebserver.Services
         public PavlovServerPlayerListPublicViewModel PavlovServerPlayerListPublicViewModel(PavlovServerInfo serverInfo,
             IEnumerable<PavlovServerPlayer> players)
         {
-            var model = new PavlovServerPlayerListPublicViewModel()
+            var model = new PavlovServerPlayerListPublicViewModel
             {
                 ServerInfo = serverInfo,
-                PlayerList = players.Select(x => new PlayerModelExtended()
+                PlayerList = players.Select(x => new PlayerModelExtended
                 {
                     Cash = x.Cash,
                     KDA = x.KDA,
@@ -55,6 +50,4 @@ namespace PavlovRconWebserver.Services
             return model;
         }
     }
-    
-
 }

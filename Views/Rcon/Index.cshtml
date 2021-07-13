@@ -8,33 +8,18 @@
     var server = ViewBag.Servers;
     ViewData["Title"] = "Commands";
 }
+
 @section Scripts{
     <script>
-    let PlayerCommands = jQuery.parseJSON('@Html.Raw(@JsonConvert.SerializeObject(Model.PlayerCommands))');
-    let TwoValueCommands = jQuery.parseJSON('@Html.Raw(@JsonConvert.SerializeObject(Model.TwoValueCommands))');
-    let serverBanModel = jQuery.parseJSON('@Html.Raw(@JsonConvert.SerializeObject(new ServerBans()))');
-    @if (Model.MultiRcon)
-    {  
-        <text>
-        let MultiRcon = true;  
-        </text>
-    }else{
-        <text>
-        let MultiRcon = false;  
-        </text>
-    }
+    let PlayerCommands = jQuery.parseJSON('@Html.Raw(JsonConvert.SerializeObject(Model.PlayerCommands))');
+    let TwoValueCommands = jQuery.parseJSON('@Html.Raw(JsonConvert.SerializeObject(Model.TwoValueCommands))');
+    let serverBanModel = jQuery.parseJSON('@Html.Raw(JsonConvert.SerializeObject(new ServerBans()))');
     </script>
 }
 
-@Html.LabelFor(x=>x.SingleServer)
-@if (Model.MultiRcon)
-{
-    @Html.ListBoxFor(m => m.SingleServer, new MultiSelectList(server,"Id","Name",Model.SingleServer), new { @class = "form-control form-control-sm" })
-}
-else
-{
-    @Html.DropDownListFor(m => m.SingleServer, new SelectList(server,"Id","Name",Model.SingleServer), new { @class = "form-control form-control-sm form-select " })
-}
+@Html.LabelFor(x => x.SingleServer)
+@Html.DropDownListFor(m => m.SingleServer, new SelectList(server, "Id", "Name", Model.SingleServer), new {@class = "form-control form-control-sm form-select "})
+
 
 <br>
 <div class="card m-1 ">
@@ -43,49 +28,50 @@ else
     </div>
     <div class="card-body">
         <div class="row">
-                @if (commandsAllow.Contains("ServerInfo"))
-                {
-                    <button type="button" class="center-block btn btn-primary btn-responsive col-sm-3 m-1" onclick="sendSingleCommand('ServerInfo')">ServerInfo</button>
-                }<div class="col-sm-1"></div>
-                @if (commandsAllow.Contains("ResetSND"))
-                {
-                    <button type="button" class="center-block btn btn-primary btn-responsive  col-sm-3 m-1" onclick="sendSingleCommand('ResetSND')">ResetSND</button>
-                }<div class="col-sm-1"></div>
-                @if (commandsAllow.Contains("RotateMap"))
-                {
-                    <button type="button" class="center-block btn btn-primary btn-responsive  col-sm-3 m-1" onclick="sendSingleCommand('RotateMap')">RotateMap</button>
-                }
+            @if (commandsAllow.Contains("ServerInfo"))
+            {
+                <button type="button" class="center-block btn btn-primary btn-responsive col-sm-3 m-1" onclick="sendSingleCommand('ServerInfo')">ServerInfo</button>
+            }
+            <div class="col-sm-1"></div>
+            @if (commandsAllow.Contains("ResetSND"))
+            {
+                <button type="button" class="center-block btn btn-primary btn-responsive  col-sm-3 m-1" onclick="sendSingleCommand('ResetSND')">ResetSND</button>
+            }
+            <div class="col-sm-1"></div>
+            @if (commandsAllow.Contains("RotateMap"))
+            {
+                <button type="button" class="center-block btn btn-primary btn-responsive  col-sm-3 m-1" onclick="sendSingleCommand('RotateMap')">RotateMap</button>
+            }
         </div>
-            <div class="row">
-                <button type="button" class="center-block btn btn-primary btn-responsive col-sm-3 m-1" onclick="BanMenu()">Ban Menu</button>
-                <div class="col-sm-1"></div>
-                @if (commandsAllow.Contains("Blacklist"))
-                {
-                    <button type="button" class="center-block btn btn-primary btn-responsive col-sm-3 m-1" onclick="sendSingleCommand('Blacklist')">InMemory Blacklist</button>
-                }
-            </div>
-        
+        <div class="row">
+            <button type="button" class="center-block btn btn-primary btn-responsive col-sm-3 m-1" onclick="BanMenu()">Ban Menu</button>
+            <div class="col-sm-1"></div>
+            @if (commandsAllow.Contains("Blacklist"))
+            {
+                <button type="button" class="center-block btn btn-primary btn-responsive col-sm-3 m-1" onclick="sendSingleCommand('Blacklist')">InMemory Blacklist</button>
+            }
+        </div>
+
         @*// Buttons*@
     </div>
 </div>
 
 
 @* PlayerList *@
-    <div class="card m-1 ">
-        <div class="card-header">
-            Player List *
-            <button type="button" class="btn btn-primary btn-group" onclick="UpdatePlayerList()">Update</button>
-        </div>
-        <div class="card-body" id="PlayerListBig" style="overflow: overlay;">
-            @* Gets autopopulated *@
-            
-        </div>
+<div class="card m-1 ">
+    <div class="card-header">
+        Player List *
+        <button type="button" class="btn btn-primary btn-group" onclick="UpdatePlayerList()">Update</button>
     </div>
-     
+    <div class="card-body" id="PlayerListBig" style="overflow: overlay;">
+        @* Gets autopopulated *@
 
-@if (!Model.MultiRcon && playerCommands.Count > 0)
+    </div>
+</div>
+
+
+@if (playerCommands.Count > 0)
 {
-   
     <div class="card m-1 ">
         <div class="card-header">
             Player/Server Actions *
@@ -94,13 +80,13 @@ else
         <div class="card-body" id="PlayerAction">
             <div class="row">
                 <div class="col-sm-4">
-                    @Html.LabelFor(x=>x.Players)
-                    @Html.DropDownListFor(m => m.Players, new SelectList(Model.Players,"Name","SteamId",Model.PlayersSelected), new { @class = "form-control form-control-sm form-select ", size = 10 })
+                    @Html.LabelFor(x => x.Players)
+                    @Html.DropDownListFor(m => m.Players, new SelectList(Model.Players, "Name", "SteamId", Model.PlayersSelected), new {@class = "form-control form-control-sm form-select ", size = 10})
                 </div>
                 <div class="col-sm-4">
                     <div class="tooltipHover">
-                    @Html.LabelFor(x => x.PlayerCommands)
-                    <span class="tooltiptext">Server comamnds doesn't need a selected player</span>
+                        @Html.LabelFor(x => x.PlayerCommands)
+                        <span class="tooltiptext">Server comamnds doesn't need a selected player</span>
                     </div>
                     @Html.DropDownListFor(m => playerCommands, new SelectList(playerCommands, "Name", "Name", playerCommands, "Group"), new {@class = "form-control form-control-sm form-select "})
                 </div>
@@ -114,7 +100,6 @@ else
             </div>
         </div>
     </div>
-     
 }
 @{
     //Give Team Cach // switch Map
@@ -145,7 +130,6 @@ else
             </div>
         </div>
     </div>
- 
 }
 * Updates every 30 secs automaticly
 <style>

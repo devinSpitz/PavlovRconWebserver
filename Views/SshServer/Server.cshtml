@@ -1,4 +1,3 @@
-
 @model SshServer
 
 @{
@@ -24,16 +23,15 @@
 </div>
 
 
-
 <form asp-controller="SshServer" asp-action="SaveServer" method="post">
     <div asp-validation-summary="All" class="text-danger"></div>
     <div class="col-md-11">
         <div class="card m-1 m-1">
             <div class="card-header">Main server settings</div>
             <div class="card-body">
-                
-            <input asp-for="Id" class="form-control" value="@Model.Id" type="hidden"/>
-            <span asp-validation-for="Id" class="text-danger"></span>  
+
+                <input asp-for="Id" class="form-control" value="@Model.Id" type="hidden"/>
+                <span asp-validation-for="Id" class="text-danger"></span>
                 <div class="form-group col-md-12">
                     <label asp-for="Name"></label>
                     <input asp-for="Name" class="form-control" value="@Model.Name"/>
@@ -61,7 +59,7 @@
                         <span asp-validation-for="SshUsername" class="text-danger"></span>
                     </div>
                 </div>
-                
+
                 <div class="row">
                     <div class="form-group col-md-6">
                         <label asp-for="SshPassword"></label>
@@ -80,7 +78,7 @@
                         <span asp-validation-for="SshKeyFileName" class="text-danger"></span>
                     </div>
                 </div>
-                
+
                 <div class="row">
                     <div class="form-group col-md-6">
                         <label asp-for="SshPassphrase"></label>
@@ -91,13 +89,13 @@
                         <span asp-validation-for="SshPassphrase" class="text-danger"></span>
                     </div>
                 </div>
-                
+
             </div>
         </div>
-    
+
         <div class="saveButton col-md-1 mt-3">
             <button type="submit" class="btn btn-success col-md-12">Save</button>
         </div>
-</div>
+    </div>
 
 </form>

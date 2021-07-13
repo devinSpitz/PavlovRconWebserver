@@ -8,9 +8,7 @@ namespace PavlovRconWebserver.Models
         public string Name { get; set; } = "";
         public string Author { get; set; } = "";
         public string ImageUrl { get; set; } = "";
-        [NotMapped]
-        public int sort { get; set; } = 0;
 
-
+        [NotMapped] public int sort { get; set; } = 0;
     }
 }

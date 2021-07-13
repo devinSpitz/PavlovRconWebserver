@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using PavlovRconWebserver.Extensions;
 
 namespace PavlovRconWebserver.Models
@@ -10,197 +9,197 @@ namespace PavlovRconWebserver.Models
     {
         public RconViewModel()
         {
-            SpecialCommands = new List<Command>()
+            SpecialCommands = new List<Command>
             {
-                new Command()
+                new Command
                 {
-                    Name  = "ServerInfo",
+                    Name = "ServerInfo",
                     InputValue = false,
                     MinRole = "User"
                 },
-                new Command()
+                new Command
                 {
-                    Name  = "RefreshList",
+                    Name = "RefreshList",
                     InputValue = false,
                     MinRole = "User"
                 },
-                new Command()
+                new Command
                 {
-                    Name  = "ResetSND",
+                    Name = "ResetSND",
                     InputValue = false,
                     MinRole = "Captain"
                 },
-                new Command()
+                new Command
                 {
-                    Name  = "Blacklist",
+                    Name = "Blacklist",
                     InputValue = false,
                     MinRole = "Captain"
                 },
-                new Command()
+                new Command
                 {
-                    Name  = "RotateMap",
+                    Name = "RotateMap",
                     InputValue = false,
                     MinRole = "Captain"
                 }
-
             };
-            PlayerCommands = new List<Command>()
+            PlayerCommands = new List<Command>
             {
-                new Command()
+                new Command
                 {
-                  Name  = "Ban",
-                  InputValue = true,
-                  MinRole = "Mod",
-                  Group = "Player commands",
-                  valuesOptions = new List<string>()
-                  {
-                    "unlimited", "5min", "10min", "30min", "1h", "3h", "6h", "12h", "24h", "48h"
-                  },
-                },new Command()
-                {
-                    Name  = "Unban",
-                    InputValue = false,
+                    Name = "Ban",
+                    InputValue = true,
                     MinRole = "Mod",
-                    Group = "Player commands"
-                },new Command()
+                    Group = "Player commands",
+                    valuesOptions = new List<string>
+                    {
+                        "unlimited", "5min", "10min", "30min", "1h", "3h", "6h", "12h", "24h", "48h"
+                    }
+                },
+                new Command
                 {
-                    Name  = "Kill",
+                    Name = "Unban",
                     InputValue = false,
                     MinRole = "Mod",
                     Group = "Player commands"
                 },
-                new Command()
+                new Command
                 {
-                    Name  = "Kick",
+                    Name = "Kill",
                     InputValue = false,
                     MinRole = "Mod",
                     Group = "Player commands"
                 },
-                new Command()
+                new Command
                 {
-                    Name  = "AddMod",
+                    Name = "Kick",
                     InputValue = false,
                     MinRole = "Mod",
                     Group = "Player commands"
                 },
-                new Command()
+                new Command
                 {
-                    Name  = "RemoveMod",
+                    Name = "AddMod",
                     InputValue = false,
                     MinRole = "Mod",
                     Group = "Player commands"
                 },
-                new Command()
+                new Command
                 {
-                    Name  = "InspectPlayer",
+                    Name = "RemoveMod",
+                    InputValue = false,
+                    MinRole = "Mod",
+                    Group = "Player commands"
+                },
+                new Command
+                {
+                    Name = "InspectPlayer",
                     InputValue = false,
                     MinRole = "User",
                     Group = "Player commands"
                 },
-                new Command()
+                new Command
                 {
-                    Name  = "SwitchTeam",
+                    Name = "SwitchTeam",
                     InputValue = true,
-                    valuesOptions = new List<string>()
+                    valuesOptions = new List<string>
                     {
                         "0", "1"
                     },
                     MinRole = "Captain",
                     Group = "Player commands"
                 },
-                new Command()
+                new Command
                 {
-                    Name  = "GiveItem",
+                    Name = "GiveItem",
                     InputValue = true,
                     PartialViewName = "ItemView",
                     MinRole = "Admin",
                     Group = "Player commands"
-                    
                 },
-                new Command()
+                new Command
                 {
-                    Name  = "SetPlayerSkin",
+                    Name = "SetPlayerSkin",
                     InputValue = true,
                     valuesOptions = Statics.Models.ToList(),
                     MinRole = "Admin",
                     Group = "Player commands"
                 },
-                new Command()
+                new Command
                 {
-                    Name  = "GiveCash",
+                    Name = "GiveCash",
                     InputValue = true,
-                    valuesOptions = new List<string>()
+                    valuesOptions = new List<string>
                     {
                         "500", "1000", "1500", "2000", "5000", "10000", "20000"
                     },
                     MinRole = "Admin",
                     Group = "Player commands"
                 },
-                new Command()
+                new Command
                 {
-                    Name  = "SetLimitedAmmoType",
+                    Name = "SetLimitedAmmoType",
                     InputValue = true,
-                    valuesOptions = new List<string>()
+                    valuesOptions = new List<string>
                     {
-                        "0","1","2"
+                        "0", "1", "2"
                     },
                     MinRole = "Admin",
                     Group = "Server commands"
                 },
-                new Command()
+                new Command
                 {
-                    Name  = "ItemList",
+                    Name = "ItemList",
                     InputValue = false,
                     MinRole = "Mod",
                     Group = "Server commands"
                 }
             };
-            TwoValueCommands = new List<ExtendedCommand>()
+            TwoValueCommands = new List<ExtendedCommand>
             {
-                new ExtendedCommand()
+                new ExtendedCommand
                 {
-                    Name  = "GiveTeamCash",
+                    Name = "GiveTeamCash",
                     InputValue = true,
                     InputValueTwo = true,
-                    valuesOptions = new List<string>()
+                    valuesOptions = new List<string>
                     {
                         "0", "1"
                     },
-                    valuesTwoOptions = new List<string>()
+                    valuesTwoOptions = new List<string>
                     {
                         "500", "1000", "1500", "2000", "5000", "10000", "20000"
                     },
                     MinRole = "Admin"
                 },
-                new ExtendedCommand()
+                new ExtendedCommand
                 {
-                    Name  = "SwitchMap",
+                    Name = "SwitchMap",
                     InputValue = true,
                     InputValueTwo = true,
                     valuesTwoOptions = GameModes.ModesString.ToList(),
-                    PartialViewName = "https://steamcommunity.com/workshop/browse/?appid=555160&browsesort=trend&section=readytouseitems&actualsort=trend&p=1&numperpage=30",
+                    PartialViewName =
+                        "https://steamcommunity.com/workshop/browse/?appid=555160&browsesort=trend&section=readytouseitems&actualsort=trend&p=1&numperpage=30",
                     MinRole = "Captain"
                 }
             };
         }
-        
+
         [DisplayName("Select the server you wanna execute the commands:")]
         public List<PavlovServer> SingleServer { get; set; }
+
         public string Command { get; set; }
-        public bool MultiRcon = false;
         public List<PlayerModel> Players { get; set; } = new List<PlayerModel>();
         public List<PlayerModel> PlayersSelected { get; set; } = new List<PlayerModel>();
 
         [DisplayName("Server/Player commands")]
         public List<Command> PlayerCommands { get; } = new List<Command>();
+
         public List<Command> SpecialCommands { get; } = new List<Command>();
         public List<ExtendedCommand> TwoValueCommands { get; } = new List<ExtendedCommand>();
-        
-        [DisplayName("Value")]
-        public string PlayerValue { get; set; }
-        
-        [DisplayName("SecondValue")]
-        public string PlayerValueTwo { get; set; }
+
+        [DisplayName("Value")] public string PlayerValue { get; set; }
+
+        [DisplayName("SecondValue")] public string PlayerValueTwo { get; set; }
     }
 
     public class PlayerListClass
@@ -208,6 +207,7 @@ namespace PavlovRconWebserver.Models
         public List<PlayerModel> PlayerList { get; set; }
         public List<PlayerModelExtended> PlayerListExtended { get; set; } = new List<PlayerModelExtended>();
     }
+
     public class PlayerModel
     {
         public string Username { get; set; }
@@ -218,6 +218,7 @@ namespace PavlovRconWebserver.Models
     {
         public PlayerModelExtended PlayerInfo = new PlayerModelExtended();
     }
+
     public class PlayerModelExtended : PlayerModel
     {
         public string PlayerName { get; set; } = "";
@@ -236,6 +237,7 @@ namespace PavlovRconWebserver.Models
             if (tmp?.Length != 3) return "0";
             return tmp[0];
         }
+
         public string getDeaths()
         {
             if (Deaths != 0) return Deaths.ToString();
@@ -243,39 +245,37 @@ namespace PavlovRconWebserver.Models
             if (tmp?.Length != 3) return "0";
             return tmp[1];
         }
+
         public string getAssists()
         {
             if (Assists != 0) return Assists.ToString();
-            var tmp = KDA?.Split("/");;
+            var tmp = KDA?.Split("/");
+            ;
             if (tmp?.Length != 3) return "0";
             return tmp[2];
         }
-        
     }
-    
+
     public class Command
     {
         public string Name { get; set; }
-        
-        [DisplayName("Amoint/ItemId/etc.")]
-        public bool InputValue { get; set; }
+
+        [DisplayName("Amoint/ItemId/etc.")] public bool InputValue { get; set; }
 
         public List<string> valuesOptions { get; set; } = new List<string>();
         public string PartialViewName { get; set; }
-        
+
         public string MinRole { get; set; }
 
         public string Group { get; set; }
     }
-    
-    public class ExtendedCommand: Command
+
+    public class ExtendedCommand : Command
     {
-        [DisplayName("Team/MapId")]
-        public new bool InputValue { get; set; }
-        
-        [DisplayName("Amount/GameMode")]
-        public bool InputValueTwo { get; set; }
-        
+        [DisplayName("Team/MapId")] public new bool InputValue { get; set; }
+
+        [DisplayName("Amount/GameMode")] public bool InputValueTwo { get; set; }
+
         public List<string> valuesTwoOptions { get; set; } = new List<string>();
     }
 }

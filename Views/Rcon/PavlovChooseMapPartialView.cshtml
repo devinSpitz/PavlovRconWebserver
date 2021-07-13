@@ -15,17 +15,17 @@
                 </button>
             </div>
             <div class="modal-body">
-                <div class='search row' style="margin-bottom: 15px;padding-bottom: 15px;">
-                    <input  class="col-sm-6" id='searchAuthor' type="text" placeholder='Search for authors' name="search"> 
-                    <input class="col-sm-6" id='searchName' type="text" placeholder='Search for map name' name="search"> 
+                <div class="search row" style="margin-bottom: 15px;padding-bottom: 15px;">
+                    <input class="col-sm-6" id="searchAuthor" type="text" placeholder="Search for authors" name="search">
+                    <input class="col-sm-6" id="searchName" type="text" placeholder="Search for map name" name="search">
                 </div>
                 @Html.Raw("<div class='row'>")
-                @foreach (var map in @Model)
+                @foreach (var map in Model)
                 {
                     <div class="col-sm-6">
                         <div class="card m-1  mapcard" data-Author="@map.Author" data-Name="@map.Name">
                             <div class="card-header">
-                                @map.Id 
+                                @map.Id
                                 @if (map.sort == 1)
                                 {
                                     @Html.Raw("<span class='fas fa-star'></span>")
@@ -41,14 +41,18 @@
                                     <b>@map.Name</b>
                                 }
                                 <br>
-                                <button data-bs-dismiss="modal" onclick="setMap('@map.Id')"><img style="width: 200px;height: 200px" src="@map.ImageUrl"></button>
-                                @if (@map.Author?.Length > maxLength)
+                                <button data-bs-dismiss="modal" onclick="setMap('@map.Id')">
+                                    <img style="width: 200px;height: 200px" src="@map.ImageUrl">
+                                </button>
+                                @if (map.Author?.Length > maxLength)
                                 {
-                                    <br><b>by @map.Author.Substring(0, maxLength) ...</b>
+                                    <br>
+                                    <b>by @map.Author.Substring(0, maxLength) ...</b>
                                 }
                                 else
                                 {
-                                    <br><b>by @map.Author</b>
+                                    <br>
+                                    <b>by @map.Author</b>
                                 }
                             </div>
                         </div>

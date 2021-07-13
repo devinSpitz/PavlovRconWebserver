@@ -1,4 +1,3 @@
-
 @model PavlovServerViewModel
 
 @{
@@ -22,15 +21,13 @@
 </div>
 
 
-
-
 <form asp-controller="PavlovServer" asp-action="SaveServer" method="post">
     <div asp-validation-summary="All" class="text-danger"></div>
 
     <input asp-for="Id" class="form-control" value="@Model.Id" type="hidden"/>
-    <span asp-validation-for="Id" class="text-danger"></span>  
-        <input asp-for="sshServerId" class="form-control" value="@Model.sshServerId" type="hidden"/>
-        <span asp-validation-for="sshServerId" class="text-danger"></span>  
+    <span asp-validation-for="Id" class="text-danger"></span>
+    <input asp-for="sshServerId" class="form-control" value="@Model.sshServerId" type="hidden"/>
+    <span asp-validation-for="sshServerId" class="text-danger"></span>
     <div class="row">
         <div class="form-group col-md-12">
             <label asp-for="Name"></label>
@@ -52,7 +49,7 @@
             </p>
             <span asp-validation-for="TelnetPassword" class="text-danger"></span>
         </div>
-            
+
         <div class="form-group col-md-3">
             <label asp-for="ServerType"></label>
             <select asp-for="ServerType" asp-items="Html.GetEnumSelectList<ServerType>()" class="form-control form-control-sm"></select>
@@ -69,24 +66,24 @@
             <label asp-for="ServerFolderPath"></label>
             <input asp-for="ServerFolderPath" class="form-control" value="@Model.ServerFolderPath"/>
             <span asp-validation-for="ServerFolderPath" class="text-danger"></span>
-        </div>    
-        </div>    
+        </div>
+    </div>
     <div class="row">
         <div class="form-group col-sm-3">
             <label asp-for="DeletAfter"></label>
             <input asp-for="DeletAfter" class="form-control" value="@Model.DeletAfter"/>
             <span asp-validation-for="DeletAfter" class="text-danger"></span>
-        </div> 
+        </div>
         <div class="form-group col-sm-3">
             <label asp-for="ServerSystemdServiceName"></label>
             <input asp-for="ServerSystemdServiceName" class="form-control" value="@Model.ServerSystemdServiceName"/>
             <span asp-validation-for="ServerSystemdServiceName" class="text-danger"></span>
-        </div>  
-    </div>  
-<div class="row">
-    <div class="saveButton col-md-1 mt-3">
-            <button type="submit" class="btn btn-success col-md-12">Save</button>
+        </div>
     </div>
-</div>
+    <div class="row">
+        <div class="saveButton col-md-1 mt-3">
+            <button type="submit" class="btn btn-success col-md-12">Save</button>
+        </div>
+    </div>
 
 </form>

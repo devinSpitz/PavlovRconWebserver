@@ -1,5 +1,5 @@
-﻿@using Microsoft.AspNetCore.Identity
-@using LiteDB.Identity.Models
+﻿@using LiteDB.Identity.Models
+@using Microsoft.AspNetCore.Identity
 @inject SignInManager<LiteDbUser> SignInManager
 @{
     var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
@@ -13,8 +13,8 @@
         <a class="btn btn-primary m-1" asp-action="ChangePassword">Password</a>
     </li>
     <li class="@ManageNavPages.SteamIdentityNavClass(ViewContext)">
-        <a class="btn btn-primary m-1"  asp-controller="Team" asp-action="EditOwnSteamIdentity">EditSteamIdentity</a>
-    </li> 
+        <a class="btn btn-primary m-1" asp-controller="Team" asp-action="EditOwnSteamIdentity">EditSteamIdentity</a>
+    </li>
     @if (hasExternalLogins)
     {
         <li class="@ManageNavPages.ExternalLoginsNavClass(ViewContext)">
@@ -25,4 +25,3 @@
     @*     <a asp-action="TwoFactorAuthentication">Two-factor authentication</a> *@
     @* </li> *@
 </ul>
-

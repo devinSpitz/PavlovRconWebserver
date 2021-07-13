@@ -35,25 +35,22 @@
                         </table>
                     </div>
                 </div>
-                @if (await UserManager.IsInRoleAsync(await UserManager.GetUserAsync(User), "Mod")||await UserManager.IsInRoleAsync(await UserManager.GetUserAsync(User), "Admin"))
-                {
-                    <br>
-                    <div class="card m-1 ">
-                        <div class="card-header">Unban SteamId</div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-sm-6">
-                                    <input name="UnbanSteamId" id="UnbanSteamId" class="form-control" placeholder="76561197960287930">
-                                </div>
-                                <div class="col-sm-3">
-                                </div>
-                                <div class="col-sm-3">
-                                    <Button alt="Remove ban" class="btn-success" onclick="RemoveBannedPlayer($('#UnbanSteamId').val())">Unban</Button>
-                                </div>
+                <br>
+                <div class="card m-1 ">
+                    <div class="card-header">Unban SteamId</div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <input name="UnbanSteamId" id="UnbanSteamId" class="form-control" placeholder="76561197960287930">
+                            </div>
+                            <div class="col-sm-3">
+                            </div>
+                            <div class="col-sm-3">
+                                <Button alt="Remove ban" class="btn-success" onclick="RemoveBannedPlayer($('#UnbanSteamId').val())">Unban</Button>
                             </div>
                         </div>
                     </div>
-                }
+                </div>
 
             </div>
         </div>

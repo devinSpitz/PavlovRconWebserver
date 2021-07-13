@@ -1,8 +1,8 @@
-@using Newtonsoft.Json.Linq
 @using Newtonsoft.Json
+@using Newtonsoft.Json.Linq
 @model string
 @{
-    JArray jsonAsArray = JsonConvert.DeserializeObject(Model) as JArray;
+    var jsonAsArray = JsonConvert.DeserializeObject(Model) as JArray;
 
     var classes = jsonAsArray
         .OfType<JObject>()
@@ -14,54 +14,51 @@
 
 <table class="table">
     <thead>
-        <tr>
-            @{
-                var anyClass = classes.FirstOrDefault();
-                if (anyClass != null)
+    <tr>
+        @{
+            var anyClass = classes.FirstOrDefault();
+            if (anyClass != null)
+            {
+                var properties = anyClass.Properties().Select(x => x.Name).ToList();
+                foreach (var property in properties)
                 {
-                    var properties = anyClass.Properties().Select(x => x.Name).ToList();
-                    foreach (var property in properties)
-                    {
-                        <th>@property</th>
-                    }
-                }
-                else
-                {
-                    <th>Data</th>
+                    <th>@property</th>
                 }
             }
-        </tr>
+            else
+            {
+                <th>Data</th>
+            }
+        }
+    </tr>
     </thead>
     <tbody>
-        @foreach (JObject item in classes)
+    @foreach (var item in classes)
+    {
+        await Html.RenderPartialAsync("JsonToHtmlSinglelevelChildPartialViewcshtml.cshtml", item);
+    }
+    @foreach (JValue item in nonClasses)
+    {
+        try
         {
-            
-            await Html.RenderPartialAsync("JsonToHtmlSinglelevelChildPartialViewcshtml.cshtml", item);
-            
-        }
-        @foreach (JValue item in nonClasses)
-        {
-            try
+            var tmp = JsonConvert.DeserializeObject(item.Value.ToString());
+            if (tmp != null)
             {
-                var tmp = JsonConvert.DeserializeObject(item.Value.ToString());
-                if (tmp != null)
-                {
-                    await Html.RenderPartialAsync("JsonToHtmlSinglelevelChildPartialViewcshtml.cshtml", tmp);
-                }
-                else
-                {
-                    <tr>
-                        <td>@item.Value</td>
-                    </tr>
-                }
+                await Html.RenderPartialAsync("JsonToHtmlSinglelevelChildPartialViewcshtml.cshtml", tmp);
             }
-            catch (Exception e)
+            else
             {
                 <tr>
                     <td>@item.Value</td>
                 </tr>
             }
-               
         }
+        catch (Exception)
+        {
+            <tr>
+                <td>@item.Value</td>
+            </tr>
+        }
+    }
     </tbody>
 </table>

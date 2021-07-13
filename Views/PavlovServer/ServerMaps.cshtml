@@ -6,7 +6,6 @@
     Layout = "_Layout";
     var maxLength = 20;
     var gameModes = GameModes.ModesString;
-    var count = 0;
 }
 <style>
     .bigFont{
@@ -25,18 +24,18 @@
 
 <div class="row">
     <div class="col-sm-6" id="Save">
-        <div class="card m-1 " >
+        <div class="card m-1 ">
             <div class="card-header">
                 Select the maps you wanne play on the server
             </div>
             <div class="card-body" id="SavecardBody">
-                <div class='search row' style="margin-bottom: 15px;padding-bottom: 15px;">
-                    <input  class="col-sm-6" id='searchAuthor' type="text" placeholder='Search for authors' name="search"> 
-                    <input class="col-sm-6" id='searchName' type="text" placeholder='Search for map name' name="search"> 
+                <div class="search row" style="margin-bottom: 15px;padding-bottom: 15px;">
+                    <input class="col-sm-6" id="searchAuthor" type="text" placeholder="Search for authors" name="search">
+                    <input class="col-sm-6" id="searchName" type="text" placeholder="Search for map name" name="search">
                 </div>
-                
+
                 @Html.Raw("<div class='row' id='SavecardBodyAppend'>")
-                @foreach (var map in @Model.AllMaps)
+                @foreach (var map in Model.AllMaps)
                 {
                     var selectedMap = Model.SelectedMaps.FirstOrDefault(x => x.Map?.Id == map.Id);
                     if (selectedMap != null)
@@ -51,7 +50,7 @@
                             </div>
                             <div class="card-body">
                                 <input class="mapId" value="@map.Id" type="hidden"/>
-                                @if (@map.Name?.Length > maxLength)
+                                @if (map.Name?.Length > maxLength)
                                 {
                                     <b>@map.Name.Substring(0, maxLength) ...</b>
                                 }
@@ -60,36 +59,39 @@
                                     <b>@map.Name</b>
                                 }
                                 <br>
-                                <button onclick="ChangeMap('@map.Id',this,$(this).parent().find('.gameMode').val())"><img class="card-img-top" src="@map.ImageUrl"></button>
-                                @if (@map.Author?.Length > maxLength)
+                                <button onclick="ChangeMap('@map.Id',this,$(this).parent().find('.gameMode').val())">
+                                    <img class="card-img-top" src="@map.ImageUrl">
+                                </button>
+                                @if (map.Author?.Length > maxLength)
                                 {
-                                    <br><b>by @map.Author.Substring(0, maxLength) ...</b>
+                                    <br>
+                                    <b>by @map.Author.Substring(0, maxLength) ...</b>
                                 }
                                 else
                                 {
-                                    <br><b>by @map.Author</b>
+                                    <br>
+                                    <b>by @map.Author</b>
                                 }
-                            
-                                @Html.DropDownList("TDM", new SelectList(gameModes,"TDM"), new { @class = "gameMode form-control form-control-sm form-select ", @onchange = "ChangeMap($(this).parent().find('.mapId').val(),this,$(this).parent().find('.gameMode').val(),true)" })
+
+                                @Html.DropDownList("TDM", new SelectList(gameModes, "TDM"), new {@class = "gameMode form-control form-control-sm form-select ", onchange = "ChangeMap($(this).parent().find('.mapId').val(),this,$(this).parent().find('.gameMode').val(),true)"})
 
                             </div>
                         </div>
                     </div>
-                    
                 }
                 @Html.Raw("</div>")
             </div>
         </div>
     </div>
     <div class="col-sm-6" id="Delete">
-        <div class="card m-1 " >
+        <div class="card m-1 ">
             <div class="card-header">
                 Here are all selected maps for the server
             </div>
             <div class="card-body" id="DeletecardBody">
-                
+
                 @Html.Raw("<div class='row' id='DeletecardBodyAppend'>")
-                @foreach (var map in @Model.SelectedMaps)
+                @foreach (var map in Model.SelectedMaps)
                 {
                     map.Map = Model.AllMaps.FirstOrDefault(x => x.Id == map.Map?.Id);
                     if (map.Map == null)
@@ -109,7 +111,7 @@
                             </div>
                             <div class="card-body">
                                 <input class="mapId" value="@map.Map.Id" type="hidden"/>
-                                @if (@map.Map.Name?.Length > maxLength)
+                                @if (map.Map.Name?.Length > maxLength)
                                 {
                                     <b>@map.Map.Name.Substring(0, maxLength) ...</b>
                                 }
@@ -118,23 +120,26 @@
                                     <b>@map.Map.Name</b>
                                 }
                                 <br>
-                                <button onclick="ChangeMap('@map.Map.Id',this,$(this).parent().find('.gameMode').val())"><img class="card-img-top" src="@map.Map.ImageUrl"></button>
-                                @if (@map.Map.Author?.Length > maxLength)
+                                <button onclick="ChangeMap('@map.Map.Id',this,$(this).parent().find('.gameMode').val())">
+                                    <img class="card-img-top" src="@map.Map.ImageUrl">
+                                </button>
+                                @if (map.Map.Author?.Length > maxLength)
                                 {
-                                    <br><b>by @map.Map.Author.Substring(0, maxLength) ...</b>
+                                    <br>
+                                    <b>by @map.Map.Author.Substring(0, maxLength) ...</b>
                                 }
                                 else
                                 {
-                                    <br><b>by @map.Map.Author</b>
+                                    <br>
+                                    <b>by @map.Map.Author</b>
                                 }
-                                @Html.DropDownList(map.GameMode, new SelectList(gameModes, map.GameMode), new {@class = "gameMode form-control form-control-sm form-select ", @onchange = "ChangeMap($(this).parent().find('.mapId').val(),this,$(this).parent().find('.gameMode').val(),true)"})
+                                @Html.DropDownList(map.GameMode, new SelectList(gameModes, map.GameMode), new {@class = "gameMode form-control form-control-sm form-select ", onchange = "ChangeMap($(this).parent().find('.mapId').val(),this,$(this).parent().find('.gameMode').val(),true)"})
 
                             </div>
                         </div>
                     </div>
-                    
                 }
-                
+
                 @Html.Raw("</div>")
             </div>
         </div>

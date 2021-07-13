@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
-using Hangfire.Annotations;
 using LiteDB;
 
 namespace PavlovRconWebserver.Models
@@ -11,7 +10,7 @@ namespace PavlovRconWebserver.Models
         Preparing = 1,
         StartetWaitingForPlayer = 2,
         OnGoing = 3,
-        Finshed= 4
+        Finshed = 4
     }
 
     public class Match
@@ -19,8 +18,7 @@ namespace PavlovRconWebserver.Models
         public int Id { get; set; }
         public string Name { get; set; }
 
-        [DisplayName("Map")] 
-        public string MapId { get; set; }
+        [DisplayName("Map")] public string MapId { get; set; }
 
         public string GameMode { get; set; }
         public bool ForceStart { get; set; } = false;
@@ -32,28 +30,60 @@ namespace PavlovRconWebserver.Models
         public Team Team0 { get; set; }
         public Team Team1 { get; set; }
 
-        
-        [BsonIgnore][NotMapped]
+
+        [BsonIgnore]
+        [NotMapped]
         public List<MatchSelectedSteamIdentity> MatchSelectedSteamIdentities { get; set; } =
             new List<MatchSelectedSteamIdentity>();
 
-        [BsonIgnore][NotMapped]
+        [BsonIgnore]
+        [NotMapped]
         public List<MatchTeamSelectedSteamIdentity> MatchTeam0SelectedSteamIdentities { get; set; } =
             new List<MatchTeamSelectedSteamIdentity>();
 
-        [BsonIgnore][NotMapped]
+        [BsonIgnore]
+        [NotMapped]
         public List<MatchTeamSelectedSteamIdentity> MatchTeam1SelectedSteamIdentities { get; set; } =
             new List<MatchTeamSelectedSteamIdentity>();
 
         public List<PavlovServerPlayer> PlayerResults { get; set; } = new List<PavlovServerPlayer>();
 
         public ServerInfo EndInfo { get; set; } = new ServerInfo();
-        
-        [BsonRef("PavlovServer")]
-        public PavlovServer PavlovServer { get; set; }
-        public Status Status { get; set; } = Status.Preparing;
-        
 
-        
+        [BsonRef("PavlovServer")] public PavlovServer PavlovServer { get; set; }
+
+        public Status Status { get; set; } = Status.Preparing;
+
+
+        public bool isEditable()
+        {
+            return Status == Status.Preparing;
+        }
+
+        public bool isFinished()
+        {
+            return Status == Status.Finshed;
+        }
+
+        public bool hasStats()
+        {
+            return Status == Status.OnGoing || Status == Status.Finshed;
+        }
+
+        public bool isStartable()
+        {
+            return Status == Status.Preparing;
+        }
+
+        public bool isForceStartable()
+        {
+            return Status == Status.StartetWaitingForPlayer;
+        }
+
+        public bool isForceStopatable()
+        {
+            return Status == Status.StartetWaitingForPlayer || Status != Status.Finshed &&
+                Status == Status.StartetWaitingForPlayer && Status == Status.Preparing;
+        }
     }
 }

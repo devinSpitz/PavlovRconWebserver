@@ -18,7 +18,7 @@ function init(){
         function (data) {
             $("#GameModeSpecificcard").html(data);
         });
-};
+}
 
 function bindSelectButtons()
 {

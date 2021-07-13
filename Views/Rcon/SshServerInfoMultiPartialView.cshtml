@@ -13,7 +13,7 @@
             <div class="modal-body">
                 @foreach (var server in Model)
                 {
-                        await Html.RenderPartialAsync("/Views/Rcon/PavlovServerInfoSinglePartialView.cshtml", server);
+                    await Html.RenderPartialAsync("/Views/Rcon/PavlovServerInfoSinglePartialView.cshtml", server);
                 }
                 <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
             </div>

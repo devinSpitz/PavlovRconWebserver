@@ -1,14 +1,14 @@
 @model PlayerModelExtended
 @{
     var steamId = "          ";
-    if(!string.IsNullOrEmpty(@Model?.UniqueId))
+    if (!string.IsNullOrEmpty(Model?.UniqueId))
     {
-        steamId = @Model.UniqueId;
+        steamId = Model.UniqueId;
     }
     var userName = "          ";
-    if(!string.IsNullOrEmpty(@Model?.Username))
+    if (!string.IsNullOrEmpty(Model?.Username))
     {
-        userName = @Model.Username;
+        userName = Model.Username;
     }
 }
 <tr>
@@ -26,10 +26,10 @@
                     @userName
                 </text>
             }
-            
+
             <span class="tooltiptext">@userName</span>
         </div>
-        
+
     </td>
     <td>
         @Model?.Score
@@ -47,8 +47,9 @@
         @Model?.Cash
     </td>
     <td>
-        <div class="tooltipHover">@steamId.Substring(0,6)...
-        <span class="tooltiptext">@steamId</span>
+        <div class="tooltipHover">
+            @steamId.Substring(0, 6)...
+            <span class="tooltiptext">@steamId</span>
         </div>
     </td>
-</tr>           
+</tr>

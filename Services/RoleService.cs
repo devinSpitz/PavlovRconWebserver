@@ -1,5 +1,3 @@
-
-using LiteDB;
 using LiteDB.Identity.Database;
 
 namespace PavlovRconWebserver.Services
@@ -12,6 +10,5 @@ namespace PavlovRconWebserver.Services
         {
             _liteDb = liteDbContext;
         }
-        
     }
 }

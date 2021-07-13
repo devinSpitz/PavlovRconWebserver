@@ -7,7 +7,7 @@ function init(){
     $("#searchName").bind("keyup change", function (e) {
         search($("#searchName").val().toLowerCase(),"data-Name");
     });
-};
+}
 
 function duplicateButton(object)
 {

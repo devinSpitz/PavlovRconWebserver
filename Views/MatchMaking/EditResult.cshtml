@@ -1,4 +1,3 @@
-@using Microsoft.AspNetCore.Razor.Language.Intermediate
 @model PavlovServerPlayerListPublicViewModel
 
 @{
@@ -7,54 +6,58 @@
 }
 
 <form asp-controller="MatchMaking" asp-action="SaveMatchResult" method="post">
-@await Html.PartialAsync("/Views/Matchmaking/EditPavlovServerInfoSinglePartialView.cshtml", new ServerInfoViewModel
-{
-    Name = Model.ServerInfo.ServerName,
-    ServerInfo = Model.ServerInfo
-})
-@{
-    var hasTwoTeams = Model.PlayerList.GroupBy(x => x.TeamId).Count() == 2;
-    var tableHeaer = "<thead><tr><th>Name</th><th>Score</th><th>Kills</th><th>Deaths</th><th>Assits</th><th>Cash</th></tr></thead>";
-}
-@if (hasTwoTeams)
-{
-    <div class="row  col-ms-6">
-        <table class="table pavlovTable table-responsive table-bordered bg-primary Team0">
-            @Html.Raw(tableHeaer)
-            <tr><th colspan="7">Team score: @Model.team0Score</th></tr>
-            @foreach (var player in Model.PlayerList.Where(x => x.TeamId == 0).OrderByDescending(x => x.Score))
-            {
-                @await Html.PartialAsync("/Views/Matchmaking/EditPlayerSingle.cshtml", player)
-            }
+    @await Html.PartialAsync("/Views/Matchmaking/EditPavlovServerInfoSinglePartialView.cshtml", new ServerInfoViewModel
+    {
+        Name = Model.ServerInfo.ServerName,
+        ServerInfo = Model.ServerInfo
+    })
+    @{
+        var hasTwoTeams = Model.PlayerList.GroupBy(x => x.TeamId).Count() == 2;
+        var tableHeaer = "<thead><tr><th>Name</th><th>Score</th><th>Kills</th><th>Deaths</th><th>Assits</th><th>Cash</th></tr></thead>";
+    }
+    @if (hasTwoTeams)
+    {
+        <div class="row  col-ms-6">
+            <table class="table pavlovTable table-responsive table-bordered bg-primary Team0">
+                @Html.Raw(tableHeaer)
+                <tr>
+                    <th colspan="7">Team score: @Model.team0Score</th>
+                </tr>
+                @foreach (var player in Model.PlayerList.Where(x => x.TeamId == 0).OrderByDescending(x => x.Score))
+                {
+                    @await Html.PartialAsync("/Views/Matchmaking/EditPlayerSingle.cshtml", player)
+                }
 
-        </table>
-    </div>
-    <div class="row col-ms-6">
-        <table class="table pavlovTable table-responsive table-bordered Team1  ">
-            @Html.Raw(tableHeaer)
-            <tr><th colspan="7">Team score: @Model.team1Score</th></tr>
-            @foreach (var player in Model.PlayerList.Where(x => x.TeamId == 1).OrderByDescending(x => x.Score))
-            {
-                @await Html.PartialAsync("/Views/Matchmaking/EditPlayerSingle.cshtml", player)
-            }
-        </table>
-    </div>
-}
-else
-{
-    <table class="table pavlovTable table-bordered table-responsive col-ms-12">
-        @Html.Raw(tableHeaer)
-        @foreach (var player in Model.PlayerList.OrderByDescending(x => x.Score))
-        {
-            @await Html.PartialAsync("/Views/Matchmaking/EditPlayerSingle.cshtml", player)
-        }
-
-    </table>
-}
-
-            <input asp-for="MatchId" type="hidden" class="form-control" value="@Model.MatchId"/>
-
-<div class="saveButton col-md-1 mt-3">
-            <button type="submit" class="btn btn-success col-md-12">Save</button>
+            </table>
         </div>
+        <div class="row col-ms-6">
+            <table class="table pavlovTable table-responsive table-bordered Team1  ">
+                @Html.Raw(tableHeaer)
+                <tr>
+                    <th colspan="7">Team score: @Model.team1Score</th>
+                </tr>
+                @foreach (var player in Model.PlayerList.Where(x => x.TeamId == 1).OrderByDescending(x => x.Score))
+                {
+                    @await Html.PartialAsync("/Views/Matchmaking/EditPlayerSingle.cshtml", player)
+                }
+            </table>
+        </div>
+    }
+    else
+    {
+        <table class="table pavlovTable table-bordered table-responsive col-ms-12">
+            @Html.Raw(tableHeaer)
+            @foreach (var player in Model.PlayerList.OrderByDescending(x => x.Score))
+            {
+                @await Html.PartialAsync("/Views/Matchmaking/EditPlayerSingle.cshtml", player)
+            }
+
+        </table>
+    }
+
+    <input asp-for="MatchId" type="hidden" class="form-control" value="@Model.MatchId"/>
+
+    <div class="saveButton col-md-1 mt-3">
+        <button type="submit" class="btn btn-success col-md-12">Save</button>
+    </div>
 </form>

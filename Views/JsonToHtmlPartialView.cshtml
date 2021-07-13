@@ -2,12 +2,11 @@
 @using Newtonsoft.Json.Linq
 @model string
 @{
-    
-    var isMultiLevel = false; 
+    var isMultiLevel = false;
     var isSingleLevel = false;
     var isKick = false;
     object? converted = null;
-    KickViewModel kick = new KickViewModel();
+    var kick = new KickViewModel();
     //Realy realy bad way to do it :(
     try
     {
@@ -19,8 +18,8 @@
         {
             //Ignore
         }
-        kick = JsonConvert.DeserializeObject<KickViewModel>(Model,new JsonSerializerSettings{CheckAdditionalContent = false});
-        if (kick.UniqueID != ""&&kick.UniqueID != null)
+        kick = JsonConvert.DeserializeObject<KickViewModel>(Model, new JsonSerializerSettings {CheckAdditionalContent = false});
+        if (kick.UniqueID != "" && kick.UniqueID != null)
         {
             isKick = true;
         }
@@ -29,11 +28,11 @@
     {
         // ignored
     }
-    if (converted!= null && converted is JObject)
+    if (converted != null && converted is JObject)
     {
         isMultiLevel = true;
     }
-    else if (converted!= null && converted is JArray)
+    else if (converted != null && converted is JArray)
     {
         isSingleLevel = true;
     }
@@ -49,23 +48,23 @@
                 </button>
             </div>
             <div class="modal-body">
-            @if (isMultiLevel)
-            {
-                await Html.RenderPartialAsync("JsonToHtmlMultilevelPartialView.cshtml", Model);
-            }
-            else if (isSingleLevel) //might not be multiLevel nor singleLevel (if no data)
-            {
-                await Html.RenderPartialAsync("JsonToHtmlSinglelevelPartialView.cshtml", Model);
-            }
-            else if (isKick)
-            {
-                await Html.RenderPartialAsync("JsonToHtmlMultilevelPartialView.cshtml", JsonConvert.SerializeObject(kick)); 
-            }
-            else
-            {
-                <div class="bg-danger">@Model?.Replace("\"","")</div>
-            }
-            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                @if (isMultiLevel)
+                {
+                    await Html.RenderPartialAsync("JsonToHtmlMultilevelPartialView.cshtml", Model);
+                }
+                else if (isSingleLevel) //might not be multiLevel nor singleLevel (if no data)
+                {
+                    await Html.RenderPartialAsync("JsonToHtmlSinglelevelPartialView.cshtml", Model);
+                }
+                else if (isKick)
+                {
+                    await Html.RenderPartialAsync("JsonToHtmlMultilevelPartialView.cshtml", JsonConvert.SerializeObject(kick));
+                }
+                else
+                {
+                    <div class="bg-danger">@Model?.Replace("\"", "")</div>
+                }
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
             </div>
         </div>
     </div>

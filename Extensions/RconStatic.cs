@@ -1,14 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Net.Sockets;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Hangfire;
-using HtmlAgilityPack;
 using LiteDB.Identity.Database;
 using Microsoft.VisualBasic;
 using PavlovRconWebserver.Exceptions;
@@ -16,75 +11,75 @@ using PavlovRconWebserver.Models;
 using PavlovRconWebserver.Services;
 using Renci.SshNet;
 using Renci.SshNet.Common;
-using Match = PavlovRconWebserver.Models.Match;
 
 namespace PavlovRconWebserver.Extensions
 {
     public static class RconStatic
-    { 
-        
+    {
         public static async Task CheckBansForAllServers(string connectionString)
         {
-            
             var steamIdentityService = new SteamIdentityService(new LiteDbIdentityContext(connectionString));
             var serverSelectedMapService = new ServerSelectedMapService(new LiteDbIdentityContext(connectionString));
             var pavlovServerService = new PavlovServerService(new LiteDbIdentityContext(connectionString));
-            var sshServerSerivce = new SshServerSerivce(new LiteDbIdentityContext(connectionString),pavlovServerService);
+            var sshServerSerivce =
+                new SshServerSerivce(new LiteDbIdentityContext(connectionString), pavlovServerService);
             var mapsService = new MapsService(new LiteDbIdentityContext(connectionString));
-            var pavlovServerInfoService = new PavlovServerInfoService(new LiteDbIdentityContext(connectionString),pavlovServerService,mapsService);
-            var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString),pavlovServerService,pavlovServerInfoService);
-            var pavlovServerPlayerHistoryService = new PavlovServerPlayerHistoryService(new LiteDbIdentityContext(connectionString));
-            var rconSerivce = new RconService(steamIdentityService,serverSelectedMapService,mapsService,pavlovServerInfoService,pavlovServerPlayerService,pavlovServerPlayerHistoryService);
+            var pavlovServerInfoService = new PavlovServerInfoService(new LiteDbIdentityContext(connectionString),
+                pavlovServerService, mapsService);
+            var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString),
+                pavlovServerService, pavlovServerInfoService);
+            var pavlovServerPlayerHistoryService =
+                new PavlovServerPlayerHistoryService(new LiteDbIdentityContext(connectionString));
+            var rconSerivce = new RconService(steamIdentityService, serverSelectedMapService, mapsService,
+                pavlovServerInfoService, pavlovServerPlayerService, pavlovServerPlayerHistoryService);
             var serverBansService = new ServerBansService(new LiteDbIdentityContext(connectionString));
             var servers = await sshServerSerivce.FindAll();
             foreach (var server in servers)
-            {
-                
-                foreach (var signleServer in server.PavlovServers)
+            foreach (var signleServer in server.PavlovServers)
+                try
                 {
-                    try
-                    {
-                        var bans = await serverBansService.FindAllFromPavlovServerId(signleServer.Id,true);
-                        await rconSerivce.SaveBlackListEntry(signleServer, bans);
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e.Message);
-                    } 
+                    var bans = await serverBansService.FindAllFromPavlovServerId(signleServer.Id, true);
+                    await rconSerivce.SaveBlackListEntry(signleServer, bans);
                 }
-            }
-        }        
-        
-        public static async Task ReloadPlayerListFromServerAndTheServerInfo(string connectionString,bool recursive = false)
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+        }
+
+        public static async Task ReloadPlayerListFromServerAndTheServerInfo(string connectionString,
+            bool recursive = false)
         {
             var exceptions = new List<Exception>();
             try
             {
                 var steamIdentityService = new SteamIdentityService(new LiteDbIdentityContext(connectionString));
-                var serverSelectedMapService = new ServerSelectedMapService(new LiteDbIdentityContext(connectionString));
+                var serverSelectedMapService =
+                    new ServerSelectedMapService(new LiteDbIdentityContext(connectionString));
                 var pavlovServerService = new PavlovServerService(new LiteDbIdentityContext(connectionString));
-                var sshServerSerivce = new SshServerSerivce(new LiteDbIdentityContext(connectionString),pavlovServerService);
+                var sshServerSerivce =
+                    new SshServerSerivce(new LiteDbIdentityContext(connectionString), pavlovServerService);
                 var mapsService = new MapsService(new LiteDbIdentityContext(connectionString));
-                var pavlovServerInfoService = new PavlovServerInfoService(new LiteDbIdentityContext(connectionString),pavlovServerService,mapsService);
-                var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString),pavlovServerService,pavlovServerInfoService);
-                var pavlovServerPlayerHistoryService = new PavlovServerPlayerHistoryService(new LiteDbIdentityContext(connectionString));
-                var rconSerivce = new RconService(steamIdentityService,serverSelectedMapService,mapsService,pavlovServerInfoService,pavlovServerPlayerService,pavlovServerPlayerHistoryService);
+                var pavlovServerInfoService = new PavlovServerInfoService(new LiteDbIdentityContext(connectionString),
+                    pavlovServerService, mapsService);
+                var pavlovServerPlayerService = new PavlovServerPlayerService(
+                    new LiteDbIdentityContext(connectionString), pavlovServerService, pavlovServerInfoService);
+                var pavlovServerPlayerHistoryService =
+                    new PavlovServerPlayerHistoryService(new LiteDbIdentityContext(connectionString));
+                var rconSerivce = new RconService(steamIdentityService, serverSelectedMapService, mapsService,
+                    pavlovServerInfoService, pavlovServerPlayerService, pavlovServerPlayerHistoryService);
                 var servers = await sshServerSerivce.FindAll();
                 foreach (var server in servers)
-                {
-                    foreach (var signleServer in server.PavlovServers.Where(x=>x.ServerType == ServerType.Community))
+                foreach (var signleServer in server.PavlovServers.Where(x => x.ServerType == ServerType.Community))
+                    try
                     {
-                        try
-                        {
-                            await rconSerivce.SendCommand(signleServer,"",false,false,"",false,false,null,true);
-                        }
-                        catch (Exception e)
-                        {
-                            exceptions.Add(e);
-                            Console.WriteLine(e.Message);
-                        } 
+                        await rconSerivce.SendCommand(signleServer, "", false, false, "", false, false, null, true);
                     }
-                }
+                    catch (Exception e)
+                    {
+                        exceptions.Add(e);
+                        Console.WriteLine(e.Message);
+                    }
             }
             catch (Exception e)
             {
@@ -97,26 +92,33 @@ namespace PavlovRconWebserver.Extensions
             //     throw new Exception(String.Join(" | Next Exception:  ",exceptions.Select(x=>x.Message).ToList()));
             // }
 
-            BackgroundJob.Schedule(() => ReloadPlayerListFromServerAndTheServerInfo(connectionString, recursive),new TimeSpan(0, 1, 0)); // Check for bans and remove them is necessary
-
+            BackgroundJob.Schedule(() => ReloadPlayerListFromServerAndTheServerInfo(connectionString, recursive),
+                new TimeSpan(0, 1, 0)); // Check for bans and remove them is necessary
         }
-        
+
 
         public static async Task<ConnectionResult> StartMatchWithAuth(RconService.AuthType authType,
             PavlovServer server,
-            Match match,string connectionString)
+            Match match, string connectionString)
         {
             var steamIdentityService = new SteamIdentityService(new LiteDbIdentityContext(connectionString));
             var serverSelectedMapService = new ServerSelectedMapService(new LiteDbIdentityContext(connectionString));
             var pavlovServerService = new PavlovServerService(new LiteDbIdentityContext(connectionString));
             var mapsService = new MapsService(new LiteDbIdentityContext(connectionString));
-            var matchSelectedTeamSteamIdentitiesService = new MatchSelectedTeamSteamIdentitiesService(new LiteDbIdentityContext(connectionString));
-            var matchSelectedSteamIdentitiesService = new MatchSelectedSteamIdentitiesService(new LiteDbIdentityContext(connectionString));
-            var pavlovServerInfoService = new PavlovServerInfoService(new LiteDbIdentityContext(connectionString),pavlovServerService,mapsService);
-            var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString),pavlovServerService,pavlovServerInfoService);
-            var pavlovServerPlayerHistoryService = new PavlovServerPlayerHistoryService(new LiteDbIdentityContext(connectionString));
-            var rconService = new RconService(steamIdentityService,serverSelectedMapService,mapsService,pavlovServerInfoService,pavlovServerPlayerService,pavlovServerPlayerHistoryService);
-            var matchService = new MatchService(new LiteDbIdentityContext(connectionString),matchSelectedTeamSteamIdentitiesService,matchSelectedSteamIdentitiesService,pavlovServerService);
+            var matchSelectedTeamSteamIdentitiesService =
+                new MatchSelectedTeamSteamIdentitiesService(new LiteDbIdentityContext(connectionString));
+            var matchSelectedSteamIdentitiesService =
+                new MatchSelectedSteamIdentitiesService(new LiteDbIdentityContext(connectionString));
+            var pavlovServerInfoService = new PavlovServerInfoService(new LiteDbIdentityContext(connectionString),
+                pavlovServerService, mapsService);
+            var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString),
+                pavlovServerService, pavlovServerInfoService);
+            var pavlovServerPlayerHistoryService =
+                new PavlovServerPlayerHistoryService(new LiteDbIdentityContext(connectionString));
+            var rconService = new RconService(steamIdentityService, serverSelectedMapService, mapsService,
+                pavlovServerInfoService, pavlovServerPlayerService, pavlovServerPlayerHistoryService);
+            var matchService = new MatchService(new LiteDbIdentityContext(connectionString),
+                matchSelectedTeamSteamIdentitiesService, matchSelectedSteamIdentitiesService, pavlovServerService);
 
             var connectionInfo = RconService.ConnectionInfo(server, authType, out var result, server.SshServer);
             using var clientSsh = new SshClient(connectionInfo);
@@ -133,14 +135,19 @@ namespace PavlovRconWebserver.Extensions
                 }
 
                 //Write whitelist and set server settings
-                var whitelist = await rconService.WriteFile(server, authType, server.ServerFolderPath+FilePaths.WhiteList, server.SshServer, Strings.Join(listOfSteamIdentietiesWhichCanPlay.Select(x=>x.SteamIdentityId).ToArray(),";"+Environment.NewLine));
+                var whitelist = await rconService.WriteFile(server, authType,
+                    server.ServerFolderPath + FilePaths.WhiteList, server.SshServer,
+                    Strings.Join(listOfSteamIdentietiesWhichCanPlay.Select(x => x.SteamIdentityId).ToArray(),
+                        ";" + Environment.NewLine));
                 if (!whitelist.Success)
                 {
-                    result.errors.Add("Could not write whitelist for the match! "+Strings.Join(whitelist.errors.ToArray(),";"));
-                    Console.WriteLine("Could not write whitelist for the match! "+Strings.Join(whitelist.errors.ToArray(),";"));
+                    result.errors.Add("Could not write whitelist for the match! " +
+                                      Strings.Join(whitelist.errors.ToArray(), ";"));
+                    Console.WriteLine("Could not write whitelist for the match! " +
+                                      Strings.Join(whitelist.errors.ToArray(), ";"));
                     return result;
                 }
-                
+
                 var serverSettings = new PavlovServerGameIni
                 {
                     bEnabled = false,
@@ -155,37 +162,35 @@ namespace PavlovRconWebserver.Extensions
                     TimeLimit = match.TimeLimit,
                     Password = null,
                     BalanceTableURL = null,
-                    MapRotation = new List<PavlovServerGameIniMap>()
+                    MapRotation = new List<PavlovServerGameIniMap>
                     {
+                        new PavlovServerGameIniMap
                         {
-                            new PavlovServerGameIniMap()
-                            {
-                                MapLabel = match.MapId,
-                                GameMode = match.GameMode
-                            }
+                            MapLabel = match.MapId,
+                            GameMode = match.GameMode
                         }
                     }
                 };
-                var map = await mapsService.FindOne(match.MapId.Replace("UGC",""));
-                await serverSettings.SaveToFile(server, new List<ServerSelectedMap>()
+                var map = await mapsService.FindOne(match.MapId.Replace("UGC", ""));
+                await serverSettings.SaveToFile(server, new List<ServerSelectedMap>
                 {
-                    new ServerSelectedMap()
+                    new ServerSelectedMap
                     {
                         Map = map,
                         GameMode = match.GameMode
                     }
                 }, rconService);
                 await rconService.SystemDStart(server, authType, server.SshServer);
-                
+
                 //StartWatchServiceForThisMatch
                 match.Status = Status.StartetWaitingForPlayer;
                 await matchService.Upsert(match);
                 Console.WriteLine("Start backgroundjob");
-                BackgroundJob.Schedule( 
-                    () => MatchInspector(authType,server,match.Id,connectionString),new TimeSpan(0,0,5)); // ChecjServerState
-
-
-            }catch (Exception e)
+                BackgroundJob.Schedule(
+                    () => MatchInspector(authType, server, match.Id, connectionString),
+                    new TimeSpan(0, 0, 5)); // ChecjServerState
+            }
+            catch (Exception e)
             {
                 switch (e)
                 {
@@ -208,7 +213,6 @@ namespace PavlovRconWebserver.Extensions
                         throw;
                     }
                 }
-
             }
             finally
             {
@@ -221,23 +225,29 @@ namespace PavlovRconWebserver.Extensions
 
         public static async Task MatchInspector(RconService.AuthType authType,
             PavlovServer server,
-            int matchId,string connectionString)
+            int matchId, string connectionString)
         {
-            
             var steamIdentityService = new SteamIdentityService(new LiteDbIdentityContext(connectionString));
             var serverSelectedMapService = new ServerSelectedMapService(new LiteDbIdentityContext(connectionString));
             var pavlovServerService = new PavlovServerService(new LiteDbIdentityContext(connectionString));
             var mapsService = new MapsService(new LiteDbIdentityContext(connectionString));
-            var matchSelectedTeamSteamIdentitiesService = new MatchSelectedTeamSteamIdentitiesService(new LiteDbIdentityContext(connectionString));
-            var matchSelectedSteamIdentitiesService = new MatchSelectedSteamIdentitiesService(new LiteDbIdentityContext(connectionString));
-            var pavlovServerInfoService = new PavlovServerInfoService(new LiteDbIdentityContext(connectionString),pavlovServerService,mapsService);
-            var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString),pavlovServerService,pavlovServerInfoService);
-            var pavlovServerPlayerHistoryService = new PavlovServerPlayerHistoryService(new LiteDbIdentityContext(connectionString));
-            var rconService = new RconService(steamIdentityService,serverSelectedMapService,mapsService,pavlovServerInfoService,pavlovServerPlayerService,pavlovServerPlayerHistoryService);
-            var matchService = new MatchService(new LiteDbIdentityContext(connectionString),matchSelectedTeamSteamIdentitiesService,matchSelectedSteamIdentitiesService,pavlovServerService);
+            var matchSelectedTeamSteamIdentitiesService =
+                new MatchSelectedTeamSteamIdentitiesService(new LiteDbIdentityContext(connectionString));
+            var matchSelectedSteamIdentitiesService =
+                new MatchSelectedSteamIdentitiesService(new LiteDbIdentityContext(connectionString));
+            var pavlovServerInfoService = new PavlovServerInfoService(new LiteDbIdentityContext(connectionString),
+                pavlovServerService, mapsService);
+            var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString),
+                pavlovServerService, pavlovServerInfoService);
+            var pavlovServerPlayerHistoryService =
+                new PavlovServerPlayerHistoryService(new LiteDbIdentityContext(connectionString));
+            var rconService = new RconService(steamIdentityService, serverSelectedMapService, mapsService,
+                pavlovServerInfoService, pavlovServerPlayerService, pavlovServerPlayerHistoryService);
+            var matchService = new MatchService(new LiteDbIdentityContext(connectionString),
+                matchSelectedTeamSteamIdentitiesService, matchSelectedSteamIdentitiesService, pavlovServerService);
             Console.WriteLine("MatchInspector started!");
             var match = await matchService.FindOne(matchId);
-            
+
             try
             {
                 if (match.ForceSop)
@@ -246,60 +256,53 @@ namespace PavlovRconWebserver.Extensions
                     await EndMatch(authType, server, match, rconService, matchService);
                     return;
                 }
-                
+
                 await rconService.SShTunnelGetAllInfoFromPavlovServer(server, authType, server.SshServer);
                 switch (match.Status)
                 {
                     case Status.StartetWaitingForPlayer:
-                        
+
                         Console.WriteLine("TryToStartMatch started!");
                         await TryToStartMatch(server, match, rconService, matchService, pavlovServerPlayerService);
                         break;
                     case Status.OnGoing:
-                        
+
                         Console.WriteLine("OnGoing!");
                         var serverInfo = await pavlovServerInfoService.FindServer(server.Id);
                         match.PlayerResults = (await pavlovServerPlayerService.FindAllFromServer(server.Id)).ToList();
                         match.EndInfo = serverInfo;
                         await matchService.Upsert(match);
-                        
+
                         if (serverInfo.RoundState == "Ended")
                         {
-                            
                             Console.WriteLine("Round ended!");
-                            await EndMatch(authType,server, match, rconService, matchService);
+                            match.PlayerResults =
+                                (await pavlovServerPlayerService.FindAllFromServer(server.Id)).ToList();
+                            match.EndInfo = serverInfo;
+                            await EndMatch(authType, server, match, rconService, matchService);
                             return;
                         }
-                     
+
                         break;
-                     
-                
                 }
-
-
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
             }
 
-            if (match.Status!=Status.Finshed)
-            {
-                
+            if (match.Status != Status.Finshed)
                 BackgroundJob.Schedule(
-                    () => MatchInspector(authType, server, match.Id,connectionString),
+                    () => MatchInspector(authType, server, match.Id, connectionString),
                     new TimeSpan(0, 0, 5)); // ChecjServerState
-            }
         }
 
-        private static async Task EndMatch(RconService.AuthType authType, PavlovServer server, Match match, RconService rconService,
+        private static async Task EndMatch(RconService.AuthType authType, PavlovServer server, Match match,
+            RconService rconService,
             MatchService matchService)
         {
-            
             match.Status = Status.Finshed;
-            //ToDo get stats and save them
             await matchService.Upsert(match);
-
             await rconService.SystemDStop(server, authType, server.SshServer);
             Console.WriteLine("Stopped server!");
         }
@@ -313,7 +316,6 @@ namespace PavlovRconWebserver.Extensions
                 //Do Players in the right team
                 foreach (var pavlovServerPlayer in playerList)
                 {
-                    
                     var team0 = match.MatchTeam0SelectedSteamIdentities.FirstOrDefault(x =>
                         x.SteamIdentityId == pavlovServerPlayer.UniqueId);
                     var team1 = match.MatchTeam1SelectedSteamIdentities.FirstOrDefault(x =>
@@ -325,7 +327,6 @@ namespace PavlovRconWebserver.Extensions
                     }
                     else if (team1 != null)
                     {
-                        
                         Console.WriteLine("SwitchTeam 1 " + pavlovServerPlayer.UniqueId);
                         await SendCommandTillDone(server, rconService, "SwitchTeam 1 " + pavlovServerPlayer.UniqueId);
                     }
@@ -340,19 +341,19 @@ namespace PavlovRconWebserver.Extensions
             }
         }
 
-        private static async Task<string> SendCommandTillDone(PavlovServer server, RconService rconService,string command,int timeoutInSeconds = 60)
+        private static async Task<string> SendCommandTillDone(PavlovServer server, RconService rconService,
+            string command, int timeoutInSeconds = 60)
         {
-            var task = Task.Run(() => SendCommandTillDoneChild(server,rconService,command));
+            var task = Task.Run(() => SendCommandTillDoneChild(server, rconService, command));
             if (task.Wait(TimeSpan.FromSeconds(timeoutInSeconds)))
                 return task.Result;
-            else
-                throw new Exception("Timed out");
+            throw new Exception("Timed out");
         }
 
-        private static async Task<string> SendCommandTillDoneChild(PavlovServer server, RconService rconService,string command)
+        private static async Task<string> SendCommandTillDoneChild(PavlovServer server, RconService rconService,
+            string command)
         {
             while (true)
-            {
                 try
                 {
                     var result = await rconService.SendCommand(server, command);
@@ -363,7 +364,6 @@ namespace PavlovRconWebserver.Extensions
                     Console.WriteLine(e);
                     throw;
                 }
-            }
         }
     }
 }

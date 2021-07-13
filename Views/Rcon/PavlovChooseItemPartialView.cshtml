@@ -1,8 +1,8 @@
 @model ServerInfoViewModel
 @{
-    var  items = new Dictionary<string,List<string> >();
-    
-    items.Add("Guns",new List<string>()
+    var items = new Dictionary<string, List<string>>();
+
+    items.Add("Guns", new List<string>
     {
         "cet9",
         "m9",
@@ -29,20 +29,20 @@
         "aug",
         "autosniper",
         "awp",
-        "antitank",
+        "antitank"
     });
 
 
-    items.Add("Granates", new List<string>()
+    items.Add("Granates", new List<string>
     {
         "grenade",
         "grenade_ru",
         "flash",
         "smoke",
-        "smoke_ru",
+        "smoke_ru"
     });
 
-    items.Add("Attachments", new List<string>()
+    items.Add("Attachments", new List<string>
     {
         "reddot",
         "holo",
@@ -53,31 +53,31 @@
         "grip_angled",
         "grip_vertical",
         "armour",
-        "kevlarhelmet",
+        "kevlarhelmet"
     });
-    
-    items.Add("Misc",new List<string>()
+
+    items.Add("Misc", new List<string>
     {
-        "defuse", 
+        "defuse",
         "knife",
         "painkillers",
         "taser",
-        "syringe",
+        "syringe"
     });
-    
-    items.Add("Ammo", new List<string>()
+
+    items.Add("Ammo", new List<string>
     {
         "ammo_rifle",
         "ammo_sniper",
         "ammo_pistol",
         "ammo_smg",
         "ammo_shotgun",
-        "ammo_special",
+        "ammo_special"
     });
-    
-    
+
+
     //WW2
-    items.Add("GunsWW", new List<string>()
+    items.Add("GunsWW", new List<string>
     {
         "ppsh",
         "mp40",
@@ -95,46 +95,46 @@
         "springfield",
         "thompson",
         "mg42",
-        "leeenfield",  
+        "leeenfield"
     });
-    
-    
-    items.Add("LootCrate", new List<string>()
+
+
+    items.Add("LootCrate", new List<string>
     {
         "Attachments",
-        "Heavy1",     
-        "Heavy2",   
-        "MedicRifle", 
-        "MedicSMG",   
-        "Pistol",     
-        "Rifle1",     
-        "Rifle2",     
-        "Rifle3",    
-        "SMG1",       
-        "SMG2",       
-        "SMG3",        
+        "Heavy1",
+        "Heavy2",
+        "MedicRifle",
+        "MedicSMG",
+        "Pistol",
+        "Rifle1",
+        "Rifle2",
+        "Rifle3",
+        "SMG1",
+        "SMG2",
+        "SMG3"
     });
-    
-    items.Add("GranatesWW", new List<string>()
+
+    items.Add("GranatesWW", new List<string>
     {
         "grenade_us",
         "grenade_ger",
         "smoke_us",
         "smoke_ger",
         "grenade_svt",
-        "smoke_svt",
+        "smoke_svt"
     });
-    
-    items.Add("LauncherWW", new List<string>()
+
+    items.Add("LauncherWW", new List<string>
     {
         "rl_piat",
         "rl_m1a1",
-        "rl_panzer",
+        "rl_panzer"
     });
-    
 
-    
-    
+
+
+
 }
 
 
@@ -152,21 +152,19 @@
                 @foreach (var list in items)
                 {
                     <div class="card m-1 ">
-                        
+
                         <div class="card-header">
                             @list.Key
                         </div>
                         <div class="card-body">
-                @Html.Raw("<div class='row' >")
+                            @Html.Raw("<div class='row' >")
                             @foreach (var item in list.Value)
                             {
                                 <button type="button" class="btn btn-success col-sm-3 m-1" data-bs-dismiss="modal" onclick="setItem('@item')">@item</button>
                             }
-                @Html.Raw("</div>")
+                            @Html.Raw("</div>")
                         </div>
                     </div>
-                    
-
                 }
 
                 <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>

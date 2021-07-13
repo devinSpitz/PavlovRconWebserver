@@ -10,42 +10,46 @@
     }
 </style>
 @{
-    var hasTwoTeams = Model.PlayerList.GroupBy(x => x.TeamId).Count()==2;
+    var hasTwoTeams = Model.PlayerList.GroupBy(x => x.TeamId).Count() == 2;
     var tableHeaer = "<thead><tr><th>Name</th><th>Score</th><th>Kills</th><th>Deaths</th><th>Assits</th><th>Cash</th><th>SteamId</th></tr></thead>";
 }
 
 @if (hasTwoTeams)
 {
-     <div class="row  col-sm-6">
-         <table class="table table-responsive table-bordered bg-primary ">
-             @Html.Raw(tableHeaer)
-             <tr><th colspan="7">Team score: @Model.team0Score</th></tr>
-             @foreach (var player in Model.PlayerList.Where(x => x.TeamId == 0).OrderByDescending(x => x.Score))
-             {
-                 @await Html.PartialAsync("PlayerSingle", player)
-             }
+    <div class="row  col-sm-6">
+        <table class="table table-responsive table-bordered bg-primary ">
+            @Html.Raw(tableHeaer)
+            <tr>
+                <th colspan="7">Team score: @Model.team0Score</th>
+            </tr>
+            @foreach (var player in Model.PlayerList.Where(x => x.TeamId == 0).OrderByDescending(x => x.Score))
+            {
+                @await Html.PartialAsync("PlayerSingle", player)
+            }
 
-         </table>
-     </div>
-     <div class="row col-sm-6">
-         <table class="table table-responsive table-bordered Red  ">
-             @Html.Raw(tableHeaer)
-             <tr><th colspan="7">Team score: @Model.team1Score</th></tr>
-             @foreach (var player in Model.PlayerList.Where(x => x.TeamId == 1).OrderByDescending(x => x.Score))
-             {
-                 @await Html.PartialAsync("PlayerSingle", player)
-             }
-         </table>
-     </div>
+        </table>
+    </div>
+    <div class="row col-sm-6">
+        <table class="table table-responsive table-bordered Red  ">
+            @Html.Raw(tableHeaer)
+            <tr>
+                <th colspan="7">Team score: @Model.team1Score</th>
+            </tr>
+            @foreach (var player in Model.PlayerList.Where(x => x.TeamId == 1).OrderByDescending(x => x.Score))
+            {
+                @await Html.PartialAsync("PlayerSingle", player)
+            }
+        </table>
+    </div>
 }
 else
 {
     <table class="table table-bordered table-responsive col-sm-12">
         @Html.Raw(tableHeaer)
-        @foreach (var player in Model.PlayerList.OrderByDescending(x=>x.Score))
+        @foreach (var player in Model.PlayerList.OrderByDescending(x => x.Score))
         {
-            @await Html.PartialAsync("PlayerSingle",player)
+            @await Html.PartialAsync("PlayerSingle", player)
         }
-        
+
     </table>
 }

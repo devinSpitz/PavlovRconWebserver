@@ -1,4 +1,3 @@
-@using Microsoft.AspNetCore.Razor.Language.Intermediate
 @model List<PavlovServerPlayerListPublicViewModel>
 
 <style>
@@ -44,7 +43,9 @@
             <div class="row  col-ms-6">
                 <table class="table pavlovTable table-responsive table-bordered bg-primary Team0">
                     @Html.Raw(tableHeaer)
-                    <tr><th colspan="7">Team score: @viewModel.team0Score</th></tr>
+                    <tr>
+                        <th colspan="7">Team score: @viewModel.team0Score</th>
+                    </tr>
                     @foreach (var player in viewModel.PlayerList.Where(x => x.TeamId == 0).OrderByDescending(x => x.Score))
                     {
                         @await Html.PartialAsync("/Views/PublicViewLists/PlayerSingle.cshtml", player)
@@ -55,7 +56,9 @@
             <div class="row col-ms-6">
                 <table class="table pavlovTable table-responsive table-bordered Team1  ">
                     @Html.Raw(tableHeaer)
-                    <tr><th colspan="7">Team score: @viewModel.team1Score</th></tr>
+                    <tr>
+                        <th colspan="7">Team score: @viewModel.team1Score</th>
+                    </tr>
                     @foreach (var player in viewModel.PlayerList.Where(x => x.TeamId == 1).OrderByDescending(x => x.Score))
                     {
                         @await Html.PartialAsync("/Views/PublicViewLists/PlayerSingle.cshtml", player)
@@ -75,8 +78,4 @@
             </table>
         }
     </div>
-
-
 }
-
-

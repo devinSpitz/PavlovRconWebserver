@@ -8,9 +8,9 @@ namespace PavlovRconWebserver.Services
 {
     public class MapsService
     {
-        private ILiteDbIdentityContext _liteDb;
-        
-        
+        private readonly ILiteDbIdentityContext _liteDb;
+
+
         public MapsService(ILiteDbIdentityContext liteDbContext)
         {
             _liteDb = liteDbContext;
@@ -19,7 +19,7 @@ namespace PavlovRconWebserver.Services
         public async Task<IEnumerable<Map>> FindAll()
         {
             return _liteDb.LiteDatabase.GetCollection<Map>("Map")
-                .FindAll().OrderByDescending(x=>x.Id);
+                .FindAll().OrderByDescending(x => x.Id);
         }
 
         public async Task<Map> FindOne(string id)

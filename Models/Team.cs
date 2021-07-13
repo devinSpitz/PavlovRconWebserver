@@ -8,9 +8,9 @@ namespace PavlovRconWebserver.Models
     {
         public int Id { get; set; }
         public List<TeamSelectedSteamIdentity> TeamSelectedSteamIdentities { get; set; }
-        
-        [NotMapped][BsonIgnore]
-        public List<SteamIdentity> AllSteamIdentities { get; set; }
+
+        [NotMapped] [BsonIgnore] public List<SteamIdentity> AllSteamIdentities { get; set; }
+
         public string Name { get; set; }
     }
 }

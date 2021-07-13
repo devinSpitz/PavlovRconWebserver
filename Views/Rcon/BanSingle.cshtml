@@ -6,13 +6,13 @@
 @inject UserManager<LiteDbUser> UserManager
 @{
     var banDate = "";
-    if (@Model?.BannedDateTime.ToLongDateString() == new DateTime().ToLongDateString())
+    if (Model?.BannedDateTime.ToLongDateString() == new DateTime().ToLongDateString())
     {
         banDate = "Unkown";
     }
     else
     {
-        banDate = @Model?.BannedDateTime.ToShortDateString()+" "+Model?.BannedDateTime.ToShortTimeString();
+        banDate = Model?.BannedDateTime.ToShortDateString() + " " + Model?.BannedDateTime.ToShortTimeString();
     }
 }
 <tr>
@@ -20,22 +20,21 @@
         @Model?.Id
     </td>
     <td>
-     @Model?.SteamName
+        @Model?.SteamName
     </td>
     <td>
-        @Model?.SteamId 
-          @if (await UserManager.IsInRoleAsync(await UserManager.GetUserAsync(User), "Mod")||await UserManager.IsInRoleAsync(await UserManager.GetUserAsync(User), "Admin"))
-          {
-              <Button alt="Remove ban" class="btn-danger" onclick="RemoveBannedPlayer('@Model?.SteamId')"><span class="fas fa-trash-alt"></span></Button>
-          }
+        @Model?.SteamId
+        <Button alt="Remove ban" class="btn-danger" onclick="RemoveBannedPlayer('@Model?.SteamId')">
+            <span class="fas fa-trash-alt"></span>
+        </Button>
     </td>
     <td>
         @Model?.Comment
     </td>
-    <td class='date col-sm-3'>
+    <td class="date col-sm-3">
         @banDate
     </td>
-    <td class='date col-sm-3'>
+    <td class="date col-sm-3">
         @{
             var tmp = new DateTime();
             var tmpString = "";
@@ -51,19 +50,19 @@
                 }
                 if (tmp.ToLongDateString() + " : " + tmp.ToShortTimeString() == new DateTime().ToLongDateString() + " : " + new DateTime().ToShortTimeString())
                 {
-                    tmpString = "Permanent"; 
+                    tmpString = "Permanent";
                 }
                 else
                 {
-                    tmpString = @tmp.ToShortDateString()+" "+tmp.ToShortTimeString();
+                    tmpString = tmp.ToShortDateString() + " " + tmp.ToShortTimeString();
                 }
             }
             if (tmpString == "00:00:00")
             {
                 tmpString = "Permanent";
             }
-            
+
         }
         @tmpString
-    </td>  
+    </td>
 </tr>

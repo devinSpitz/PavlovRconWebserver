@@ -4,8 +4,6 @@
 @{
     ViewBag.Title = "Edit SteamIdentities on Team";
     Layout = "_Layout";
-    var maxLength = 20;
-
 }
 
 
@@ -13,22 +11,21 @@
 
 <form asp-controller="Team" asp-action="UpdateOverwriteRoleOfTeamSelectedSteamIdentity" method="post">
     <div asp-validation-summary="All" class="text-danger"></div>
-    
-    <label asp-for="overWriteRole"></label>
-    @Html.DropDownListFor(m => m.overWriteRole, new SelectList(RightsHandler.Roles,"Value","Value",Model.overWriteRole), new { @class = "form-control form-control-sm form-select " })     
 
-    
-    
+    <label asp-for="overWriteRole"></label>
+    @Html.DropDownListFor(m => m.overWriteRole, new SelectList(RightsHandler.Roles, "Value", "Value", Model.overWriteRole), new {@class = "form-control form-control-sm form-select "})
+
+
     <span asp-validation-for="overWriteRole" class="text-danger"></span>
     <input asp-for="steamIdentityId" class="form-control" value="@Model.steamIdentityId" type="hidden"/>
     <span asp-validation-for="steamIdentityId" class="text-danger"></span>
     <input asp-for="teamId" class="form-control" value="@Model.teamId" type="hidden"/>
     <span asp-validation-for="teamId" class="text-danger"></span>
-    
-    
+
+
     <div class="saveButton col-md-1 mt-3">
         <button type="submit" class="btn btn-success col-md-12">Save</button>
     </div>
-    
+
 
 </form>

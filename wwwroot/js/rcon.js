@@ -45,7 +45,7 @@ function init(){
         UpdatePlayerList();
     }
 
-};
+}
 
 function setItem(id)
 {
