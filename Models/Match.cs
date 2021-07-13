@@ -46,8 +46,8 @@ namespace PavlovRconWebserver.Models
             new List<MatchTeamSelectedSteamIdentity>();
 
         public List<PavlovServerPlayer> PlayerResults { get; set; } = new List<PavlovServerPlayer>();
-        
-        public ServerInfo EndInfo { get; set; }
+
+        public ServerInfo EndInfo { get; set; } = new ServerInfo();
         
         [BsonRef("PavlovServer")]
         public PavlovServer PavlovServer { get; set; }

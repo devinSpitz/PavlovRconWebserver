@@ -12,6 +12,14 @@ namespace PavlovRconWebserver.Services
         
         private ILiteDbIdentityContext _liteDb;
 
+        public async Task<int> RemoveFromMatch(int matchId)
+        {
+            var tmp = _liteDb.LiteDatabase.GetCollection<MatchSelectedSteamIdentity>("MatchSelectedSteamIdentity").FindAll().ToList();
+            
+            
+            return _liteDb.LiteDatabase.GetCollection<MatchSelectedSteamIdentity>("MatchSelectedSteamIdentity")
+                .DeleteMany(x=>x.matchId==matchId);
+        }
         public MatchSelectedSteamIdentitiesService(ILiteDbIdentityContext liteDbContext)
         {
             _liteDb = liteDbContext;

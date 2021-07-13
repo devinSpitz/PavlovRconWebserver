@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using LiteDB;
 using LiteDB.Identity.Database;
 using PavlovRconWebserver.Models;
 
@@ -38,6 +39,16 @@ namespace PavlovRconWebserver.Services
             return _liteDb.LiteDatabase.GetCollection<MatchTeamSelectedSteamIdentity>("MatchTeamSelectedSteamIdentity")
                 .Include(x =>x.matchId==matchId && x.TeamId==teamId)
                 .Upsert(matchTeamSelectedSteamIdentity);
+        }
+        
+                
+        public async Task<int> RemoveFromMatch(int matchId)
+        {
+            var tmp = _liteDb.LiteDatabase.GetCollection<MatchTeamSelectedSteamIdentity>("MatchTeamSelectedSteamIdentity").FindAll().ToList();
+            
+            
+            return _liteDb.LiteDatabase.GetCollection<MatchTeamSelectedSteamIdentity>("MatchTeamSelectedSteamIdentity")
+                .DeleteMany(x=>x.matchId==matchId);
         }
 
     }

@@ -17,7 +17,9 @@ namespace PavlovRconWebserver.Controllers
     {
         private readonly UserService _userservice;
         private readonly MatchService _matchService;
+        private readonly MapsService _mapsService;
         private readonly PavlovServerService _pavlovServerService;
+        private readonly PublicViewListsService _publicViewListsService;
         private readonly TeamService _teamService;
         private readonly SteamIdentityService _steamIdentityService;
         private readonly MatchSelectedSteamIdentitiesService _matchSelectedSteamIdentitiesService;
@@ -29,6 +31,8 @@ namespace PavlovRconWebserver.Controllers
             PavlovServerService pavlovServerService,TeamService teamService,
             MatchSelectedSteamIdentitiesService matchSelectedSteamIdentities,
             SteamIdentityService steamIdentityService,
+            MapsService mapsService,
+            PublicViewListsService publicViewListsService,
             TeamSelectedSteamIdentityService teamSelectedSteamIdentityService,
             MatchSelectedTeamSteamIdentitiesService matchSelectedTeamSteamIdentitiesService,
             IConfiguration config)
@@ -42,6 +46,8 @@ namespace PavlovRconWebserver.Controllers
             _matchSelectedTeamSteamIdentitiesService = matchSelectedTeamSteamIdentitiesService;
             _teamSelectedSteamIdentityService = teamSelectedSteamIdentityService;
             _configuration = config;
+            _mapsService = mapsService;
+            _publicViewListsService = publicViewListsService;
         }
 
 
@@ -51,6 +57,57 @@ namespace PavlovRconWebserver.Controllers
             return showFinished ?  View(await _matchService.FindAll()): View((await _matchService.FindAll()).Where(x=>x.Status!=Status.Finshed));
         }
 
+        [HttpGet]
+        public async Task<IActionResult> EditMatchResult(int id)
+        { 
+            var match = await _matchService.FindOne(id);
+            if(match==null) return BadRequest("No match like that exists!");
+            if(match.Status!=Status.Finshed)  return BadRequest("Match is not finished jet!");
+            if(match.EndInfo==null)  return BadRequest("Match has no endInfo");
+            var map = await _mapsService.FindOne(match.MapId.Replace("UGC",""));
+            if(map==null)  return BadRequest("Match has no map set");
+            var result = _publicViewListsService.PavlovServerPlayerListPublicViewModel(new PavlovServerInfo
+            {
+                MapLabel = match.MapId,
+                MapPictureLink = map.ImageUrl,
+                GameMode = match.EndInfo.GameMode,
+                ServerName = match.EndInfo.ServerName,
+                RoundState = match.EndInfo.RoundState,
+                PlayerCount = match.EndInfo.PlayerCount,
+                Teams = match.EndInfo.Teams,
+                Team0Score = match.EndInfo.Team0Score,
+                Team1Score = match.EndInfo.Team1Score,
+                ServerId = match.PavlovServer.Id
+            },match.PlayerResults);
+            result.MatchId = match.Id;
+            return View("EditResult",result);
+        }
+        [HttpPost("[controller]/SaveMatchResult")]
+        public async Task<IActionResult> SaveMatchResult(PavlovServerPlayerListPublicViewModel match)
+        {
+            var realMatch = await _matchService.FindOne(match.MatchId);
+            if(realMatch==null) return BadRequest("No match like that exists!");
+
+            if (match.ServerInfo != null)
+            {
+                realMatch.EndInfo.Team0Score = match.ServerInfo.Team0Score;
+                realMatch.EndInfo.Team1Score = match.ServerInfo.Team1Score;  
+            }
+            if(match.PlayerList!=null)
+                foreach (var playerModelExtended in match.PlayerList)
+                {
+                    var player = realMatch.PlayerResults.FirstOrDefault(x => x.UniqueId == playerModelExtended.UniqueId);
+                    player.Kills = playerModelExtended.Kills;
+                    player.Deaths = playerModelExtended.Deaths;
+                    player.Assists = playerModelExtended.Assists;
+                }
+
+            await _matchService.Upsert(realMatch);
+
+            return RedirectToAction("Index","MatchMaking");
+        }
+        
+        
         [HttpGet]
         public async Task<IActionResult> EditMatch(int id)
         {

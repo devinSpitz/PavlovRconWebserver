@@ -57,8 +57,7 @@ namespace PavlovRconWebserver.Extensions
             {
                 modStateIsEnough =  await IsUserAtLeastInTeamRole("Mod", tmpCommand.Value);
             }
-                
-            // Todo: Being mod on the server also means its ok
+            
             
             return isInRole || modStateIsEnough;
         }    

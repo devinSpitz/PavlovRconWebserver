@@ -58,8 +58,9 @@ namespace PavlovRconWebserver.Controllers
             {
                 var match = await _matchService.FindOne(matchId);
                 if(match==null) continue;
-                if(match.Status!=Status.OnGoing||match.Status!=Status.Finshed) continue;
-                var map = await _mapsService.FindOne(match.MapId);
+                if(match.Status!=Status.OnGoing&&match.Status!=Status.Finshed) continue;
+                var map = await _mapsService.FindOne(match.MapId.Replace("UGC",""));
+                if(map==null)  continue;
                 result.Add(_publicViewListsService.PavlovServerPlayerListPublicViewModel(new PavlovServerInfo
                 {
                     MapLabel = match.MapId,

@@ -42,6 +42,8 @@ namespace PavlovRconWebserver.Services
 
         public bool Delete(string id)
         {
+            
+            //Todo remove all connected Data
             return _liteDb.LiteDatabase.GetCollection<LiteDbUser>("LiteDbUser").Delete(new ObjectId(id));
         }
         

@@ -163,7 +163,6 @@ namespace PavlovRconWebserver.Services
 
         }
 
-        //Todo: function
         public async Task<ConnectionResult> SystemDStart(PavlovServer server, AuthType type, SshServer sshServer)
         {
             var connectionInfo = ConnectionInfo(server, type, out var result, sshServer);
@@ -228,7 +227,6 @@ namespace PavlovRconWebserver.Services
 
         }
 
-        //Todo function
         public async Task<ConnectionResult> SystemDStop(PavlovServer server, AuthType type, SshServer sshServer)
         {
             var connectionInfo = ConnectionInfo(server, type, out var result, sshServer);

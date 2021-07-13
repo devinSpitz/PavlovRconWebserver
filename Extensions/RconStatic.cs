@@ -111,11 +111,12 @@ namespace PavlovRconWebserver.Extensions
             var pavlovServerService = new PavlovServerService(new LiteDbIdentityContext(connectionString));
             var mapsService = new MapsService(new LiteDbIdentityContext(connectionString));
             var matchSelectedTeamSteamIdentitiesService = new MatchSelectedTeamSteamIdentitiesService(new LiteDbIdentityContext(connectionString));
+            var matchSelectedSteamIdentitiesService = new MatchSelectedSteamIdentitiesService(new LiteDbIdentityContext(connectionString));
             var pavlovServerInfoService = new PavlovServerInfoService(new LiteDbIdentityContext(connectionString),pavlovServerService,mapsService);
             var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString),pavlovServerService,pavlovServerInfoService);
             var pavlovServerPlayerHistoryService = new PavlovServerPlayerHistoryService(new LiteDbIdentityContext(connectionString));
             var rconService = new RconService(steamIdentityService,serverSelectedMapService,mapsService,pavlovServerInfoService,pavlovServerPlayerService,pavlovServerPlayerHistoryService);
-            var matchService = new MatchService(new LiteDbIdentityContext(connectionString),matchSelectedTeamSteamIdentitiesService,pavlovServerService);
+            var matchService = new MatchService(new LiteDbIdentityContext(connectionString),matchSelectedTeamSteamIdentitiesService,matchSelectedSteamIdentitiesService,pavlovServerService);
 
             var connectionInfo = RconService.ConnectionInfo(server, authType, out var result, server.SshServer);
             using var clientSsh = new SshClient(connectionInfo);
@@ -144,14 +145,14 @@ namespace PavlovRconWebserver.Extensions
                 {
                     bEnabled = false,
                     ServerName = match.Name,
-                    MaxPlayers = match.PlayerSlots, //Todo get real time
+                    MaxPlayers = match.PlayerSlots,
                     bSecured = true,
                     bCustomServer = true,
                     bWhitelist = true,
                     RefreshListTime = 120,
                     LimitedAmmoType = 0,
                     TickRate = 90,
-                    TimeLimit = match.TimeLimit, //Todo get real time
+                    TimeLimit = match.TimeLimit,
                     Password = null,
                     BalanceTableURL = null,
                     MapRotation = new List<PavlovServerGameIniMap>()
@@ -228,11 +229,12 @@ namespace PavlovRconWebserver.Extensions
             var pavlovServerService = new PavlovServerService(new LiteDbIdentityContext(connectionString));
             var mapsService = new MapsService(new LiteDbIdentityContext(connectionString));
             var matchSelectedTeamSteamIdentitiesService = new MatchSelectedTeamSteamIdentitiesService(new LiteDbIdentityContext(connectionString));
+            var matchSelectedSteamIdentitiesService = new MatchSelectedSteamIdentitiesService(new LiteDbIdentityContext(connectionString));
             var pavlovServerInfoService = new PavlovServerInfoService(new LiteDbIdentityContext(connectionString),pavlovServerService,mapsService);
             var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString),pavlovServerService,pavlovServerInfoService);
             var pavlovServerPlayerHistoryService = new PavlovServerPlayerHistoryService(new LiteDbIdentityContext(connectionString));
             var rconService = new RconService(steamIdentityService,serverSelectedMapService,mapsService,pavlovServerInfoService,pavlovServerPlayerService,pavlovServerPlayerHistoryService);
-            var matchService = new MatchService(new LiteDbIdentityContext(connectionString),matchSelectedTeamSteamIdentitiesService,pavlovServerService);
+            var matchService = new MatchService(new LiteDbIdentityContext(connectionString),matchSelectedTeamSteamIdentitiesService,matchSelectedSteamIdentitiesService,pavlovServerService);
             Console.WriteLine("MatchInspector started!");
             var match = await matchService.FindOne(matchId);
             

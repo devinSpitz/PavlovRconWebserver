@@ -15,15 +15,18 @@ namespace PavlovRconWebserver.Services
         private ILiteDbIdentityContext _liteDb;
         
         private readonly MatchSelectedTeamSteamIdentitiesService _matchSelectedTeamSteamIdentitiesService;
+        private readonly MatchSelectedSteamIdentitiesService _matchSelectedSteamIdentitiesService;
         private readonly PavlovServerService _pavlovServerService;
         
         public MatchService(ILiteDbIdentityContext liteDbContext,
             MatchSelectedTeamSteamIdentitiesService matchSelectedTeamSteamIdentitiesService,
+            MatchSelectedSteamIdentitiesService matchSelectedSteamIdentitiesService,
             PavlovServerService pavlovServerService
         )
         {
             _liteDb = liteDbContext;
             _matchSelectedTeamSteamIdentitiesService = matchSelectedTeamSteamIdentitiesService;
+            _matchSelectedSteamIdentitiesService = matchSelectedSteamIdentitiesService;
             _pavlovServerService = pavlovServerService;
 
         }
@@ -36,7 +39,6 @@ namespace PavlovRconWebserver.Services
             try
             {
                 var match = await FindOne(matchId);
-                //Todo: get selected steamidentitys
                 match.MatchTeam0SelectedSteamIdentities = (await _matchSelectedTeamSteamIdentitiesService.FindAllSelectedForMatchAndTeam(matchId, 0)).ToList();
                 match.MatchTeam1SelectedSteamIdentities = (await _matchSelectedTeamSteamIdentitiesService.FindAllSelectedForMatchAndTeam(matchId, 1)).ToList();
                 var server = await _pavlovServerService.FindOne(match.PavlovServer.Id);
@@ -120,6 +122,8 @@ namespace PavlovRconWebserver.Services
 
         public async Task<bool> Delete(int id)
         {
+            await _matchSelectedTeamSteamIdentitiesService.RemoveFromMatch(id);
+            await _matchSelectedSteamIdentitiesService.RemoveFromMatch(id);
             return _liteDb.LiteDatabase.GetCollection<Match>("Match").Delete(id);
         }
         public async Task<bool> CanBedeleted(int id)

@@ -312,7 +312,6 @@ function RconChooseItemPartialView()
         }
     });
 }
-//Todo: merge all that modal functions
 
 function RconChooseMapPartialView()
 {

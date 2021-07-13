@@ -225,21 +225,27 @@ namespace PavlovRconWebserver.Models
         public string Cash { get; set; } = "";
         public int TeamId { get; set; } = 0;
         public int Score { get; set; } = 0;
+        public int Kills { get; set; } = 0;
+        public int Deaths { get; set; } = 0;
+        public int Assists { get; set; } = 0;
 
         public string getKills()
         {
+            if (Kills != 0) return Kills.ToString();
             var tmp = KDA?.Split("/");
             if (tmp?.Length != 3) return "0";
             return tmp[0];
         }
         public string getDeaths()
         {
+            if (Deaths != 0) return Deaths.ToString();
             var tmp = KDA?.Split("/");
             if (tmp?.Length != 3) return "0";
             return tmp[1];
         }
         public string getAssists()
         {
+            if (Assists != 0) return Assists.ToString();
             var tmp = KDA?.Split("/");;
             if (tmp?.Length != 3) return "0";
             return tmp[2];

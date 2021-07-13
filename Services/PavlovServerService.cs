@@ -63,6 +63,7 @@ namespace PavlovRconWebserver.Services
 
         public async Task<bool> Delete(long id)
         {
+            //Todo remove all connected Data
             return _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer").Delete(id);
         }
     }
