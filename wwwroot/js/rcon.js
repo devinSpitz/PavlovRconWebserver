@@ -9,11 +9,10 @@ function init(){
  
     setValueFields(PlayerCommands,TwoValueCommands,true);
 
-    if(!MultiRcon)
-        $("#playerCommands").change(function(){
-            
-            setValueFields(PlayerCommands,TwoValueCommands,false);
-        });    
+    $("#playerCommands").change(function(){
+        
+        setValueFields(PlayerCommands,TwoValueCommands,false);
+    });    
     
     $("#twoValueCommands").change(function(){
         
@@ -25,7 +24,7 @@ function init(){
         $("#SingleServer :selected").each(function(){
             servers.push($(this).val())
         });
-        if(servers.length===1 &&typeof servers[0] !== undefined && servers[0] !== "" && !MultiRcon)
+        if(servers.length===1 &&typeof servers[0] !== undefined && servers[0] !== "")
         {
             var PlayerListBig = $("#PlayerListBig");
             PlayerListBig.html("");
@@ -37,7 +36,7 @@ function init(){
     $("#SingleServer :selected").each(function(){
         servers.push($(this).val())
     });
-    if(servers.length===1 &&typeof servers[0] !== undefined && servers[0] !== "" && !MultiRcon)
+    if(servers.length===1 &&typeof servers[0] !== undefined && servers[0] !== "")
     {
         var PlayerListBig = $("#PlayerListBig");
         PlayerListBig.html("");
@@ -463,21 +462,18 @@ function ValueFieldPartialView(playerCommands,twoValueCommands,atualCommandName,
 function setValueFields(playerCommands,twoValueCommands,documentReady = false)
 {
     
-    if(!MultiRcon) {
-        // PlayerValue
-        // Make Object
-        // get actual Command = 
-        if (!documentReady) {
-            $("#PlayerAction").find("#PlayerValueParent").find("input").remove();
-            $("#PlayerAction").find("#PlayerValueParent").find("select").remove();
-            $("#PlayerAction").find("#PlayerValueParent").find("a").remove();
-            $("#PlayerAction").find("#PlayerValueParent").find(".valueFieldButtons").remove();
-        }
-        ValueFieldPartialView(playerCommands, twoValueCommands, $("#playerCommands :selected").val(), true, true, function (data) {
-            $("#PlayerAction").find("#PlayerValueParent").append(data);
-        })
-
+    // PlayerValue
+    // Make Object
+    // get actual Command = 
+    if (!documentReady) {
+        $("#PlayerAction").find("#PlayerValueParent").find("input").remove();
+        $("#PlayerAction").find("#PlayerValueParent").find("select").remove();
+        $("#PlayerAction").find("#PlayerValueParent").find("a").remove();
+        $("#PlayerAction").find("#PlayerValueParent").find(".valueFieldButtons").remove();
     }
+    ValueFieldPartialView(playerCommands, twoValueCommands, $("#playerCommands :selected").val(), true, true, function (data) {
+        $("#PlayerAction").find("#PlayerValueParent").append(data);
+    })
     // ActionsWithTwovalues
     // Make Object
     if (!documentReady) {

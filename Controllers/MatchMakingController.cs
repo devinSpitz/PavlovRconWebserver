@@ -90,29 +90,12 @@ namespace PavlovRconWebserver.Controllers
             var realMatch = await _matchService.FindOne(match.MatchId);
             if (realMatch == null) return BadRequest("No match like that exists!");
 
-            if (match.ServerInfo != null)
-            {
-                realMatch.EndInfo.Team0Score = match.ServerInfo.Team0Score;
-                realMatch.EndInfo.Team1Score = match.ServerInfo.Team1Score;
-            }
-
-            if (match.PlayerList != null)
-                foreach (var playerModelExtended in match.PlayerList)
-                {
-                    var player =
-                        realMatch.PlayerResults.FirstOrDefault(x => x.UniqueId == playerModelExtended.UniqueId);
-                    if (player != null)
-                    {
-                        player.Kills = playerModelExtended.Kills;
-                        player.Deaths = playerModelExtended.Deaths;
-                        player.Assists = playerModelExtended.Assists;
-                    }
-                }
-
-            await _matchService.Upsert(realMatch);
+            await _matchService.SaveMatchResult(match, realMatch);
 
             return RedirectToAction("Index", "MatchMaking");
         }
+
+
 
 
         [HttpGet]
@@ -120,41 +103,12 @@ namespace PavlovRconWebserver.Controllers
         {
             var oldMatch = await _matchService.FindOne(id);
             if (!oldMatch.isEditable()) return BadRequest("No meets requirement!");
-            var match = new MatchViewModel
-            {
-                Id = oldMatch.Id,
-                Name = oldMatch.Name,
-                MapId = oldMatch.MapId,
-                ForceSop = oldMatch.ForceSop,
-                ForceStart = oldMatch.ForceStart,
-                TimeLimit = oldMatch.TimeLimit,
-                PlayerSlots = oldMatch.PlayerSlots,
-                GameMode = oldMatch.GameMode,
-                Team0 = oldMatch.Team0,
-                Team1 = oldMatch.Team1,
-                PavlovServer = oldMatch.PavlovServer,
-                Status = oldMatch.Status,
-                Team0Id = oldMatch.Team0?.Id,
-                Team1Id = oldMatch.Team1?.Id
-            };
-            if (oldMatch.PavlovServer != null)
-                match.PavlovServerId = oldMatch.PavlovServer.Id;
-            match.AllTeams = (await _teamService.FindAll()).ToList();
-            match.AllPavlovServers = (await _pavlovServerService.FindAll()).Where(x => x.ServerType == ServerType.Event)
-                .ToList(); // and where no match is already running
+            var match = await _matchService.PrepareViewModel(oldMatch);
 
-            match.MatchSelectedSteamIdentities =
-                (await _matchSelectedSteamIdentitiesService.FindAllSelectedForMatch(oldMatch.Id)).ToList();
-            match.MatchTeam0SelectedSteamIdentities =
-                (await _matchSelectedTeamSteamIdentitiesService.FindAllSelectedForMatchAndTeam(oldMatch.Id, 0))
-                .ToList();
-            match.MatchTeam1SelectedSteamIdentities =
-                (await _matchSelectedTeamSteamIdentitiesService.FindAllSelectedForMatchAndTeam(oldMatch.Id, 1))
-                .ToList();
-
-            var test = (await _matchSelectedTeamSteamIdentitiesService.FindAll()).ToList();
             return View("Match", match);
         }
+
+     
 
         public async Task<IActionResult> CreateMatch()
         {
@@ -231,125 +185,7 @@ namespace PavlovRconWebserver.Controllers
                     return BadRequest("The match already started so you can not change anything!");
             }
 
-            realmatch.Name = match.Name;
-            realmatch.MapId = match.MapId;
-            realmatch.GameMode = match.GameMode;
-            realmatch.TimeLimit = match.TimeLimit;
-            realmatch.PlayerSlots = match.PlayerSlots;
-
-            var gotAnswer = GameModes.HasTeams.TryGetValue(realmatch.GameMode, out var hasTeams);
-            if (gotAnswer)
-            {
-                if (hasTeams)
-                {
-                    realmatch.Team0 = await _teamService.FindOne((int) match.Team0Id);
-                    realmatch.Team0.TeamSelectedSteamIdentities =
-                        (await _teamSelectedSteamIdentityService.FindAllFrom(realmatch.Team0.Id)).ToList();
-                    realmatch.Team1 = await _teamService.FindOne((int) match.Team1Id);
-                    realmatch.Team1.TeamSelectedSteamIdentities =
-                        (await _teamSelectedSteamIdentityService.FindAllFrom(realmatch.Team1.Id)).ToList();
-
-                    // Check all steam identities
-                    foreach (var team0SelectedSteamIdentity in match.MatchTeam0SelectedSteamIdentitiesStrings)
-                    {
-                        var tmp = realmatch.Team0.TeamSelectedSteamIdentities.FirstOrDefault(x =>
-                            x.SteamIdentity.Id.ToString() == team0SelectedSteamIdentity);
-                        if (tmp != null)
-                            realmatch.MatchTeam0SelectedSteamIdentities.Add(new MatchTeamSelectedSteamIdentity
-                            {
-                                matchId = realmatch.Id,
-                                SteamIdentityId = team0SelectedSteamIdentity,
-                                TeamId = 0
-                            });
-                        else
-                            return BadRequest("The SteamID:" + team0SelectedSteamIdentity +
-                                              " is not a member of the team0!");
-                    }
-
-                    foreach (var team1SelectedSteamIdentity in match.MatchTeam1SelectedSteamIdentitiesStrings)
-                    {
-                        var tmp = realmatch.Team1.TeamSelectedSteamIdentities.FirstOrDefault(x =>
-                            x.SteamIdentity.Id.ToString() == team1SelectedSteamIdentity);
-                        if (tmp != null)
-                            realmatch.MatchTeam0SelectedSteamIdentities.Add(new MatchTeamSelectedSteamIdentity
-                            {
-                                matchId = realmatch.Id,
-                                SteamIdentityId = team1SelectedSteamIdentity,
-                                TeamId = 1
-                            });
-                        else
-                            return BadRequest("The SteamID:" + team1SelectedSteamIdentity +
-                                              " is not a member of the team0!");
-                    }
-                }
-                else
-                {
-                    foreach (var SelectedSteamIdentity in match.MatchSelectedSteamIdentitiesStrings)
-                    {
-                        var tmp = await _steamIdentityService.FindOne(SelectedSteamIdentity);
-                        if (tmp != null)
-                            realmatch.MatchSelectedSteamIdentities.Add(new MatchSelectedSteamIdentity
-                            {
-                                matchId = realmatch.Id,
-                                SteamIdentityId = SelectedSteamIdentity
-                            });
-                        else
-                            return BadRequest("The SteamID:" + SelectedSteamIdentity + " is not registred!");
-                    }
-                }
-
-                //When not a server is set!!!! or server already is running a match
-                if (match.PavlovServerId <= 0)
-                    return BadRequest("Please select a server!");
-                realmatch.PavlovServer = await _pavlovServerService.FindOne(match.PavlovServerId);
-                if (realmatch.PavlovServer == null) return BadRequest("Error while mapping pavlovServer!");
-                realmatch.Status = match.Status;
-            }
-            else
-            {
-                return BadRequest("Could not cast GameMode!");
-            }
-
-
-            //
-
-            var bla = await _matchService.Upsert(realmatch);
-
-            if (bla)
-            {
-                // First remove Old TeamSelected and Match selected stuff
-
-                if (realmatch.MatchSelectedSteamIdentities.Count > 0)
-                {
-                    foreach (var realmatchMatchSelectedSteamIdentity in realmatch.MatchSelectedSteamIdentities)
-                        realmatchMatchSelectedSteamIdentity.matchId = realmatch.Id;
-
-                    await _matchSelectedSteamIdentitiesService.Upsert(realmatch.MatchSelectedSteamIdentities,
-                        realmatch.Id);
-                }
-
-                // Then write the new ones
-
-                if (realmatch.MatchTeam0SelectedSteamIdentities.Count > 0)
-                {
-                    foreach (var matchTeam0SelectedSteamIdentities in realmatch.MatchTeam0SelectedSteamIdentities)
-                        matchTeam0SelectedSteamIdentities.matchId = realmatch.Id;
-
-                    await _matchSelectedTeamSteamIdentitiesService.Upsert(realmatch.MatchTeam0SelectedSteamIdentities,
-                        realmatch.Id, (int) match.Team0Id);
-                }
-
-                if (realmatch.MatchTeam1SelectedSteamIdentities.Count > 0)
-                {
-                    foreach (var matchTeam1SelectedSteamIdentities in realmatch.MatchTeam1SelectedSteamIdentities)
-                        matchTeam1SelectedSteamIdentities.matchId = realmatch.Id;
-
-                    await _matchSelectedTeamSteamIdentitiesService.Upsert(realmatch.MatchTeam1SelectedSteamIdentities,
-                        realmatch.Id, (int) match.Team1Id);
-                }
-
-                return new ObjectResult(true);
-            }
+            if (await _matchService.SaveMatchToService(match, realmatch)) return new ObjectResult(true);
 
             return BadRequest("Could not save match! Internal Error!");
         }
@@ -374,6 +210,7 @@ namespace PavlovRconWebserver.Controllers
             return RedirectToAction("Index", "MatchMaking");
         }
 
+        //Todo: Most of it to the service?
         [HttpPost("[controller]/PartialViewPerGameMode")]
         public async Task<IActionResult> PartialViewPerGameMode(string gameMode, Match match)
         {
@@ -381,7 +218,6 @@ namespace PavlovRconWebserver.Controllers
 
             var selectedSteamIdentitiesRaw =
                 (await _matchSelectedSteamIdentitiesService.FindAllSelectedForMatch(match.Id)).ToList();
-            var selectedSteamIdentitiesRaw2 = (await _matchSelectedSteamIdentitiesService.FindAll()).ToList();
             var selectedTeam0SteamIdentitiesRaw =
                 (await _matchSelectedTeamSteamIdentitiesService.FindAllSelectedForMatchAndTeam(match.Id, 0)).ToList();
             var selectedTeam1SteamIdentitiesRaw =

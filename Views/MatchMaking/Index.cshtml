@@ -72,7 +72,7 @@
                 @match.Status
                 @if (match.hasStats())
                 {
-                    <a class="btn btn-sm btn-primary" href="@Url.Action("PlayersFromMatches", "PublicViewLists", new {matchIds = new int[1] {match.Id}, backgroundColorHex = "#222", fontColorHex = "var(--bs-table-striped-color)"})"><span class="fas fa-eye"></span> Stats</a>
+                    <a class="btn btn-sm btn-primary" href="@Url.Action("PlayersFromMatches", "PublicViewLists", new {matchIds = new int[1] {match.Id}, backgroundColorHex = "#222", fontColorHex = "#ffffff"})"><span class="fas fa-eye"></span> Stats</a>
                 }
                 @if (match.isFinished())
                 {

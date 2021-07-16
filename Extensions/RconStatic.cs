@@ -105,6 +105,7 @@ namespace PavlovRconWebserver.Extensions
             var serverSelectedMapService = new ServerSelectedMapService(new LiteDbIdentityContext(connectionString));
             var pavlovServerService = new PavlovServerService(new LiteDbIdentityContext(connectionString));
             var mapsService = new MapsService(new LiteDbIdentityContext(connectionString));
+            var teamSelectedSteamIdentityService = new TeamSelectedSteamIdentityService(new LiteDbIdentityContext(connectionString));
             var matchSelectedTeamSteamIdentitiesService =
                 new MatchSelectedTeamSteamIdentitiesService(new LiteDbIdentityContext(connectionString));
             var matchSelectedSteamIdentitiesService =
@@ -117,8 +118,9 @@ namespace PavlovRconWebserver.Extensions
                 new PavlovServerPlayerHistoryService(new LiteDbIdentityContext(connectionString));
             var rconService = new RconService(steamIdentityService, serverSelectedMapService, mapsService,
                 pavlovServerInfoService, pavlovServerPlayerService, pavlovServerPlayerHistoryService);
+            var teamService =  new TeamService(new LiteDbIdentityContext(connectionString));
             var matchService = new MatchService(new LiteDbIdentityContext(connectionString),
-                matchSelectedTeamSteamIdentitiesService, matchSelectedSteamIdentitiesService, pavlovServerService);
+                matchSelectedTeamSteamIdentitiesService, matchSelectedSteamIdentitiesService,pavlovServerService,steamIdentityService,teamService,teamSelectedSteamIdentityService);
 
             var connectionInfo = RconService.ConnectionInfo(server, authType, out var result, server.SshServer);
             using var clientSsh = new SshClient(connectionInfo);
@@ -231,10 +233,12 @@ namespace PavlovRconWebserver.Extensions
             var serverSelectedMapService = new ServerSelectedMapService(new LiteDbIdentityContext(connectionString));
             var pavlovServerService = new PavlovServerService(new LiteDbIdentityContext(connectionString));
             var mapsService = new MapsService(new LiteDbIdentityContext(connectionString));
+            var teamSelectedSteamIdentityService = new TeamSelectedSteamIdentityService(new LiteDbIdentityContext(connectionString));
             var matchSelectedTeamSteamIdentitiesService =
                 new MatchSelectedTeamSteamIdentitiesService(new LiteDbIdentityContext(connectionString));
             var matchSelectedSteamIdentitiesService =
                 new MatchSelectedSteamIdentitiesService(new LiteDbIdentityContext(connectionString));
+            var teamService =  new TeamService(new LiteDbIdentityContext(connectionString));
             var pavlovServerInfoService = new PavlovServerInfoService(new LiteDbIdentityContext(connectionString),
                 pavlovServerService, mapsService);
             var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString),
@@ -244,7 +248,7 @@ namespace PavlovRconWebserver.Extensions
             var rconService = new RconService(steamIdentityService, serverSelectedMapService, mapsService,
                 pavlovServerInfoService, pavlovServerPlayerService, pavlovServerPlayerHistoryService);
             var matchService = new MatchService(new LiteDbIdentityContext(connectionString),
-                matchSelectedTeamSteamIdentitiesService, matchSelectedSteamIdentitiesService, pavlovServerService);
+                matchSelectedTeamSteamIdentitiesService, matchSelectedSteamIdentitiesService, pavlovServerService,steamIdentityService,teamService,teamSelectedSteamIdentityService);
             Console.WriteLine("MatchInspector started!");
             var match = await matchService.FindOne(matchId);
 

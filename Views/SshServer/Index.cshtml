@@ -56,37 +56,59 @@
             <td>
                 @if (sshServer.PavlovServers != null)
                 {
-                    <table class="table table-sm table-bordered table-responsive">
+                    <table class="table table-sm table-bordered table-responsive pavlovServerTable">
                         <tr>
-                            <th>Gui Name</th>
+                            <th>Gui Name <button class="btn btn-primary col-5 m-1" onclick="showHideTable(this)"><span class="fas fa-eye"></span> All columns</button></th>
                             <th>Service state</th>
-                            <th>Delete from list</th>
-                            <th>System</th>
-                            <th>Maps</th>
-                            <th>ServerSettings</th>
-                            <th>Stop/Start</th>
+                            <th class="toHide">Delete from list</th>
+                            <th class="toHide">System</th>
+                            <th class="toHide">Maps</th>
+                            <th class="toHide">ServerSettings</th>
+                            <th class="toHide">Stop/Start</th>
+                            <th class="toHide">Stats</th>
                         </tr>
                         @foreach (var pavlovServer in sshServer.PavlovServers)
                         {
+                            var bg = "";
+                            @if (pavlovServer.ServerServiceState == ServerServiceState.active)
+                            {
+                                bg = "text-success";
+                                
+                            }
+                            else if (pavlovServer.ServerServiceState==ServerServiceState.disabled)
+                            {
+                                bg = "text-danger";
+                                
+                            }
+                            else if (pavlovServer.ServerServiceState==ServerServiceState.inactive)
+                            {
+                                bg = "text-warning";
+                                
+                            }
+                            else if (pavlovServer.ServerServiceState==ServerServiceState.none)
+                            {
+                                bg = "text-light";
+                                
+                            }
                             <tr>
                                 <td> @pavlovServer.Name </td>
-                                <td> @pavlovServer.ServerServiceState </td>
-                                <td>
+                                <td class="@bg"> @pavlovServer.ServerServiceState </td>
+                                <td  class="toHide">
                                     <a class="btn btn-sm btn-danger" href="@Url.Action("DeleteServer", "PavlovServer", new {pavlovServer.Id})" onclick="return confirm('Are you sure you want to Delete?')">
                                         <span class="fas fa-trash-alt"></span>
                                     </a>
                                 </td>
-                                <td>
+                                <td  class="toHide">
                                     <a class="btn btn-sm btn-primary" href="@Url.Action("EditServer", "PavlovServer", new {serverId = pavlovServer.Id, sshServerId = sshServer.Id})">
                                         <span class="fas fa-edit"></span>
                                     </a>
                                 </td>
-                                <td>
+                                <td  class="toHide">
                                     <a class="btn btn-sm btn-primary" href="@Url.Action("EditServerSelectedMaps", "PavlovServer", new {serverId = pavlovServer.Id})">
                                         <span class="fas fa-map"></span>
                                     </a>
                                 </td>
-                                <td>
+                                <td  class="toHide">
                                     <a class="btn btn-sm btn-primary" href="@Url.Action("EditServerSettings", "PavlovServer", new {serverId = pavlovServer.Id})">
                                         <span class="fas fa-cogs"></span>
                                     </a>
@@ -97,11 +119,15 @@
                                         <span>Mods</span>
                                     </a>
                                 </td>
-                                <td>
+                                <td  class="toHide">
                                     <a class="btn btn-sm btn-danger" href="@Url.Action("StopSystemdService", "PavlovServer", new {serverId = pavlovServer.Id})" onclick="return confirm('Are you sure you want to stop the server?')">
                                         <span class="fas fa-stop"></span>
                                     </a>
                                     <a class="btn btn-sm btn-primary" href="@Url.Action("StartSystemdService", "PavlovServer", new {serverId = pavlovServer.Id})">Force <span class="fas fa-play"></span></a>
+                                </td>
+                                <td  class="toHide">
+                                    <a class="btn btn-sm btn-primary" href="@Url.Action("PlayersFromServers", "PublicViewLists", new {servers = new int[1] {pavlovServer.Id}, backgroundColorHex = "#222", fontColorHex = "#ffffff"})"><span class="fas fa-eye"></span> Stats</a>
+                                    <a class="btn btn-sm btn-primary" href="@Url.Action("GetHistoryOfServer", "PublicViewLists", new {serverId = pavlovServer.Id})"><span class="fas fa-eye"></span> History</a>
                                 </td>
                             </tr>
                         }
@@ -111,8 +137,45 @@
                 <a class="btn btn-sm btn-primary mb-1" href="@Url.Action("EditServer", "PavlovServer", new {serverId = 0, sshServerId = sshServer.Id})">
                     <span class="fas fa-plus"></span>
                 </a>
+                
+                <a class="btn btn-sm btn-primary mb-1" href="@Url.Action("PlayersFromServers", "PublicViewLists", new {servers = sshServer.PavlovServers?.Select(x=>x.Id).ToArray(), backgroundColorHex = "#222", fontColorHex = "#ffffff"})"><span class="fas fa-eye"></span> All Stats</a>
             </td>
         </tr>
     }
     </tbody>
 </table>
+
+<script>
+
+    function init(){
+        $(".pavlovServerTable").each(function(){
+            hideTable(true,$(this));
+        });
+    }
+    
+    function showHideTable(object)
+    {
+        let parent = $(object).parents(".pavlovServerTable");
+        hideTable(!parent.find(".hidden").exists(),parent)
+    }
+    
+    function hideTable(hide,table){
+        
+        if(hide)
+        {
+             $(table).find(".toHide").each(function (){
+                 $(this).addClass('hidden');
+             });
+        }
+        else
+        {
+               $(table).find(".toHide").each(function (){
+                     $(this).removeClass('hidden');
+                 });
+        }
+    }
+
+</script>
+<style>
+    .hidden {display:none;}
+</style>
