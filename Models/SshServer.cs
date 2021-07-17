@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -33,5 +34,13 @@ namespace PavlovRconWebserver.Models
         public string SshPassphrase { get; set; }
 
         [NotMapped] [BsonIgnore] public List<PavlovServer> PavlovServers { get; set; }
+
+
+
+        [DisplayName("Active Steam")]
+        [Required] public bool SteamIsAvailable { get; set; } = false; 
+        public string SteamUser { get; set; }
+        [DisplayName("SteamCMD folder path")]
+        public string SteamPath { get; set; }
     }
 }

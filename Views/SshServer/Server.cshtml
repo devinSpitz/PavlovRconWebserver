@@ -92,6 +92,41 @@
 
             </div>
         </div>
+        <div class="card m-1">
+        <div class="card-header">Steam (WIP)</div>
+        <div class="card-body">
+        <div class="card m-1 bg-info">
+            <ul>
+                <li>The steam user will get used over "sudo -iu {user}" so make sure that the ssh user has sudo rights</li>
+                <li>With that you can update your Pavlov server over the gui</li>
+            </ul>
+        </div>
+            <div class="row">
+                <div class="form-group col-md-2">
+                    <label asp-for="SteamIsAvailable"></label>
+                    <input asp-for="SteamIsAvailable" class="form-control form-check-input" value="@Model.SteamIsAvailable"/>
+                    <span asp-validation-for="SteamIsAvailable" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="form-group col-md-6">
+                    <label asp-for="SteamUser"></label>
+                    <input asp-for="SteamUser" class="form-control" value="@Model.SteamUser"/>
+                    <span asp-validation-for="SteamUser" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="form-group col-md-6">
+                    <label asp-for="SteamPath"></label>
+                    <input asp-for="SteamPath" class="form-control" value="@Model.SteamPath"/>
+                    <span asp-validation-for="SteamPath" class="text-danger"></span>
+                </div>
+            </div>
+
+        </div>
+    </div>
 
         <div class="saveButton col-md-1 mt-3">
             <button type="submit" class="btn btn-success col-md-12">Save</button>
