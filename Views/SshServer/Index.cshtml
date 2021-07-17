@@ -148,9 +148,12 @@
 <script>
 
     function init(){
-        $(".pavlovServerTable").each(function(){
-            hideTable(true,$(this));
-        });
+        if (isMobile)
+        {  
+            $(".pavlovServerTable").each(function(){
+                hideTable(true,$(this));
+            });
+        }
     }
     
     function showHideTable(object)
