@@ -122,6 +122,8 @@ namespace PavlovRconWebserver.Controllers
                 server.SshServer = await _service.FindOne(server.sshServerId);
                 if (server.create)
                 {
+                    //Todo delete server if somethings goes wrong and also give it as an option may need root as well
+                    //Todo stop when folder exist or when service already exist or when already a server with the same port is registerd on this ssh server
                     var result = "";
                     try
                     {
@@ -145,6 +147,24 @@ namespace PavlovRconWebserver.Controllers
                         server.SshServer.SshUsername = oldSSHcrid.SshUsername;
                         server.SshServer.SshPassword = oldSSHcrid.SshPassword;
                         server.SshServer.SshKeyFileName = oldSSHcrid.SshKeyFileName;
+                        
+                        //start server and stop server to get Saved folder etc.
+                        try
+                        {
+                            await SystemdService.StartServerService(server, _rconService, _pavlovServerService, _service);
+                        }
+                        catch (Exception )
+                        {
+                            //ignore
+                        }
+                        try
+                        {
+                            await SystemdService.StopServerService(server, _rconService, _pavlovServerService, _service);
+                        }
+                        catch (Exception )
+                        {
+                            //ignore
+                        }
                         result += "\n *******************************Update/Install PavlovServerService Done*******************************";
                         
                         var pavlovServerGameIni = new PavlovServerGameIni()
