@@ -18,6 +18,7 @@ namespace PavlovRconWebserver.Models
         [DisplayName("SSH port")] public int SshPort { get; set; } = 22;
 
         [DisplayName("SSH username")] public string SshUsername { get; set; }
+        [NotMapped] [BsonIgnore] public string NotRootSshUsername { get; set; }
 
         [DisplayName("SSH password")]
         [Display(Description = "CAUTION: WILL BE SAVED BLANK")]
@@ -39,7 +40,6 @@ namespace PavlovRconWebserver.Models
 
         [DisplayName("Active Steam")]
         [Required] public bool SteamIsAvailable { get; set; } = false; 
-        public string SteamUser { get; set; }
         [DisplayName("SteamCMD folder path")]
         public string SteamPath { get; set; }
     }

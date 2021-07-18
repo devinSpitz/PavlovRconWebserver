@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using LiteDB.Identity.Database;
 using PavlovRconWebserver.Exceptions;
@@ -60,6 +62,8 @@ namespace PavlovRconWebserver.Services
 
         public async Task<PavlovServer> validatePavlovServer(PavlovServer pavlovServer, RconService rconService)
         {
+            
+            Console.WriteLine("start validate");
             var hasToStop = false;
             if (string.IsNullOrEmpty(pavlovServer.TelnetPassword) && pavlovServer.Id != 0)
                 pavlovServer.TelnetPassword = (await _pavlovServer.FindOne(pavlovServer.Id)).TelnetPassword;
@@ -80,15 +84,21 @@ namespace PavlovRconWebserver.Services
                 string.IsNullOrEmpty(pavlovServer.SshServer.SshKeyFileName))
                 throw new SaveServerException("SshPassword", "You need at least a password or a key file!");
 
+            
+            Console.WriteLine("try to start service");
             //try if the service realy exist
             try
             {
                 pavlovServer = await SystemdService.GetServerServiceState(pavlovServer, rconService);
                 if (pavlovServer.ServerServiceState != ServerServiceState.active)
                 {
+                    Console.WriteLine("has to start");
                     hasToStop = true;
+                    //the problem is here for the validating part if it has to start the service first it has problems
                     await SystemdService.StartServerService(pavlovServer, rconService, _pavlovServer, this);
                     pavlovServer = await SystemdService.GetServerServiceState(pavlovServer, rconService);
+                    
+                    Console.WriteLine("state = "+pavlovServer.ServerServiceState);
                 }
             }
             catch (CommandException e)
@@ -96,6 +106,7 @@ namespace PavlovRconWebserver.Services
                 throw new SaveServerException("", e.Message);
             }
 
+            Console.WriteLine("try to send serverinfo");
             //try to send Command ServerInfo
             try
             {
@@ -103,23 +114,33 @@ namespace PavlovRconWebserver.Services
             }
             catch (CommandException e)
             {
+                await HasToStop(pavlovServer, rconService, hasToStop);
                 throw new SaveServerException("", e.Message);
             }
 
             //try if the user have rights to delete maps cache
             try
             {
+                Console.WriteLine("delete unused maps");
                 await rconService.SendCommand(pavlovServer, "", true);
             }
             catch (CommandException e)
-            {
+            { 
+                await HasToStop(pavlovServer, rconService, hasToStop);
                 throw new SaveServerException("", e.Message);
             }
+            await HasToStop(pavlovServer, rconService, hasToStop);
 
+            return pavlovServer;
+        }
+
+        private async Task<PavlovServer> HasToStop(PavlovServer pavlovServer, RconService rconService, bool hasToStop)
+        {
             if (hasToStop)
             {
+                Console.WriteLine("stop server again!");
                 await SystemdService.StopServerService(pavlovServer, rconService, _pavlovServer, this);
-                pavlovServer.ServerServiceState = ServerServiceState.disabled;
+                pavlovServer = await SystemdService.GetServerServiceState(pavlovServer, rconService);
             }
 
             return pavlovServer;

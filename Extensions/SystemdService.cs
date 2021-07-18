@@ -87,7 +87,15 @@ namespace PavlovRconWebserver.Extensions
         {
             var state = await rconSerivce.SendCommand(pavlovServer, "", false, false, "", false, false, null, false,
                 false, false, true);
-            await UpdateAllServiceStates(rconSerivce, pavlovServerService, sshServerSerivce);
+            try
+            {
+                await UpdateAllServiceStates(rconSerivce, pavlovServerService, sshServerSerivce);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            
             return state;
         }
 
@@ -96,7 +104,29 @@ namespace PavlovRconWebserver.Extensions
         {
             var state = await rconSerivce.SendCommand(pavlovServer, "", false, false, "", false, false, null, false,
                 false, true);
-            await UpdateAllServiceStates(rconSerivce, pavlovServerService, sshServerSerivce);
+            
+            try
+            {
+                await UpdateAllServiceStates(rconSerivce, pavlovServerService, sshServerSerivce);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            return state;
+        }
+        
+        public static async Task<string> UpdateInstallPavlovServer(PavlovServer pavlovServer, RconService rconSerivce)
+        {
+            var state = await rconSerivce.SendCommand(pavlovServer, "", false, false, "", false, false, null, false,
+                false, false,false,true);
+            return state;
+        }
+        
+        public static async Task<string> InstallPavlovServerService(PavlovServer pavlovServer, RconService rconSerivce)
+        {
+            var state = await rconSerivce.SendCommand(pavlovServer, "", false, false, "", false, false, null, false,
+                false, false,false,false,true);
             return state;
         }
     }

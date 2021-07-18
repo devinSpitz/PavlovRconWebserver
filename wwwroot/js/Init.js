@@ -13,6 +13,15 @@ $(document).ready(function() {
 
         return form;
     };
+    
+    $(".form-check-input").change(function(){
+        if($(this).is(":checked"))
+        {
+            $(this).val("true");
+        }else{
+            $(this).val("false");
+        }
+    });
 
 });
 

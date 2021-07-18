@@ -15,38 +15,6 @@ Videos:
 [Feature Guide](https://youtu.be/iSmAP6_DAyM)  
 [How To Install/Build](https://youtu.be/GBgW4mP2zgI)    
 
-Since last commit the ssh user will need following premissions and the priviliges to start/stop/enable services (root) for this folder and everything in there:  
-  
-Read+Write /home/steam/pavlovserver/   // path of your pavlov server: for now only to manage the blacklist but will be more in the future.  
-Read+Write /tmp/workshop/7777/content/555160/   // path to the pavlov maps: 7777 could be different on your system. It is the port your pavlov server uses!  
-
-
-```
-sudo groupadd pavlovRconWebserver && 
-sudo usermod -a -G pavlovRconWebserver UserNameWhichIsEnteredAsSshUserInPavlovRconWebserver &&
-sudo usermod -a -G pavlovRconWebserver steam && 
-sudo chown :pavlovRconWebserver /tmp/workshop/7777/content/555160/ && 
-sudo chown :pavlovRconWebserver /home/steam/pavlovserver/Pavlov/Saved/Config/ &&
-sudo chown :pavlovRconWebserver /home/steam/pavlovserver/Pavlov/Saved/Config/LinuxServer/ &&
-sudo chown :pavlovRconWebserver /home/steam/pavlovserver/Pavlov/Saved/Config/LinuxServer/* &&
-sudo chmod 777 /home/steam/pavlovserver/Pavlov/Saved/Config/LinuxServer/Game.ini &&
-sudo setfacl -m g:pavlovRconWebserver:rwx,d:g:pavlovRconWebserver:rwx /tmp/workshop/7777/content/555160/ &&
-sudo setfacl -m g:pavlovRconWebserver:rwx,d:g:pavlovRconWebserver:rwx /home/steam/pavlovserver/Pavlov/Saved/Config/ &&
-sudo setfacl -m g:pavlovRconWebserver:rwx,d:g:pavlovRconWebserver:rwx /home/steam/pavlovserver/Pavlov/Saved/Config/LinuxServer/ &&
-```
-
-you may also need this for all the files which already be there (This is way to powerfull but works)
-```
-sudo chmod 777 $(find /tmp/workshop/7777/content/555160/ -type d)
-```
-
-sudo 
-
-
-
-* Telnet direct connections are not supported anymore cause i have to clean the maps from the cache!  
-
-
 
 Auth logic with priority(with added multiple options):
 
@@ -71,6 +39,8 @@ https://dev.to/ianknighton/hosting-a-net-core-app-with-nginx-and-let-s-encrypt-1
 Features:
 =======
 newly added:  
+* The ssh user now should be the steam user. (Root user will fail in code)
+* Root user is needed to create a pavlov server(will not be saved!). The service that gets create need root to make the .service file
 * Users can now change there skin
 * Server handle Stop and Start  
 * Chosen maps not only have effect on deleting also has effect on the server settings.  
@@ -147,6 +117,11 @@ https://github.com/9swampy/Telnet/
 Font Awesome  
 Get vector icons and social logos on your website with Font Awesome, the web's most popular icon set and toolkit.   
 https://fontawesome.com/  
+
+
+Bootswatch  
+Free themes for Bootstrap  
+https://bootswatch.com/  
 
 =====================  
 Thanks to all this people who worked for this nuget packages. Without that it wouldn't be possible to do this.  

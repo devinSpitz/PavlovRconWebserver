@@ -138,7 +138,7 @@ namespace PavlovRconWebserver.Extensions
 
                 //Write whitelist and set server settings
                 var whitelist = await rconService.WriteFile(server, authType,
-                    server.ServerFolderPath + FilePaths.WhiteList, server.SshServer,
+                    server.ServerFolderPath + FilePaths.WhiteList,
                     Strings.Join(listOfSteamIdentietiesWhichCanPlay.Select(x => x.SteamIdentityId).ToArray(),
                         ";" + Environment.NewLine));
                 if (!whitelist.Success)
@@ -182,7 +182,7 @@ namespace PavlovRconWebserver.Extensions
                         GameMode = match.GameMode
                     }
                 }, rconService);
-                await rconService.SystemDStart(server, authType, server.SshServer);
+                await rconService.SystemDStart(server, authType);
 
                 //StartWatchServiceForThisMatch
                 match.Status = Status.StartetWaitingForPlayer;
@@ -261,7 +261,7 @@ namespace PavlovRconWebserver.Extensions
                     return;
                 }
 
-                await rconService.SShTunnelGetAllInfoFromPavlovServer(server, authType, server.SshServer);
+                await rconService.SShTunnelGetAllInfoFromPavlovServer(server, authType);
                 switch (match.Status)
                 {
                     case Status.StartetWaitingForPlayer:
@@ -307,7 +307,7 @@ namespace PavlovRconWebserver.Extensions
         {
             match.Status = Status.Finshed;
             await matchService.Upsert(match);
-            await rconService.SystemDStop(server, authType, server.SshServer);
+            await rconService.SystemDStop(server, authType);
             Console.WriteLine("Stopped server!");
         }
 
