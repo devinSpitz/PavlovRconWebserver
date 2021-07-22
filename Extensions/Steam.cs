@@ -34,7 +34,7 @@ namespace PavlovRconWebserver.Extensions
             foreach (var signleServer in server.PavlovServers)
                 try
                 {
-                    await rconSerivce.SendCommand(signleServer, "", true);
+                    await rconSerivce.DeleteUnusedMaps(signleServer);
                 }
                 catch (Exception e)
                 {

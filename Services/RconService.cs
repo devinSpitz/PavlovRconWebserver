@@ -86,10 +86,39 @@ namespace PavlovRconWebserver.Services
 
             return result;
         }
-
-        public async Task<ConnectionResult> SystemDCheckState(PavlovServer server, AuthType type)
+        
+        
+        public static async Task<AuthType> GetAuthType(PavlovServer server)
         {
-            var connectionInfo = ConnectionInfo(server, type, out var result, server.SshServer);
+            List<AuthType> auths = new List<AuthType>()
+            {
+                AuthType.PrivateKeyPassphrase,
+                AuthType.PrivateKey,
+                AuthType.UserPass
+            };
+            foreach (var type in auths)
+            {
+                try
+                {
+                    var connectionInfo = ConnectionInfo(server, type, out var result);
+                    using var client = new SshClient(connectionInfo);
+                    client.Connect();
+                    if (client.IsConnected)
+                        return type;
+                }
+                catch (Exception)
+                {
+                    //ignore and find the right one to use
+                }
+            }
+
+            throw new CommandException("No auth method worked!");
+        }
+
+        public async Task<string> SystemDCheckState(PavlovServer server)
+        {
+            var type = await GetAuthType(server);
+            var connectionInfo = ConnectionInfo(server, type, out var result);
             using var client = new SshClient(connectionInfo);
             try
             {
@@ -166,12 +195,13 @@ namespace PavlovRconWebserver.Services
             }
 
             if (result.errors.Count <= 0 || result.answer != "") result.Success = true;
-            return result;
+            return EndConnection(result);
         }
 
-        public async Task<ConnectionResult> SystemDStart(PavlovServer server, AuthType type)
+        public async Task<ConnectionResult> SystemDStart(PavlovServer server)
         {
-            var connectionInfo = ConnectionInfo(server, type, out var result, server.SshServer);
+            var type = await GetAuthType(server);
+            var connectionInfo = ConnectionInfo(server, type, out var result);
             using var client = new SshClient(connectionInfo);
             try
             {
@@ -261,9 +291,10 @@ namespace PavlovRconWebserver.Services
             return result;
         }
 
-        public async Task<ConnectionResult> SystemDStop(PavlovServer server, AuthType type)
+        public async Task<ConnectionResult> SystemDStop(PavlovServer server)
         {
-            var connectionInfo = ConnectionInfo(server, type, out var result, server.SshServer);
+            var type = await GetAuthType(server);
+            var connectionInfo = ConnectionInfo(server, type, out var result);
             using var client = new SshClient(connectionInfo);
             try
             {
@@ -348,22 +379,84 @@ namespace PavlovRconWebserver.Services
 
             return result;
         }
-
-        public async Task<ConnectionResult> UpdateInstallPavlovServer(PavlovServer server, AuthType type)
+        //
+        // public async Task<ConnectionResult> RemovePavlovServerFolder(PavlovServer server)
+        // {
+        //     var type = await GetAuthType(server);
+        //     var connectionInfo = ConnectionInfo(server, type, out var result);
+        //     var restart = false;
+        //     if (server.ServerServiceState == ServerServiceState.active)
+        //     {
+        //         restart = true;
+        //         await SystemDStop(server);
+        //     }
+        //     using var client = new SshClient(connectionInfo);
+        //     try
+        //     {
+        //         client.Connect();
+        //         var stream =
+        //         client.CreateShellStream("pavlovRconWebserverSShTunnelSystemdCheck", 80, 24, 800, 600, 1024);
+        //         var update = await SendCommandForShell(
+        //             "rm -rf "+server.ServerFolderPath, stream, "");
+        //         if (update == null) result.errors.Add("Could not remove the pavlovserver folder " + server.Name);
+        //         result.answer = update;
+        //     }
+        //     catch (Exception e)
+        //     {
+        //         switch (e)
+        //         {
+        //             case SshAuthenticationException _:
+        //                 result.errors.Add("Could not Login over ssh!" + server.Name);
+        //                 break;
+        //             case SshConnectionException _:
+        //                 result.errors.Add("Could not connect to host over ssh!" + server.Name);
+        //                 break;
+        //             case SshOperationTimeoutException _:
+        //                 result.errors.Add("Could not connect to host cause of timeout over ssh!" + server.Name);
+        //                 break;
+        //             case SocketException _:
+        //                 result.errors.Add("Could not connect to host!" + server.Name);
+        //                 break;
+        //             case InvalidOperationException _:
+        //                 result.errors.Add(e.Message + " <- most lily this error is from telnet" + server.Name);
+        //                 break;
+        //             default:
+        //             {
+        //                 client.Disconnect();
+        //                 throw;
+        //             }
+        //         }
+        //     }
+        //     finally
+        //     {
+        //         client.Disconnect();
+        //     }
+        //
+        //     if (restart)
+        //     {
+        //         await SystemDStart(server);
+        //     }
+        //     
+        //     if (result.errors.Count <= 0 || result.answer != "") result.Success = true;
+        //
+        //     return result;
+        // }
+        //
+        public async Task<string> UpdateInstallPavlovServer(PavlovServer server)
         {
-
-            var connectionInfo = ConnectionInfo(server, type, out var result, server.SshServer);
+            var type = await GetAuthType(server);
+            var connectionInfo = ConnectionInfo(server, type, out var result);
             if(!server.SshServer.SteamIsAvailable)
             {
                 result.Success = false;
                 result.errors.Add(" Steam is now enabled on this server!");
-                return result;
+                return EndConnection(result);
             } 
             var restart = false;
             if (server.ServerServiceState == ServerServiceState.active)
             {
                 restart = true;
-                await SystemDStop(server, type);
+                await SystemDStop(server);
             }
             using var client = new SshClient(connectionInfo);
             try
@@ -409,22 +502,23 @@ namespace PavlovRconWebserver.Services
 
             if (restart)
             {
-                await SystemDStart(server, type);
+                await SystemDStart(server);
             }
             
             if (result.errors.Count <= 0 || result.answer != "") result.Success = true;
 
-            return result;
+            
+            return EndConnection(result);
         }
-        public async Task<ConnectionResult> InstallPavlovServerService(PavlovServer server, AuthType type)
+        public async Task<string> InstallPavlovServerService(PavlovServer server)
         {
-
-            var connectionInfo = ConnectionInfo(server, type, out var result, server.SshServer);
+            var type = await GetAuthType(server);
+            var connectionInfo = ConnectionInfo(server, type, out var result);
             if(!server.SshServer.SteamIsAvailable)
             {
                 result.Success = false;
                 result.errors.Add(" Steam is now enabled on this server!");
-                return result;
+                return EndConnection(result);
             } 
             using var client = new SshClient(connectionInfo);
             using var sftp = new SftpClient(connectionInfo);
@@ -476,7 +570,7 @@ WantedBy = multi-user.target";
                 {
                     result.Success = false;
                     result.errors.Add("Could not upload service file!");
-                    return result;
+                    return EndConnection(result);
                 }
                 //daemon reload
                 client.Connect();
@@ -523,13 +617,15 @@ WantedBy = multi-user.target";
             
             if (result.errors.Count <= 0 || result.answer != "") result.Success = true;
 
-            return result;
+            return EndConnection(result);
         }
 
-        private async Task<ConnectionResult> SShTunnelMultipleCommands(PavlovServer server, AuthType type,
+        private async Task<ConnectionResult> SShTunnelMultipleCommands(PavlovServer server,
             string[] commands)
         {
-            var connectionInfo = ConnectionInfo(server, type, out var result, server.SshServer);
+            if(server.ServerServiceState != ServerServiceState.active) throw new CommandException("will not do command while server service is inactive!");
+            var type = await GetAuthType(server);
+            var connectionInfo = ConnectionInfo(server, type, out var result);
             using var client = new SshClient(connectionInfo);
             try
             {
@@ -633,7 +729,7 @@ WantedBy = multi-user.target";
             return result;
         }
 
-        private static async Task<string> SingleCommandResult(Client client2, string command)
+        public static async Task<string> SingleCommandResult(Client client2, string command)
         {
             await client2.WriteLine(command);
             var commandResult = await client2.ReadAsync(TimeSpan.FromMilliseconds(300));
@@ -653,14 +749,15 @@ WantedBy = multi-user.target";
             return singleCommandResult;
         }
 
-        private async Task<ConnectionResult> SShTunnel(PavlovServer server, AuthType type, string command)
+        public async Task<string> SendCommandSShTunnel(PavlovServer server, string command)
         {
-            var result = await SShTunnelMultipleCommands(server, type, new[] {command});
-            return result;
+            
+            var result = await SShTunnelMultipleCommands(server, new[] {command});
+
+            return EndConnection(result);
         }
 
-        public static ConnectionInfo ConnectionInfo(PavlovServer server, AuthType type, out ConnectionResult result,
-            SshServer sshServer)
+        public static ConnectionInfo ConnectionInfo(PavlovServer server, AuthType type, out ConnectionResult result)
         {
             ConnectionInfo connectionInfo = null;
 
@@ -668,31 +765,32 @@ WantedBy = multi-user.target";
             //auth
             if (type == AuthType.PrivateKey)
             {
-                var keyFiles = new[] {new PrivateKeyFile("KeyFiles/" + sshServer.SshKeyFileName)};
-                connectionInfo = new ConnectionInfo(sshServer.Adress, sshServer.SshPort, sshServer.SshUsername,
-                    new PrivateKeyAuthenticationMethod(sshServer.SshUsername, keyFiles));
+                var keyFiles = new[] {new PrivateKeyFile("KeyFiles/" + server.SshServer.SshKeyFileName)};
+                connectionInfo = new ConnectionInfo(server.SshServer.Adress, server.SshServer.SshPort, server.SshServer.SshUsername,
+                    new PrivateKeyAuthenticationMethod(server.SshServer.SshUsername, keyFiles));
             }
             else if (type == AuthType.UserPass)
             {
-                connectionInfo = new ConnectionInfo(sshServer.Adress, sshServer.SshPort, sshServer.SshUsername,
-                    new PasswordAuthenticationMethod(sshServer.SshUsername, sshServer.SshPassword));
+                connectionInfo = new ConnectionInfo(server.SshServer.Adress, server.SshServer.SshPort, server.SshServer.SshUsername,
+                    new PasswordAuthenticationMethod(server.SshServer.SshUsername, server.SshServer.SshPassword));
             }
             else if (type == AuthType.PrivateKeyPassphrase)
             {
                 var keyFiles = new[]
-                    {new PrivateKeyFile("KeyFiles/" + sshServer.SshKeyFileName, sshServer.SshPassphrase)};
-                connectionInfo = new ConnectionInfo(sshServer.Adress, sshServer.SshPort, sshServer.SshUsername,
-                    new PasswordAuthenticationMethod(sshServer.SshUsername, sshServer.SshPassphrase),
-                    new PrivateKeyAuthenticationMethod(sshServer.SshUsername, keyFiles));
+                    {new PrivateKeyFile("KeyFiles/" + server.SshServer.SshKeyFileName, server.SshServer.SshPassphrase)};
+                connectionInfo = new ConnectionInfo(server.SshServer.Adress, server.SshServer.SshPort, server.SshServer.SshUsername,
+                    new PasswordAuthenticationMethod(server.SshServer.SshUsername, server.SshServer.SshPassphrase),
+                    new PrivateKeyAuthenticationMethod(server.SshServer.SshUsername, keyFiles));
             }
 
             return connectionInfo;
         }
 
-        private async Task<ConnectionResult> GetFile(PavlovServer server, AuthType type, string path)
+        public async Task<string> GetFile(PavlovServer server, string path)
         {
             var connectionResult = new ConnectionResult();
-            var connectionInfo = ConnectionInfo(server, type, out var result, server.SshServer);
+            var type = await GetAuthType(server);
+            var connectionInfo = ConnectionInfo(server, type, out var result);
             //check if first scripts exist
             using var sftp = new SftpClient(connectionInfo);
             try
@@ -728,13 +826,25 @@ WantedBy = multi-user.target";
                 sftp.Disconnect();
             }
 
-            return connectionResult;
+            
+            return EndConnection(connectionResult);
+        }
+        private string EndConnection(ConnectionResult connectionResult)
+        {
+            if (!connectionResult.Success)
+            {
+                if (connectionResult.errors.Count <= 0) throw new CommandException("Could not connect to server!");
+                throw new CommandException(Strings.Join(connectionResult.errors.ToArray(), "\n"));
+            }
+
+            return connectionResult.answer;
         }
 
-        public async Task<ConnectionResult> WriteFile(PavlovServer server, AuthType type, string path, string content)
+        public async Task<string> WriteFile(PavlovServer server, string path, string content)
         {
             var connectionResult = new ConnectionResult();
-            var connectionInfo = ConnectionInfo(server, type, out var result, server.SshServer);
+            var type = await GetAuthType(server);
+            var connectionInfo = ConnectionInfo(server, type, out var result);
             //check if first scripts exist
             using var sftp = new SftpClient(connectionInfo);
             sftp.BufferSize = 4 * 1024; // bypass Payload error large files
@@ -784,22 +894,21 @@ WantedBy = multi-user.target";
                 sftp.Disconnect();
             }
 
-            return connectionResult;
+            return EndConnection(connectionResult);
         }
 
         public async Task<bool> SaveBlackListEntry(PavlovServer server, List<ServerBans> NewBlackListContent)
         {
             var blacklistArray = NewBlackListContent.Select(x => x.SteamId).ToArray();
             var content = string.Join(Environment.NewLine, blacklistArray);
-            var blacklist = await SendCommand(server, server.ServerFolderPath + FilePaths.BanList, false, false,
-                content, true);
-
+            var blacklist = await WriteFile(server, server.ServerFolderPath + FilePaths.BanList,content);
             return true;
         }
 
-        public async Task<ConnectionResult> SShTunnelGetAllInfoFromPavlovServer(PavlovServer server, AuthType type)
+        public async Task<string> SShTunnelGetAllInfoFromPavlovServer(PavlovServer server)
         {
-            var connectionInfo = ConnectionInfo(server, type, out var result, server.SshServer);
+            var type = await GetAuthType(server);
+            var connectionInfo = ConnectionInfo(server, type, out var result);
             using var client = new SshClient(connectionInfo);
             var costumesToSet = new Dictionary<string, string>();
             try
@@ -921,7 +1030,7 @@ WantedBy = multi-user.target";
 
 
                                     foreach (var customToSet in costumesToSet)
-                                        await SendCommand(server,
+                                        await SendCommandSShTunnel(server,
                                             "SetPlayerSkin " + customToSet.Key + " " + customToSet.Value);
                                 }
                                 else
@@ -981,13 +1090,25 @@ WantedBy = multi-user.target";
                 client.Disconnect();
             }
 
-            return result;
+            return EndConnection(result);
         }
 
         public async Task<List<ServerBans>> GetServerBansFromBlackList(PavlovServer server, List<ServerBans> banlist)
         {
-            var blacklist = await SendCommand(server, server.ServerFolderPath + FilePaths.BanList, false, true);
-            var lines = blacklist.Split(
+            var answer = "";
+
+            try
+            {
+
+                answer = await GetFile(server, server.ServerFolderPath + FilePaths.BanList);
+
+            }
+            catch (Exception e)
+            {
+                throw new CommandException(e.Message);
+            }
+            
+            var lines = answer.Split(
                 new[] {"\r\n", "\r", "\n"},
                 StringSplitOptions.None
             );
@@ -1012,7 +1133,7 @@ WantedBy = multi-user.target";
             return banlist;
         }
 
-        private async Task<ConnectionResult> DeleteUnusedMaps(PavlovServer server, AuthType type)
+        public async Task<ConnectionResult> DeleteUnusedMaps(PavlovServer server)
         {
             // Ned to check
             //1. Running Maps
@@ -1024,7 +1145,8 @@ WantedBy = multi-user.target";
             //     answer = "Did nothing"
             // };
             var connectionResult = new ConnectionResult();
-            var connectionInfo = ConnectionInfo(server, type, out var result, server.SshServer);
+            var type = await GetAuthType(server);
+            var connectionInfo = ConnectionInfo(server, type, out var result);
             using var client = new SshClient(connectionInfo);
             client.Connect();
             //check if first scripts exist
@@ -1098,7 +1220,7 @@ WantedBy = multi-user.target";
             return connectionResult;
         }
 
-        private static void DeleteDirectory(SftpClient client, string path)
+        public static void DeleteDirectory(SftpClient client, string path)
         {
             foreach (var file in client.ListDirectory(path))
                 if (file.Name != "." && file.Name != "..")
@@ -1112,127 +1234,6 @@ WantedBy = multi-user.target";
             client.DeleteDirectory(path);
         }
 
-        //Use every type of auth as a backup way to get the result
-        // that can cause long waiting times but i think its better than just do one thing.
-        //Todo Write this function nice its just a mess but it works for now
-        public async Task<string> SendCommand(PavlovServer server, string command, bool deleteUnusedMaps = false,
-            bool getFile = false, string writeContent = "", bool writeFile = false, bool multiCommand = false,
-            List<string> multiCommands = null, bool reloadServerInfo = false, bool checkSystemd = false,
-            bool startSystemd = false, bool stopSystemd = false, bool updateInstallPavlovServer = false, bool installPavlovServerService = false)
-        {
-            var connectionResult = new ConnectionResult();
 
-            if (server.ServerServiceState != ServerServiceState.active &&
-                !string.IsNullOrEmpty(server.ServerSystemdServiceName) && !checkSystemd && !getFile && !writeFile &&
-                !deleteUnusedMaps && !startSystemd &&
-                !stopSystemd &&
-                !updateInstallPavlovServer &&
-                !installPavlovServerService)
-            {
-                
-                Console.WriteLine("will not do command while server service is inactive!");
-                throw new CommandException("will not do command while server service is inactive!");
-            }
-
-            if (!string.IsNullOrEmpty(server.SshServer.SshPassphrase) &&
-                !string.IsNullOrEmpty(server.SshServer.SshKeyFileName) &&
-                File.Exists("KeyFiles/" + server.SshServer.SshKeyFileName) &&
-                !string.IsNullOrEmpty(server.SshServer.SshUsername))
-            {
-                if (deleteUnusedMaps)
-                    connectionResult = await DeleteUnusedMaps(server, AuthType.PrivateKeyPassphrase);
-                else if (getFile)
-                    connectionResult = await GetFile(server, AuthType.PrivateKeyPassphrase, command);
-                else if (writeFile)
-                    connectionResult = await WriteFile(server, AuthType.PrivateKeyPassphrase, command,
-                        writeContent);
-                else if (multiCommand && multiCommands != null)
-                    connectionResult = await SShTunnelMultipleCommands(server, AuthType.PrivateKeyPassphrase,
-                        multiCommands.ToArray());
-                else if (reloadServerInfo)
-                    connectionResult =
-                        await SShTunnelGetAllInfoFromPavlovServer(server, AuthType.PrivateKeyPassphrase);
-                else if (checkSystemd)
-                    connectionResult = await SystemDCheckState(server, AuthType.PrivateKeyPassphrase);
-                else if (startSystemd)
-                    connectionResult = await SystemDStart(server, AuthType.PrivateKeyPassphrase);
-                else if (stopSystemd)
-                    connectionResult = await SystemDStop(server, AuthType.PrivateKeyPassphrase);
-                else if (updateInstallPavlovServer)
-                    connectionResult = await UpdateInstallPavlovServer(server, AuthType.PrivateKeyPassphrase);
-                else if (installPavlovServerService)
-                    connectionResult = await InstallPavlovServerService(server, AuthType.PrivateKeyPassphrase);
-                else
-                    connectionResult =
-                        await SShTunnel(server, AuthType.PrivateKeyPassphrase, command);
-            }
-
-            if (!connectionResult.Success && !string.IsNullOrEmpty(server.SshServer.SshKeyFileName) &&
-                File.Exists("KeyFiles/" + server.SshServer.SshKeyFileName) &&
-                !string.IsNullOrEmpty(server.SshServer.SshUsername))
-            {
-                if (deleteUnusedMaps)
-                    connectionResult = await DeleteUnusedMaps(server, AuthType.PrivateKey);
-                else if (getFile)
-                    connectionResult = await GetFile(server, AuthType.PrivateKey, command);
-                else if (writeFile)
-                    connectionResult = await WriteFile(server, AuthType.PrivateKey, command,
-                        writeContent);
-                else if (multiCommand && multiCommands != null)
-                    connectionResult = await SShTunnelMultipleCommands(server, AuthType.PrivateKey,
-                        multiCommands.ToArray());
-                else if (reloadServerInfo)
-                    connectionResult =
-                        await SShTunnelGetAllInfoFromPavlovServer(server, AuthType.PrivateKey);
-                else if (checkSystemd)
-                    connectionResult = await SystemDCheckState(server, AuthType.PrivateKey);
-                else if (startSystemd)
-                    connectionResult = await SystemDStart(server, AuthType.PrivateKey);
-                else if (stopSystemd)
-                    connectionResult = await SystemDStop(server, AuthType.PrivateKey);
-                else if (updateInstallPavlovServer)
-                    connectionResult = await UpdateInstallPavlovServer(server, AuthType.PrivateKey);
-                else if (installPavlovServerService)
-                    connectionResult = await InstallPavlovServerService(server, AuthType.PrivateKey);
-                else connectionResult = await SShTunnel(server, AuthType.PrivateKey, command);
-            }
-
-            if (!connectionResult.Success && !string.IsNullOrEmpty(server.SshServer.SshUsername) &&
-                !string.IsNullOrEmpty(server.SshServer.SshPassword))
-            {
-                if (deleteUnusedMaps)
-                    connectionResult = await DeleteUnusedMaps(server, AuthType.UserPass);
-                else if (getFile)
-                    connectionResult = await GetFile(server, AuthType.UserPass, command);
-                else if (writeFile)
-                    connectionResult =
-                        await WriteFile(server, AuthType.UserPass, command, writeContent);
-                else if (multiCommand && multiCommands != null)
-                    connectionResult = await SShTunnelMultipleCommands(server, AuthType.UserPass,
-                        multiCommands.ToArray());
-                else if (reloadServerInfo)
-                    connectionResult =
-                        await SShTunnelGetAllInfoFromPavlovServer(server, AuthType.UserPass);
-                else if (checkSystemd)
-                    connectionResult = await SystemDCheckState(server, AuthType.UserPass);
-                else if (startSystemd)
-                    connectionResult = await SystemDStart(server, AuthType.UserPass);
-                else if (stopSystemd)
-                    connectionResult = await SystemDStop(server, AuthType.UserPass);
-                else if (updateInstallPavlovServer)
-                    connectionResult = await UpdateInstallPavlovServer(server, AuthType.UserPass);
-                else if (installPavlovServerService)
-                    connectionResult = await InstallPavlovServerService(server, AuthType.UserPass);
-                else connectionResult = await SShTunnel(server, AuthType.UserPass, command);
-            }
-
-            if (!connectionResult.Success)
-            {
-                if (connectionResult.errors.Count <= 0) throw new CommandException("Could not connect to server!");
-                throw new CommandException(Strings.Join(connectionResult.errors.ToArray(), "\n"));
-            }
-
-            return connectionResult.answer;
-        }
     }
 }

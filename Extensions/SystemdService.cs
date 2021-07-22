@@ -36,7 +36,7 @@ namespace PavlovRconWebserver.Extensions
                     Console.WriteLine(e.Message);
                 }
         }
-
+        
         public static async Task UpdateServerState(PavlovServer signleServer, RconService rconSerivce,
             PavlovServerService pavlovServerService, SshServerSerivce sshServerSerivce, bool withCheck)
         {
@@ -58,7 +58,8 @@ namespace PavlovRconWebserver.Extensions
                 {
                     Console.WriteLine(e.Message);
                 }
-        }
+        }        
+        
 
         /// <summary>
         /// </summary>
@@ -67,8 +68,7 @@ namespace PavlovRconWebserver.Extensions
         /// <returns></returns>
         public static async Task<PavlovServer> GetServerServiceState(PavlovServer pavlovServer, RconService rconService)
         {
-            var state = await rconService.SendCommand(pavlovServer, "", false, false, "", false, false, null, false,
-                true);
+            var state = await rconService.SystemDCheckState(pavlovServer);
             // state can be: active, inactive,disabled
             if (state == "active")
                 pavlovServer.ServerServiceState = ServerServiceState.active;
@@ -80,54 +80,6 @@ namespace PavlovRconWebserver.Extensions
                 pavlovServer.ServerServiceState = ServerServiceState.none;
 
             return pavlovServer;
-        }
-
-        public static async Task<string> StopServerService(PavlovServer pavlovServer, RconService rconSerivce,
-            PavlovServerService pavlovServerService, SshServerSerivce sshServerSerivce)
-        {
-            var state = await rconSerivce.SendCommand(pavlovServer, "", false, false, "", false, false, null, false,
-                false, false, true);
-            try
-            {
-                await UpdateAllServiceStates(rconSerivce, pavlovServerService, sshServerSerivce);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
-            
-            return state;
-        }
-
-        public static async Task<string> StartServerService(PavlovServer pavlovServer, RconService rconSerivce,
-            PavlovServerService pavlovServerService, SshServerSerivce sshServerSerivce)
-        {
-            var state = await rconSerivce.SendCommand(pavlovServer, "", false, false, "", false, false, null, false,
-                false, true);
-            
-            try
-            {
-                await UpdateAllServiceStates(rconSerivce, pavlovServerService, sshServerSerivce);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
-            return state;
-        }
-        
-        public static async Task<string> UpdateInstallPavlovServer(PavlovServer pavlovServer, RconService rconSerivce)
-        {
-            var state = await rconSerivce.SendCommand(pavlovServer, "", false, false, "", false, false, null, false,
-                false, false,false,true);
-            return state;
-        }
-        
-        public static async Task<string> InstallPavlovServerService(PavlovServer pavlovServer, RconService rconSerivce)
-        {
-            var state = await rconSerivce.SendCommand(pavlovServer, "", false, false, "", false, false, null, false,
-                false, false,false,false,true);
-            return state;
         }
     }
 }

@@ -69,28 +69,12 @@ namespace PavlovRconWebserver.Services
             return steamIdentitiesToReturn;
         }
 
-        public async Task<List<string>> ReadFromFile(PavlovServer pavlovServer)
-        {
-            var steamIds = new List<string>();
-            var whiteListContent = await _rconService.SendCommand(pavlovServer,
-                pavlovServer.ServerFolderPath + FilePaths.ModList, false, true);
-            var lines = whiteListContent.Split("\n");
-            foreach (var line in lines)
-            {
-                var tmpLine = line.Replace(Environment.NewLine, "").Replace("\r", "").Replace("\n", "");
-                steamIds.Add(tmpLine.Replace(";", ""));
-            }
-
-            return steamIds;
-        }
 
         private async Task<bool> SaveToFile(PavlovServer pavlovServer, List<string> steamIds)
         {
             var lines = steamIds.Select(steamIdentity => steamIdentity + ";").ToList();
             var content = string.Join(Environment.NewLine, lines);
-            await _rconService.SendCommand(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.ModList, false,
-                false,
-                content, true);
+            await _rconService.WriteFile(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.ModList, content);
             return true;
         }
 

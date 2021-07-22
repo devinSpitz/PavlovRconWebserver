@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 using PavlovRconWebserver.Exceptions;
 using PavlovRconWebserver.Extensions;
@@ -98,9 +99,9 @@ namespace PavlovRconWebserver.Controllers
             var response = "";
             try
             {
-                response = await _service.SendCommand(singleServer, command);
+                response = await _service.SendCommandSShTunnel(singleServer, command);
             }
-            catch (CommandException e)
+            catch (Exception e)
             {
                 return BadRequest(e.Message);
             }
@@ -187,7 +188,16 @@ namespace PavlovRconWebserver.Controllers
             //Get steam name
             try
             {
-                var playersTmp = await _service.SendCommand(ban.PavlovServer, "RefreshList");
+                var result1 = "";
+                try
+                {
+                    result1 = await _service.SendCommandSShTunnel(ban.PavlovServer, "RefreshList");
+                }
+                catch (Exception e)
+                {
+                    return BadRequest(e.Message);
+                }
+                var playersTmp = result1;
                 var playersList = JsonConvert.DeserializeObject<PlayerListClass>(playersTmp);
                 var playerName = playersList.PlayerList.FirstOrDefault(x => x.UniqueId == steamId)?.Username;
                 if (playerName != null) ban.SteamName = playerName;
@@ -197,17 +207,25 @@ namespace PavlovRconWebserver.Controllers
                 //Ignore cause the player name is not something very important
             }
 
+            var result = "";
             try
             {
-                await _service.SendCommand(ban.PavlovServer, "Ban " + steamId);
+                result = await _service.SendCommandSShTunnel(ban.PavlovServer, "Ban " + steamId);
             }
-            catch (CommandException)
+            catch (Exception e)
             {
-                return BadRequest("Could not ban player on the PavlovServer!");
+                return BadRequest(e.Message);
             }
 
             var banlist = await _serverBansService.FindAllFromPavlovServerId(ban.PavlovServer.Id, true);
-            banlist = await _service.GetServerBansFromBlackList(ban.PavlovServer, banlist);
+            try
+            {
+                banlist = await _service.GetServerBansFromBlackList(ban.PavlovServer, banlist);
+            }
+            catch (CommandException e)
+            {
+                return BadRequest(e.Message);
+            }
             //needs to handle the Blacklist file. Also save the file here with all current banned players
             if (banlist.FirstOrDefault(x => x.SteamId == ban.SteamId) == null)
             {
@@ -230,9 +248,16 @@ namespace PavlovRconWebserver.Controllers
             if (string.IsNullOrEmpty(steamId) || steamId == "-") return BadRequest("SteamID must be set!");
             var pavlovServer = await _pavlovServerService.FindOne(serverId);
 
-
+            var banlist = new List<ServerBans>();
             //Remove from blacklist file
-            var banlist = await _service.GetServerBansFromBlackList(pavlovServer, new List<ServerBans>());
+            try
+            {
+                banlist = await _service.GetServerBansFromBlackList(pavlovServer, new List<ServerBans>());
+            }
+            catch (CommandException e)
+            {
+                return BadRequest(e.Message);
+            }
             var toRemove = banlist.FirstOrDefault(x => x.SteamId == steamId);
             if (toRemove != null)
             {
@@ -250,7 +275,7 @@ namespace PavlovRconWebserver.Controllers
             //unban command
             try
             {
-                await _service.SendCommand(pavlovServer, "Unban " + steamId);
+                await _service.SendCommandSShTunnel(pavlovServer, "Unban " + steamId);
             }
             catch (CommandException)
             {
@@ -323,11 +348,21 @@ namespace PavlovRconWebserver.Controllers
             var serverInfo = "";
             try
             {
-                serverInfo = await _service.SendCommand(server, "ServerInfo");
+                var result = "";
+                try
+                {
+                    result = await _service.SendCommandSShTunnel(server, "ServerInfo");
+
+                }
+                catch (Exception e)
+                {
+                    return BadRequest(e.Message);
+                }
+
+                serverInfo = result;
             }
             catch (CommandException e)
             {
-                return BadRequest(e.Message);
             }
 
             var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(serverInfo.Replace("\"\"", "\"ServerInfo\""));

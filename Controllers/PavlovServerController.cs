@@ -122,72 +122,11 @@ namespace PavlovRconWebserver.Controllers
                 server.SshServer = await _service.FindOne(server.sshServerId);
                 if (server.create)
                 {
-                    //Todo delete server if somethings goes wrong and also give it as an option may need root as well
-                    //Todo stop when folder exist or when service already exist or when already a server with the same port is registerd on this ssh server
-                    var result = "";
-                    try
+                    var result = await _pavlovServerService.CreatePavlovServer(server,_rconService,_serverSelectedMapService,_service,_pavlovServerService);
+                    server = result.Key;
+                    if (result.Value==null)
                     {
-                        
-                        result += await SystemdService.UpdateInstallPavlovServer(server, _rconService);
-                        result += "\n *******************************Update/Install Done*******************************";
-                        var oldSSHcrid = new SshServer()
-                        {
-                            SshPassphrase = server.SshServer.SshPassphrase,
-                            SshUsername = server.SshServer.SshUsername,
-                            SshPassword = server.SshServer.SshPassword,
-                            SshKeyFileName = server.SshServer.SshKeyFileName
-                        };
-                        server.SshServer.SshPassphrase = server.SshPassphraseRoot;
-                        server.SshServer.SshUsername = server.SshUsernameRoot;
-                        server.SshServer.SshPassword = server.SshPasswordRoot;
-                        server.SshServer.SshKeyFileName = server.SshKeyFileNameRoot;
-                        server.SshServer.NotRootSshUsername = oldSSHcrid.SshUsername;
-                        result += await SystemdService.InstallPavlovServerService(server, _rconService);
-                        server.SshServer.SshPassphrase = oldSSHcrid.SshPassphrase;
-                        server.SshServer.SshUsername = oldSSHcrid.SshUsername;
-                        server.SshServer.SshPassword = oldSSHcrid.SshPassword;
-                        server.SshServer.SshKeyFileName = oldSSHcrid.SshKeyFileName;
-                        
-                        //start server and stop server to get Saved folder etc.
-                        try
-                        {
-                            await SystemdService.StartServerService(server, _rconService, _pavlovServerService, _service);
-                        }
-                        catch (Exception )
-                        {
-                            //ignore
-                        }
-                        try
-                        {
-                            await SystemdService.StopServerService(server, _rconService, _pavlovServerService, _service);
-                        }
-                        catch (Exception )
-                        {
-                            //ignore
-                        }
-                        result += "\n *******************************Update/Install PavlovServerService Done*******************************";
-                        
-                        var pavlovServerGameIni = new PavlovServerGameIni()
-                        {
-                            
-                        };
-                        var selectedMaps = await _serverSelectedMapService.FindAllFrom(server);
-                        await pavlovServerGameIni.SaveToFile(server, selectedMaps.ToList(), _rconService);
-                        result += "\n *******************************Save server settings Done*******************************";                     
-                        //also create rcon settings
-                        var rconSettingsTempalte = "Password="+server.TelnetPassword+"\nPort="+server.TelnetPort;
-                        await _rconService.SendCommand(server, server.ServerFolderPath + FilePaths.RconSettings, false, false,
-                            rconSettingsTempalte, true);
-
-                         
-
-                        result += "\n *******************************create rconSettings Done*******************************";
-                        
-                        Console.WriteLine(result);
-                    }
-                    catch (Exception e)
-                    {
-                        ModelState.AddModelError("Could not install service or server!: \n*******************************************Start*************\n"+result, e.Message);
+                        ModelState.AddModelError("Id","Could not install service or server!: \n*******************************************Start*************\n"+result);
                         return await EditServer(server);
                     }
                     
@@ -211,6 +150,7 @@ namespace PavlovRconWebserver.Controllers
             return RedirectToAction("Index", "SshServer");
         }
 
+  
         [HttpGet("[controller]/DeleteServer/{id}")]
         public async Task<IActionResult> DeleteServer(int id)
         {
@@ -237,7 +177,7 @@ namespace PavlovRconWebserver.Controllers
             if (await _userservice.IsUserNotInRole("Admin", HttpContext.User)) return new UnauthorizedResult();
 
             var server = await _pavlovServerService.FindOne(serverId);
-            await SystemdService.StartServerService(server, _rconService, _pavlovServerService, _service);
+            await _rconService.SystemDStart(server);
             return RedirectToAction("Index", "SshServer");
         }
         
@@ -247,7 +187,7 @@ namespace PavlovRconWebserver.Controllers
             if (await _userservice.IsUserNotInRole("Admin", HttpContext.User)) return new UnauthorizedResult();
 
             var server = await _pavlovServerService.FindOne(serverId);
-            var result = await SystemdService.UpdateInstallPavlovServer(server, _rconService);
+            var result = await _rconService.UpdateInstallPavlovServer(server);
             
             return new ObjectResult(result);
         }
@@ -258,7 +198,7 @@ namespace PavlovRconWebserver.Controllers
             if (await _userservice.IsUserNotInRole("Admin", HttpContext.User)) return new UnauthorizedResult();
 
             var server = await _pavlovServerService.FindOne(serverId);
-            await SystemdService.StopServerService(server, _rconService, _pavlovServerService, _service);
+            await _rconService.SystemDStop(server);
             return RedirectToAction("Index", "SshServer");
         }
 

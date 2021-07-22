@@ -33,8 +33,8 @@ namespace PavlovRconWebserver.Models
 
         public async Task<bool> ReadFromFile(PavlovServer pavlovServer, RconService rconService)
         {
-            var GameIniContent = await rconService.SendCommand(pavlovServer,
-                pavlovServer.ServerFolderPath + FilePaths.GameIni, false, true);
+            var GameIniContent = await rconService.GetFile(pavlovServer,
+                pavlovServer.ServerFolderPath + FilePaths.GameIni);
             var lines = GameIniContent.Split("\n");
             var first = true; // cause the first line is to ignore
             foreach (var line in lines)
@@ -160,8 +160,8 @@ namespace PavlovRconWebserver.Models
                     lines.Add("MapRotation=(MapId=\"" + serverSelectedMap.Map.Id + "\", GameMode=\"" +
                               serverSelectedMap.GameMode + "\")");
             var content = string.Join(Environment.NewLine, lines);
-            await rconService.SendCommand(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.GameIni, false, false,
-                content, true);
+            await rconService.WriteFile(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.GameIni,
+                content);
             return true;
         }
     }

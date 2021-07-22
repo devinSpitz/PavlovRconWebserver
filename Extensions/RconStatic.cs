@@ -73,7 +73,7 @@ namespace PavlovRconWebserver.Extensions
                 foreach (var signleServer in server.PavlovServers.Where(x => x.ServerType == ServerType.Community))
                     try
                     {
-                        await rconSerivce.SendCommand(signleServer, "", false, false, "", false, false, null, true);
+                        await rconSerivce.SShTunnelGetAllInfoFromPavlovServer(signleServer);
                     }
                     catch (Exception e)
                     {
@@ -122,7 +122,7 @@ namespace PavlovRconWebserver.Extensions
             var matchService = new MatchService(new LiteDbIdentityContext(connectionString),
                 matchSelectedTeamSteamIdentitiesService, matchSelectedSteamIdentitiesService,pavlovServerService,steamIdentityService,teamService,teamSelectedSteamIdentityService);
 
-            var connectionInfo = RconService.ConnectionInfo(server, authType, out var result, server.SshServer);
+            var connectionInfo = RconService.ConnectionInfo(server, authType, out var result);
             using var clientSsh = new SshClient(connectionInfo);
             using var clientSftp = new SftpClient(connectionInfo);
             try
@@ -137,17 +137,21 @@ namespace PavlovRconWebserver.Extensions
                 }
 
                 //Write whitelist and set server settings
-                var whitelist = await rconService.WriteFile(server, authType,
-                    server.ServerFolderPath + FilePaths.WhiteList,
-                    Strings.Join(listOfSteamIdentietiesWhichCanPlay.Select(x => x.SteamIdentityId).ToArray(),
-                        ";" + Environment.NewLine));
-                if (!whitelist.Success)
+
+                var whitelist = "";
+                try
+                {
+
+                    await rconService.WriteFile(server,
+                        server.ServerFolderPath + FilePaths.WhiteList,
+                        Strings.Join(listOfSteamIdentietiesWhichCanPlay.Select(x => x.SteamIdentityId).ToArray(),
+                            ";" + Environment.NewLine));
+                    return result;
+                }
+                catch (Exception e)
                 {
                     result.errors.Add("Could not write whitelist for the match! " +
-                                      Strings.Join(whitelist.errors.ToArray(), ";"));
-                    Console.WriteLine("Could not write whitelist for the match! " +
-                                      Strings.Join(whitelist.errors.ToArray(), ";"));
-                    return result;
+                                      e.Message);
                 }
 
                 var serverSettings = new PavlovServerGameIni
@@ -182,7 +186,7 @@ namespace PavlovRconWebserver.Extensions
                         GameMode = match.GameMode
                     }
                 }, rconService);
-                await rconService.SystemDStart(server, authType);
+                await rconService.SystemDStart(server);
 
                 //StartWatchServiceForThisMatch
                 match.Status = Status.StartetWaitingForPlayer;
@@ -261,7 +265,7 @@ namespace PavlovRconWebserver.Extensions
                     return;
                 }
 
-                await rconService.SShTunnelGetAllInfoFromPavlovServer(server, authType);
+                await rconService.SShTunnelGetAllInfoFromPavlovServer(server);
                 switch (match.Status)
                 {
                     case Status.StartetWaitingForPlayer:
@@ -307,7 +311,7 @@ namespace PavlovRconWebserver.Extensions
         {
             match.Status = Status.Finshed;
             await matchService.Upsert(match);
-            await rconService.SystemDStop(server, authType);
+            await rconService.SystemDStop(server);
             Console.WriteLine("Stopped server!");
         }
 
@@ -360,7 +364,7 @@ namespace PavlovRconWebserver.Extensions
             while (true)
                 try
                 {
-                    var result = await rconService.SendCommand(server, command);
+                    var result = await rconService.SendCommandSShTunnel(server, command);
                     return result;
                 }
                 catch (CommandException e)

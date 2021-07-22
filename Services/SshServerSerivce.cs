@@ -95,7 +95,7 @@ namespace PavlovRconWebserver.Services
                     Console.WriteLine("has to start");
                     hasToStop = true;
                     //the problem is here for the validating part if it has to start the service first it has problems
-                    await SystemdService.StartServerService(pavlovServer, rconService, _pavlovServer, this);
+                    await rconService.SystemDStart(pavlovServer);
                     pavlovServer = await SystemdService.GetServerServiceState(pavlovServer, rconService);
                     
                     Console.WriteLine("state = "+pavlovServer.ServerServiceState);
@@ -110,7 +110,7 @@ namespace PavlovRconWebserver.Services
             //try to send Command ServerInfo
             try
             {
-                var response = await rconService.SendCommand(pavlovServer, "ServerInfo");
+                var response = await rconService.SendCommandSShTunnel(pavlovServer, "ServerInfo");
             }
             catch (CommandException e)
             {
@@ -122,7 +122,7 @@ namespace PavlovRconWebserver.Services
             try
             {
                 Console.WriteLine("delete unused maps");
-                await rconService.SendCommand(pavlovServer, "", true);
+                await rconService.DeleteUnusedMaps(pavlovServer);
             }
             catch (CommandException e)
             { 
@@ -139,7 +139,7 @@ namespace PavlovRconWebserver.Services
             if (hasToStop)
             {
                 Console.WriteLine("stop server again!");
-                await SystemdService.StopServerService(pavlovServer, rconService, _pavlovServer, this);
+                await rconService.SystemDStop(pavlovServer);
                 pavlovServer = await SystemdService.GetServerServiceState(pavlovServer, rconService);
             }
 
