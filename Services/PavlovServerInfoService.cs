@@ -7,17 +7,11 @@ namespace PavlovRconWebserver.Services
 {
     public class PavlovServerInfoService
     {
-        private readonly MapsService _mapsService;
-        private readonly PavlovServerService _pavlovServerService;
-
         private readonly ILiteDbIdentityContext _liteDb;
 
 
-        public PavlovServerInfoService(ILiteDbIdentityContext liteDbContext, PavlovServerService pavlovServerService,
-            MapsService mapsService)
+        public PavlovServerInfoService(ILiteDbIdentityContext liteDbContext)
         {
-            _pavlovServerService = pavlovServerService;
-            _mapsService = mapsService;
             _liteDb = liteDbContext;
         }
 

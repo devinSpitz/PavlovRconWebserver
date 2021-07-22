@@ -74,7 +74,7 @@
             <span asp-validation-for="ServerFolderPath" class="text-danger"></span>
         </div>
     </div>
-    
+
     <div class="row">
         <div class="form-group col-sm-3">
             <label asp-for="DeletAfter"></label>
@@ -87,46 +87,46 @@
             <span asp-validation-for="ServerSystemdServiceName" class="text-danger"></span>
         </div>
     </div>
-    
+
     @if (Model.create)
     {
         <div class="col-md-11">
             <div class="card m-1 ">
                 <div class="card-header">Root user</div>
                 <div class="card-body">
-                <div class="card m-1 bg-info">
-                    <ul>
-                        <li>This user will not get saved and only be used to make the service for the pavlovserver.</li>
-                        <li>This user is needed to make the service.</li>
-                        <li>The service has to be stopped!</li>
-                        <li class="bg-warning">After a save has failed while creating a server you may have to disable and stop the service depends on what is already done!</li>
-                    </ul>
-                </div>
-                <div class="row">
-                    <div class="form-group col-sm-3">
-                        <label asp-for="SshUsernameRoot"></label>
-                        <input asp-for="SshUsernameRoot" class="form-control" value="@Model.SshUsernameRoot"/>
-                        <span asp-validation-for="SshUsernameRoot" class="text-danger"></span>
+                    <div class="card m-1 bg-info">
+                        <ul>
+                            <li>This user will not get saved and only be used to make the service for the pavlovserver.</li>
+                            <li>This user is needed to make the service.</li>
+                            <li>The service has to be stopped!</li>
+                            <li class="bg-warning">After a save has failed while creating a server you may have to disable and stop the service depends on what is already done!</li>
+                        </ul>
                     </div>
-                    <div class="form-group col-md-6">
-                        <label asp-for="SshPasswordRoot"></label>
-                        <input asp-for="SshPasswordRoot"   type="password" autocomplete="off" class="form-control" value="@Model.SshPasswordRoot"/>
-                        <span asp-validation-for="SshPasswordRoot" class="text-danger"></span>
+                    <div class="row">
+                        <div class="form-group col-sm-3">
+                            <label asp-for="SshUsernameRoot"></label>
+                            <input asp-for="SshUsernameRoot" class="form-control" value="@Model.SshUsernameRoot"/>
+                            <span asp-validation-for="SshUsernameRoot" class="text-danger"></span>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label asp-for="SshPasswordRoot"></label>
+                            <input asp-for="SshPasswordRoot" type="password" autocomplete="off" class="form-control" value="@Model.SshPasswordRoot"/>
+                            <span asp-validation-for="SshPasswordRoot" class="text-danger"></span>
+                        </div>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="form-group col-md-6">
-                        <label asp-for="SshKeyFileNameRoot"></label>
-                        @Html.DropDownListFor(m => m.SshKeyFileNameRoot, new SelectList(keyFiles, "", "", Model.SshKeyFileNameRoot), new {@class = "form-control form-select form-control-sm"})
-                        <span asp-validation-for="SshKeyFileNameRoot" class="text-danger"></span>
+                    <div class="row">
+                        <div class="form-group col-md-6">
+                            <label asp-for="SshKeyFileNameRoot"></label>
+                            @Html.DropDownListFor(m => m.SshKeyFileNameRoot, new SelectList(keyFiles, "", "", Model.SshKeyFileNameRoot), new {@class = "form-control form-select form-control-sm"})
+                            <span asp-validation-for="SshKeyFileNameRoot" class="text-danger"></span>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label asp-for="SshPassphraseRoot"></label>
+                            <input asp-for="SshPassphraseRoot" class="form-control" value="@Model.SshPassphraseRoot"/>
+                            <span asp-validation-for="ServerPort" class="text-danger"></span>
+                        </div>
                     </div>
-                    <div class="form-group col-md-6">
-                        <label asp-for="SshPassphraseRoot"></label>
-                        <input asp-for="SshPassphraseRoot" class="form-control" value="@Model.SshPassphraseRoot"/>
-                        <span asp-validation-for="ServerPort" class="text-danger"></span>
-                    </div>
-                </div>
-                
+
                     @* Gets auto populatet *@
                 </div>
             </div>
@@ -138,7 +138,6 @@
             <button type="submit" class="btn btn-success col-md-12">Save</button>
         </div>
     </div>
-    
-    
+
 
 </form>

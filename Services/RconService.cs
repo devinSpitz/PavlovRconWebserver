@@ -51,7 +51,7 @@ namespace PavlovRconWebserver.Services
         }
 
         public static async Task<string> SendCommandForShell(string customCmd, ShellStream stream,
-            [CanBeNull] string expect,int ms = 2000)
+            [CanBeNull] string expect, int ms = 2000)
         {
             var writer = new StreamWriter(stream)
             {
@@ -86,18 +86,17 @@ namespace PavlovRconWebserver.Services
 
             return result;
         }
-        
-        
+
+
         public static async Task<AuthType> GetAuthType(PavlovServer server)
         {
-            List<AuthType> auths = new List<AuthType>()
+            var auths = new List<AuthType>
             {
                 AuthType.PrivateKeyPassphrase,
                 AuthType.PrivateKey,
                 AuthType.UserPass
             };
             foreach (var type in auths)
-            {
                 try
                 {
                     var connectionInfo = ConnectionInfo(server, type, out var result);
@@ -110,7 +109,6 @@ namespace PavlovRconWebserver.Services
                 {
                     //ignore and find the right one to use
                 }
-            }
 
             throw new CommandException("No auth method worked!");
         }
@@ -146,14 +144,9 @@ namespace PavlovRconWebserver.Services
                             "systemctl is-active " + server.ServerSystemdServiceName + ".service", stream,
                             @"^(?!.*is-active).*active.*$");
                         if (active == null || active.Contains("inactive"))
-                        {
                             result.answer = "inactive";
-                        }
                         else
-                        {
-                             result.answer = "active";
-                        }
-
+                            result.answer = "active";
                     }
                     else
                     {
@@ -215,25 +208,25 @@ namespace PavlovRconWebserver.Services
                 {
                     var enable = await SendCommandForShell(
                         "systemctl enable " + server.ServerSystemdServiceName + ".service", stream, null);
-                    if (enable == null) result.errors.Add("Could not enable service " + server.Name);
-                    else if(enable.ToLower().Contains("password")) {
+                    if (enable == null)
+                    {
+                        result.errors.Add("Could not enable service " + server.Name);
+                    }
+                    else if (enable.ToLower().Contains("password"))
+                    {
                         var enteredPassword = await SendCommandForShell(
                             server.SshServer.SshPassword, stream, @".*[pP]assword.*");
-                        if (enteredPassword == "\r\n" || enteredPassword == null )
-                        {
+                        if (enteredPassword == "\r\n" || enteredPassword == null)
                             result.errors.Add("Could not disable service after entering the password again!");
-                        }
                         if (enteredPassword != null && enteredPassword.ToLower().Contains("password"))
                         {
                             var enteredPasswordReload = await SendCommandForShell(
                                 server.SshServer.SshPassword, stream, null);
-                            if (enteredPasswordReload == "\r\n" || enteredPasswordReload == null )
-                            {
+                            if (enteredPasswordReload == "\r\n" || enteredPasswordReload == null)
                                 result.errors.Add("Could not disable service after entering the password again!");
-                            }
                         }
                     }
-                    
+
                     //enable for reload
                 }
 
@@ -243,14 +236,14 @@ namespace PavlovRconWebserver.Services
                 {
                     result.errors.Add("Could not start service " + server.Name);
                 }
-                else if(start.ToLower().Contains("password")) {
+                else if (start.ToLower().Contains("password"))
+                {
                     var enteredPassword = await SendCommandForShell(
                         server.SshServer.SshPassword, stream, null);
-                    if (enteredPassword == "\r\n" || enteredPassword == null )
-                    {
+                    if (enteredPassword == "\r\n" || enteredPassword == null)
                         result.errors.Add("Could not start service after entering the password again!");
-                    }
-                }else
+                }
+                else
                 {
                     Console.WriteLine(start);
                 }
@@ -307,39 +300,42 @@ namespace PavlovRconWebserver.Services
                 if (disabled != null)
                 {
                     var enable = await SendCommandForShell(
-                        "systemctl disable " + server.ServerSystemdServiceName + ".service", stream, @".*[pP]assword.*");
-                    if (enable == null) result.errors.Add("Could not disable service " + server.Name);
-                    else if(enable.ToLower().Contains("password")) {
+                        "systemctl disable " + server.ServerSystemdServiceName + ".service", stream,
+                        @".*[pP]assword.*");
+                    if (enable == null)
+                    {
+                        result.errors.Add("Could not disable service " + server.Name);
+                    }
+                    else if (enable.ToLower().Contains("password"))
+                    {
                         var enteredPassword = await SendCommandForShell(
                             server.SshServer.SshPassword, stream, @".*[pP]assword.*");
-                        if (enteredPassword == "\r\n" || enteredPassword == null )
-                        {
+                        if (enteredPassword == "\r\n" || enteredPassword == null)
                             result.errors.Add("Could not disable service after entering the password again!");
-                        }
                         if (enteredPassword != null && enteredPassword.ToLower().Contains("password"))
                         {
                             var enteredPasswordReload = await SendCommandForShell(
                                 server.SshServer.SshPassword, stream, null);
-                            if (enteredPasswordReload == "\r\n" || enteredPasswordReload == null )
-                            {
+                            if (enteredPasswordReload == "\r\n" || enteredPasswordReload == null)
                                 result.errors.Add("Could not disable service after entering the password again!");
-                            }
                         }
                     }
-
-                
                 }
+
                 var start = await SendCommandForShell("systemctl stop " + server.ServerSystemdServiceName + ".service",
                     stream, null);
-                if (start == null) result.errors.Add("Could not stop service " + server.Name);
-                else if(start.ToLower().Contains("password")) {
+                if (start == null)
+                {
+                    result.errors.Add("Could not stop service " + server.Name);
+                }
+                else if (start.ToLower().Contains("password"))
+                {
                     var enteredPassword = await SendCommandForShell(
                         server.SshServer.SshPassword, stream, null);
-                    if (enteredPassword == "\r\n" || enteredPassword == null )
-                    {
+                    if (enteredPassword == "\r\n" || enteredPassword == null)
                         result.errors.Add("Could not stop service after entering the password again!");
-                    }
-                }else
+                }
+                else
                 {
                     Console.WriteLine(start);
                 }
@@ -379,6 +375,7 @@ namespace PavlovRconWebserver.Services
 
             return result;
         }
+
         //
         // public async Task<ConnectionResult> RemovePavlovServerFolder(PavlovServer server)
         // {
@@ -446,26 +443,30 @@ namespace PavlovRconWebserver.Services
         {
             var type = await GetAuthType(server);
             var connectionInfo = ConnectionInfo(server, type, out var result);
-            if(!server.SshServer.SteamIsAvailable)
+            if (!server.SshServer.SteamIsAvailable)
             {
                 result.Success = false;
                 result.errors.Add(" Steam is now enabled on this server!");
                 return EndConnection(result);
-            } 
+            }
+
             var restart = false;
             if (server.ServerServiceState == ServerServiceState.active)
             {
                 restart = true;
                 await SystemDStop(server);
             }
+
             using var client = new SshClient(connectionInfo);
             try
             {
                 client.Connect();
                 var stream =
-                client.CreateShellStream("pavlovRconWebserverSShTunnelSystemdCheck", 80, 24, 800, 600, 1024);
+                    client.CreateShellStream("pavlovRconWebserverSShTunnelSystemdCheck", 80, 24, 800, 600, 1024);
                 var update = await SendCommandForShell(
-                    "cd "+server.SshServer.SteamPath+" && ./steamcmd.sh +login anonymous +force_install_dir "+server.ServerFolderPath+" +app_update 622970 +exit", stream, @".*(Success! App '622970' already up to date|Success! App '622970' fully installed).*",60000);
+                    "cd " + server.SshServer.SteamPath + " && ./steamcmd.sh +login anonymous +force_install_dir " +
+                    server.ServerFolderPath + " +app_update 622970 +exit", stream,
+                    @".*(Success! App '622970' already up to date|Success! App '622970' fully installed).*", 60000);
                 if (update == null) result.errors.Add("Could not update the pavlovserver " + server.Name);
                 result.answer = update;
             }
@@ -500,55 +501,51 @@ namespace PavlovRconWebserver.Services
                 client.Disconnect();
             }
 
-            if (restart)
-            {
-                await SystemDStart(server);
-            }
-            
+            if (restart) await SystemDStart(server);
+
             if (result.errors.Count <= 0 || result.answer != "") result.Success = true;
 
-            
+
             return EndConnection(result);
         }
+
         public async Task<string> InstallPavlovServerService(PavlovServer server)
         {
             var type = await GetAuthType(server);
             var connectionInfo = ConnectionInfo(server, type, out var result);
-            if(!server.SshServer.SteamIsAvailable)
+            if (!server.SshServer.SteamIsAvailable)
             {
                 result.Success = false;
                 result.errors.Add(" Steam is now enabled on this server!");
                 return EndConnection(result);
-            } 
+            }
+
             using var client = new SshClient(connectionInfo);
             using var sftp = new SftpClient(connectionInfo);
             try
             {
-                var serviceTempalte = 
-@"[Unit]
+                var serviceTempalte =
+                    @"[Unit]
 Description=Pavlov VR dedicated server
 
 [Service]
 Type=simple
-WorkingDirectory="+server.ServerFolderPath+@"
-ExecStart="+server.ServerFolderPath+@"PavlovServer.sh  -PORT='"+server.ServerPort+@"'
+WorkingDirectory=" + server.ServerFolderPath + @"
+ExecStart=" + server.ServerFolderPath + @"PavlovServer.sh  -PORT='" + server.ServerPort + @"'
 
 RestartSec=1
 Restart=always
-User="+server.SshServer.NotRootSshUsername+@"
-Group="+server.SshServer.NotRootSshUsername+@"
+User=" + server.SshServer.NotRootSshUsername + @"
+Group=" + server.SshServer.NotRootSshUsername + @"
 
 [Install]
 WantedBy = multi-user.target";
-                
+
                 sftp.BufferSize = 4 * 1024; // bypass Payload error large files
                 sftp.Connect();
-                var path = "/etc/systemd/system/" + server.ServerSystemdServiceName+".service";
+                var path = "/etc/systemd/system/" + server.ServerSystemdServiceName + ".service";
                 //check if file exist
-                if (sftp.Exists(path))
-                {
-                    sftp.DeleteFile(path);
-                }
+                if (sftp.Exists(path)) sftp.DeleteFile(path);
 
                 using (var fileStream = new MemoryStream(Encoding.ASCII.GetBytes(serviceTempalte)))
                 {
@@ -572,14 +569,14 @@ WantedBy = multi-user.target";
                     result.errors.Add("Could not upload service file!");
                     return EndConnection(result);
                 }
+
                 //daemon reload
                 client.Connect();
                 var stream =
                     client.CreateShellStream("pavlovRconWebserverSShTunnelSystemdCheck", 80, 24, 800, 600, 1024);
 
 
-                var state = await SendCommandForShell("systemctl daemon-reload",stream,null);
-                
+                var state = await SendCommandForShell("systemctl daemon-reload", stream, null);
             }
             catch (Exception e)
             {
@@ -614,7 +611,7 @@ WantedBy = multi-user.target";
                 sftp.Disconnect();
             }
 
-            
+
             if (result.errors.Count <= 0 || result.answer != "") result.Success = true;
 
             return EndConnection(result);
@@ -623,7 +620,8 @@ WantedBy = multi-user.target";
         private async Task<ConnectionResult> SShTunnelMultipleCommands(PavlovServer server,
             string[] commands)
         {
-            if(server.ServerServiceState != ServerServiceState.active) throw new CommandException("will not do command while server service is inactive!");
+            if (server.ServerServiceState != ServerServiceState.active)
+                throw new CommandException("will not do command while server service is inactive!");
             var type = await GetAuthType(server);
             var connectionInfo = ConnectionInfo(server, type, out var result);
             using var client = new SshClient(connectionInfo);
@@ -643,7 +641,7 @@ WantedBy = multi-user.target";
                         if (client2.IsConnected)
                         {
                             var password = await client2.ReadAsync(TimeSpan.FromMilliseconds(500));
-                            Console.WriteLine("Answer: "+password);
+                            Console.WriteLine("Answer: " + password);
                             if (password.Contains("Password"))
                             {
                                 await client2.WriteLine(server.TelnetPassword);
@@ -751,7 +749,6 @@ WantedBy = multi-user.target";
 
         public async Task<string> SendCommandSShTunnel(PavlovServer server, string command)
         {
-            
             var result = await SShTunnelMultipleCommands(server, new[] {command});
 
             return EndConnection(result);
@@ -766,19 +763,22 @@ WantedBy = multi-user.target";
             if (type == AuthType.PrivateKey)
             {
                 var keyFiles = new[] {new PrivateKeyFile("KeyFiles/" + server.SshServer.SshKeyFileName)};
-                connectionInfo = new ConnectionInfo(server.SshServer.Adress, server.SshServer.SshPort, server.SshServer.SshUsername,
+                connectionInfo = new ConnectionInfo(server.SshServer.Adress, server.SshServer.SshPort,
+                    server.SshServer.SshUsername,
                     new PrivateKeyAuthenticationMethod(server.SshServer.SshUsername, keyFiles));
             }
             else if (type == AuthType.UserPass)
             {
-                connectionInfo = new ConnectionInfo(server.SshServer.Adress, server.SshServer.SshPort, server.SshServer.SshUsername,
+                connectionInfo = new ConnectionInfo(server.SshServer.Adress, server.SshServer.SshPort,
+                    server.SshServer.SshUsername,
                     new PasswordAuthenticationMethod(server.SshServer.SshUsername, server.SshServer.SshPassword));
             }
             else if (type == AuthType.PrivateKeyPassphrase)
             {
                 var keyFiles = new[]
                     {new PrivateKeyFile("KeyFiles/" + server.SshServer.SshKeyFileName, server.SshServer.SshPassphrase)};
-                connectionInfo = new ConnectionInfo(server.SshServer.Adress, server.SshServer.SshPort, server.SshServer.SshUsername,
+                connectionInfo = new ConnectionInfo(server.SshServer.Adress, server.SshServer.SshPort,
+                    server.SshServer.SshUsername,
                     new PasswordAuthenticationMethod(server.SshServer.SshUsername, server.SshServer.SshPassphrase),
                     new PrivateKeyAuthenticationMethod(server.SshServer.SshUsername, keyFiles));
             }
@@ -826,9 +826,10 @@ WantedBy = multi-user.target";
                 sftp.Disconnect();
             }
 
-            
+
             return EndConnection(connectionResult);
         }
+
         private string EndConnection(ConnectionResult connectionResult)
         {
             if (!connectionResult.Success)
@@ -852,16 +853,10 @@ WantedBy = multi-user.target";
             {
                 sftp.Connect();
                 //check if file exist
-                if (sftp.Exists(path))
-                {
-                    sftp.DeleteFile(path);
-                }
-                
-                if (!sftp.Exists(path))
-                {
-                    sftp.Create(path);
-                }
-                
+                if (sftp.Exists(path)) sftp.DeleteFile(path);
+
+                if (!sftp.Exists(path)) sftp.Create(path);
+
                 using (var fileStream = new MemoryStream(Encoding.ASCII.GetBytes(content)))
                 {
                     sftp.UploadFile(fileStream, path);
@@ -901,7 +896,7 @@ WantedBy = multi-user.target";
         {
             var blacklistArray = NewBlackListContent.Select(x => x.SteamId).ToArray();
             var content = string.Join(Environment.NewLine, blacklistArray);
-            var blacklist = await WriteFile(server, server.ServerFolderPath + FilePaths.BanList,content);
+            var blacklist = await WriteFile(server, server.ServerFolderPath + FilePaths.BanList, content);
             return true;
         }
 
@@ -927,7 +922,7 @@ WantedBy = multi-user.target";
                         if (client2.IsConnected)
                         {
                             var password = await client2.ReadAsync(TimeSpan.FromMilliseconds(500));
-                            Console.WriteLine("Answer: "+password);
+                            Console.WriteLine("Answer: " + password);
                             if (password.Contains("Password"))
                             {
                                 await client2.WriteLine(server.TelnetPassword);
@@ -1099,15 +1094,13 @@ WantedBy = multi-user.target";
 
             try
             {
-
                 answer = await GetFile(server, server.ServerFolderPath + FilePaths.BanList);
-
             }
             catch (Exception e)
             {
                 throw new CommandException(e.Message);
             }
-            
+
             var lines = answer.Split(
                 new[] {"\r\n", "\r", "\n"},
                 StringSplitOptions.None
@@ -1233,7 +1226,5 @@ WantedBy = multi-user.target";
 
             client.DeleteDirectory(path);
         }
-
-
     }
 }

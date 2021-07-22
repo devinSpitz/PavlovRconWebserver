@@ -12,15 +12,15 @@ namespace PavlovRconWebserver.Services
 {
     public class MatchService
     {
+        private readonly ILiteDbIdentityContext _liteDb;
         private readonly MatchSelectedSteamIdentitiesService _matchSelectedSteamIdentitiesService;
-        private readonly TeamSelectedSteamIdentityService _teamSelectedSteamIdentityService;
 
         private readonly MatchSelectedTeamSteamIdentitiesService _matchSelectedTeamSteamIdentitiesService;
         private readonly PavlovServerService _pavlovServerService;
-        private readonly TeamService _teamService;
         private readonly SteamIdentityService _steamIdentityService;
-        private readonly ILiteDbIdentityContext _liteDb;
-        
+        private readonly TeamSelectedSteamIdentityService _teamSelectedSteamIdentityService;
+        private readonly TeamService _teamService;
+
 
         public MatchService(ILiteDbIdentityContext liteDbContext,
             MatchSelectedTeamSteamIdentitiesService matchSelectedTeamSteamIdentitiesService,
@@ -258,7 +258,7 @@ namespace PavlovRconWebserver.Services
                 .ToList();
             return match;
         }
-        
+
         public async Task SaveMatchResult(PavlovServerPlayerListPublicViewModel match, Match realMatch)
         {
             if (match.ServerInfo != null)
@@ -282,7 +282,7 @@ namespace PavlovRconWebserver.Services
 
             await Upsert(realMatch);
         }
-        
+
         public async Task<bool> Upsert(Match match)
         {
             var result = false;

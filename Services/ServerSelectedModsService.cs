@@ -11,11 +11,10 @@ namespace PavlovRconWebserver.Services
 {
     public class ServerSelectedModsService
     {
+        private readonly ILiteDbIdentityContext _liteDb;
         private readonly RconService _rconService;
         private readonly SteamIdentityService _steamIdentityService;
         private readonly UserService _userService;
-
-        private readonly ILiteDbIdentityContext _liteDb;
 
         public ServerSelectedModsService(ILiteDbIdentityContext liteDbContext, RconService rconService,
             SteamIdentityService steamIdentityService, UserService userService)

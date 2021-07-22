@@ -7,7 +7,6 @@ using LiteDB.Identity.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using PavlovRconWebserver.Exceptions;
-using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
 using PavlovRconWebserver.Services;
 
@@ -52,7 +51,7 @@ namespace PavlovRconWebserver.Controllers
 
 
         [HttpGet("[controller]/EditServer/{serverId}/{sshServerId}/{create?}")]
-        public async Task<IActionResult> EditServer(int serverId, int sshServerId,bool create = false)
+        public async Task<IActionResult> EditServer(int serverId, int sshServerId, bool create = false)
         {
             if (await _userservice.IsUserNotInRole("Admin", HttpContext.User)) return new UnauthorizedResult();
             var server = new PavlovServer();
@@ -70,6 +69,7 @@ namespace PavlovRconWebserver.Controllers
             {
                 // ignore there is maybe no folder or the folder is empty 
             }
+
             viewModel.create = create;
             return View("Server", viewModel);
         }
@@ -87,6 +87,7 @@ namespace PavlovRconWebserver.Controllers
             {
                 // ignore there is maybe no folder or the folder is empty 
             }
+
             return View("Server", server);
         }
 
@@ -118,22 +119,22 @@ namespace PavlovRconWebserver.Controllers
 
             try
             {
-         
                 server.SshServer = await _service.FindOne(server.sshServerId);
                 if (server.create)
                 {
-                    var result = await _pavlovServerService.CreatePavlovServer(server,_rconService,_serverSelectedMapService,_service,_pavlovServerService);
+                    var result = await _pavlovServerService.CreatePavlovServer(server, _rconService,
+                        _serverSelectedMapService, _service, _pavlovServerService);
                     server = result.Key;
-                    if (result.Value==null)
+                    if (result.Value == null)
                     {
-                        ModelState.AddModelError("Id","Could not install service or server!: \n*******************************************Start*************\n"+result);
+                        ModelState.AddModelError("Id",
+                            "Could not install service or server!: \n*******************************************Start*************\n" +
+                            result);
                         return await EditServer(server);
                     }
-                    
                 }
-                
+
                 await _pavlovServerService.Upsert(server.toPavlovServer(server), _rconService, _service);
-                
             }
             catch (SaveServerException e)
             {
@@ -150,7 +151,7 @@ namespace PavlovRconWebserver.Controllers
             return RedirectToAction("Index", "SshServer");
         }
 
-  
+
         [HttpGet("[controller]/DeleteServer/{id}")]
         public async Task<IActionResult> DeleteServer(int id)
         {
@@ -180,7 +181,7 @@ namespace PavlovRconWebserver.Controllers
             await _rconService.SystemDStart(server);
             return RedirectToAction("Index", "SshServer");
         }
-        
+
         [HttpGet("[controller]/UpdatePavlovServer/{serverId}")]
         public async Task<IActionResult> UpdatePavlovServer(int serverId)
         {
@@ -188,7 +189,7 @@ namespace PavlovRconWebserver.Controllers
 
             var server = await _pavlovServerService.FindOne(serverId);
             var result = await _rconService.UpdateInstallPavlovServer(server);
-            
+
             return new ObjectResult(result);
         }
 

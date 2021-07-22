@@ -51,9 +51,11 @@ namespace PavlovRconWebserver.Services
                 .Find(x => x.Id == id).FirstOrDefault();
             return pavlovServer;
         }
-        public async Task<KeyValuePair<PavlovServerViewModel,string>> CreatePavlovServer(PavlovServerViewModel server,
-          RconService rconService,ServerSelectedMapService serverSelectedMapService,SshServerSerivce sshServerSerivce,
-          PavlovServerService pavlovServerService)
+
+        public async Task<KeyValuePair<PavlovServerViewModel, string>> CreatePavlovServer(PavlovServerViewModel server,
+            RconService rconService, ServerSelectedMapService serverSelectedMapService,
+            SshServerSerivce sshServerSerivce,
+            PavlovServerService pavlovServerService)
         {
             //Todo stop when folder exist or when service already exist or when already a server with the same port is registerd on this ssh server
             string result = null;
@@ -61,7 +63,7 @@ namespace PavlovRconWebserver.Services
             {
                 result += await rconService.UpdateInstallPavlovServer(server);
                 result += "\n *******************************Update/Install Done*******************************";
-                var oldSSHcrid = new SshServer()
+                var oldSSHcrid = new SshServer
                 {
                     SshPassphrase = server.SshServer.SshPassphrase,
                     SshUsername = server.SshServer.SshUsername,
@@ -109,15 +111,14 @@ namespace PavlovRconWebserver.Services
                 result +=
                     "\n *******************************Update/Install PavlovServerService Done*******************************";
 
-                var pavlovServerGameIni = new PavlovServerGameIni()
-                {
-                };
+                var pavlovServerGameIni = new PavlovServerGameIni();
                 var selectedMaps = await serverSelectedMapService.FindAllFrom(server);
                 await pavlovServerGameIni.SaveToFile(server, selectedMaps.ToList(), rconService);
                 result += "\n *******************************Save server settings Done*******************************";
                 //also create rcon settings
                 var rconSettingsTempalte = "Password=" + server.TelnetPassword + "\nPort=" + server.TelnetPort;
-                await rconService.WriteFile(server, server.ServerFolderPath + FilePaths.RconSettings, rconSettingsTempalte);
+                await rconService.WriteFile(server, server.ServerFolderPath + FilePaths.RconSettings,
+                    rconSettingsTempalte);
 
 
                 result += "\n *******************************create rconSettings Done*******************************";
@@ -126,14 +127,15 @@ namespace PavlovRconWebserver.Services
             }
             catch (Exception e)
             {
-                return new KeyValuePair<PavlovServerViewModel, string>(server,result+"\n " +
-                                                                              "**********************************************Exception:***********************\n" +
-                                                                              e.Message);
+                return new KeyValuePair<PavlovServerViewModel, string>(server, result + "\n " +
+                                                                               "**********************************************Exception:***********************\n" +
+                                                                               e.Message);
             }
-            return new KeyValuePair<PavlovServerViewModel, string>(server,null);
-        } 
-        
-        
+
+            return new KeyValuePair<PavlovServerViewModel, string>(server, null);
+        }
+
+
         // public async Task<KeyValuePair<PavlovServerViewModel,string>> RemovePavlovServerFromDisk(PavlovServerViewModel server,
         //   RconService rconService,ServerSelectedMapService serverSelectedMapService,SshServerSerivce sshServerSerivce,
         //   PavlovServerService pavlovServerService)

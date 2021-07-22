@@ -8,18 +8,12 @@ namespace PavlovRconWebserver.Services
 {
     public class PavlovServerPlayerService
     {
-        private readonly PavlovServerInfoService _pavlovServerInfoService;
-        private readonly PavlovServerService _pavlovServerService;
-
         private readonly ILiteDbIdentityContext _liteDb;
 
 
-        public PavlovServerPlayerService(ILiteDbIdentityContext liteDbContext, PavlovServerService pavlovServerService,
-            PavlovServerInfoService pavlovServerInfoService)
+        public PavlovServerPlayerService(ILiteDbIdentityContext liteDbContext)
         {
-            _pavlovServerService = pavlovServerService;
             _liteDb = liteDbContext;
-            _pavlovServerInfoService = pavlovServerInfoService;
         }
 
         public async Task<IEnumerable<PavlovServerPlayer>> FindAllFromServer(int serverId)

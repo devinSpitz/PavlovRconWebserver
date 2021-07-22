@@ -96,8 +96,6 @@ namespace PavlovRconWebserver.Controllers
         }
 
 
-
-
         [HttpGet]
         public async Task<IActionResult> EditMatch(int id)
         {
@@ -108,7 +106,6 @@ namespace PavlovRconWebserver.Controllers
             return View("Match", match);
         }
 
-     
 
         public async Task<IActionResult> CreateMatch()
         {

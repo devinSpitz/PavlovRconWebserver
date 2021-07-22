@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 using PavlovRconWebserver.Exceptions;
 using PavlovRconWebserver.Extensions;
@@ -197,6 +196,7 @@ namespace PavlovRconWebserver.Controllers
                 {
                     return BadRequest(e.Message);
                 }
+
                 var playersTmp = result1;
                 var playersList = JsonConvert.DeserializeObject<PlayerListClass>(playersTmp);
                 var playerName = playersList.PlayerList.FirstOrDefault(x => x.UniqueId == steamId)?.Username;
@@ -226,6 +226,7 @@ namespace PavlovRconWebserver.Controllers
             {
                 return BadRequest(e.Message);
             }
+
             //needs to handle the Blacklist file. Also save the file here with all current banned players
             if (banlist.FirstOrDefault(x => x.SteamId == ban.SteamId) == null)
             {
@@ -258,6 +259,7 @@ namespace PavlovRconWebserver.Controllers
             {
                 return BadRequest(e.Message);
             }
+
             var toRemove = banlist.FirstOrDefault(x => x.SteamId == steamId);
             if (toRemove != null)
             {
@@ -352,7 +354,6 @@ namespace PavlovRconWebserver.Controllers
                 try
                 {
                     result = await _service.SendCommandSShTunnel(server, "ServerInfo");
-
                 }
                 catch (Exception e)
                 {

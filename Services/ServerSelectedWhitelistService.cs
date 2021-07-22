@@ -10,9 +10,8 @@ namespace PavlovRconWebserver.Services
 {
     public class ServerSelectedWhitelistService
     {
-        private readonly RconService _rconService;
-
         private readonly ILiteDbIdentityContext _liteDb;
+        private readonly RconService _rconService;
 
         public ServerSelectedWhitelistService(ILiteDbIdentityContext liteDbContext, RconService rconService)
         {

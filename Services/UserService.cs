@@ -11,8 +11,8 @@ namespace PavlovRconWebserver.Services
 {
     public class UserService
     {
-        private readonly RoleManager<LiteDbRole> _roleManager;
         private readonly ILiteDbIdentityContext _liteDb;
+        private readonly RoleManager<LiteDbRole> _roleManager;
         private readonly UserManager<LiteDbUser> _userManager;
 
         public UserService(ILiteDbIdentityContext liteDbContext, UserManager<LiteDbUser> userMrg,

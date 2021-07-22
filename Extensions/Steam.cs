@@ -21,10 +21,8 @@ namespace PavlovRconWebserver.Extensions
             var sshServerSerivce =
                 new SshServerSerivce(new LiteDbIdentityContext(connectionString), pavlovServerService);
             var mapsService = new MapsService(new LiteDbIdentityContext(connectionString));
-            var pavlovServerInfoService = new PavlovServerInfoService(new LiteDbIdentityContext(connectionString),
-                pavlovServerService, mapsService);
-            var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString),
-                pavlovServerService, pavlovServerInfoService);
+            var pavlovServerInfoService = new PavlovServerInfoService(new LiteDbIdentityContext(connectionString));
+            var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString));
             var pavlovServerPlayerHistoryService =
                 new PavlovServerPlayerHistoryService(new LiteDbIdentityContext(connectionString));
             var rconSerivce = new RconService(steamIdentityService, serverSelectedMapService, mapsService,

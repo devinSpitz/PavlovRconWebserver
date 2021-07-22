@@ -16,10 +16,8 @@ namespace PavlovRconWebserver.Extensions
             var pavlovServerService = new PavlovServerService(new LiteDbIdentityContext(connectionString));
             var sshServerSerivce =
                 new SshServerSerivce(new LiteDbIdentityContext(connectionString), pavlovServerService);
-            var pavlovServerInfoService = new PavlovServerInfoService(new LiteDbIdentityContext(connectionString),
-                pavlovServerService, mapsService);
-            var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString),
-                pavlovServerService, pavlovServerInfoService);
+            var pavlovServerInfoService = new PavlovServerInfoService(new LiteDbIdentityContext(connectionString));
+            var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString));
             var pavlovServerPlayerHistoryService =
                 new PavlovServerPlayerHistoryService(new LiteDbIdentityContext(connectionString));
             var rconSerivce = new RconService(steamIdentityService, serverSelectedMapService, mapsService,
@@ -36,7 +34,7 @@ namespace PavlovRconWebserver.Extensions
                     Console.WriteLine(e.Message);
                 }
         }
-        
+
         public static async Task UpdateServerState(PavlovServer signleServer, RconService rconSerivce,
             PavlovServerService pavlovServerService, SshServerSerivce sshServerSerivce, bool withCheck)
         {
@@ -58,8 +56,8 @@ namespace PavlovRconWebserver.Extensions
                 {
                     Console.WriteLine(e.Message);
                 }
-        }        
-        
+        }
+
 
         /// <summary>
         /// </summary>
