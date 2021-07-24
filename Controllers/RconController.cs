@@ -116,7 +116,10 @@ namespace PavlovRconWebserver.Controllers
             if (!await RightsHandler.IsUserAtLeastInRole("Captain", HttpContext.User, _userservice) &&
                 !isModOnTheServer) return Unauthorized();
             var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(server.Replace("\"\"", "\"ServerInfo\""));
-            tmp.Name = (await _pavlovServerService.FindOne(serverId)).Name;
+            if (tmp == null) return BadRequest("Could not Desirialize Object!");
+            var pavlovServer = await _pavlovServerService.FindOne(serverId);
+            if (pavlovServer == null) return BadRequest("Could not get pavlovserver!");
+            tmp.Name = pavlovServer.Name;
 
             var map = await _mapsService.FindOne(tmp.ServerInfo.MapLabel.Replace("UGC", ""));
             if (map != null)
@@ -331,8 +334,13 @@ namespace PavlovRconWebserver.Controllers
         {
             var singleServer = new PavlovServer();
             singleServer = await _pavlovServerService.FindOne(serverId);
+            if (HttpContext.User == null) return false;
+            var user = (await _userservice.getUserFromCp(HttpContext.User));
+            if (user == null) return false;
+            if (singleServer == null) return false;
+            if (_serverSelectedModsService == null) return false;
             var isModOnTheServer = await RightsHandler.IsModOnTheServer(_serverSelectedModsService, singleServer,
-                (await _userservice.getUserFromCp(HttpContext.User)).Id);
+                user.Id);
             return isModOnTheServer;
         }
 

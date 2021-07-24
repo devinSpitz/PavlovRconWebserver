@@ -10,6 +10,7 @@ namespace PavlovRconWebserver.Models
     {
         public int sshServerId { get; set; }
         public bool create { get; set; } = false;
+        public bool remove { get; set; } = false;
         [DisplayName("SSH username")] public string SshUsernameRoot { get; set; }
 
         [DisplayName("SSH password")]

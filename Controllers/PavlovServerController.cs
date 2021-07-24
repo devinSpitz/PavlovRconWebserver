@@ -50,8 +50,8 @@ namespace PavlovRconWebserver.Controllers
         }
 
 
-        [HttpGet("[controller]/EditServer/{serverId}/{sshServerId}/{create?}")]
-        public async Task<IActionResult> EditServer(int serverId, int sshServerId, bool create = false)
+        [HttpGet("[controller]/EditServer/{serverId}/{sshServerId}/{create?}/{remove?}")]
+        public async Task<IActionResult> EditServer(int serverId, int sshServerId, bool create = false, bool remove = false)
         {
             if (await _userservice.IsUserNotInRole("Admin", HttpContext.User)) return new UnauthorizedResult();
             var server = new PavlovServer();
@@ -71,6 +71,7 @@ namespace PavlovRconWebserver.Controllers
             }
 
             viewModel.create = create;
+            viewModel.remove = remove;
             return View("Server", viewModel);
         }
 
@@ -122,14 +123,24 @@ namespace PavlovRconWebserver.Controllers
                 server.SshServer = await _service.FindOne(server.sshServerId);
                 if (server.create)
                 {
-                    var result = await _pavlovServerService.CreatePavlovServer(server, _rconService,
-                        _serverSelectedMapService, _service, _pavlovServerService);
-                    server = result.Key;
-                    if (result.Value == null)
+                    try
+                    {
+                        var result = await _pavlovServerService.CreatePavlovServer(server, _rconService,
+                            _serverSelectedMapService, _service, _pavlovServerService);
+                        server = result.Key;
+                        if (result.Value != null)
+                        {
+                            await _pavlovServerService.RemovePavlovServerFromDisk(server, _rconService,_service);
+                            ModelState.AddModelError("Id",
+                                "Could not install service or server!: \n*******************************************Start*************\n" +
+                                result);
+                            return await EditServer(server);
+                        }
+                    }
+                    catch (CommandException e)
                     {
                         ModelState.AddModelError("Id",
-                            "Could not install service or server!: \n*******************************************Start*************\n" +
-                            result);
+                            "Could not install service or server!: "+e.Message);
                         return await EditServer(server);
                     }
                 }
@@ -146,7 +157,10 @@ namespace PavlovRconWebserver.Controllers
                     ModelState.AddModelError(e.FieldName, e.Message);
             }
 
-            if (ModelState.ErrorCount > 0) return await EditServer(server);
+            if (ModelState.ErrorCount > 0)
+            {
+                return await EditServer(server);
+            }
 
             return RedirectToAction("Index", "SshServer");
         }
@@ -158,6 +172,36 @@ namespace PavlovRconWebserver.Controllers
             if (await _userservice.IsUserNotInRole("Admin", HttpContext.User)) return new UnauthorizedResult();
             await _pavlovServerService.Delete(id, _whitelistService, _serverSelectedMapService,
                 _serverSelectedModsService);
+            return RedirectToAction("Index", "SshServer");
+        }
+        [HttpGet("[controller]/CompleteRemoveView/{id}")]
+        public async Task<IActionResult> CompleteRemoveView(int id)
+        {
+            if (await _userservice.IsUserNotInRole("Admin", HttpContext.User)) return new UnauthorizedResult();
+            var server = await _pavlovServerService.FindOne(id);
+            if (server == null) return BadRequest("There is no Server with this id!");
+            
+            
+            return await EditServer(server.Id,server.SshServer.Id,false,true);
+        }
+        
+        [HttpPost("[controller]/CompleteRemove/")]
+        public async Task<IActionResult> CompleteRemove(PavlovServerViewModel viewModel)
+        {
+            if (await _userservice.IsUserNotInRole("Admin", HttpContext.User)) return new UnauthorizedResult();
+            var result = await _pavlovServerService.RemovePavlovServerFromDisk(viewModel,_rconService,_service);
+            if (result.Value != null) return BadRequest(result.Value);
+            
+            await _pavlovServerService.Delete(viewModel.Id, _whitelistService, _serverSelectedMapService,
+                _serverSelectedModsService);
+            return RedirectToAction("Index", "SshServer");
+        }
+        
+        [HttpPost("[controller]/DeleteServerFromFolder/")]
+        public async Task<IActionResult> DeleteServerFromFolder(PavlovServerViewModel viewModel)
+        {
+            if (await _userservice.IsUserNotInRole("Admin", HttpContext.User)) return new UnauthorizedResult();
+            await _pavlovServerService.RemovePavlovServerFromDisk(viewModel,_rconService,_service);
             return RedirectToAction("Index", "SshServer");
         }
 

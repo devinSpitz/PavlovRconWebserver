@@ -59,7 +59,8 @@
                         <tr>
                             <th class="col-sm-3">Gui Name <button class="btn btn-primary col-5 m-1" onclick="showHideTable(this)"><span class="fas fa-eye"></span> All columns</button></th>
                             <th class="col-sm-1">Service state</th>
-                            <th class="toHide">Delete<br> from list</th>
+                            <th class="toHide">Delete<br>from list</th>
+                            <th class="toHide">Delete<br>incl. files</th>
                             <th class="toHide">System</th>
                             <th class="toHide">Maps</th>
                             <th class="toHide col-sm-2">ServerSettings</th>
@@ -92,9 +93,17 @@
                                 <td> @pavlovServer.Name </td>
                                 <td class="@bg"> @pavlovServer.ServerServiceState </td>
                                 <td class="toHide">
-                                    <a class="btn btn-sm btn-danger" href="@Url.Action("DeleteServer", "PavlovServer", new {pavlovServer.Id})" onclick="return confirm('Are you sure you want to Delete?')">
+                                    <a class="btn btn-sm btn-danger" alt="Remove from list" href="@Url.Action("DeleteServer", "PavlovServer", new {pavlovServer.Id})" onclick="return confirm('Are you sure you want to remove the server from list?')">
                                         <span class="fas fa-trash-alt"></span>
                                     </a>
+                                </td>
+                                <td class="toHide">
+                                    @if (sshServer.SteamIsAvailable)
+                                    {
+                                        <a class="btn btn-sm btn-danger"  alt="Complete Remove" href="@Url.Action("CompleteRemoveView", "PavlovServer", new {pavlovServer.Id})" onclick="return confirm('Are you sure you want to Delete the hole Pavlov Server inlc. files?')">
+                                            <span class="fas fa-trash-alt"></span>
+                                        </a>
+                                    }
                                 </td>
                                 <td class="toHide">
                                     <a class="btn btn-sm btn-primary" href="@Url.Action("EditServer", "PavlovServer", new {serverId = pavlovServer.Id, sshServerId = sshServer.Id})">

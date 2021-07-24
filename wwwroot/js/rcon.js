@@ -274,7 +274,7 @@ function SingleServerInfoPartialView(result,ServerIds)
 {
     let controller = "Rcon";
     let data = {};
-    data = { server: result ,serverId: ServerIds[0]};
+    data = { server: result ,serverId: ServerIds};
 
     $.ajax({
         type: 'POST',

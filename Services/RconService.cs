@@ -376,69 +376,8 @@ namespace PavlovRconWebserver.Services
             return result;
         }
 
-        //
-        // public async Task<ConnectionResult> RemovePavlovServerFolder(PavlovServer server)
-        // {
-        //     var type = await GetAuthType(server);
-        //     var connectionInfo = ConnectionInfo(server, type, out var result);
-        //     var restart = false;
-        //     if (server.ServerServiceState == ServerServiceState.active)
-        //     {
-        //         restart = true;
-        //         await SystemDStop(server);
-        //     }
-        //     using var client = new SshClient(connectionInfo);
-        //     try
-        //     {
-        //         client.Connect();
-        //         var stream =
-        //         client.CreateShellStream("pavlovRconWebserverSShTunnelSystemdCheck", 80, 24, 800, 600, 1024);
-        //         var update = await SendCommandForShell(
-        //             "rm -rf "+server.ServerFolderPath, stream, "");
-        //         if (update == null) result.errors.Add("Could not remove the pavlovserver folder " + server.Name);
-        //         result.answer = update;
-        //     }
-        //     catch (Exception e)
-        //     {
-        //         switch (e)
-        //         {
-        //             case SshAuthenticationException _:
-        //                 result.errors.Add("Could not Login over ssh!" + server.Name);
-        //                 break;
-        //             case SshConnectionException _:
-        //                 result.errors.Add("Could not connect to host over ssh!" + server.Name);
-        //                 break;
-        //             case SshOperationTimeoutException _:
-        //                 result.errors.Add("Could not connect to host cause of timeout over ssh!" + server.Name);
-        //                 break;
-        //             case SocketException _:
-        //                 result.errors.Add("Could not connect to host!" + server.Name);
-        //                 break;
-        //             case InvalidOperationException _:
-        //                 result.errors.Add(e.Message + " <- most lily this error is from telnet" + server.Name);
-        //                 break;
-        //             default:
-        //             {
-        //                 client.Disconnect();
-        //                 throw;
-        //             }
-        //         }
-        //     }
-        //     finally
-        //     {
-        //         client.Disconnect();
-        //     }
-        //
-        //     if (restart)
-        //     {
-        //         await SystemDStart(server);
-        //     }
-        //     
-        //     if (result.errors.Count <= 0 || result.answer != "") result.Success = true;
-        //
-        //     return result;
-        // }
-        //
+        
+
         public async Task<string> UpdateInstallPavlovServer(PavlovServer server)
         {
             var type = await GetAuthType(server);
@@ -614,6 +553,130 @@ WantedBy = multi-user.target";
 
             if (result.errors.Count <= 0 || result.answer != "") result.Success = true;
 
+            return EndConnection(result);
+        }
+        public async Task<string> RemovePath(PavlovServer server,string path)
+        {
+            var type = await GetAuthType(server);
+            var connectionInfo = ConnectionInfo(server, type, out var result);
+            var restart = false;
+            if (server.ServerServiceState == ServerServiceState.active)
+            {
+                restart = true;
+                await SystemDStop(server);
+            }
+            using var client = new SshClient(connectionInfo);
+            using var clientSftp = new SftpClient(connectionInfo);
+            try
+            {
+                client.Connect();
+                clientSftp.Connect();
+                if (clientSftp.Exists(path))
+                {
+                    var stream =
+                        client.CreateShellStream("pavlovRconWebserverSShTunnelSystemdCheck", 80, 24, 800, 600, 1024);
+                    var update = await SendCommandForShell(
+                        "rm -rf "+path, stream, null);
+                    if (update == null) result.errors.Add("Could not remove the "+path+"! " + server.Name);
+                    result.answer = update;
+                }
+                else
+                {
+                    result.answer = "Everything is fine there is no file to delete!";
+                }
+            }
+            catch (Exception e)
+            {
+                switch (e)
+                {
+                    case SshAuthenticationException _:
+                        result.errors.Add("Could not Login over ssh!" + server.Name);
+                        break;
+                    case SshConnectionException _:
+                        result.errors.Add("Could not connect to host over ssh!" + server.Name);
+                        break;
+                    case SshOperationTimeoutException _:
+                        result.errors.Add("Could not connect to host cause of timeout over ssh!" + server.Name);
+                        break;
+                    case SocketException _:
+                        result.errors.Add("Could not connect to host!" + server.Name);
+                        break;
+                    case InvalidOperationException _:
+                        result.errors.Add(e.Message + " <- most lily this error is from telnet" + server.Name);
+                        break;
+                    default:
+                    {
+                        client.Disconnect();
+                        clientSftp.Disconnect();
+                        throw;
+                    }
+                }
+            }
+            finally
+            {
+                client.Disconnect();
+                clientSftp.Disconnect();
+            }
+        
+            if (restart)
+            {
+                await SystemDStart(server);
+            }
+            
+            if (result.errors.Count <= 0 || result.answer != "") result.Success = true;
+        
+            return EndConnection(result);
+        }
+        public async Task<string> DoesPathExist(PavlovServer server,string path)
+        {
+            var type = await GetAuthType(server);
+            var connectionInfo = ConnectionInfo(server, type, out var result);
+            using var clientSftp = new SftpClient(connectionInfo);
+            try
+            {
+                clientSftp.Connect();
+                if (clientSftp.Exists(path))
+                {
+                    result.Success = true;
+                    result.answer = "true";
+                }
+                else
+                {
+                    result.answer = "false";
+                }
+            }
+            catch (Exception e)
+            {
+                switch (e)
+                {
+                    case SshAuthenticationException _:
+                        result.errors.Add("Could not Login over ssh!" + server.Name);
+                        break;
+                    case SshConnectionException _:
+                        result.errors.Add("Could not connect to host over ssh!" + server.Name);
+                        break;
+                    case SshOperationTimeoutException _:
+                        result.errors.Add("Could not connect to host cause of timeout over ssh!" + server.Name);
+                        break;
+                    case SocketException _:
+                        result.errors.Add("Could not connect to host!" + server.Name);
+                        break;
+                    case InvalidOperationException _:
+                        result.errors.Add(e.Message + " <- most lily this error is from telnet" + server.Name);
+                        break;
+                    default:
+                    {
+                        clientSftp.Disconnect();
+                        throw;
+                    }
+                }
+            }
+            finally
+            {
+                clientSftp.Disconnect();
+            }
+            if (result.errors.Count <= 0 || result.answer != "") result.Success = true;
+        
             return EndConnection(result);
         }
 

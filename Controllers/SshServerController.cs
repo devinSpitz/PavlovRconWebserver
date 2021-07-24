@@ -62,11 +62,12 @@ namespace PavlovRconWebserver.Controllers
                 // ignore there is maybe no folder or the folder is empty 
             }
 
+            ViewBag.Remove = false;
             return View("Server", server);
         }
 
         [HttpPost]
-        public async Task<IActionResult> EditServer(SshServer server)
+        public async Task<IActionResult> EditServer(SshServer server,bool remove = false)
         {
             if (await _userservice.IsUserNotInRole("Admin", HttpContext.User)) return new UnauthorizedResult();
             try
@@ -79,6 +80,7 @@ namespace PavlovRconWebserver.Controllers
                 // ignore there is maybe no folder or the folder is empty 
             }
 
+            ViewBag.Remove = remove;
             return View("Server", server);
         }
 

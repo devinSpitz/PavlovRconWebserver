@@ -98,7 +98,8 @@ namespace PavlovRconWebserver.Extensions
             PavlovServer server, ObjectId id)
         {
             var mods = (await serverSelectedModsService.FindAllFrom(server)).ToList();
-            return mods.FirstOrDefault(x => x.LiteDbUser.Id == id) != null;
+            if (mods.Count <= 0) return false;
+            return mods.FirstOrDefault(x => x.LiteDbUser?.Id == id) != null;
         }
 
 

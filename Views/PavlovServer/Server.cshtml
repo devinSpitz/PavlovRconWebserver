@@ -1,7 +1,17 @@
 @model PavlovServerViewModel
 
 @{
-    ViewBag.Title = "Add/Update pavlov server";
+    if (Model.create)
+    {
+        ViewBag.Title = "Create pavlov server";
+    }else if (Model.remove)
+    {
+        ViewBag.Title = "Complete remove pavlov server";
+    }
+    else
+    {
+        ViewBag.Title = "Add/Update pavlov server";
+    }
     Layout = "_Layout";
     var placeholder = "";
     if (Model.Id > 0)
@@ -10,19 +20,45 @@
     }
     var keyFiles = Model.SshKeyFileNames.Prepend("");
 
+    var action = "";
 }
 
 <h2>@ViewBag.Title</h2>
-<div class="card bg-info">
-    <ul>
-        <li>Each field is a mandatory field</li>
-        <li>The Pavlov server and the service must already exist (but the service can be disabled).</li>
-        <li>When saving, a validation is performed at the same time. This means that the pavlov server is also started for a short time if it is not yet running.</li>
-    </ul>
-</div>
-
-
-<form asp-controller="PavlovServer" asp-action="SaveServer" method="post">
+@if (!Model.remove)
+{
+    <div class="card bg-info">
+        <ul>
+            <li>Each field is a mandatory field</li>
+            @if (!Model.create)
+            {
+                <li>The Pavlov server and the service must already exist (but the service can be disabled).</li>
+            }
+            <li>When saving, a validation is performed at the same time. This means that the pavlov server is also started for a short time if it is not yet running.</li>
+            @if (!Model.remove && !Model.create && Model.Id!=0)
+            {
+                <li class="bg-warning">You can not change the actual ports or the rcon password by editting the server. </li>
+                <li class="bg-warning">To do that remove the complete server and recreate it again.</li>
+                <li class="bg-warning">This is only to fine ajust if you changed the server settings manualy or made the hole pavlov server manualy!</li>
+            }
+            @if (!Model.create && Model.Id==0)
+            {
+                <li class="bg-warning">This is only to add server which is made manualy!</li>
+            }
+        
+        </ul>
+    </div>
+    
+    
+}
+@if (Model.remove)
+{
+    action = "CompleteRemove";
+}else
+{
+    action = "SaveServer";
+}
+        
+    <form asp-controller="PavlovServer" asp-action="@action" method="post">
     <div asp-validation-summary="All" class="text-danger"></div>
 
     <input asp-for="Id" class="form-control" value="@Model.Id" type="hidden"/>
@@ -30,11 +66,27 @@
     {
         <input asp-for="create" class="form-control form-check-input" value="@Model.create" type="hidden"/>
     }
+    
     <input asp-for="Id" class="form-control " value="@Model.Id" type="hidden"/>
-    <span asp-validation-for="Id" class="text-danger"></span>
+    
     <input asp-for="sshServerId" class="form-control" value="@Model.sshServerId" type="hidden"/>
     <span asp-validation-for="sshServerId" class="text-danger"></span>
-    <div class="row">
+    @if (Model.remove)
+    {
+        <div class="row">
+            <input type="hidden" asp-for="Name" class="form-control" value="@Model.Name"/>
+            <input type="hidden" asp-for="TelnetPort" class="form-control" value="@Model.TelnetPort"/>
+            <input type="hidden" asp-for="TelnetPassword" class="form-control" placeholder="@placeholder" value="" autocomplete="off"/>
+            <input type="hidden" asp-for="ServerType"  class="form-control form-control-sm">
+            <input type="hidden" asp-for="ServerPort" class="form-control" value="@Model.ServerPort"/>
+            <input type="hidden" asp-for="ServerFolderPath" class="form-control" value="@Model.ServerFolderPath"/>
+            <input type="hidden" asp-for="DeletAfter" class="form-control" value="@Model.DeletAfter"/>
+            <input type="hidden" asp-for="ServerSystemdServiceName" class="form-control" value="@Model.ServerSystemdServiceName"/>
+    </div>  
+    }
+    else
+    {
+           <div class="row">
         <div class="form-group col-md-12">
             <label asp-for="Name"></label>
             <input asp-for="Name" class="form-control" value="@Model.Name"/>
@@ -86,9 +138,11 @@
             <input asp-for="ServerSystemdServiceName" class="form-control" value="@Model.ServerSystemdServiceName"/>
             <span asp-validation-for="ServerSystemdServiceName" class="text-danger"></span>
         </div>
-    </div>
+    </div> 
+    }
 
-    @if (Model.create)
+
+    @if (Model.create || Model.remove)
     {
         <div class="col-md-11">
             <div class="card m-1 ">
@@ -96,10 +150,8 @@
                 <div class="card-body">
                     <div class="card m-1 bg-info">
                         <ul>
-                            <li>This user will not get saved and only be used to make the service for the pavlovserver.</li>
-                            <li>This user is needed to make the service.</li>
-                            <li>The service has to be stopped!</li>
-                            <li class="bg-warning">After a save has failed while creating a server you may have to disable and stop the service depends on what is already done!</li>
+                            <li>This user will not get saved and only be used to @if(Model.create) { <text>make</text> }@if(Model.remove) { <text>remove</text> } the service for the pavlovserver.</li>
+                            @if(Model.create) { <li>This user is needed to make the service.</li> }
                         </ul>
                     </div>
                     <div class="row">
@@ -135,7 +187,7 @@
 
     <div class="row">
         <div class="saveButton col-md-1 mt-3">
-            <button type="submit" class="btn btn-success col-md-12">Save</button>
+            <button type="submit" class="btn btn-success col-md-12">@if(Model.create) { <text>Create</text> }@if(Model.remove) { <text>Remove</text> }@if(!Model.remove && !Model.create) { <text>Save</text> }</button>
         </div>
     </div>
 
