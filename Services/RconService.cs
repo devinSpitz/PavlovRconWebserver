@@ -713,12 +713,12 @@ WantedBy = multi-user.target";
                     {
                         if (client2.IsConnected)
                         {
-                            var password = await client2.ReadAsync(TimeSpan.FromMilliseconds(500));
+                            var password = await client2.ReadAsync(TimeSpan.FromMilliseconds(2000));
                             Console.WriteLine("Answer: " + password);
                             if (password.Contains("Password"))
                             {
                                 await client2.WriteLine(server.TelnetPassword);
-                                var auth = await client2.ReadAsync(TimeSpan.FromMilliseconds(500));
+                                var auth = await client2.ReadAsync(TimeSpan.FromMilliseconds(2000));
                                 if (auth.Contains("Authenticated=1"))
                                     foreach (var command in commands)
                                     {
@@ -803,7 +803,7 @@ WantedBy = multi-user.target";
         public static async Task<string> SingleCommandResult(Client client2, string command)
         {
             await client2.WriteLine(command);
-            var commandResult = await client2.ReadAsync(TimeSpan.FromMilliseconds(300));
+            var commandResult = await client2.ReadAsync(TimeSpan.FromMilliseconds(2000));
 
 
             var singleCommandResult = "";
@@ -994,12 +994,12 @@ WantedBy = multi-user.target";
                     {
                         if (client2.IsConnected)
                         {
-                            var password = await client2.ReadAsync(TimeSpan.FromMilliseconds(500));
+                            var password = await client2.ReadAsync(TimeSpan.FromMilliseconds(2000));
                             Console.WriteLine("Answer: " + password);
                             if (password.Contains("Password"))
                             {
                                 await client2.WriteLine(server.TelnetPassword);
-                                var auth = await client2.ReadAsync(TimeSpan.FromMilliseconds(500));
+                                var auth = await client2.ReadAsync(TimeSpan.FromMilliseconds(2000));
                                 if (auth.Contains("Authenticated=1"))
                                 {
                                     // it is authetificated
@@ -1237,7 +1237,7 @@ WantedBy = multi-user.target";
 
                         // Check if map is running
                         var isRunningAnswerCommand = client.CreateCommand("lsof +D " + map.FullName);
-                        isRunningAnswerCommand.CommandTimeout = TimeSpan.FromMilliseconds(500);
+                        isRunningAnswerCommand.CommandTimeout = TimeSpan.FromMilliseconds(2000);
                         var isRunningAnswer = isRunningAnswerCommand.Execute();
                         if (isRunningAnswer.Contains("COMMAND") && isRunningAnswer.Contains("USER")
                         ) // map is running on the server
