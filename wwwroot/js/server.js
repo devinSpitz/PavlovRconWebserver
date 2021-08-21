@@ -20,8 +20,6 @@ function duplicateButton(object)
 
 function ChangeMap(mapId,object,gameMode,onlyChange = false)
 {
-    //Todo fix gameMode has to specific the if  if its only change the gametype do not remove the stuff soo may add and remove a callback?
-
     if($(object).parent().parent().parent().parent().parent().parent().parent().prop("id")==="Save") // This is some how ridiculous cause .parents() gave back delete and save. I will get e bether solution xD
     {
         callApi("Save",serverId,mapId,object,gameMode,onlyChange);

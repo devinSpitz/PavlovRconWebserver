@@ -147,10 +147,22 @@ namespace PavlovRconWebserver.Models
             lines.Add("TickRate=" + TickRate);
             lines.Add("TimeLimit=" + TimeLimit);
             if (!string.IsNullOrEmpty(Password))
+            {
                 lines.Add("Password=" + Password);
+            }
+            else
+            {
+                lines.Add("Password=");
+            }
 
             if (!string.IsNullOrEmpty(BalanceTableURL))
+            {
                 lines.Add("BalanceTableURL=" + BalanceTableURL);
+            }
+            else
+            {
+                lines.Add("BalanceTableURL=");
+            }
 
             foreach (var serverSelectedMap in serverSelectedMaps)
                 if (Regex.IsMatch(serverSelectedMap.Map.Id, @"^\d+$"))

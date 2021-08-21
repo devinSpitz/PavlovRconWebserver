@@ -21,7 +21,7 @@ namespace PavlovRconWebserver.Extensions
             var pavlovServerPlayerHistoryService =
                 new PavlovServerPlayerHistoryService(new LiteDbIdentityContext(connectionString));
             var rconSerivce = new RconService(steamIdentityService, serverSelectedMapService, mapsService,
-                pavlovServerInfoService, pavlovServerPlayerService, pavlovServerPlayerHistoryService);
+                pavlovServerInfoService, pavlovServerPlayerService,pavlovServerService,sshServerSerivce, pavlovServerPlayerHistoryService);
             var servers = await sshServerSerivce.FindAll();
             foreach (var server in servers)
             foreach (var signleServer in server.PavlovServers)
@@ -35,6 +35,21 @@ namespace PavlovRconWebserver.Extensions
                 }
         }
 
+        public static async Task CheckStateForAllServers(PavlovServerService pavlovServerService,SshServerSerivce sshServerSerivce, RconService rconSerivce)
+        {
+            var pavlovServers = await pavlovServerService.FindAll();
+            
+            foreach (var signleServer in pavlovServers)
+                try
+                {
+                    await UpdateServerState(signleServer, rconSerivce, pavlovServerService, sshServerSerivce, false);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+        }
+        
         public static async Task UpdateServerState(PavlovServer signleServer, RconService rconSerivce,
             PavlovServerService pavlovServerService, SshServerSerivce sshServerSerivce, bool withCheck)
         {

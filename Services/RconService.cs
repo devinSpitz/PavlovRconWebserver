@@ -36,10 +36,14 @@ namespace PavlovRconWebserver.Services
 
         private readonly ServerSelectedMapService _serverSelectedMapService;
         private readonly SteamIdentityService _steamIdentityService;
+        private readonly PavlovServerService _pavlovServerService;
+        private readonly SshServerSerivce _sshServerSerivce;
 
         public RconService(SteamIdentityService steamIdentityService, ServerSelectedMapService serverSelectedMapService,
             MapsService mapsService, PavlovServerInfoService pavlovServerInfoService,
             PavlovServerPlayerService pavlovServerPlayerService,
+            PavlovServerService pavlovServerService,
+            SshServerSerivce sshServerSerivce,
             PavlovServerPlayerHistoryService pavlovServerPlayerHistoryService)
         {
             _serverSelectedMapService = serverSelectedMapService;
@@ -48,6 +52,8 @@ namespace PavlovRconWebserver.Services
             _pavlovServerPlayerService = pavlovServerPlayerService;
             _pavlovServerPlayerHistoryService = pavlovServerPlayerHistoryService;
             _steamIdentityService = steamIdentityService;
+            _pavlovServerService = pavlovServerService;
+            _sshServerSerivce = sshServerSerivce;
         }
 
         public static async Task<string> SendCommandForShell(string customCmd, ShellStream stream,
@@ -281,6 +287,7 @@ namespace PavlovRconWebserver.Services
 
             if (result.errors.Count <= 0) result.Success = true;
 
+            await SystemdService.CheckStateForAllServers(_pavlovServerService,_sshServerSerivce,this);
             return result;
         }
 
@@ -372,7 +379,8 @@ namespace PavlovRconWebserver.Services
             }
 
             if (result.errors.Count <= 0) result.Success = true;
-
+            
+            await SystemdService.CheckStateForAllServers(_pavlovServerService,_sshServerSerivce,this);
             return result;
         }
 
@@ -447,6 +455,8 @@ namespace PavlovRconWebserver.Services
 
             return EndConnection(result);
         }
+        
+
 
         public async Task<string> InstallPavlovServerService(PavlovServer server)
         {

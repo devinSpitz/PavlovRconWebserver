@@ -217,10 +217,15 @@ namespace PavlovRconWebserver.Services
 
         public async Task<Match> FindOne(int id)
         {
-            return _liteDb.LiteDatabase.GetCollection<Match>("Match")
+            var selected = await _matchSelectedSteamIdentitiesService.FindAllSelectedForMatch(id);
+            var match =  _liteDb.LiteDatabase.GetCollection<Match>("Match")
                 .Include(x => x.Team0)
                 .Include(x => x.Team1)
                 .Find(x => x.Id == id).FirstOrDefault();
+            if (match == null) return null;
+            match.PavlovServer = await _pavlovServerService.FindOne(match.PavlovServer.Id);
+            match.MatchSelectedSteamIdentities = selected.ToList();
+            return match;
         }
 
         public async Task<MatchViewModel> PrepareViewModel(Match oldMatch)
