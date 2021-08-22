@@ -170,8 +170,15 @@ namespace PavlovRconWebserver.Controllers
         public async Task<IActionResult> DeleteServer(int id)
         {
             if (await _userservice.IsUserNotInRole("Admin", HttpContext.User)) return new UnauthorizedResult();
-            await _pavlovServerService.Delete(id, _whitelistService, _serverSelectedMapService,
-                _serverSelectedModsService);
+            try
+            {
+                await _pavlovServerService.Delete(id, _whitelistService, _serverSelectedMapService,
+                    _serverSelectedModsService);
+            }
+            catch (CommandException e)
+            {
+                return BadRequest(e.Message);
+            }
             return RedirectToAction("Index", "SshServer");
         }
         [HttpGet("[controller]/CompleteRemoveView/{id}")]
@@ -188,12 +195,20 @@ namespace PavlovRconWebserver.Controllers
         [HttpPost("[controller]/CompleteRemove/")]
         public async Task<IActionResult> CompleteRemove(PavlovServerViewModel viewModel)
         {
-            if (await _userservice.IsUserNotInRole("Admin", HttpContext.User)) return new UnauthorizedResult();
-            var result = await _pavlovServerService.RemovePavlovServerFromDisk(viewModel,_rconService,_service);
-            if (result.Value != null) return BadRequest(result.Value);
-            
-            await _pavlovServerService.Delete(viewModel.Id, _whitelistService, _serverSelectedMapService,
-                _serverSelectedModsService);
+
+            try
+            { 
+                if (await _userservice.IsUserNotInRole("Admin", HttpContext.User)) return new UnauthorizedResult();
+                var result = await _pavlovServerService.RemovePavlovServerFromDisk(viewModel,_rconService,_service);
+                if (result.Value != null) return BadRequest(result.Value);
+
+                await _pavlovServerService.Delete(viewModel.Id, _whitelistService, _serverSelectedMapService,
+                    _serverSelectedModsService);
+            }
+            catch (CommandException e)
+            {
+                return BadRequest(e.Message);
+            }
             return RedirectToAction("Index", "SshServer");
         }
         
@@ -201,7 +216,14 @@ namespace PavlovRconWebserver.Controllers
         public async Task<IActionResult> DeleteServerFromFolder(PavlovServerViewModel viewModel)
         {
             if (await _userservice.IsUserNotInRole("Admin", HttpContext.User)) return new UnauthorizedResult();
-            await _pavlovServerService.RemovePavlovServerFromDisk(viewModel,_rconService,_service);
+            try
+            { 
+                await _pavlovServerService.RemovePavlovServerFromDisk(viewModel,_rconService,_service);
+            }
+            catch (CommandException e)
+            {
+                return BadRequest(e.Message);
+            }
             return RedirectToAction("Index", "SshServer");
         }
 
@@ -211,7 +233,14 @@ namespace PavlovRconWebserver.Controllers
             if (await _userservice.IsUserNotInRole("Admin", HttpContext.User)) return new UnauthorizedResult();
             var viewModel = new PavlovServerGameIni();
             var server = await _pavlovServerService.FindOne(serverId);
-            await viewModel.ReadFromFile(server, _rconService);
+            try
+            { 
+                await viewModel.ReadFromFile(server, _rconService);
+            }
+            catch (CommandException e)
+            {
+                return BadRequest(e.Message);
+            }
             viewModel.serverId = serverId;
             return View("ServerSettings", viewModel);
         }
@@ -222,7 +251,14 @@ namespace PavlovRconWebserver.Controllers
             if (await _userservice.IsUserNotInRole("Admin", HttpContext.User)) return new UnauthorizedResult();
 
             var server = await _pavlovServerService.FindOne(serverId);
-            await _rconService.SystemDStart(server);
+            try
+            { 
+                await _rconService.SystemDStart(server);
+            }
+            catch (CommandException e)
+            {
+                return BadRequest(e.Message);
+            }
             return RedirectToAction("Index", "SshServer");
         }
 
@@ -232,7 +268,16 @@ namespace PavlovRconWebserver.Controllers
             if (await _userservice.IsUserNotInRole("Admin", HttpContext.User)) return new UnauthorizedResult();
 
             var server = await _pavlovServerService.FindOne(serverId);
-            var result = await _rconService.UpdateInstallPavlovServer(server);
+
+            var result = "";
+            try
+            { 
+                result = await _rconService.UpdateInstallPavlovServer(server);
+            }
+            catch (CommandException e)
+            {
+                return BadRequest(e.Message);
+            }
 
             return new ObjectResult(result);
         }
@@ -242,8 +287,15 @@ namespace PavlovRconWebserver.Controllers
         {
             if (await _userservice.IsUserNotInRole("Admin", HttpContext.User)) return new UnauthorizedResult();
 
-            var server = await _pavlovServerService.FindOne(serverId);
-            await _rconService.SystemDStop(server);
+            var server = await _pavlovServerService.FindOne(serverId);            
+            try
+            {
+                await _rconService.SystemDStop(server);
+            }
+            catch (CommandException e)
+            {
+                return BadRequest(e.Message);
+            }
             return RedirectToAction("Index", "SshServer");
         }
 
@@ -254,7 +306,14 @@ namespace PavlovRconWebserver.Controllers
 
             var server = await _pavlovServerService.FindOne(pavlovServerGameIni.serverId);
             var selectedMaps = await _serverSelectedMapService.FindAllFrom(server);
-            await pavlovServerGameIni.SaveToFile(server, selectedMaps.ToList(), _rconService);
+            try
+            {
+                await pavlovServerGameIni.SaveToFile(server, selectedMaps.ToList(), _rconService);
+            }
+            catch (CommandException e)
+            {
+                return BadRequest(e.Message);
+            }
             return RedirectToAction("Index", "SshServer");
         }
 
@@ -283,7 +342,14 @@ namespace PavlovRconWebserver.Controllers
         {
             if (await _userservice.IsUserNotInRole("Admin", HttpContext.User)) return new UnauthorizedResult();
             var server = await _pavlovServerService.FindOne(pavlovServerWhitelistViewModel.pavlovServerId);
-            await _whitelistService.SaveWhiteListToFileAndDb(pavlovServerWhitelistViewModel.steamIds, server);
+            try
+            {
+                await _whitelistService.SaveWhiteListToFileAndDb(pavlovServerWhitelistViewModel.steamIds, server);
+            }
+            catch (CommandException e)
+            {
+                return BadRequest(e.Message);
+            }
             //service
             return RedirectToAction("Index", "SshServer");
         }
@@ -326,7 +392,14 @@ namespace PavlovRconWebserver.Controllers
         {
             if (await _userservice.IsUserNotInRole("Admin", HttpContext.User)) return new UnauthorizedResult();
             var server = await _pavlovServerService.FindOne(pavlovServerModlistViewModel.pavlovServerId);
-            await _serverSelectedModsService.SaveWhiteListToFileAndDb(pavlovServerModlistViewModel.userIds, server);
+            try
+            {
+                await _serverSelectedModsService.SaveWhiteListToFileAndDb(pavlovServerModlistViewModel.userIds, server);
+            }
+            catch (CommandException e)
+            {
+                return BadRequest(e.Message);
+            }
             //service
             return RedirectToAction("Index", "SshServer");
         }

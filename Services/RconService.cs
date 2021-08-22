@@ -870,25 +870,51 @@ WantedBy = multi-user.target";
             {
                 sftp.Connect();
 
-                //check if file exist
-                if (!sftp.Exists(path))
-                    try
-                    {
-                        sftp.Create(path);
-                    }
-                    catch (SftpPermissionDeniedException e)
-                    {
-                        sftp.Disconnect();
-                        throw new CommandException(server.Name + ": Could not create file: " + path + " " + e.Message);
-                    }
-
-                //Download file
                 var outPutStream = new MemoryStream();
-                using (Stream fileStream = outPutStream)
+                try
                 {
-                    sftp.DownloadFile(path, fileStream);
-                }
+                    //check if file exist
+                    if (!sftp.Exists(path))
+                    {
+                        connectionResult.Success = true;
+                        connectionResult.answer = "File is empty";
+                        sftp.Disconnect();
+                        return EndConnection(connectionResult);
+                    }
 
+                    //Download file
+                    using (Stream fileStream = outPutStream)
+                    {
+                        sftp.DownloadFile(path, fileStream);
+                    }
+                }
+                catch (Exception e)
+                {
+                    switch (e)
+                    {
+                        case SshConnectionException _:
+                            result.errors.Add("Could not Login over ssh! " + server.Name);
+                            sftp.Disconnect();
+                            return EndConnection(connectionResult);
+                        case SftpPathNotFoundException _:
+                            result.errors.Add("Could not find file! ("+path +") on the server: "+ server.Name);
+                            sftp.Disconnect();
+                            return EndConnection(connectionResult);
+                        case SftpPermissionDeniedException _:
+                            result.errors.Add("Permissions denied for file: ("+path +") on the server: "+ server.Name);
+                            sftp.Disconnect();
+                            return EndConnection(connectionResult);
+                        case SshException _:
+                            result.errors.Add("Could not connect to host!" + server.Name);
+                            sftp.Disconnect();
+                            return EndConnection(connectionResult);
+                        default:
+                        {
+                            sftp.Disconnect();
+                            return EndConnection(connectionResult);
+                        }
+                    }
+                }
                 var fileContentArray = outPutStream.ToArray();
                 var fileContent = Encoding.Default.GetString(fileContentArray);
                 connectionResult.Success = true;
@@ -922,27 +948,55 @@ WantedBy = multi-user.target";
             //check if first scripts exist
             using var sftp = new SftpClient(connectionInfo);
             sftp.BufferSize = 4 * 1024; // bypass Payload error large files
+            var outPutStream = new MemoryStream();
             try
             {
                 sftp.Connect();
                 //check if file exist
-                if (sftp.Exists(path)) sftp.DeleteFile(path);
-
-                if (!sftp.Exists(path)) sftp.Create(path);
-
-                using (var fileStream = new MemoryStream(Encoding.ASCII.GetBytes(content)))
+                try
                 {
-                    sftp.UploadFile(fileStream, path);
+                    if (sftp.Exists(path)) sftp.DeleteFile(path);
+
+                    if (!sftp.Exists(path)) sftp.Create(path);
+                    using (var fileStream = new MemoryStream(Encoding.ASCII.GetBytes(content)))
+                    {
+                        sftp.UploadFile(fileStream, path);
+                    }
+
+
+                    //Download file again to valid result
+                    using (Stream fileStream = outPutStream)
+                    {
+                        sftp.DownloadFile(path, fileStream);
+                    }
                 }
-
-
-                //Download file again to valid result
-                var outPutStream = new MemoryStream();
-                using (Stream fileStream = outPutStream)
+                catch (Exception e)
                 {
-                    sftp.DownloadFile(path, fileStream);
+                    switch (e)
+                    {
+                        case SshConnectionException _:
+                            result.errors.Add("Could not Login over ssh! " + server.Name);
+                            sftp.Disconnect();
+                            return EndConnection(connectionResult);
+                        case SftpPathNotFoundException _:
+                            result.errors.Add("Could not find file! ("+path +") on the server: "+ server.Name);
+                            sftp.Disconnect();
+                            return EndConnection(connectionResult);
+                        case SftpPermissionDeniedException _:
+                            result.errors.Add("Permissions denied for file: ("+path +") on the server: "+ server.Name);
+                            sftp.Disconnect();
+                            return EndConnection(connectionResult);
+                        case SshException _:
+                            result.errors.Add("Could not connect to host!" + server.Name);
+                            sftp.Disconnect();
+                            return EndConnection(connectionResult);
+                        default:
+                        {
+                            sftp.Disconnect();
+                            return EndConnection(connectionResult);
+                        }
+                    }
                 }
-
                 var fileContentArray = outPutStream.ToArray();
                 var fileContent = Encoding.Default.GetString(fileContentArray);
 

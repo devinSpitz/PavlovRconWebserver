@@ -235,7 +235,14 @@ namespace PavlovRconWebserver.Controllers
             {
                 //write to BlackList.txt
                 banlist.Add(ban);
-                await _service.SaveBlackListEntry(ban.PavlovServer, banlist);
+                try
+                {
+                    await _service.SaveBlackListEntry(ban.PavlovServer, banlist);
+                }
+                catch (CommandException e)
+                {
+                    return BadRequest(e.Message);
+                }
             }
 
             await _serverBansService.Upsert(ban);
@@ -268,7 +275,14 @@ namespace PavlovRconWebserver.Controllers
             {
                 //write to BlackList.txt
                 banlist.Remove(toRemove);
-                await _service.SaveBlackListEntry(pavlovServer, banlist);
+                try
+                {
+                    await _service.SaveBlackListEntry(pavlovServer, banlist);
+                }
+                catch (CommandException e)
+                {
+                    return BadRequest(e.Message);
+                }
             }
 
             // remove from Database
