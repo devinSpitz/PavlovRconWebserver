@@ -86,9 +86,24 @@ Note:
 Help:
 =======
 1. If you expirience any problem first press "CTRL"+"F5" to reload JavaScript.  
-2. Known issues found by makupi/pavlov-bot: https://github.com/makupi/pavlov-bot#known-issues-with-rcon-that-bot-cant-fix
+2. Known issues found by makupi/pavlov-bot: https://github.com/makupi/pavlov-bot#known-issues-with-rcon-that-bot-cant-fix  
+  
+Info:
+=======
+Once the function to create the Pavlov server works well, I will include the Test branch in the master branch.
+  
+  
+Donate:
+=======
+Feel free to support my work by donating:  
 
-Credits: 
+<a href="https://www.paypal.com/donate?hosted_button_id=JYNFKYARZ7DT4">
+  <img src="https://www.paypalobjects.com/en_US/CH/i/btn/btn_donateCC_LG.gif" alt="Donate with PayPal" />
+</a>  
+  
+Credits:
+=======
+
 
 Implementation of AspNetCore.Identity for LiteDB database engine.   
 https://github.com/quicksln/LiteDB.Identity
