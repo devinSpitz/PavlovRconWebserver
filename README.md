@@ -81,6 +81,17 @@ Help:
 ```The process cannot access the file '...\Database.db' because it is being used by another process.```  
    I dont know how to fix this problem. It works under linux xD
 
+   
+Donate:
+=======
+Feel free to support my work by donating:
+<form action="https://www.paypal.com/donate" method="post" target="_top">
+<input type="hidden" name="hosted_button_id" value="JYNFKYARZ7DT4" />
+<input type="image" src="https://www.paypalobjects.com/en_US/CH/i/btn/btn_donateCC_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
+<img alt="" border="0" src="https://www.paypal.com/en_CH/i/scr/pixel.gif" width="1" height="1" />
+</form>
+
+
 Credits:
 =======
 
@@ -133,5 +144,8 @@ https://github.com/domaindrivendev/Swashbuckle.AspNetCore
 Thanks to all this people who worked for this nuget packages. Without that it wouldn't be possible to do this.  
 
 
+
+
+<b>Powered by Spitz IT Solutions</b>  
 
 <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.
