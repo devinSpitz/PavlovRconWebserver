@@ -65,14 +65,14 @@ namespace PavlovRconWebserver.Services
                 var exist = await rconService.DoesPathExist(server, server.ServerFolderPath);
                 if (exist == "true")
                 {
-                    throw new CommandException("ServerFolderPath already exist!");
+                    throw new CommandExceptionCreateServerDuplicate("ServerFolderPath already exist!");
                 }
 
                 exist = await rconService.DoesPathExist(server,
                     "/etc/systemd/system/" + server.ServerSystemdServiceName + ".service");
                 if (exist == "true")
                 {
-                    throw new CommandException("Systemd Service already exist!");
+                    throw new CommandExceptionCreateServerDuplicate("Systemd Service already exist!");
                 }
 
                 var portsUsed = (await pavlovServerService.FindAll()).Where(x => x.SshServer.Id == server.SshServer.Id)
@@ -81,12 +81,12 @@ namespace PavlovRconWebserver.Services
                 {
                     if (portsUsed.ServerPort == server.ServerPort)
                     {
-                        throw new CommandException("The server port is already used!");
+                        throw new CommandExceptionCreateServerDuplicate("The server port is already used!");
                     }
 
                     if (portsUsed.TelnetPort == server.TelnetPort)
                     {
-                        throw new CommandException("The telnet port is already used!");
+                        throw new CommandExceptionCreateServerDuplicate("The telnet port is already used!");
                     }
                 }
 
@@ -154,9 +154,9 @@ namespace PavlovRconWebserver.Services
 
                 Console.WriteLine(result);
             }
-            catch (CommandException e)
+            catch (CommandExceptionCreateServerDuplicate e)
             {
-                throw new CommandException(e.Message);
+                throw new CommandExceptionCreateServerDuplicate(e.Message);
             }
             catch (Exception e)
             {

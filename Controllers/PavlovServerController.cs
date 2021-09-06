@@ -125,27 +125,55 @@ namespace PavlovRconWebserver.Controllers
                 {
                     try
                     {
+                        try
+                        {
+                            await _service.IsValidOnly(server,false);
+                            
+                            if (string.IsNullOrEmpty(server.ServerFolderPath))
+                                throw new SaveServerException("ServerFolderPath", "The server ServerFolderPath is needed!");
+                            if (server.ServerPort<=0)
+                                throw new SaveServerException("ServerPort", "The server port is needed!");
+                            if (server.TelnetPort<=0)
+                                throw new SaveServerException("TelnetPort", "The rcon port is needed!");
+                            if (string.IsNullOrEmpty(server.ServerSystemdServiceName))
+                                throw new SaveServerException("ServerSystemdServiceName", "The server service name is needed!");
+                            if (string.IsNullOrEmpty(server.Name))
+                                throw new SaveServerException("Name", "The Gui name is needed!");
+                        }
+                        catch (SaveServerException e)
+                        {
+                            return await GoBackEditServer(server,
+                                "Field is not set: "+e.Message,false);
+                        }
                         var result = await _pavlovServerService.CreatePavlovServer(server, _rconService,
                             _serverSelectedMapService, _service, _pavlovServerService);
                         server = result.Key;
                         if (result.Value != null)
                         {
-                            await _pavlovServerService.RemovePavlovServerFromDisk(server, _rconService,_service);
-                            ModelState.AddModelError("Id",
+                            return await GoBackEditServer(server,
                                 "Could not install service or server!: \n*******************************************Start*************\n" +
-                                result);
-                            return await EditServer(server);
+                                result,true);
                         }
                     }
-                    catch (CommandException e)
+                    catch (CommandExceptionCreateServerDuplicate e)
                     {
-                        ModelState.AddModelError("Id",
-                            "Could not install service or server!: "+e.Message);
-                        return await EditServer(server);
+                        return await GoBackEditServer(server,"Duplicate server entry exception: "+e.Message,false);
                     }
                 }
 
-                await _pavlovServerService.Upsert(server.toPavlovServer(server), _rconService, _service);
+                try
+                {
+                    //save and validate server a last time
+                    await _pavlovServerService.Upsert(server.toPavlovServer(server), _rconService, _service);
+                }
+                catch (SaveServerException e)
+                {
+                    return await GoBackEditServer(server,"Could not validate server after fully setting it up: "+e.Message,server.create);
+                }
+                catch (CommandException e)
+                {
+                    return await GoBackEditServer(server, "Could not validate server after fully setting it up: "+e.Message,server.create);
+                }
             }
             catch (SaveServerException e)
             {
@@ -163,6 +191,15 @@ namespace PavlovRconWebserver.Controllers
             }
 
             return RedirectToAction("Index", "SshServer");
+        }
+
+        private async Task<IActionResult> GoBackEditServer(PavlovServerViewModel server, string error,bool remove = false)
+        {
+            if(remove)
+                await _pavlovServerService.RemovePavlovServerFromDisk(server, _rconService, _service);
+            ModelState.AddModelError("Id", error
+            );
+            return await EditServer(server);
         }
 
 

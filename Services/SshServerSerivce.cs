@@ -63,24 +63,7 @@ namespace PavlovRconWebserver.Services
         {
             Console.WriteLine("start validate");
             var hasToStop = false;
-            if (string.IsNullOrEmpty(pavlovServer.TelnetPassword) && pavlovServer.Id != 0)
-                pavlovServer.TelnetPassword = (await _pavlovServer.FindOne(pavlovServer.Id)).TelnetPassword;
-            if (!RconHelper.IsMD5(pavlovServer.TelnetPassword))
-            {
-                if (string.IsNullOrEmpty(pavlovServer.TelnetPassword))
-                    throw new SaveServerException("Password", "The telnet password is required!");
-
-                pavlovServer.TelnetPassword = RconHelper.CreateMD5(pavlovServer.TelnetPassword);
-            }
-
-            if (pavlovServer.SshServer.SshPort <= 0) throw new SaveServerException("SshPort", "You need a SSH port!");
-
-            if (string.IsNullOrEmpty(pavlovServer.SshServer.SshUsername))
-                throw new SaveServerException("SshUsername", "You need a username!");
-
-            if (string.IsNullOrEmpty(pavlovServer.SshServer.SshPassword) &&
-                string.IsNullOrEmpty(pavlovServer.SshServer.SshKeyFileName))
-                throw new SaveServerException("SshPassword", "You need at least a password or a key file!");
+            await IsValidOnly(pavlovServer);
 
 
             Console.WriteLine("try to start service");
@@ -131,6 +114,30 @@ namespace PavlovRconWebserver.Services
             await HasToStop(pavlovServer, rconService, hasToStop);
 
             return pavlovServer;
+        }
+
+        public async Task IsValidOnly(PavlovServer pavlovServer, bool parseMd5 = true)
+        {
+            if (string.IsNullOrEmpty(pavlovServer.TelnetPassword) && pavlovServer.Id != 0)
+                pavlovServer.TelnetPassword = (await _pavlovServer.FindOne(pavlovServer.Id)).TelnetPassword;
+            if (!RconHelper.IsMD5(pavlovServer.TelnetPassword))
+            {
+                if (string.IsNullOrEmpty(pavlovServer.TelnetPassword))
+                    throw new SaveServerException("Password", "The telnet password is required!");
+
+                if(parseMd5)
+                    pavlovServer.TelnetPassword = RconHelper.CreateMD5(pavlovServer.TelnetPassword);
+            }
+
+            if (pavlovServer.SshServer.SshPort <= 0) throw new SaveServerException("SshPort", "You need a SSH port!");
+
+            if (string.IsNullOrEmpty(pavlovServer.SshServer.SshUsername))
+                throw new SaveServerException("SshUsername", "You need a username!");
+
+            
+            if (string.IsNullOrEmpty(pavlovServer.SshServer.SshPassword) &&
+                string.IsNullOrEmpty(pavlovServer.SshServer.SshKeyFileName))
+                throw new SaveServerException("SshPassword", "You need at least a password or a key file!");
         }
 
         private async Task<PavlovServer> HasToStop(PavlovServer pavlovServer, RconService rconService, bool hasToStop)
