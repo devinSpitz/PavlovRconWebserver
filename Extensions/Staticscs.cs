@@ -36,7 +36,8 @@ namespace PavlovRconWebserver.Extensions
             {"ZWV", true},
             {"WW2GUN", true},
             {"TANKTDM", true},
-            {"KOTH", false}
+            {"KOTH", false},
+            {"TTT", false}
         };
 
         public static IDictionary<string, bool> OneTeam = new Dictionary<string, bool>
@@ -48,7 +49,8 @@ namespace PavlovRconWebserver.Extensions
             {"ZWV", true},
             {"WW2GUN", false},
             {"TANKTDM", false},
-            {"KOTH", false}
+            {"KOTH", false},
+            {"TTT", false}
         };
 
         public static string[] ModesString =

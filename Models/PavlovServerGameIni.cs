@@ -33,19 +33,21 @@ namespace PavlovRconWebserver.Models
 
         public async Task<bool> ReadFromFile(PavlovServer pavlovServer, RconService rconService)
         {
-            var GameIniContent = await rconService.GetFile(pavlovServer,
+            var gameIniContent = await rconService.GetFile(pavlovServer,
                 pavlovServer.ServerFolderPath + FilePaths.GameIni);
-            var lines = GameIniContent.Split("\n");
+            var lines = gameIniContent.Split("\n");
             var first = true; // cause the first line is to ignore
             foreach (var line in lines)
             {
+                var tmpLine = line.CutLineAfter('#');
+                
                 if (first)
                 {
                     first = false;
                     continue;
                 }
 
-                var tmpLine = line.Replace(Environment.NewLine, "").Replace("\r", "").Replace("\n", "");
+                tmpLine = tmpLine.Replace(Environment.NewLine, "").Replace("\r", "").Replace("\n", "");
                 //Bools
                 if (tmpLine.Contains("bEnabled="))
                 {
@@ -131,6 +133,9 @@ namespace PavlovRconWebserver.Models
             return true;
         }
 
+
+
+        
         public async Task<bool> SaveToFile(PavlovServer pavlovServer, List<ServerSelectedMap> serverSelectedMaps,
             RconService rconService)
         {

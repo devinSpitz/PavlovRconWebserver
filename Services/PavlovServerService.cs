@@ -104,11 +104,17 @@ namespace PavlovRconWebserver.Services
                 server.SshServer.SshPassword = server.SshPasswordRoot;
                 server.SshServer.SshKeyFileName = server.SshKeyFileNameRoot;
                 server.SshServer.NotRootSshUsername = oldSSHcrid.SshUsername;
-                result += await rconService.InstallPavlovServerService(server);
-                server.SshServer.SshPassphrase = oldSSHcrid.SshPassphrase;
-                server.SshServer.SshUsername = oldSSHcrid.SshUsername;
-                server.SshServer.SshPassword = oldSSHcrid.SshPassword;
-                server.SshServer.SshKeyFileName = oldSSHcrid.SshKeyFileName;
+                try
+                {
+                    result += await rconService.InstallPavlovServerService(server);
+                }
+                catch (CommandException e)
+                {
+                    //If crash inside here the user login is still root. If the root login is bad this will fail to remove the server afterwards
+                    OverwrideTheNormalSSHLoginData(server, oldSSHcrid);
+                    throw;
+                }
+                OverwrideTheNormalSSHLoginData(server, oldSSHcrid);
 
                 //start server and stop server to get Saved folder etc.
                 try
@@ -166,6 +172,14 @@ namespace PavlovRconWebserver.Services
             }
 
             return new KeyValuePair<PavlovServerViewModel, string>(server, null);
+        }
+
+        private void OverwrideTheNormalSSHLoginData(PavlovServerViewModel server, SshServer oldSSHcrid)
+        {
+            server.SshServer.SshPassphrase = oldSSHcrid.SshPassphrase;
+            server.SshServer.SshUsername = oldSSHcrid.SshUsername;
+            server.SshServer.SshPassword = oldSSHcrid.SshPassword;
+            server.SshServer.SshKeyFileName = oldSSHcrid.SshKeyFileName;
         }
 
 
