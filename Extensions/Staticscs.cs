@@ -53,7 +53,7 @@ namespace PavlovRconWebserver.Extensions
 
         public static string[] ModesString =
         {
-            "SND", "TDM", "DM", "GUN", "ZWV", "WW2GUN", "TANKTDM", "KOTH"
+            "SND", "TDM", "DM", "GUN", "ZWV", "WW2GUN", "TANKTDM", "KOTH","TTT"
         };
     }
 }
