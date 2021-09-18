@@ -31,7 +31,7 @@ namespace PavlovRconWebserver.Services
                 steamIdentityOnTeam = await teamSelectedSteamIdentityService.FindOne(teamId, steamIdentity.Id);
             if (await RightsHandler.IsUserAtLeastInRole("Captain", cp, userService)) return true;
             if (steamIdentityOnTeam == null) return false;
-            return await RightsHandler.IsUserAtLeastInTeamRole("Captain", steamIdentityOnTeam.RoleOverwrite);
+            return RightsHandler.IsUserAtLeastInTeamRole("Captain", steamIdentityOnTeam.RoleOverwrite);
         }
 
         public async Task<IEnumerable<Team>> FindAll()

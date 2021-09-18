@@ -67,7 +67,7 @@ namespace PavlovRconWebserver.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> EditServer(SshServer server,bool remove = false)
+        public async Task<IActionResult> EditServer(SshServer server, bool remove = false)
         {
             if (await _userservice.IsUserNotInRole("Admin", HttpContext.User)) return new UnauthorizedResult();
             try
@@ -96,11 +96,11 @@ namespace PavlovRconWebserver.Controllers
                 if (server.Id == 0)
                 {
                     newServer = true;
-                    server.Id = await _service.Insert(server, _rconService);
+                    server.Id = await _service.Insert(server);
                 }
                 else
                 {
-                    await _service.Update(server, _rconService);
+                    await _service.Update(server);
                 }
             }
             catch (SaveServerException e)
@@ -187,8 +187,7 @@ namespace PavlovRconWebserver.Controllers
         public async Task<IActionResult> DeleteServer(int id)
         {
             if (await _userservice.IsUserNotInRole("Admin", HttpContext.User)) return new UnauthorizedResult();
-            await _service.Delete(id, _pavlovServerService, _whitelistService, _serverSelectedMapService,
-                _serverSelectedModsService);
+            await _service.Delete(id);
             return await Index();
         }
     }

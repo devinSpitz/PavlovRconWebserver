@@ -13,11 +13,20 @@ namespace PavlovRconWebserver.Services
     public class PavlovServerService
     {
         private readonly ILiteDbIdentityContext _liteDb;
+        private readonly ServerSelectedMapService _serverSelectedMapService;
+        private readonly ServerSelectedModsService _serverSelectedModsService;
+        private readonly ServerSelectedWhitelistService _serverSelectedWhitelistService;
 
 
-        public PavlovServerService(ILiteDbIdentityContext liteDbContext)
+        public PavlovServerService(ILiteDbIdentityContext liteDbContext,
+            ServerSelectedModsService serverSelectedModsService,
+            ServerSelectedWhitelistService serverSelectedWhitelistService,
+            ServerSelectedMapService serverSelectedMapService)
         {
             _liteDb = liteDbContext;
+            _serverSelectedMapService = serverSelectedMapService;
+            _serverSelectedModsService = serverSelectedModsService;
+            _serverSelectedWhitelistService = serverSelectedWhitelistService;
         }
 
 
@@ -53,44 +62,32 @@ namespace PavlovRconWebserver.Services
             return pavlovServer;
         }
 
-        public async Task<KeyValuePair<PavlovServerViewModel, string>> CreatePavlovServer(PavlovServerViewModel server,
-            RconService rconService, ServerSelectedMapService serverSelectedMapService,
-            SshServerSerivce sshServerSerivce,
-            PavlovServerService pavlovServerService)
+
+        public async Task<KeyValuePair<PavlovServerViewModel, string>> CreatePavlovServer(PavlovServerViewModel server)
         {
             string result = null;
             try
             {
                 //Check stuff
-                var exist = await rconService.DoesPathExist(server, server.ServerFolderPath);
-                if (exist == "true")
-                {
-                    throw new CommandExceptionCreateServerDuplicate("ServerFolderPath already exist!");
-                }
+                var exist = RconStatic.DoesPathExist(server, server.ServerFolderPath);
+                if (exist == "true") throw new CommandExceptionCreateServerDuplicate("ServerFolderPath already exist!");
 
-                exist = await rconService.DoesPathExist(server,
+                exist = RconStatic.DoesPathExist(server,
                     "/etc/systemd/system/" + server.ServerSystemdServiceName + ".service");
-                if (exist == "true")
-                {
-                    throw new CommandExceptionCreateServerDuplicate("Systemd Service already exist!");
-                }
+                if (exist == "true") throw new CommandExceptionCreateServerDuplicate("Systemd Service already exist!");
 
-                var portsUsed = (await pavlovServerService.FindAll()).Where(x => x.SshServer.Id == server.SshServer.Id)
+                var portsUsed = (await FindAll()).Where(x => x.SshServer.Id == server.SshServer.Id)
                     .FirstOrDefault(x => x.ServerPort == server.ServerPort || x.TelnetPort == server.TelnetPort);
                 if (portsUsed != null)
                 {
                     if (portsUsed.ServerPort == server.ServerPort)
-                    {
                         throw new CommandExceptionCreateServerDuplicate("The server port is already used!");
-                    }
 
                     if (portsUsed.TelnetPort == server.TelnetPort)
-                    {
                         throw new CommandExceptionCreateServerDuplicate("The telnet port is already used!");
-                    }
                 }
 
-                result += await rconService.UpdateInstallPavlovServer(server);
+                result += await RconStatic.UpdateInstallPavlovServer(server,this);
                 result += "\n *******************************Update/Install Done*******************************";
                 var oldSSHcrid = new SshServer
                 {
@@ -106,7 +103,7 @@ namespace PavlovRconWebserver.Services
                 server.SshServer.NotRootSshUsername = oldSSHcrid.SshUsername;
                 try
                 {
-                    result += await rconService.InstallPavlovServerService(server);
+                    result += RconStatic.InstallPavlovServerService(server);
                 }
                 catch (CommandException e)
                 {
@@ -114,20 +111,13 @@ namespace PavlovRconWebserver.Services
                     OverwrideTheNormalSSHLoginData(server, oldSSHcrid);
                     throw;
                 }
+
                 OverwrideTheNormalSSHLoginData(server, oldSSHcrid);
 
                 //start server and stop server to get Saved folder etc.
                 try
                 {
-                    await rconService.SystemDStart(server);
-                    try
-                    {
-                        await SystemdService.UpdateAllServiceStates(rconService, pavlovServerService, sshServerSerivce);
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                    }
+                    await RconStatic.SystemDStart(server,this);
                 }
                 catch (Exception)
                 {
@@ -136,7 +126,7 @@ namespace PavlovRconWebserver.Services
 
                 try
                 {
-                    await rconService.SystemDStop(server);
+                    await RconStatic.SystemDStop(server,this);
                 }
                 catch (Exception)
                 {
@@ -147,12 +137,12 @@ namespace PavlovRconWebserver.Services
                     "\n *******************************Update/Install PavlovServerService Done*******************************";
 
                 var pavlovServerGameIni = new PavlovServerGameIni();
-                var selectedMaps = await serverSelectedMapService.FindAllFrom(server);
-                await pavlovServerGameIni.SaveToFile(server, selectedMaps.ToList(), rconService);
+                var selectedMaps = await _serverSelectedMapService.FindAllFrom(server);
+                pavlovServerGameIni.SaveToFile(server, selectedMaps.ToList());
                 result += "\n *******************************Save server settings Done*******************************";
                 //also create rcon settings
                 var rconSettingsTempalte = "Password=" + server.TelnetPassword + "\nPort=" + server.TelnetPort;
-                await rconService.WriteFile(server, server.ServerFolderPath + FilePaths.RconSettings,
+                RconStatic.WriteFile(server, server.ServerFolderPath + FilePaths.RconSettings,
                     rconSettingsTempalte);
 
 
@@ -174,6 +164,49 @@ namespace PavlovRconWebserver.Services
             return new KeyValuePair<PavlovServerViewModel, string>(server, null);
         }
 
+
+        public async Task CheckStateForAllServers()
+        {
+            var pavlovServers = await FindAll();
+
+            foreach (var signleServer in pavlovServers)
+                try
+                {
+                    await UpdateServerState(signleServer, false);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+        }
+
+        private async Task UpdateServerState(PavlovServer signleServer, bool withCheck)
+        {
+            var serverWithState = await GetServerServiceState(signleServer);
+            await Upsert(serverWithState, withCheck);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="pavlovServer"></param>
+        /// <param name="rconService"></param>
+        /// <returns></returns>
+        private async Task<PavlovServer> GetServerServiceState(PavlovServer pavlovServer)
+        {
+            var state = await RconStatic.SystemDCheckState(pavlovServer);
+            // state can be: active, inactive,disabled
+            if (state == "active")
+                pavlovServer.ServerServiceState = ServerServiceState.active;
+            else if (state == "inactive")
+                pavlovServer.ServerServiceState = ServerServiceState.inactive;
+            else if (state == "disabled")
+                pavlovServer.ServerServiceState = ServerServiceState.disabled;
+            else
+                pavlovServer.ServerServiceState = ServerServiceState.none;
+
+            return pavlovServer;
+        }
+
         private void OverwrideTheNormalSSHLoginData(PavlovServerViewModel server, SshServer oldSSHcrid)
         {
             server.SshServer.SshPassphrase = oldSSHcrid.SshPassphrase;
@@ -183,82 +216,114 @@ namespace PavlovRconWebserver.Services
         }
 
 
-        public async Task<KeyValuePair<PavlovServerViewModel,string>> RemovePavlovServerFromDisk(PavlovServerViewModel server,
-          RconService rconService,
-          SshServerSerivce sshServerSerivce)
+        public async Task IsValidOnly(PavlovServer pavlovServer, bool parseMd5 = true)
         {
-            
-            string result = null;
+            if (string.IsNullOrEmpty(pavlovServer.TelnetPassword) && pavlovServer.Id != 0)
+                pavlovServer.TelnetPassword = (await FindOne(pavlovServer.Id)).TelnetPassword;
+            if (!RconHelper.IsMD5(pavlovServer.TelnetPassword))
+            {
+                if (string.IsNullOrEmpty(pavlovServer.TelnetPassword))
+                    throw new SaveServerException("Password", "The telnet password is required!");
+
+                if (parseMd5)
+                    pavlovServer.TelnetPassword = RconHelper.CreateMD5(pavlovServer.TelnetPassword);
+            }
+
+            if (pavlovServer.SshServer.SshPort <= 0) throw new SaveServerException("SshPort", "You need a SSH port!");
+
+            if (string.IsNullOrEmpty(pavlovServer.SshServer.SshUsername))
+                throw new SaveServerException("SshUsername", "You need a username!");
+
+
+            if (string.IsNullOrEmpty(pavlovServer.SshServer.SshPassword) &&
+                string.IsNullOrEmpty(pavlovServer.SshServer.SshKeyFileName))
+                throw new SaveServerException("SshPassword", "You need at least a password or a key file!");
+        }
+
+        public async Task<PavlovServer> ValidatePavlovServer(PavlovServer pavlovServer)
+        {
+            Console.WriteLine("start validate");
+            var hasToStop = false;
+            await IsValidOnly(pavlovServer);
+
+
+            Console.WriteLine("try to start service");
+            //try if the service realy exist
             try
             {
-                
-                //start server and stop server to get Saved folder etc.
-                try
+                pavlovServer = await GetServerServiceState(pavlovServer);
+                if (pavlovServer.ServerServiceState != ServerServiceState.active)
                 {
-                    await rconService.SystemDStop(server);
+                    Console.WriteLine("has to start");
+                    hasToStop = true;
+                    //the problem is here for the validating part if it has to start the service first it has problems
+                    await RconStatic.SystemDStart(pavlovServer,this);
+                    pavlovServer = await GetServerServiceState(pavlovServer);
+
+                    Console.WriteLine("state = " + pavlovServer.ServerServiceState);
                 }
-                catch (Exception)
-                {
-                    //ignore
-                }
-
-                server.SshServer = await sshServerSerivce.FindOne(server.sshServerId);
-                if (server.SshServer == null) throw new CommandException("Could not get the sshServer!");
-                var oldSSHcrid = new SshServer()
-                {
-                    SshPassphrase = server.SshServer.SshPassphrase,
-                    SshUsername = server.SshServer.SshUsername,
-                    SshPassword = server.SshServer.SshPassword,
-                    SshKeyFileName = server.SshServer.SshKeyFileName
-                };
-                server.SshServer.SshPassphrase = server.SshPassphraseRoot;
-                server.SshServer.SshUsername = server.SshUsernameRoot;
-                server.SshServer.SshPassword = server.SshPasswordRoot;
-                server.SshServer.SshKeyFileName = server.SshKeyFileNameRoot;
-                server.SshServer.NotRootSshUsername = oldSSHcrid.SshUsername;
-                result += await rconService.RemovePath(server,"/etc/systemd/system/" + server.ServerSystemdServiceName + ".service");
-                server.SshServer.SshPassphrase = oldSSHcrid.SshPassphrase;
-                server.SshServer.SshUsername = oldSSHcrid.SshUsername;
-                server.SshServer.SshPassword = oldSSHcrid.SshPassword;
-                server.SshServer.SshKeyFileName = oldSSHcrid.SshKeyFileName;
-        
-
-        
-                result += "\n *******************************delete service Done*******************************";
-        
-                result += await rconService.RemovePath(server,server.ServerFolderPath);
-                result += "\n *******************************delete folder Done*******************************";
-
-                Console.WriteLine(result);
             }
-            catch (Exception e)
+            catch (CommandException e)
             {
-                return new KeyValuePair<PavlovServerViewModel, string>(server,result+"\n " +
-                                                                              "**********************************************Exception:***********************\n" +
-                                                                              e.Message);
+                throw new SaveServerException("", e.Message);
             }
-            return new KeyValuePair<PavlovServerViewModel, string>(server,null);
-        }
-        
 
-        public async Task<bool> Upsert(PavlovServer pavlovServer, RconService service,
-            SshServerSerivce sshServerSerivce, bool withCheck = true)
+            Console.WriteLine("try to send serverinfo");
+            //try to send Command ServerInfo
+            try
+            {
+                var response = await RconStatic.SendCommandSShTunnel(pavlovServer, "ServerInfo");
+            }
+            catch (CommandException e)
+            {
+                await HasToStop(pavlovServer, hasToStop);
+                throw new SaveServerException("", e.Message);
+            }
+
+            //try if the user have rights to delete maps cache
+            try
+            {
+                Console.WriteLine("delete unused maps");
+                RconStatic.DeleteUnusedMaps(pavlovServer,
+                    (await _serverSelectedMapService.FindAllFrom(pavlovServer)).ToList());
+            }
+            catch (CommandException e)
+            {
+                await HasToStop(pavlovServer, hasToStop);
+                throw new SaveServerException("", e.Message);
+            }
+
+            await HasToStop(pavlovServer, hasToStop);
+
+            return pavlovServer;
+        }
+
+        private async Task<PavlovServer> HasToStop(PavlovServer pavlovServer, bool hasToStop)
+        {
+            if (hasToStop)
+            {
+                Console.WriteLine("stop server again!");
+                await RconStatic.SystemDStop(pavlovServer,this);
+                pavlovServer = await GetServerServiceState(pavlovServer);
+            }
+
+            return pavlovServer;
+        }
+
+        public async Task<bool> Upsert(PavlovServer pavlovServer, bool withCheck = true)
         {
             if (withCheck)
-                pavlovServer = await sshServerSerivce.validatePavlovServer(pavlovServer, service);
+                pavlovServer = await ValidatePavlovServer(pavlovServer);
             return _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer")
                 .Upsert(pavlovServer);
         }
 
-        public async Task<bool> Delete(int id,
-            ServerSelectedWhitelistService serverSelectedWhiteList,
-            ServerSelectedMapService serverSelectedMapService,
-            ServerSelectedModsService serverSelectedModsService)
+        public async Task<bool> Delete(int id)
         {
             var server = await FindOne(id);
-            await serverSelectedMapService.DeleteFromServer(server);
-            await serverSelectedModsService.DeleteFromServer(server);
-            await serverSelectedWhiteList.DeleteFromServer(server);
+            await _serverSelectedMapService.DeleteFromServer(server);
+            await _serverSelectedModsService.DeleteFromServer(server);
+            await _serverSelectedWhitelistService.DeleteFromServer(server);
             return _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer").Delete(server.Id);
         }
     }

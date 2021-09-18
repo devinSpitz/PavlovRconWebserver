@@ -5,34 +5,33 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
-using LiteDB.Identity.Database;
+using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
-using PavlovRconWebserver.Services;
 
-namespace PavlovRconWebserver.Extensions
+namespace PavlovRconWebserver.Services
 {
-    public static class Steam
+    public class SteamService
     {
-        public static async Task DeleteAllUnsedMapsFromAllServers(string connectionString)
+        private readonly MapsService _mapsService;
+        private readonly ServerSelectedMapService _serverSelectedMapService;
+        private readonly SshServerSerivce _sshServerSerivce;
+
+        public SteamService(SshServerSerivce sshServerSerivce,
+            ServerSelectedMapService serverSelectedMapService)
         {
-            var steamIdentityService = new SteamIdentityService(new LiteDbIdentityContext(connectionString));
-            var serverSelectedMapService = new ServerSelectedMapService(new LiteDbIdentityContext(connectionString));
-            var pavlovServerService = new PavlovServerService(new LiteDbIdentityContext(connectionString));
-            var sshServerSerivce =
-                new SshServerSerivce(new LiteDbIdentityContext(connectionString), pavlovServerService);
-            var mapsService = new MapsService(new LiteDbIdentityContext(connectionString));
-            var pavlovServerInfoService = new PavlovServerInfoService(new LiteDbIdentityContext(connectionString));
-            var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString));
-            var pavlovServerPlayerHistoryService =
-                new PavlovServerPlayerHistoryService(new LiteDbIdentityContext(connectionString));
-            var rconSerivce = new RconService(steamIdentityService, serverSelectedMapService, mapsService,
-                pavlovServerInfoService, pavlovServerPlayerService,pavlovServerService,sshServerSerivce,  pavlovServerPlayerHistoryService);
-            var servers = await sshServerSerivce.FindAll();
+            _sshServerSerivce = sshServerSerivce;
+            _serverSelectedMapService = serverSelectedMapService;
+        }
+
+        public async Task DeleteAllUnsedMapsFromAllServers()
+        {
+            var servers = await _sshServerSerivce.FindAll();
             foreach (var server in servers)
             foreach (var signleServer in server.PavlovServers)
                 try
                 {
-                    await rconSerivce.DeleteUnusedMaps(signleServer);
+                    RconStatic.DeleteUnusedMaps(signleServer,
+                        (await _serverSelectedMapService.FindAllFrom(signleServer)).ToList());
                 }
                 catch (Exception e)
                 {
@@ -41,10 +40,8 @@ namespace PavlovRconWebserver.Extensions
                 }
         }
 
-        public static async Task<bool> CrawlSteamMaps(string connectionString)
+        public async Task<bool> CrawlSteamMaps()
         {
-            var mapsService = new MapsService(new LiteDbIdentityContext(connectionString));
-
             var client = new HttpClient();
             var response =
                 await client.GetAsync(
@@ -70,9 +67,9 @@ namespace PavlovRconWebserver.Extensions
             pages = (await Task.WhenAll(pageTasks)).ToList();
 
 
-            var MapsTasks = pages.Select(GetMapsFromPage);
+            var mapsTasks = pages.Select(GetMapsFromPage);
             var pagesMaps =
-                (await Task.WhenAll(MapsTasks))
+                (await Task.WhenAll(mapsTasks))
                 .ToList(); // This uses like 1 GB RAM what i think everybody should have :( But i try to parse 52 sites which each have 30 maps on it parallel so this is obvious
             var maps = pagesMaps.SelectMany(x => x).ToList();
             var rconMapsViewModels = maps.Prepend(new Map
@@ -162,14 +159,14 @@ namespace PavlovRconWebserver.Extensions
                 if (mapsTmp == null) tmpRconMaps.Add(map);
             }
 
-            foreach (var tmpMap in tmpRconMaps) await mapsService.Upsert(tmpMap);
+            foreach (var tmpMap in tmpRconMaps) await _mapsService.Upsert(tmpMap);
             //Delete Maps in the database which are not in steam anymore!
-            foreach (var map in await mapsService.FindAll())
+            foreach (var map in await _mapsService.FindAll())
             {
                 var tmp = tmpRconMaps.FirstOrDefault(x => x.Id == map.Id);
                 var isNumeric = int.TryParse(map.Id, out _);
                 if (tmp == null && isNumeric)
-                    await mapsService.Delete(map.Id);
+                    await _mapsService.Delete(map.Id);
                 // i should my here delete them from the serverSelectedMaps as well
             }
 
@@ -177,7 +174,7 @@ namespace PavlovRconWebserver.Extensions
         }
 
 
-        private static async Task<List<Map>> GetMapsFromPage(HtmlDocument page)
+        private async Task<List<Map>> GetMapsFromPage(HtmlDocument page)
         {
             var notes = page.DocumentNode.SelectNodes("//div[@class='workshopItem']");
 
@@ -188,7 +185,7 @@ namespace PavlovRconWebserver.Extensions
             return maps;
         }
 
-        private static async Task<Map> getMapFromNote(HtmlNode note)
+        private async Task<Map> getMapFromNote(HtmlNode note)
         {
             var map = new Map();
             map.Id = new Regex(@"(?<=id=)([0-9]*)(?=&searchtext=)").Match(note.OuterHtml).Value;
@@ -209,7 +206,7 @@ namespace PavlovRconWebserver.Extensions
             return map;
         }
 
-        private static async Task<HtmlDocument> getPage(int index)
+        private async Task<HtmlDocument> getPage(int index)
         {
             var client = new HttpClient();
             var singlePage = new HtmlDocument();

@@ -12,15 +12,13 @@ namespace PavlovRconWebserver.Services
     public class ServerSelectedModsService
     {
         private readonly ILiteDbIdentityContext _liteDb;
-        private readonly RconService _rconService;
         private readonly SteamIdentityService _steamIdentityService;
         private readonly UserService _userService;
 
-        public ServerSelectedModsService(ILiteDbIdentityContext liteDbContext, RconService rconService,
+        public ServerSelectedModsService(ILiteDbIdentityContext liteDbContext,
             SteamIdentityService steamIdentityService, UserService userService)
         {
             _liteDb = liteDbContext;
-            _rconService = rconService;
             _steamIdentityService = steamIdentityService;
             _userService = userService;
         }
@@ -73,7 +71,7 @@ namespace PavlovRconWebserver.Services
         {
             var lines = steamIds.Select(steamIdentity => steamIdentity + ";").ToList();
             var content = string.Join(Environment.NewLine, lines);
-            await _rconService.WriteFile(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.ModList, content);
+            RconStatic.WriteFile(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.ModList, content);
             return true;
         }
 

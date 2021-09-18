@@ -11,12 +11,10 @@ namespace PavlovRconWebserver.Services
     public class ServerSelectedWhitelistService
     {
         private readonly ILiteDbIdentityContext _liteDb;
-        private readonly RconService _rconService;
 
-        public ServerSelectedWhitelistService(ILiteDbIdentityContext liteDbContext, RconService rconService)
+        public ServerSelectedWhitelistService(ILiteDbIdentityContext liteDbContext)
         {
             _liteDb = liteDbContext;
-            _rconService = rconService;
         }
 
         public async Task<bool> SaveWhiteListToFileAndDb(List<string> steamIds, PavlovServer server)
@@ -42,7 +40,7 @@ namespace PavlovRconWebserver.Services
         {
             var lines = steamIds.Select(steamIdentity => steamIdentity + ";").ToList();
             var content = string.Join(Environment.NewLine, lines);
-            await _rconService.WriteFile(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.WhiteList, content);
+            RconStatic.WriteFile(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.WhiteList, content);
             return true;
         }
 

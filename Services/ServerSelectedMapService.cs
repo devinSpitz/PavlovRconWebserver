@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using LiteDB.Identity.Database;
 using PavlovRconWebserver.Models;
@@ -15,42 +14,15 @@ namespace PavlovRconWebserver.Services
             _liteDb = liteDbContext;
         }
 
-        public async Task<IEnumerable<ServerSelectedMap>> FindAll()
+
+        public async Task<IEnumerable<ServerSelectedMap>> FindAllFrom(PavlovServer pavlovServer)
         {
             return _liteDb.LiteDatabase.GetCollection<ServerSelectedMap>("ServerSelectedMap")
                 .Include(x => x.Map)
                 .Include(x => x.PavlovServer)
-                .FindAll();
+                .Find(x => x.PavlovServer.Id == pavlovServer.Id);
         }
 
-        public async Task<IEnumerable<ServerSelectedMap>> FindAllFrom(PavlovServer sshServer)
-        {
-            return _liteDb.LiteDatabase.GetCollection<ServerSelectedMap>("ServerSelectedMap")
-                .Include(x => x.Map)
-                .Include(x => x.PavlovServer)
-                .Find(x => x.PavlovServer.Id == sshServer.Id);
-        }
-
-        public async Task<IEnumerable<ServerSelectedMap>> FindAllFrom(Map map)
-        {
-            return _liteDb.LiteDatabase.GetCollection<ServerSelectedMap>("ServerSelectedMap")
-                .Include(x => x.Map)
-                .Include(x => x.PavlovServer)
-                .Find(x => x.Map.Id == map.Id);
-        }
-
-        public async Task<ServerSelectedMap> FindOne(int id)
-        {
-            return _liteDb.LiteDatabase.GetCollection<ServerSelectedMap>("ServerSelectedMap")
-                .Find(x => x.Id == id).FirstOrDefault();
-        }
-
-        public async Task<ServerSelectedMap> FindSelectedMap(int serverId, string mapId)
-        {
-            return _liteDb.LiteDatabase.GetCollection<ServerSelectedMap>("ServerSelectedMap").Include(x => x.Map)
-                .Include(x => x.PavlovServer)
-                .Find(x => x.Map.Id == mapId && x.PavlovServer.Id == serverId).FirstOrDefault();
-        }
 
         public async Task<int> Insert(ServerSelectedMap serverSelectedMap)
         {

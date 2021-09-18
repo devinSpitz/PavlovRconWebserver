@@ -1,229 +1,677 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
-using Hangfire;
-using LiteDB.Identity.Database;
+using Hangfire.Annotations;
 using Microsoft.VisualBasic;
 using PavlovRconWebserver.Exceptions;
 using PavlovRconWebserver.Models;
 using PavlovRconWebserver.Services;
+using PrimS.Telnet;
 using Renci.SshNet;
 using Renci.SshNet.Common;
+using Renci.SshNet.Sftp;
 
 namespace PavlovRconWebserver.Extensions
 {
     public static class RconStatic
     {
-        public static async Task CheckBansForAllServers(string connectionString)
+        private static async Task<string> SendCommandForShell(string customCmd, ShellStream stream,
+            [CanBeNull] string expect, int ms = 2000)
         {
-            var steamIdentityService = new SteamIdentityService(new LiteDbIdentityContext(connectionString));
-            var serverSelectedMapService = new ServerSelectedMapService(new LiteDbIdentityContext(connectionString));
-            var pavlovServerService = new PavlovServerService(new LiteDbIdentityContext(connectionString));
-            var sshServerSerivce =
-                new SshServerSerivce(new LiteDbIdentityContext(connectionString), pavlovServerService);
-            var mapsService = new MapsService(new LiteDbIdentityContext(connectionString));
-            var pavlovServerInfoService = new PavlovServerInfoService(new LiteDbIdentityContext(connectionString));
-            var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString));
-            var pavlovServerPlayerHistoryService =
-                new PavlovServerPlayerHistoryService(new LiteDbIdentityContext(connectionString));
-            var rconSerivce = new RconService(steamIdentityService, serverSelectedMapService, mapsService,
-                pavlovServerInfoService, pavlovServerPlayerService,pavlovServerService,sshServerSerivce, pavlovServerPlayerHistoryService);
-            var serverBansService = new ServerBansService(new LiteDbIdentityContext(connectionString));
-            var servers = await sshServerSerivce.FindAll();
-            foreach (var server in servers)
-            foreach (var signleServer in server.PavlovServers)
+            var writer = new StreamWriter(stream)
+            {
+                AutoFlush = true
+            };
+            var result = "";
+            stream.Flush();
+            await writer.FlushAsync();
+
+
+            await writer.WriteLineAsync(customCmd);
+            if (expect == null)
+            {
+                var reader = new StreamReader(stream);
+                Task.Delay(ms).Wait();
+                result = (await ReadStream(reader)).ToString();
+            }
+            else
+            {
+                result = stream.Expect(new Regex(expect, RegexOptions.Multiline), TimeSpan.FromMilliseconds(ms));
+            }
+
+            return result;
+        }
+
+        private static async Task<StringBuilder> ReadStream(StreamReader reader)
+        {
+            var result = new StringBuilder();
+
+            string line;
+            while ((line = await reader.ReadLineAsync()) != null) result.AppendLine(line);
+
+            return result;
+        }
+
+
+        public static RconService.AuthType GetAuthType(PavlovServer server)
+        {
+            var auths = new List<RconService.AuthType>
+            {
+                RconService.AuthType.PrivateKeyPassphrase,
+                RconService.AuthType.PrivateKey,
+                RconService.AuthType.UserPass
+            };
+            foreach (var type in auths)
                 try
                 {
-                    var bans = await serverBansService.FindAllFromPavlovServerId(signleServer.Id, true);
-                    await rconSerivce.SaveBlackListEntry(signleServer, bans);
+                    var connectionInfo = ConnectionInfoInternal(server, type, out var result);
+                    using var client = new SshClient(connectionInfo);
+                    client.Connect();
+                    if (client.IsConnected)
+                        return type;
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
-                    Console.WriteLine(e.Message);
+                    //ignore and find the right one to use
                 }
+
+            throw new CommandException("No auth method worked!");
         }
 
-        public static async Task ReloadPlayerListFromServerAndTheServerInfo(string connectionString,
-            bool recursive = false)
+        public static async Task<string> SystemDCheckState(PavlovServer server)
         {
-            var exceptions = new List<Exception>();
+            var type = GetAuthType(server);
+            var connectionInfo = ConnectionInfoInternal(server, type, out var result);
+            using var client = new SshClient(connectionInfo);
             try
             {
-                var steamIdentityService = new SteamIdentityService(new LiteDbIdentityContext(connectionString));
-                var serverSelectedMapService =
-                    new ServerSelectedMapService(new LiteDbIdentityContext(connectionString));
-                var pavlovServerService = new PavlovServerService(new LiteDbIdentityContext(connectionString));
-                var sshServerSerivce =
-                    new SshServerSerivce(new LiteDbIdentityContext(connectionString), pavlovServerService);
-                var mapsService = new MapsService(new LiteDbIdentityContext(connectionString));
-                var pavlovServerInfoService = new PavlovServerInfoService(new LiteDbIdentityContext(connectionString));
-                var pavlovServerPlayerService = new PavlovServerPlayerService(
-                    new LiteDbIdentityContext(connectionString));
-                var pavlovServerPlayerHistoryService =
-                    new PavlovServerPlayerHistoryService(new LiteDbIdentityContext(connectionString));
-                var rconSerivce = new RconService(steamIdentityService, serverSelectedMapService, mapsService,
-                    pavlovServerInfoService, pavlovServerPlayerService,pavlovServerService,sshServerSerivce, pavlovServerPlayerHistoryService);
-                var servers = await sshServerSerivce.FindAll();
-                foreach (var server in servers)
-                foreach (var signleServer in server.PavlovServers.Where(x => x.ServerType == ServerType.Community))
-                    try
-                    {
-                        await rconSerivce.SShTunnelGetAllInfoFromPavlovServer(signleServer);
-                    }
-                    catch (Exception e)
-                    {
-                        exceptions.Add(e);
-                        Console.WriteLine(e.Message);
-                    }
-            }
-            catch (Exception e)
-            {
-                exceptions.Add(e);
-                Console.WriteLine(e.Message);
-            }
-            // Ignore them for now
-            // if (exceptions.Count > 0)
-            // {
-            //     throw new Exception(String.Join(" | Next Exception:  ",exceptions.Select(x=>x.Message).ToList()));
-            // }
-
-            BackgroundJob.Schedule(() => ReloadPlayerListFromServerAndTheServerInfo(connectionString, recursive),
-                new TimeSpan(0, 1, 0)); // Check for bans and remove them is necessary
-        }
+                client.Connect();
+                var stream =
+                    client.CreateShellStream("pavlovRconWebserverSShTunnelSystemdCheck", 80, 24, 800, 600, 1024);
 
 
-        public static async Task<ConnectionResult> StartMatchWithAuth(RconService.AuthType authType,
-            PavlovServer server,
-            Match match, string connectionString)
-        {
-            var steamIdentityService = new SteamIdentityService(new LiteDbIdentityContext(connectionString));
-            var serverSelectedMapService = new ServerSelectedMapService(new LiteDbIdentityContext(connectionString));
-            var pavlovServerService = new PavlovServerService(new LiteDbIdentityContext(connectionString));
-            var sshServerSerivce = new SshServerSerivce(new LiteDbIdentityContext(connectionString),pavlovServerService);
-            var mapsService = new MapsService(new LiteDbIdentityContext(connectionString));
-            var teamSelectedSteamIdentityService =
-                new TeamSelectedSteamIdentityService(new LiteDbIdentityContext(connectionString));
-            var matchSelectedTeamSteamIdentitiesService =
-                new MatchSelectedTeamSteamIdentitiesService(new LiteDbIdentityContext(connectionString));
-            var matchSelectedSteamIdentitiesService =
-                new MatchSelectedSteamIdentitiesService(new LiteDbIdentityContext(connectionString));
-            var pavlovServerInfoService = new PavlovServerInfoService(new LiteDbIdentityContext(connectionString));
-            var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString));
-            var pavlovServerPlayerHistoryService =
-                new PavlovServerPlayerHistoryService(new LiteDbIdentityContext(connectionString));
-            var rconService = new RconService(steamIdentityService, serverSelectedMapService, mapsService,
-                pavlovServerInfoService, pavlovServerPlayerService,pavlovServerService,sshServerSerivce, pavlovServerPlayerHistoryService);
-            var teamService = new TeamService(new LiteDbIdentityContext(connectionString));
-            var matchService = new MatchService(new LiteDbIdentityContext(connectionString),
-                matchSelectedTeamSteamIdentitiesService, matchSelectedSteamIdentitiesService, pavlovServerService,
-                steamIdentityService, teamService, teamSelectedSteamIdentityService);
-
-            var connectionInfo = RconService.ConnectionInfo(server, authType, out var result);
-            using var clientSsh = new SshClient(connectionInfo);
-            using var clientSftp = new SftpClient(connectionInfo);
-            try
-            {
-                var listOfSteamIdentietiesWhichCanPlay = match.MatchTeam0SelectedSteamIdentities;
-                listOfSteamIdentietiesWhichCanPlay.AddRange(match.MatchTeam1SelectedSteamIdentities);
-                var list = new List<string>();
-                if (listOfSteamIdentietiesWhichCanPlay.Count <= 0 && match.MatchSelectedSteamIdentities.Count <= 0)
+                var state = await SendCommandForShell(
+                    "systemctl list-unit-files --type service | grep " + server.ServerSystemdServiceName + ".service",
+                    stream, @".*(enabled|disabled).*");
+                if (state == null)
                 {
-                    result.errors.Add("There are no team members so no match will start!");
-                    Console.WriteLine("There are no team members so no match will start!");
-                    return result;
+                    result.errors.Add("Service does not exist!" + server.Name);
                 }
                 else
                 {
-                    if (match.MatchSelectedSteamIdentities.Count > 0)
+                    if (state.Contains("disabled"))
                     {
-                        list = match.MatchSelectedSteamIdentities.Select(x => Strings.Trim(x.SteamIdentityId+";"+Environment.NewLine)).ToList();
+                        result.answer = "disabled";
                     }
-                    else if (listOfSteamIdentietiesWhichCanPlay.Count > 0)
+                    else if (state.Contains("enabled"))
                     {
-                        list = listOfSteamIdentietiesWhichCanPlay.Select(x => Strings.Trim(x.SteamIdentityId)).ToList();
+                        var active = await SendCommandForShell(
+                            "systemctl is-active " + server.ServerSystemdServiceName + ".service", stream,
+                            @"^(?!.*is-active).*active.*$");
+                        if (active == null || active.Contains("inactive"))
+                            result.answer = "inactive";
+                        else
+                            result.answer = "active";
                     }
-                   
+                    else
+                    {
+                        result.answer = "notAvailable";
+                        result.errors.Add("Service does not exist cause he is not enabled and not disabled!" +
+                                          server.Name);
+                    }
                 }
-
-                //Write whitelist and set server settings
-
-                var whitelist = "";
-                try
-                {
-                    await rconService.WriteFile(server,
-                        server.ServerFolderPath + FilePaths.WhiteList,
-                        Strings.Join(list.ToArray()));
-                    
-                }
-                catch (Exception e)
-                {
-                    result.errors.Add("Could not write whitelist for the match! " +
-                                      e.Message);
-                }
-
-                var serverSettings = new PavlovServerGameIni
-                {
-                    bEnabled = true,
-                    ServerName = match.Name,
-                    MaxPlayers = match.PlayerSlots,
-                    bSecured = true,
-                    bCustomServer = true,
-                    bWhitelist = true,
-                    RefreshListTime = 120,
-                    LimitedAmmoType = 0,
-                    TickRate = 90,
-                    TimeLimit = match.TimeLimit,
-                    Password = null,
-                    BalanceTableURL = null,
-                    MapRotation = new List<PavlovServerGameIniMap>
-                    {
-                        new PavlovServerGameIniMap
-                        {
-                            MapLabel = match.MapId,
-                            GameMode = match.GameMode
-                        }
-                    }
-                };
-                var map = await mapsService.FindOne(match.MapId.Replace("UGC", ""));
-                await serverSettings.SaveToFile(server, new List<ServerSelectedMap>
-                {
-                    new ServerSelectedMap
-                    {
-                        Map = map,
-                        GameMode = match.GameMode
-                    }
-                }, rconService);
-                await rconService.SystemDStart(server);
-
-                //StartWatchServiceForThisMatch
-                match.Status = Status.StartetWaitingForPlayer;
-                await matchService.Upsert(match);
-                Console.WriteLine("Start backgroundjob");
-                BackgroundJob.Schedule(
-                    () => MatchInspector(authType, match.Id, connectionString),
-                    new TimeSpan(0, 0, 5)); // ChecjServerState
             }
             catch (Exception e)
             {
                 switch (e)
                 {
                     case SshAuthenticationException _:
-                        result.errors.Add("Could not Login over ssh!");
+                        result.errors.Add("Could not Login over ssh!" + server.Name);
                         break;
                     case SshConnectionException _:
-                        result.errors.Add("Could not connect to host over ssh!");
+                        result.errors.Add("Could not connect to host over ssh!" + server.Name);
                         break;
                     case SshOperationTimeoutException _:
-                        result.errors.Add("Could not connect to host cause of timeout over ssh!");
+                        result.errors.Add("Could not connect to host cause of timeout over ssh!" + server.Name);
                         break;
                     case SocketException _:
-                        result.errors.Add("Could not connect to host!");
+                        result.errors.Add("Could not connect to host!" + server.Name);
+                        break;
+                    case InvalidOperationException _:
+                        result.errors.Add(e.Message + " <- most lily this error is from telnet" + server.Name);
                         break;
                     default:
                     {
-                        clientSsh.Disconnect();
+                        client.Disconnect();
+                        throw;
+                    }
+                }
+            }
+            finally
+            {
+                client.Disconnect();
+            }
+
+            if (result.errors.Count <= 0 || result.answer != "") result.Success = true;
+            return EndConnection(result);
+        }
+
+
+        public static async Task<string> UpdateInstallPavlovServer(PavlovServer server,PavlovServerService pavlovServerService)
+        {
+            var type = GetAuthType(server);
+            var connectionInfo = ConnectionInfoInternal(server, type, out var result);
+            if (!server.SshServer.SteamIsAvailable)
+            {
+                result.Success = false;
+                result.errors.Add(" Steam is now enabled on this server!");
+                return EndConnection(result);
+            }
+
+            var restart = false;
+            if (server.ServerServiceState == ServerServiceState.active)
+            {
+                restart = true;
+                await SystemDStop(server,pavlovServerService);
+            }
+
+            using var client = new SshClient(connectionInfo);
+            try
+            {
+                client.Connect();
+                var stream =
+                    client.CreateShellStream("pavlovRconWebserverSShTunnelSystemdCheck", 80, 24, 800, 600, 1024);
+                var update = await SendCommandForShell(
+                    "cd " + server.SshServer.SteamPath + " && ./steamcmd.sh +login anonymous +force_install_dir " +
+                    server.ServerFolderPath + " +app_update 622970 +exit", stream,
+                    @".*(Success! App '622970' already up to date|Success! App '622970' fully installed).*", 60000);
+                if (update == null) result.errors.Add("Could not update the pavlovserver " + server.Name);
+                result.answer = update;
+            }
+            catch (Exception e)
+            {
+                switch (e)
+                {
+                    case SshAuthenticationException _:
+                        result.errors.Add("Could not Login over ssh!" + server.Name);
+                        break;
+                    case SshConnectionException _:
+                        result.errors.Add("Could not connect to host over ssh!" + server.Name);
+                        break;
+                    case SshOperationTimeoutException _:
+                        result.errors.Add("Could not connect to host cause of timeout over ssh!" + server.Name);
+                        break;
+                    case SocketException _:
+                        result.errors.Add("Could not connect to host!" + server.Name);
+                        break;
+                    case InvalidOperationException _:
+                        result.errors.Add(e.Message + " <- most lily this error is from telnet" + server.Name);
+                        break;
+                    default:
+                    {
+                        client.Disconnect();
+                        throw;
+                    }
+                }
+            }
+            finally
+            {
+                client.Disconnect();
+            }
+
+            if (restart) await SystemDStart(server,pavlovServerService);
+
+            if (result.errors.Count <= 0 || result.answer != "") result.Success = true;
+
+
+            return EndConnection(result);
+        }
+
+
+        public static async Task<ConnectionResult> SystemDStart(PavlovServer server,PavlovServerService pavlovServerService)
+        {
+            var type = GetAuthType(server);
+            var connectionInfo = ConnectionInfoInternal(server, type, out var result);
+            using var client = new SshClient(connectionInfo);
+            try
+            {
+                client.Connect();
+                var stream =
+                    client.CreateShellStream("pavlovRconWebserverSShTunnelSystemdCheck", 80, 24, 800, 600, 1024);
+                var disabled = await SendCommandForShell(
+                    "systemctl list-unit-files --type service | grep " + server.ServerSystemdServiceName + ".service",
+                    stream, @".*disabled.*");
+                if (disabled != null)
+                {
+                    var enable = await SendCommandForShell(
+                        "systemctl enable " + server.ServerSystemdServiceName + ".service", stream, null);
+                    if (enable == null)
+                    {
+                        result.errors.Add("Could not enable service " + server.Name);
+                    }
+                    else if (enable.ToLower().Contains("password"))
+                    {
+                        var enteredPassword = await SendCommandForShell(
+                            server.SshServer.SshPassword, stream, @".*[pP]assword.*");
+                        if (enteredPassword == "\r\n" || enteredPassword == null)
+                            result.errors.Add("Could not disable service after entering the password again!");
+                        if (enteredPassword != null && enteredPassword.ToLower().Contains("password"))
+                        {
+                            var enteredPasswordReload = await SendCommandForShell(
+                                server.SshServer.SshPassword, stream, null);
+                            if (enteredPasswordReload == "\r\n" || enteredPasswordReload == null)
+                                result.errors.Add("Could not disable service after entering the password again!");
+                        }
+                    }
+
+                    //enable for reload
+                }
+
+                var start = await SendCommandForShell(
+                    "systemctl restart " + server.ServerSystemdServiceName + ".service", stream, null);
+                if (start == null)
+                {
+                    result.errors.Add("Could not start service " + server.Name);
+                }
+                else if (start.ToLower().Contains("password"))
+                {
+                    var enteredPassword = await SendCommandForShell(
+                        server.SshServer.SshPassword, stream, null);
+                    if (enteredPassword == "\r\n" || enteredPassword == null)
+                        result.errors.Add("Could not start service after entering the password again!");
+                }
+                else
+                {
+                    Console.WriteLine(start);
+                }
+            }
+            catch (Exception e)
+            {
+                switch (e)
+                {
+                    case SshAuthenticationException _:
+                        result.errors.Add("Could not Login over ssh!" + server.Name);
+                        break;
+                    case SshConnectionException _:
+                        result.errors.Add("Could not connect to host over ssh!" + server.Name);
+                        break;
+                    case SshOperationTimeoutException _:
+                        result.errors.Add("Could not connect to host cause of timeout over ssh!" + server.Name);
+                        break;
+                    case SocketException _:
+                        result.errors.Add("Could not connect to host!" + server.Name);
+                        break;
+                    case InvalidOperationException _:
+                        result.errors.Add(e.Message + " <- most lily this error is from telnet" + server.Name);
+                        break;
+                    default:
+                    {
+                        client.Disconnect();
+                        throw;
+                    }
+                }
+            }
+            finally
+            {
+                client.Disconnect();
+            }
+
+            if (result.errors.Count <= 0) result.Success = true;
+
+            //ToDo check serverstats when stop or start server
+            await pavlovServerService.CheckStateForAllServers();
+            return result;
+        }
+
+        public static async Task<ConnectionResult> SystemDStop(PavlovServer server,PavlovServerService pavlovServerService)
+        {
+            var type = GetAuthType(server);
+            var connectionInfo = ConnectionInfoInternal(server, type, out var result);
+            using var client = new SshClient(connectionInfo);
+            try
+            {
+                client.Connect();
+                var stream =
+                    client.CreateShellStream("pavlovRconWebserverSShTunnelSystemdCheck", 80, 24, 800, 600, 1024);
+                var disabled = await SendCommandForShell(
+                    "systemctl list-unit-files --type service | grep " + server.ServerSystemdServiceName + ".service",
+                    stream, @".*enabled.*");
+                if (disabled != null)
+                {
+                    var enable = await SendCommandForShell(
+                        "systemctl disable " + server.ServerSystemdServiceName + ".service", stream,
+                        @".*[pP]assword.*");
+                    if (enable == null)
+                    {
+                        result.errors.Add("Could not disable service " + server.Name);
+                    }
+                    else if (enable.ToLower().Contains("password"))
+                    {
+                        var enteredPassword = await SendCommandForShell(
+                            server.SshServer.SshPassword, stream, @".*[pP]assword.*");
+                        if (enteredPassword == "\r\n" || enteredPassword == null)
+                            result.errors.Add("Could not disable service after entering the password again!");
+                        if (enteredPassword != null && enteredPassword.ToLower().Contains("password"))
+                        {
+                            var enteredPasswordReload = await SendCommandForShell(
+                                server.SshServer.SshPassword, stream, null);
+                            if (enteredPasswordReload == "\r\n" || enteredPasswordReload == null)
+                                result.errors.Add("Could not disable service after entering the password again!");
+                        }
+                    }
+                }
+
+                var start = await SendCommandForShell("systemctl stop " + server.ServerSystemdServiceName + ".service",
+                    stream, null);
+                if (start == null)
+                {
+                    result.errors.Add("Could not stop service " + server.Name);
+                }
+                else if (start.ToLower().Contains("password"))
+                {
+                    var enteredPassword = await SendCommandForShell(
+                        server.SshServer.SshPassword, stream, null);
+                    if (enteredPassword == "\r\n" || enteredPassword == null)
+                        result.errors.Add("Could not stop service after entering the password again!");
+                }
+                else
+                {
+                    Console.WriteLine(start);
+                }
+            }
+            catch (Exception e)
+            {
+                switch (e)
+                {
+                    case SshAuthenticationException _:
+                        result.errors.Add("Could not Login over ssh!" + server.Name);
+                        break;
+                    case SshConnectionException _:
+                        result.errors.Add("Could not connect to host over ssh!" + server.Name);
+                        break;
+                    case SshOperationTimeoutException _:
+                        result.errors.Add("Could not connect to host cause of timeout over ssh!" + server.Name);
+                        break;
+                    case SocketException _:
+                        result.errors.Add("Could not connect to host!" + server.Name);
+                        break;
+                    case InvalidOperationException _:
+                        result.errors.Add(e.Message + " <- most lily this error is from telnet" + server.Name);
+                        break;
+                    default:
+                    {
+                        client.Disconnect();
+                        throw;
+                    }
+                }
+            }
+            finally
+            {
+                client.Disconnect();
+            }
+
+            if (result.errors.Count <= 0) result.Success = true;
+            //ToDo check serverstats when stop or start server
+            await pavlovServerService.CheckStateForAllServers();
+            return result;
+        }
+
+
+        public static ConnectionResult DeleteUnusedMaps(PavlovServer server,
+            List<ServerSelectedMap> serverSelectedMaps)
+        {
+            // Ned to check
+            //1. Running Maps
+            //2. May not used for 48h?
+            // //Cause all server shares the same save space for maps.
+            // return new ConnectionResult()
+            // {
+            //     Seccuess = true,
+            //     answer = "Did nothing"
+            // };
+            var connectionResult = new ConnectionResult();
+            var type = GetAuthType(server);
+            var connectionInfo = ConnectionInfoInternal(server, type, out var result);
+            using var client = new SshClient(connectionInfo);
+            client.Connect();
+            //check if first scripts exist
+            using var sftp = new SftpClient(connectionInfo);
+            var toDeleteMaps = new List<string>();
+            try
+            {
+                sftp.Connect();
+                //Delete old maps in tmp folder
+                //
+                if (sftp.Exists("/tmp/workshop/" + server.ServerPort + "/content/555160"))
+                {
+                    var maps = sftp.ListDirectory("/tmp/workshop/" + server.ServerPort + "/content/555160");
+                    foreach (var map in maps)
+                    {
+                        if (!map.IsDirectory) continue;
+                        if (map.Name == ".") continue;
+                        if (map.Name == "..") continue;
+                        if (serverSelectedMaps.FirstOrDefault(x => x.Id == server.Id && x.Map.Name == map.Name) != null
+                        ) // map is on the selectet list
+                            continue; // map is selected
+
+                        // Check if map is running
+                        var isRunningAnswerCommand = client.CreateCommand("lsof +D " + map.FullName);
+                        isRunningAnswerCommand.CommandTimeout = TimeSpan.FromMilliseconds(2000);
+                        var isRunningAnswer = isRunningAnswerCommand.Execute();
+                        if (isRunningAnswer.Contains("COMMAND") && isRunningAnswer.Contains("USER")
+                        ) // map is running on the server
+                            continue; // map is in use
+
+                        //Check usage
+                        SftpFileAttributes attributes = null;
+                        try
+                        {
+                            attributes = sftp.GetAttributes(map.FullName + "/LinuxServer.pak");
+                        }
+                        catch (SftpPathNotFoundException)
+                        {
+                            continue;
+                        }
+
+                        var lastAccessTime = attributes.LastAccessTime;
+                        if (lastAccessTime < DateTime.Now.Subtract(new TimeSpan(server.DeletAfter, 0, 0, 0)))
+                        {
+                            try
+                            {
+                                DeleteDirectory(sftp, map.FullName);
+                            }
+                            catch (SftpPermissionDeniedException)
+                            {
+                                sftp.Disconnect();
+                                throw new CommandException("Permission denied to delet map" + server.Name);
+                            }
+
+                            if (sftp.Exists(map.FullName))
+                            {
+                                sftp.Disconnect();
+                                throw new CommandException("Could not delete map!" + server.Name);
+                            }
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                sftp.Disconnect();
+            }
+
+            client.Disconnect();
+            connectionResult.Success = true;
+            return connectionResult;
+        }
+
+        public static async Task<string> InstallPavlovServerService(PavlovServer server)
+        {
+            var type =  GetAuthType(server);
+            var connectionInfo = ConnectionInfoInternal(server, type, out var result);
+            if (!server.SshServer.SteamIsAvailable)
+            {
+                result.Success = false;
+                result.errors.Add(" Steam is now enabled on this server!");
+                return EndConnection(result);
+            }
+
+            using var client = new SshClient(connectionInfo);
+            using var sftp = new SftpClient(connectionInfo);
+            try
+            {
+                var serviceTempalte =
+                    @"[Unit]
+Description=Pavlov VR dedicated server
+
+[Service]
+Type=simple
+WorkingDirectory=" + server.ServerFolderPath + @"
+ExecStart=" + server.ServerFolderPath + @"PavlovServer.sh  -PORT='" + server.ServerPort + @"'
+
+RestartSec=1
+Restart=always
+User=" + server.SshServer.NotRootSshUsername + @"
+Group=" + server.SshServer.NotRootSshUsername + @"
+
+[Install]
+WantedBy = multi-user.target";
+
+                sftp.BufferSize = 4 * 1024; // bypass Payload error large files
+                sftp.Connect();
+                var path = "/etc/systemd/system/" + server.ServerSystemdServiceName + ".service";
+                //check if file exist
+                if (sftp.Exists(path)) sftp.DeleteFile(path);
+
+                using (var fileStream = new MemoryStream(Encoding.ASCII.GetBytes(serviceTempalte)))
+                {
+                    sftp.UploadFile(fileStream, path);
+                }
+
+
+                //Download file again to valid result
+                var outPutStream = new MemoryStream();
+                using (Stream fileStream = outPutStream)
+                {
+                    sftp.DownloadFile(path, fileStream);
+                }
+
+                var fileContentArray = outPutStream.ToArray();
+                var fileContent = Encoding.Default.GetString(fileContentArray);
+
+                if (fileContent.Replace(Environment.NewLine, "") != serviceTempalte.Replace(Environment.NewLine, ""))
+                {
+                    result.Success = false;
+                    result.errors.Add("Could not upload service file!");
+                    return EndConnection(result);
+                }
+
+                //daemon reload
+                client.Connect();
+                var stream =
+                    client.CreateShellStream("pavlovRconWebserverSShTunnelSystemdCheck", 80, 24, 800, 600, 1024);
+
+
+                var state = await SendCommandForShell("systemctl daemon-reload", stream, null);
+            }
+            catch (Exception e)
+            {
+                switch (e)
+                {
+                    case SshAuthenticationException _:
+                        result.errors.Add("Could not Login over ssh!" + server.Name);
+                        break;
+                    case SshConnectionException _:
+                        result.errors.Add("Could not connect to host over ssh!" + server.Name);
+                        break;
+                    case SshOperationTimeoutException _:
+                        result.errors.Add("Could not connect to host cause of timeout over ssh!" + server.Name);
+                        break;
+                    case SocketException _:
+                        result.errors.Add("Could not connect to host!" + server.Name);
+                        break;
+                    case InvalidOperationException _:
+                        result.errors.Add(e.Message + " <- most lily this error is from telnet" + server.Name);
+                        break;
+                    default:
+                    {
+                        client.Disconnect();
+                        sftp.Disconnect();
+                        throw;
+                    }
+                }
+            }
+            finally
+            {
+                client.Disconnect();
+                sftp.Disconnect();
+            }
+
+
+            if (result.errors.Count <= 0 || result.answer != "") result.Success = true;
+
+            return EndConnection(result);
+        }
+
+        public static async Task<string> RemovePath(PavlovServer server, string path,PavlovServerService pavlovServerService)
+        {
+            var type = GetAuthType(server);
+            var connectionInfo = ConnectionInfoInternal(server, type, out var result);
+            var restart = false;
+            if (server.ServerServiceState == ServerServiceState.active)
+            {
+                restart = true;
+                await SystemDStop(server,pavlovServerService);
+            }
+
+            using var client = new SshClient(connectionInfo);
+            using var clientSftp = new SftpClient(connectionInfo);
+            try
+            {
+                client.Connect();
+                clientSftp.Connect();
+                if (clientSftp.Exists(path))
+                {
+                    var stream =
+                        client.CreateShellStream("pavlovRconWebserverSShTunnelSystemdCheck", 80, 24, 800, 600, 1024);
+                    var update = await SendCommandForShell(
+                        "rm -rf " + path, stream, null);
+                    if (update == null) result.errors.Add("Could not remove the " + path + "! " + server.Name);
+                    result.answer = update;
+                }
+                else
+                {
+                    result.answer = "Everything is fine there is no file to delete!";
+                }
+            }
+            catch (Exception e)
+            {
+                switch (e)
+                {
+                    case SshAuthenticationException _:
+                        result.errors.Add("Could not Login over ssh!" + server.Name);
+                        break;
+                    case SshConnectionException _:
+                        result.errors.Add("Could not connect to host over ssh!" + server.Name);
+                        break;
+                    case SshOperationTimeoutException _:
+                        result.errors.Add("Could not connect to host cause of timeout over ssh!" + server.Name);
+                        break;
+                    case SocketException _:
+                        result.errors.Add("Could not connect to host!" + server.Name);
+                        break;
+                    case InvalidOperationException _:
+                        result.errors.Add(e.Message + " <- most lily this error is from telnet" + server.Name);
+                        break;
+                    default:
+                    {
+                        client.Disconnect();
                         clientSftp.Disconnect();
                         throw;
                     }
@@ -231,158 +679,417 @@ namespace PavlovRconWebserver.Extensions
             }
             finally
             {
-                clientSsh.Disconnect();
+                client.Disconnect();
                 clientSftp.Disconnect();
             }
 
-            return result;
+            if (restart) await SystemDStart(server,pavlovServerService);
+
+            if (result.errors.Count <= 0 || result.answer != "") result.Success = true;
+
+            return EndConnection(result);
         }
 
-        public static async Task MatchInspector(RconService.AuthType authType,
-            int matchId, string connectionString)
+        public static string DoesPathExist(PavlovServer server, string path)
         {
-            var steamIdentityService = new SteamIdentityService(new LiteDbIdentityContext(connectionString));
-            var serverSelectedMapService = new ServerSelectedMapService(new LiteDbIdentityContext(connectionString));
-            var pavlovServerService = new PavlovServerService(new LiteDbIdentityContext(connectionString));
-            var sshServerSerivce = new SshServerSerivce(new LiteDbIdentityContext(connectionString),pavlovServerService);
-            var mapsService = new MapsService(new LiteDbIdentityContext(connectionString));
-            var teamSelectedSteamIdentityService =
-                new TeamSelectedSteamIdentityService(new LiteDbIdentityContext(connectionString));
-            var matchSelectedTeamSteamIdentitiesService =
-                new MatchSelectedTeamSteamIdentitiesService(new LiteDbIdentityContext(connectionString));
-            var matchSelectedSteamIdentitiesService =
-                new MatchSelectedSteamIdentitiesService(new LiteDbIdentityContext(connectionString));
-            var teamService = new TeamService(new LiteDbIdentityContext(connectionString));
-            var pavlovServerInfoService = new PavlovServerInfoService(new LiteDbIdentityContext(connectionString));
-            var pavlovServerPlayerService = new PavlovServerPlayerService(new LiteDbIdentityContext(connectionString));
-            var pavlovServerPlayerHistoryService =
-                new PavlovServerPlayerHistoryService(new LiteDbIdentityContext(connectionString));
-            var rconService = new RconService(steamIdentityService, serverSelectedMapService, mapsService,
-                pavlovServerInfoService, pavlovServerPlayerService,pavlovServerService,sshServerSerivce,  pavlovServerPlayerHistoryService);
-            var matchService = new MatchService(new LiteDbIdentityContext(connectionString),
-                matchSelectedTeamSteamIdentitiesService, matchSelectedSteamIdentitiesService, pavlovServerService,
-                steamIdentityService, teamService, teamSelectedSteamIdentityService);
-            Console.WriteLine("MatchInspector started!");
-            var match = await matchService.FindOne(matchId);
-
+            var type = GetAuthType(server);
+            var connectionInfo = ConnectionInfoInternal(server, type, out var result);
+            using var clientSftp = new SftpClient(connectionInfo);
             try
             {
-                if (match.ForceSop)
+                clientSftp.Connect();
+                if (clientSftp.Exists(path))
                 {
-                    Console.WriteLine("Endmatch!");
-                    await EndMatch(authType, match.PavlovServer, match, rconService, matchService);
-                    return;
+                    result.Success = true;
+                    result.answer = "true";
                 }
-
-                await rconService.SShTunnelGetAllInfoFromPavlovServer(match.PavlovServer);
-                switch (match.Status)
+                else
                 {
-                    case Status.StartetWaitingForPlayer:
-
-                        Console.WriteLine("TryToStartMatch started!");
-                        await TryToStartMatch(match.PavlovServer, match, rconService, matchService, pavlovServerPlayerService);
-                        break;
-                    case Status.OnGoing:
-
-                        Console.WriteLine("OnGoing!");
-                        var serverInfo = await pavlovServerInfoService.FindServer(match.PavlovServer.Id);
-                        match.PlayerResults = (await pavlovServerPlayerService.FindAllFromServer(match.PavlovServer.Id)).ToList();
-                        match.EndInfo = serverInfo;
-                        await matchService.Upsert(match);
-
-                        if (serverInfo.RoundState == "Ended")
-                        {
-                            Console.WriteLine("Round ended!");
-                            match.PlayerResults =
-                                (await pavlovServerPlayerService.FindAllFromServer(match.PavlovServer.Id)).ToList();
-                            match.EndInfo = serverInfo;
-                            await EndMatch(authType, match.PavlovServer, match, rconService, matchService);
-                            return;
-                        }
-
-                        break;
+                    result.answer = "false";
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-            }
-
-            if (match.Status != Status.Finshed)
-                BackgroundJob.Schedule(
-                    () => MatchInspector(authType, match.Id, connectionString),
-                    new TimeSpan(0, 0, 5)); // ChecjServerState
-        }
-
-        private static async Task EndMatch(RconService.AuthType authType, PavlovServer server, Match match,
-            RconService rconService,
-            MatchService matchService)
-        {
-            match.Status = Status.Finshed;
-            await matchService.Upsert(match);
-            await rconService.SystemDStop(server);
-            Console.WriteLine("Stopped server!");
-        }
-
-        private static async Task TryToStartMatch(PavlovServer server, Match match, RconService rconService,
-            MatchService matchService, PavlovServerPlayerService pavlovServerPlayerService)
-        {
-            var playerList = (await pavlovServerPlayerService.FindAllFromServer(server.Id)).ToList();
-            Console.WriteLine(" playerlistcount = "+playerList.Count());
-            Console.WriteLine(" match.PlayerSlots  = "+match.PlayerSlots );
-            if (playerList.Count() == match.PlayerSlots || match.ForceStart) //All Player are here
-            {
-                //Do Players in the right team
-                foreach (var pavlovServerPlayer in playerList)
+                switch (e)
                 {
-                    var team0 = match.MatchTeam0SelectedSteamIdentities.FirstOrDefault(x =>
-                        x.SteamIdentityId == pavlovServerPlayer.UniqueId);
-                    var team1 = match.MatchTeam1SelectedSteamIdentities.FirstOrDefault(x =>
-                        x.SteamIdentityId == pavlovServerPlayer.UniqueId);
-                    if (team0 != null)
+                    case SshAuthenticationException _:
+                        result.errors.Add("Could not Login over ssh!" + server.Name);
+                        break;
+                    case SshConnectionException _:
+                        result.errors.Add("Could not connect to host over ssh!" + server.Name);
+                        break;
+                    case SshOperationTimeoutException _:
+                        result.errors.Add("Could not connect to host cause of timeout over ssh!" + server.Name);
+                        break;
+                    case SocketException _:
+                        result.errors.Add("Could not connect to host!" + server.Name);
+                        break;
+                    case InvalidOperationException _:
+                        result.errors.Add(e.Message + " <- most lily this error is from telnet" + server.Name);
+                        break;
+                    default:
                     {
-                        Console.WriteLine("SwitchTeam 0 " + pavlovServerPlayer.UniqueId);
-                        await SendCommandTillDone(server, rconService, "SwitchTeam 0 " + pavlovServerPlayer.UniqueId);
-                    }
-                    else if (team1 != null)
-                    {
-                        Console.WriteLine("SwitchTeam 1 " + pavlovServerPlayer.UniqueId);
-                        await SendCommandTillDone(server, rconService, "SwitchTeam 1 " + pavlovServerPlayer.UniqueId);
+                        clientSftp.Disconnect();
+                        throw;
                     }
                 }
-                //All Players are on the right team now
-                //ResetSND
-
-                Console.WriteLine("start ResetSND!");
-                await SendCommandTillDone(server, rconService, "ResetSND");
-                match.Status = Status.OnGoing;
-                await matchService.Upsert(match);
             }
+            finally
+            {
+                clientSftp.Disconnect();
+            }
+
+            if (result.errors.Count <= 0 || result.answer != "") result.Success = true;
+
+            return EndConnection(result);
         }
 
-        private static async Task<string> SendCommandTillDone(PavlovServer server, RconService rconService,
-            string command, int timeoutInSeconds = 60)
+        public static async Task<ConnectionResult> SShTunnelMultipleCommands(PavlovServer server,
+            string[] commands)
         {
-            var task = Task.Run(() => SendCommandTillDoneChild(server, rconService, command));
-            if (task.Wait(TimeSpan.FromSeconds(timeoutInSeconds)))
-                return task.Result;
-            throw new Exception("Timed out");
+            if (server.ServerServiceState != ServerServiceState.active)
+                throw new CommandException("will not do command while server service is inactive!");
+            var type = GetAuthType(server);
+            var connectionInfo = ConnectionInfoInternal(server, type, out var result);
+            using var client = new SshClient(connectionInfo);
+            try
+            {
+                client.Connect();
+
+                if (client.IsConnected)
+                {
+                    var portToForward = server.TelnetPort + 50;
+                    var portForwarded = new ForwardedPortLocal("127.0.0.1", (uint) portToForward, "127.0.0.1",
+                        (uint) server.TelnetPort);
+                    client.AddForwardedPort(portForwarded);
+                    portForwarded.Start();
+                    using (var client2 = new Client("127.0.0.1", portToForward, new CancellationToken()))
+                    {
+                        if (client2.IsConnected)
+                        {
+                            var password = await client2.ReadAsync(TimeSpan.FromMilliseconds(2000));
+                            Console.WriteLine("Answer: " + password);
+                            if (password.Contains("Password"))
+                            {
+                                await client2.WriteLine(server.TelnetPassword);
+                                var auth = await client2.ReadAsync(TimeSpan.FromMilliseconds(2000));
+                                if (auth.Contains("Authenticated=1"))
+                                    foreach (var command in commands)
+                                    {
+                                        var singleCommandResult = await SingleCommandResult(client2, command);
+
+                                        result.MultiAnswer.Add(singleCommandResult);
+                                    }
+                                else
+                                    result.errors.Add("Telnet Client could not authenticate ..." + server.Name);
+                            }
+                            else
+                            {
+                                result.errors.Add("Telnet Client did not ask for Password ..." + server.Name);
+                            }
+                        }
+                        else
+                        {
+                            result.errors.Add("Telnet Client could not connect ..." + server.Name);
+                        }
+
+                        client2.Dispose();
+                    }
+
+                    client.Disconnect();
+                }
+                else
+                {
+                    result.errors.Add("Telnet Client cannot be reached..." + server.Name);
+                    Console.WriteLine("Telnet Client cannot be reached..." + server.Name);
+                }
+            }
+            catch (Exception e)
+            {
+                switch (e)
+                {
+                    case SshAuthenticationException _:
+                        result.errors.Add("Could not Login over ssh!" + server.Name);
+                        break;
+                    case SshConnectionException _:
+                        result.errors.Add("Could not connect to host over ssh!" + server.Name);
+                        break;
+                    case SshOperationTimeoutException _:
+                        result.errors.Add("Could not connect to host cause of timeout over ssh!" + server.Name);
+                        break;
+                    case SocketException _:
+                        result.errors.Add("Could not connect to host!" + server.Name);
+                        break;
+                    case InvalidOperationException _:
+                        result.errors.Add(e.Message + " <- most lily this error is from telnet" + server.Name);
+                        break;
+                    default:
+                    {
+                        client.Disconnect();
+                        throw;
+                    }
+                }
+            }
+            finally
+            {
+                client.Disconnect();
+            }
+
+            if (result.MultiAnswer.Count > 1)
+            {
+                result.answer = string.Join(",", result.MultiAnswer);
+                result.answer = "[" + result.answer + "]";
+            }
+            else if (result.MultiAnswer.Count == 1)
+            {
+                result.answer = result.MultiAnswer[0];
+            }
+            else
+            {
+                result.errors.Add("there was no answer" + server.Name);
+            }
+
+            if (result.errors.Count <= 0 || result.answer != "") result.Success = true;
+
+            return result;
         }
 
-        private static async Task<string> SendCommandTillDoneChild(PavlovServer server, RconService rconService,
-            string command)
+        public static async Task<string> SingleCommandResult(Client client2, string command)
         {
-            while (true)
+            await client2.WriteLine(command);
+            var commandResult = await client2.ReadAsync(TimeSpan.FromMilliseconds(2000));
+
+
+            var singleCommandResult = "";
+            if (commandResult.Contains("{"))
+                singleCommandResult = commandResult
+                    .Substring(commandResult.IndexOf("{", StringComparison.Ordinal));
+
+            if (singleCommandResult.StartsWith("Password: Authenticated=1"))
+                singleCommandResult = singleCommandResult.Replace("Password: Authenticated=1", "");
+
+
+            if (singleCommandResult.Contains(command))
+                singleCommandResult = singleCommandResult.Replace(command, "");
+            return singleCommandResult;
+        }
+
+        public static async Task<string> SendCommandSShTunnel(PavlovServer server, string command)
+        {
+            var result = await SShTunnelMultipleCommands(server, new[] {command});
+
+            return EndConnection(result);
+        }
+
+        public static ConnectionInfo ConnectionInfoInternal(PavlovServer server, RconService.AuthType type,
+            out ConnectionResult result)
+        {
+            ConnectionInfo connectionInfo = null;
+
+            result = new ConnectionResult();
+            //auth
+            if (type == RconService.AuthType.PrivateKey)
+            {
+                var keyFiles = new[] {new PrivateKeyFile("KeyFiles/" + server.SshServer.SshKeyFileName)};
+                connectionInfo = new ConnectionInfo(server.SshServer.Adress, server.SshServer.SshPort,
+                    server.SshServer.SshUsername,
+                    new PrivateKeyAuthenticationMethod(server.SshServer.SshUsername, keyFiles));
+            }
+            else if (type == RconService.AuthType.UserPass)
+            {
+                connectionInfo = new ConnectionInfo(server.SshServer.Adress, server.SshServer.SshPort,
+                    server.SshServer.SshUsername,
+                    new PasswordAuthenticationMethod(server.SshServer.SshUsername, server.SshServer.SshPassword));
+            }
+            else if (type == RconService.AuthType.PrivateKeyPassphrase)
+            {
+                var keyFiles = new[]
+                    {new PrivateKeyFile("KeyFiles/" + server.SshServer.SshKeyFileName, server.SshServer.SshPassphrase)};
+                connectionInfo = new ConnectionInfo(server.SshServer.Adress, server.SshServer.SshPort,
+                    server.SshServer.SshUsername,
+                    new PasswordAuthenticationMethod(server.SshServer.SshUsername, server.SshServer.SshPassphrase),
+                    new PrivateKeyAuthenticationMethod(server.SshServer.SshUsername, keyFiles));
+            }
+
+            return connectionInfo;
+        }
+
+        public static async Task<string> GetFile(PavlovServer server, string path)
+        {
+            var connectionResult = new ConnectionResult();
+            var type = GetAuthType(server);
+            var connectionInfo = ConnectionInfoInternal(server, type, out var result);
+            //check if first scripts exist
+            using var sftp = new SftpClient(connectionInfo);
+            try
+            {
+                sftp.Connect();
+
+                var outPutStream = new MemoryStream();
                 try
                 {
-                    var result = await rconService.SendCommandSShTunnel(server, command);
-                    return result;
+                    //check if file exist
+                    if (!sftp.Exists(path))
+                    {
+                        connectionResult.Success = true;
+                        connectionResult.answer = "File is empty";
+                        sftp.Disconnect();
+                        return EndConnection(connectionResult);
+                    }
+
+                    //Download file
+                    using (Stream fileStream = outPutStream)
+                    {
+                        sftp.DownloadFile(path, fileStream);
+                    }
                 }
-                catch (CommandException e)
+                catch (Exception e)
                 {
-                    Console.WriteLine(e);
-                    throw;
+                    switch (e)
+                    {
+                        case SshConnectionException _:
+                            result.errors.Add("Could not Login over ssh! " + server.Name);
+                            sftp.Disconnect();
+                            return EndConnection(connectionResult);
+                        case SftpPathNotFoundException _:
+                            result.errors.Add("Could not find file! (" + path + ") on the server: " + server.Name);
+                            sftp.Disconnect();
+                            return EndConnection(connectionResult);
+                        case SftpPermissionDeniedException _:
+                            result.errors.Add("Permissions denied for file: (" + path + ") on the server: " +
+                                              server.Name);
+                            sftp.Disconnect();
+                            return EndConnection(connectionResult);
+                        case SshException _:
+                            result.errors.Add("Could not connect to host!" + server.Name);
+                            sftp.Disconnect();
+                            return EndConnection(connectionResult);
+                        default:
+                        {
+                            sftp.Disconnect();
+                            return EndConnection(connectionResult);
+                        }
+                    }
                 }
+
+                var fileContentArray = outPutStream.ToArray();
+                var fileContent = Encoding.Default.GetString(fileContentArray);
+                connectionResult.Success = true;
+                connectionResult.answer = fileContent;
+            }
+            finally
+            {
+                sftp.Disconnect();
+            }
+
+
+            return EndConnection(connectionResult);
+        }
+
+        public static string EndConnection(ConnectionResult connectionResult)
+        {
+            if (!connectionResult.Success)
+            {
+                if (connectionResult.errors.Count <= 0) throw new CommandException("Could not connect to server!");
+                throw new CommandException(Strings.Join(connectionResult.errors.ToArray(), "\n"));
+            }
+
+            return connectionResult.answer;
+        }
+
+        public static string WriteFile(PavlovServer server, string path, string content)
+        {
+            var connectionResult = new ConnectionResult();
+            var type = GetAuthType(server);
+            var connectionInfo = ConnectionInfoInternal(server, type, out var result);
+            //check if first scripts exist
+            using var sftp = new SftpClient(connectionInfo);
+            sftp.BufferSize = 4 * 1024; // bypass Payload error large files
+            var outPutStream = new MemoryStream();
+            try
+            {
+                sftp.Connect();
+                //check if file exist
+                try
+                {
+                    if (sftp.Exists(path)) sftp.DeleteFile(path);
+
+                    if (!sftp.Exists(path)) sftp.Create(path);
+                    using (var fileStream = new MemoryStream(Encoding.ASCII.GetBytes(content)))
+                    {
+                        sftp.UploadFile(fileStream, path);
+                    }
+
+
+                    //Download file again to valid result
+                    using (Stream fileStream = outPutStream)
+                    {
+                        sftp.DownloadFile(path, fileStream);
+                    }
+                }
+                catch (Exception e)
+                {
+                    switch (e)
+                    {
+                        case SshConnectionException _:
+                            result.errors.Add("Could not Login over ssh! " + server.Name);
+                            sftp.Disconnect();
+                            return EndConnection(connectionResult);
+                        case SftpPathNotFoundException _:
+                            result.errors.Add("Could not find file! (" + path + ") on the server: " + server.Name);
+                            sftp.Disconnect();
+                            return EndConnection(connectionResult);
+                        case SftpPermissionDeniedException _:
+                            result.errors.Add("Permissions denied for file: (" + path + ") on the server: " +
+                                              server.Name);
+                            sftp.Disconnect();
+                            return EndConnection(connectionResult);
+                        case SshException _:
+                            result.errors.Add("Could not connect to host!" + server.Name);
+                            sftp.Disconnect();
+                            return EndConnection(connectionResult);
+                        default:
+                        {
+                            sftp.Disconnect();
+                            return EndConnection(connectionResult);
+                        }
+                    }
+                }
+
+                var fileContentArray = outPutStream.ToArray();
+                var fileContent = Encoding.Default.GetString(fileContentArray);
+
+                if (fileContent.Replace(Environment.NewLine, "") == content.Replace(Environment.NewLine, ""))
+                {
+                    connectionResult.Success = true;
+                    connectionResult.answer = "File upload successfully " + server.Name;
+                }
+                else
+                {
+                    connectionResult.Success = false;
+                    connectionResult.answer = "File in not the same as uploaded. So upload failed! " + server.Name;
+                }
+            }
+            finally
+            {
+                sftp.Disconnect();
+            }
+
+            return EndConnection(connectionResult);
+        }
+
+        private static void DeleteDirectory(SftpClient client, string path)
+        {
+            foreach (var file in client.ListDirectory(path))
+                if (file.Name != "." && file.Name != "..")
+                {
+                    if (file.IsDirectory)
+                        DeleteDirectory(client, file.FullName);
+                    else
+                        client.DeleteFile(file.FullName);
+                }
+
+            client.DeleteDirectory(path);
         }
     }
 }

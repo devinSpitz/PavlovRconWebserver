@@ -59,7 +59,7 @@ namespace PavlovRconWebserver.Extensions
             var tmpCommand = commandRights.FirstOrDefault(x => x.Key == commandOnly);
             var isInRole = await IsUserAtLeastInRole(tmpCommand.Value, cp, userService);
             var modStateIsEnough = false;
-            if (isMod) modStateIsEnough = await IsUserAtLeastInTeamRole("Mod", tmpCommand.Value);
+            if (isMod) modStateIsEnough = IsUserAtLeastInTeamRole("Mod", tmpCommand.Value);
 
 
             return isInRole || modStateIsEnough;
@@ -80,7 +80,7 @@ namespace PavlovRconWebserver.Extensions
             return result;
         }
 
-        public static async Task<bool> IsUserAtLeastInTeamRole(string role, string TeamRole)
+        public static bool IsUserAtLeastInTeamRole(string role, string TeamRole)
         {
             var result = false;
 

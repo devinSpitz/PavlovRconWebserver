@@ -13,7 +13,8 @@ namespace PavlovRconWebserver.Exceptions
         {
         }
 
-        public CommandExceptionCreateServerDuplicate(string message, Exception innerException) : base(message, innerException)
+        public CommandExceptionCreateServerDuplicate(string message, Exception innerException) : base(message,
+            innerException)
         {
         }
     }

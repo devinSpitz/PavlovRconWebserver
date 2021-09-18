@@ -14,15 +14,7 @@ namespace PavlovRconWebserver.Services
         {
             _liteDb = liteDbContext;
         }
-
-        public async Task<IEnumerable<TeamSelectedSteamIdentity>> FindAll()
-        {
-            return _liteDb.LiteDatabase.GetCollection<TeamSelectedSteamIdentity>("TeamSelectedSteamIdentity")
-                .Include(x => x.SteamIdentity)
-                .Include(x => x.SteamIdentity.LiteDbUser)
-                .Include(x => x.Team)
-                .FindAll();
-        }
+        
 
         public async Task<IEnumerable<TeamSelectedSteamIdentity>> FindAllFrom(int teamId)
         {

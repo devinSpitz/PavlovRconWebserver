@@ -33,14 +33,14 @@ namespace PavlovRconWebserver.Models
 
         public async Task<bool> ReadFromFile(PavlovServer pavlovServer, RconService rconService)
         {
-            var gameIniContent = await rconService.GetFile(pavlovServer,
+            var gameIniContent = await RconStatic.GetFile(pavlovServer,
                 pavlovServer.ServerFolderPath + FilePaths.GameIni);
             var lines = gameIniContent.Split("\n");
             var first = true; // cause the first line is to ignore
             foreach (var line in lines)
             {
                 var tmpLine = line.CutLineAfter('#');
-                
+
                 if (first)
                 {
                     first = false;
@@ -106,22 +106,22 @@ namespace PavlovRconWebserver.Models
                 else if (tmpLine.Contains("MaxPlayers="))
                 {
                     var tmp = tmpLine.Replace("MaxPlayers=", "");
-                    MaxPlayers = int.Parse(tmp);
+                    MaxPlayers = int.Parse((string) tmp);
                 }
                 else if (tmpLine.Contains("RefreshListTime="))
                 {
                     var tmp = tmpLine.Replace("RefreshListTime=", "");
-                    RefreshListTime = int.Parse(tmp);
+                    RefreshListTime = int.Parse((string) tmp);
                 }
                 else if (tmpLine.Contains("LimitedAmmoType="))
                 {
                     var tmp = tmpLine.Replace("LimitedAmmoType=", "");
-                    LimitedAmmoType = int.Parse(tmp);
+                    LimitedAmmoType = int.Parse((string) tmp);
                 }
                 else if (tmpLine.Contains("TickRate="))
                 {
                     var tmp = line.Replace("TickRate=", "");
-                    TickRate = int.Parse(tmp);
+                    TickRate = int.Parse((string) tmp);
                 }
                 else if (tmpLine.Contains("TimeLimit="))
                 {
@@ -134,10 +134,7 @@ namespace PavlovRconWebserver.Models
         }
 
 
-
-        
-        public async Task<bool> SaveToFile(PavlovServer pavlovServer, List<ServerSelectedMap> serverSelectedMaps,
-            RconService rconService)
+        public bool SaveToFile(PavlovServer pavlovServer, List<ServerSelectedMap> serverSelectedMaps)
         {
             var lines = new List<string>();
             lines.Add("[/Script/Pavlov.DedicatedServer]");
@@ -152,22 +149,14 @@ namespace PavlovRconWebserver.Models
             lines.Add("TickRate=" + TickRate);
             lines.Add("TimeLimit=" + TimeLimit);
             if (!string.IsNullOrEmpty(Password))
-            {
                 lines.Add("Password=" + Password);
-            }
             else
-            {
                 lines.Add("Password=");
-            }
 
             if (!string.IsNullOrEmpty(BalanceTableURL))
-            {
                 lines.Add("BalanceTableURL=" + BalanceTableURL);
-            }
             else
-            {
                 lines.Add("BalanceTableURL=");
-            }
 
             foreach (var serverSelectedMap in serverSelectedMaps)
                 if (Regex.IsMatch(serverSelectedMap.Map.Id, @"^\d+$"))
@@ -177,7 +166,7 @@ namespace PavlovRconWebserver.Models
                     lines.Add("MapRotation=(MapId=\"" + serverSelectedMap.Map.Id + "\", GameMode=\"" +
                               serverSelectedMap.GameMode + "\")");
             var content = string.Join(Environment.NewLine, lines);
-            await rconService.WriteFile(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.GameIni,
+            RconStatic.WriteFile(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.GameIni,
                 content);
             return true;
         }

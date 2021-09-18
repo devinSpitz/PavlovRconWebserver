@@ -13,7 +13,6 @@ namespace PavlovRconWebserver.Controllers
     [Authorize]
     public class MatchMakingController : Controller
     {
-        private readonly IConfiguration _configuration;
         private readonly MapsService _mapsService;
         private readonly MatchSelectedSteamIdentitiesService _matchSelectedSteamIdentitiesService;
         private readonly MatchSelectedTeamSteamIdentitiesService _matchSelectedTeamSteamIdentitiesService;
@@ -33,8 +32,7 @@ namespace PavlovRconWebserver.Controllers
             MapsService mapsService,
             PublicViewListsService publicViewListsService,
             TeamSelectedSteamIdentityService teamSelectedSteamIdentityService,
-            MatchSelectedTeamSteamIdentitiesService matchSelectedTeamSteamIdentitiesService,
-            IConfiguration config)
+            MatchSelectedTeamSteamIdentitiesService matchSelectedTeamSteamIdentitiesService)
         {
             _userservice = userService;
             _matchService = matchService;
@@ -44,7 +42,6 @@ namespace PavlovRconWebserver.Controllers
             _matchSelectedSteamIdentitiesService = matchSelectedSteamIdentities;
             _matchSelectedTeamSteamIdentitiesService = matchSelectedTeamSteamIdentitiesService;
             _teamSelectedSteamIdentityService = teamSelectedSteamIdentityService;
-            _configuration = config;
             _mapsService = mapsService;
             _publicViewListsService = publicViewListsService;
         }
@@ -155,7 +152,7 @@ namespace PavlovRconWebserver.Controllers
             var match = await _matchService.FindOne(id);
             if (match == null) return BadRequest("No match found!");
             if (!match.isStartable()) return BadRequest("No meets requirement!");
-            await _matchService.StartMatch(id, _configuration.GetConnectionString("DefaultConnection"));
+            await _matchService.StartMatch(id);
             return RedirectToAction("Index", "MatchMaking");
         }
 

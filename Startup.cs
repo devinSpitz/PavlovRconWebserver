@@ -1,6 +1,8 @@
 ﻿using System;
 using Hangfire;
+using Hangfire.Dashboard;
 using Hangfire.MemoryStorage;
+using LiteDB.Async;
 using LiteDB.Identity.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -26,31 +28,45 @@ namespace PavlovRconWebserver
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            
             services.AddHangfire(x => x.UseMemoryStorage());
+            services.AddHangfireServer(x =>
+            {
+                x.WorkerCount = 10;
+            });
+            JobStorage.Current = new MemoryStorage();
             var connectionString = Configuration.GetConnectionString("DefaultConnection");
             services.AddLiteDBIdentity(connectionString).AddDefaultTokenProviders();
+            //services.AddLiteAsyncDBIdentity(connectionString).AddDefaultTokenProviders();
+            
+            var db = new LiteDatabaseAsync("Filename=mydatabase.db;Connection=shared;Password=hunter2");
             // Add LiteDB Dependency. Thare are three ways to set database:
             // 1. By default it uses the first connection string on appsettings.json, ConnectionStrings section.
-            services.AddTransient<SshServerSerivce>();
-            services.AddTransient<UserService>();
-            services.AddTransient<RconService>();
-            services.AddTransient<ServerSelectedMapService>();
-            services.AddTransient<MapsService>();
-            services.AddTransient<TeamService>();
-            services.AddTransient<SteamIdentityService>();
-            services.AddTransient<TeamSelectedSteamIdentityService>();
-            services.AddTransient<MatchService>();
-            services.AddTransient<PavlovServerService>();
-            services.AddTransient<ServerBansService>();
-            services.AddTransient<PavlovServerPlayerService>();
-            services.AddTransient<PavlovServerInfoService>();
-            services.AddTransient<PavlovServerPlayerHistoryService>();
-            services.AddTransient<MatchSelectedSteamIdentitiesService>();
-            services.AddTransient<MatchSelectedTeamSteamIdentitiesService>();
-            services.AddTransient<ServerSelectedWhitelistService>();
-            services.AddTransient<ServerSelectedModsService>();
-            services.AddTransient<PublicViewListsService>();
+            services.AddScoped<SshServerSerivce>();
+            services.AddScoped<UserService>();
+            services.AddScoped<RconService>();
+            services.AddScoped<ServerSelectedMapService>();
+            services.AddScoped<MapsService>();
+            services.AddScoped<TeamService>();
+            services.AddScoped<SteamIdentityService>();
+            services.AddScoped<TeamSelectedSteamIdentityService>();
+            services.AddScoped<MatchService>();
+            services.AddScoped<PavlovServerService>();
+            services.AddScoped<ServerBansService>();
+            services.AddScoped<PavlovServerPlayerService>();
+            services.AddScoped<PavlovServerInfoService>();
+            services.AddScoped<PavlovServerPlayerHistoryService>();
+            services.AddScoped<MatchSelectedSteamIdentitiesService>();
+            services.AddScoped<MatchSelectedTeamSteamIdentitiesService>();
+            services.AddScoped<ServerSelectedWhitelistService>();
+            services.AddScoped<ServerSelectedModsService>();
+            services.AddScoped<PublicViewListsService>();
+            services.AddScoped<SteamService>();
             services.AddSingleton(Configuration);
+            services.AddScoped<IEmailSender, EmailSender>();
+            
+            
+            
             // services
             //    .AddAuthentication(cfg =>
             //    {
@@ -58,7 +74,6 @@ namespace PavlovRconWebserver
             //    })
             //    .AddCookie();
             // Add application services.
-            services.AddTransient<IEmailSender, EmailSender>();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v0.0.1", new OpenApiInfo
@@ -78,14 +93,12 @@ namespace PavlovRconWebserver
                 app.UseDeveloperExceptionPage();
             else
                 app.UseExceptionHandler("/Home/Error");
-            var options = new BackgroundJobServerOptions
-            {
-                WorkerCount = 10
-            };
 
             if (env.EnvironmentName == "Development")
                 app.UseHangfireDashboard(
-                    //    ,new DashboardOptions
+                    "/hangfire"
+                    //,
+                    // new DashboardOptions
                     // {
                     //    Authorization = new IDashboardAuthorizationFilter[]
                     //    {
@@ -93,8 +106,7 @@ namespace PavlovRconWebserver
                     //    }
                     // }
                 ); // Does not work on dotnet 3.1 and i can not compile dotnet 5.0 on my ubuntu right now.
-
-            app.UseHangfireServer(options);
+            
             if (env.EnvironmentName == "Development")
             {
                 // Enable middleware to serve generated Swagger as a JSON endpoint.
@@ -110,38 +122,45 @@ namespace PavlovRconWebserver
 
             app.UseStaticFiles();
 
-            var connectionString = Configuration.GetConnectionString("DefaultConnection");
-
-
-            if (env.EnvironmentName != "Development")
-                RecurringJob.AddOrUpdate(
-                    () => Steam.DeleteAllUnsedMapsFromAllServers(connectionString),
-                    Cron.Daily(3)); // Delete all unusedMaps every day on 3 in the morning
-
-            RecurringJob.AddOrUpdate(
-                () => Steam.CrawlSteamMaps(connectionString),
-                Cron.Daily(2)); // Get all Maps every day on 2 in the morning
-
-            if (env.EnvironmentName != "Development")
-                RecurringJob.AddOrUpdate(
-                    () => RconStatic.CheckBansForAllServers(connectionString),
-                    string.Format("*/{0} * * * *", 5)); // Check for bans and remove them is necessary
-
-            BackgroundJob.Schedule(
-                () => RconStatic.ReloadPlayerListFromServerAndTheServerInfo(connectionString, true),
-                new TimeSpan(0, 1, 0)); // Check for bans and remove them is necessary
-
-            BackgroundJob.Schedule(
-                () => SystemdService.CheckServiceStateForAll(connectionString),
-                new TimeSpan(0, 1, 0)); // Check for bans and remove them is necessary
-
-
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseHttpsRedirection();
-
+            
             app.UseEndpoints(endpoints => { endpoints.MapDefaultControllerRoute(); });
+            using (var serviceScope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope())
+            {
+                var steamService = serviceScope.ServiceProvider.GetService<SteamService>();
+                var rconService = serviceScope.ServiceProvider.GetService<RconService>();
+                var pavlovServerService = serviceScope.ServiceProvider.GetService<PavlovServerService>();
+                if (env.EnvironmentName != "Development")
+                {
+                    
+                    RecurringJob.AddOrUpdate(
+                        () => steamService.DeleteAllUnsedMapsFromAllServers(),
+                        Cron.Daily(3)); // Delete all unusedMaps every day on 3 in the morning
+
+                    RecurringJob.AddOrUpdate(
+                        () => rconService.CheckBansForAllServers(),
+                        "*/5 * * * *"); // Check for bans and remove them is necessary
+
+                    RecurringJob.AddOrUpdate(
+                        () => pavlovServerService.CheckStateForAllServers(),
+                        Cron.Minutely()); // Check server states
+                }
+
+
+                RecurringJob.AddOrUpdate(
+                    () => steamService.CrawlSteamMaps(),
+                    Cron.Daily(2)); // Get all Maps every day on 2 in the morning
+
+
+                BackgroundJob.Schedule(
+                    () => rconService.ReloadPlayerListFromServerAndTheServerInfo(true),
+                    new TimeSpan(0, 1, 0)); // Check for bans and remove them is necessary
+            }
+
+
         }
     }
 }

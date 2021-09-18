@@ -21,12 +21,10 @@ namespace PavlovRconWebserver.Controllers
         private readonly ServerBansService _serverBansService;
         private readonly ServerSelectedMapService _serverSelectedMapService;
         private readonly ServerSelectedModsService _serverSelectedModsService;
-        private readonly SshServerSerivce _serverService;
         private readonly RconService _service;
         private readonly UserService _userservice;
 
         public RconController(RconService service,
-            SshServerSerivce serverService,
             UserService userService,
             ServerSelectedMapService serverSelectedMapService,
             MapsService mapsService,
@@ -36,7 +34,6 @@ namespace PavlovRconWebserver.Controllers
             PavlovServerPlayerService pavlovServerPlayerService)
         {
             _service = service;
-            _serverService = serverService;
             _userservice = userService;
             _serverSelectedMapService = serverSelectedMapService;
             _mapsService = mapsService;
@@ -98,7 +95,7 @@ namespace PavlovRconWebserver.Controllers
             var response = "";
             try
             {
-                response = await _service.SendCommandSShTunnel(singleServer, command);
+                response = await RconStatic.SendCommandSShTunnel(singleServer, command);
             }
             catch (Exception e)
             {
@@ -193,7 +190,7 @@ namespace PavlovRconWebserver.Controllers
                 var result1 = "";
                 try
                 {
-                    result1 = await _service.SendCommandSShTunnel(ban.PavlovServer, "RefreshList");
+                    result1 = await RconStatic.SendCommandSShTunnel(ban.PavlovServer, "RefreshList");
                 }
                 catch (Exception e)
                 {
@@ -213,7 +210,7 @@ namespace PavlovRconWebserver.Controllers
             var result = "";
             try
             {
-                result = await _service.SendCommandSShTunnel(ban.PavlovServer, "Ban " + steamId);
+                result = await RconStatic.SendCommandSShTunnel(ban.PavlovServer, "Ban " + steamId);
             }
             catch (Exception e)
             {
@@ -294,7 +291,7 @@ namespace PavlovRconWebserver.Controllers
             //unban command
             try
             {
-                await _service.SendCommandSShTunnel(pavlovServer, "Unban " + steamId);
+                await RconStatic.SendCommandSShTunnel(pavlovServer, "Unban " + steamId);
             }
             catch (CommandException)
             {
@@ -349,7 +346,7 @@ namespace PavlovRconWebserver.Controllers
             var singleServer = new PavlovServer();
             singleServer = await _pavlovServerService.FindOne(serverId);
             if (HttpContext.User == null) return false;
-            var user = (await _userservice.getUserFromCp(HttpContext.User));
+            var user = await _userservice.getUserFromCp(HttpContext.User);
             if (user == null) return false;
             if (singleServer == null) return false;
             if (_serverSelectedModsService == null) return false;
@@ -375,7 +372,7 @@ namespace PavlovRconWebserver.Controllers
                 var result = "";
                 try
                 {
-                    result = await _service.SendCommandSShTunnel(server, "ServerInfo");
+                    result = await RconStatic.SendCommandSShTunnel(server, "ServerInfo");
                 }
                 catch (Exception e)
                 {
