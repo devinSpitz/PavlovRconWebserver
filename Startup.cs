@@ -2,7 +2,6 @@
 using Hangfire;
 using Hangfire.Dashboard;
 using Hangfire.MemoryStorage;
-using LiteDB.Async;
 using LiteDB.Identity.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;

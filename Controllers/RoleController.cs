@@ -23,12 +23,12 @@ namespace PavlovRconWebserver.Controllers
             userManager = userMrg;
             _userService = userService;
             // for updaters add roles which are should be there
-            if (roleManager.Roles.FirstOrDefault(x => x.Name == "Mod") == null)
+            if (roleManager.Roles?.FirstOrDefault(x => x.Name == "Mod") == null)
                 roleManager.CreateAsync(new LiteDbRole
                 {
                     Name = "Mod"
                 });
-            if (roleManager.Roles.FirstOrDefault(x => x.Name == "Captain") == null)
+            if (roleManager.Roles?.FirstOrDefault(x => x.Name == "Captain") == null)
                 roleManager.CreateAsync(new LiteDbRole
                 {
                     Name = "Captain"
@@ -39,8 +39,11 @@ namespace PavlovRconWebserver.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
+            var test = await _userService.IsUserNotInRole("Admin", HttpContext.User);
+            var test2 = !( await _userService.IsUserNotInRole("Admin", HttpContext.User));
             if (await _userService.IsUserNotInRole("Admin", HttpContext.User)) return new UnauthorizedResult();
             return View(roleManager.Roles);
+            
         }
 
         [HttpGet]
@@ -76,8 +79,9 @@ namespace PavlovRconWebserver.Controllers
             var role = await roleManager.FindByIdAsync(id);
             var members = new List<LiteDbUser>();
             var nonMembers = new List<LiteDbUser>();
-            foreach (var user in await _userService.FindAll())
+            foreach (var user in (await _userService.FindAll()).ToList())
             {
+                var bla = await userManager.IsInRoleAsync(user, role.Name);
                 var singleUser = await userManager.IsInRoleAsync(user, role.Name) ? members : nonMembers;
                 singleUser.Add(user);
             }

@@ -52,7 +52,7 @@ namespace PavlovRconWebserver.Controllers
             if (!await CheckRightsTeamCaptainOrCaptain(0, bla)) return Unauthorized();
 
             var teams = new List<Team>();
-            var tmpTeams = await _teamService.FindAll();
+            var tmpTeams = (await _teamService.FindAll()).ToList();
 
             if (!await RightsHandler.IsUserAtLeastInRole("Captain", HttpContext.User, _userService))
             {

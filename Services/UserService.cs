@@ -64,12 +64,12 @@ namespace PavlovRconWebserver.Services
         public async Task CreateDefaultRoles()
         {
             // for updaters add roles which are should be there
-            if (_roleManager.Roles.ToList().FirstOrDefault(x => x.Name == "Mod") == null)
+            if (_roleManager.Roles?.ToList().FirstOrDefault(x => x.Name == "Mod") == null)
                 await _roleManager.CreateAsync(new LiteDbRole
                 {
                     Name = "Mod"
                 });
-            if (_roleManager.Roles.ToList().FirstOrDefault(x => x.Name == "Captain") == null)
+            if (_roleManager.Roles?.FirstOrDefault(x => x.Name == "Captain") == null)
                 await _roleManager.CreateAsync(new LiteDbRole
                 {
                     Name = "Captain"

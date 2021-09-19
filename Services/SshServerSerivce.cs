@@ -22,8 +22,8 @@ namespace PavlovRconWebserver.Services
 
         public async Task<IEnumerable<SshServer>> FindAll()
         {
-            var list = await _liteDb.LiteDatabaseAsync.GetCollection<SshServer>("SshServer")
-                .FindAllAsync();
+            var list = (await _liteDb.LiteDatabaseAsync.GetCollection<SshServer>("SshServer")
+                .FindAllAsync()).ToList();
             
             foreach (var single in list)
             {
