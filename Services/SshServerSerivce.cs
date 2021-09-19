@@ -22,30 +22,31 @@ namespace PavlovRconWebserver.Services
 
         public async Task<IEnumerable<SshServer>> FindAll()
         {
-            var list = _liteDb.LiteDatabase.GetCollection<SshServer>("SshServer")
-                .FindAll().Select(x =>
-                {
-                    x.PavlovServers = _pavlovServerService.FindAllFrom(x.Id);
-                    return x;
-                }).ToList();
+            var list = await _liteDb.LiteDatabaseAsync.GetCollection<SshServer>("SshServer")
+                .FindAllAsync();
+            
+            foreach (var single in list)
+            {
+               single.PavlovServers = await _pavlovServerService.FindAllFrom(single.Id);
+            }
             return list;
         }
 
         public async Task<SshServer> FindOne(int id)
         {
-            return _liteDb.LiteDatabase.GetCollection<SshServer>("SshServer")
-                .Find(x => x.Id == id).Select(x =>
-                {
-                    x.PavlovServers = _pavlovServerService.FindAllFrom(x.Id);
-                    return x;
-                }).FirstOrDefault();
+             var single = (await _liteDb.LiteDatabaseAsync.GetCollection<SshServer>("SshServer")
+                .FindOneAsync(x => x.Id == id));
+                
+             single.PavlovServers = await  _pavlovServerService.FindAllFrom(single.Id);
+
+             return single;
         }
 
         public async Task<int> Insert(SshServer sshServer)
         {
             ValidateSshServer(sshServer);
-            return _liteDb.LiteDatabase.GetCollection<SshServer>("SshServer")
-                .Insert(sshServer);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<SshServer>("SshServer")
+                .InsertAsync(sshServer);
         }
 
         private static void ValidateSshServer(SshServer server)
@@ -130,8 +131,8 @@ namespace PavlovRconWebserver.Services
 
             ValidateSshServer(sshServer);
 
-            return _liteDb.LiteDatabase.GetCollection<SshServer>("SshServer")
-                .Update(sshServer);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<SshServer>("SshServer")
+                .UpdateAsync(sshServer);
         }
 
         public async Task<bool> Delete(int id)
@@ -139,7 +140,7 @@ namespace PavlovRconWebserver.Services
             var pavlovServers = (await _pavlovServerService.FindAll()).Where(x => x.SshServer.Id == id);
             foreach (var pavlovServer in pavlovServers)
                 await _pavlovServerService.Delete(pavlovServer.Id);
-            return _liteDb.LiteDatabase.GetCollection<SshServer>("SshServer").Delete(id);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<SshServer>("SshServer").DeleteAsync(id);
         }
     }
 }

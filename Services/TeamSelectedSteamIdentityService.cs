@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using LiteDB.Identity.Database;
+using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
 
 namespace PavlovRconWebserver.Services
@@ -18,71 +18,71 @@ namespace PavlovRconWebserver.Services
 
         public async Task<IEnumerable<TeamSelectedSteamIdentity>> FindAllFrom(int teamId)
         {
-            return _liteDb.LiteDatabase.GetCollection<TeamSelectedSteamIdentity>("TeamSelectedSteamIdentity")
+            return (await _liteDb.LiteDatabaseAsync.GetCollection<TeamSelectedSteamIdentity>("TeamSelectedSteamIdentity")
                 .Include(x => x.SteamIdentity)
                 .Include(x => x.SteamIdentity.LiteDbUser)
                 .Include(x => x.Team)
-                .Find(x => x.Team.Id == teamId);
+                .FindAsync(x => x.Team.Id == teamId));
         }
 
         public async Task<IEnumerable<TeamSelectedSteamIdentity>> FindAllFrom(SteamIdentity steamIdentity)
         {
-            return _liteDb.LiteDatabase.GetCollection<TeamSelectedSteamIdentity>("TeamSelectedSteamIdentity")
+            return (await _liteDb.LiteDatabaseAsync.GetCollection<TeamSelectedSteamIdentity>("TeamSelectedSteamIdentity")
                 .Include(x => x.SteamIdentity)
                 .Include(x => x.SteamIdentity.LiteDbUser)
                 .Include(x => x.Team)
-                .Find(x => x.SteamIdentity.Id == steamIdentity.Id);
+                .FindAsync(x => x.SteamIdentity.Id == steamIdentity.Id));
         }
 
         public async Task<TeamSelectedSteamIdentity> FindOne(int id)
         {
-            return _liteDb.LiteDatabase.GetCollection<TeamSelectedSteamIdentity>("TeamSelectedSteamIdentity")
+            return await _liteDb.LiteDatabaseAsync.GetCollection<TeamSelectedSteamIdentity>("TeamSelectedSteamIdentity")
                 .Include(x => x.SteamIdentity)
                 .Include(x => x.SteamIdentity.LiteDbUser)
                 .Include(x => x.Team)
-                .Find(x => x.Id == id).FirstOrDefault();
+                .FindOneAsync(x => x.Id == id);
         }
 
         public async Task<TeamSelectedSteamIdentity> FindOne(string steamIdentityId)
         {
-            return _liteDb.LiteDatabase.GetCollection<TeamSelectedSteamIdentity>("TeamSelectedSteamIdentity")
+            return await _liteDb.LiteDatabaseAsync.GetCollection<TeamSelectedSteamIdentity>("TeamSelectedSteamIdentity")
                 .Include(x => x.SteamIdentity)
                 .Include(x => x.SteamIdentity.LiteDbUser)
                 .Include(x => x.Team)
-                .Find(x => x.SteamIdentity.Id == steamIdentityId).FirstOrDefault();
+                .FindOneAsync(x => x.SteamIdentity.Id == steamIdentityId);
         }
 
         public async Task<TeamSelectedSteamIdentity> FindOne(int teamId, string steamIdentityId)
         {
-            return _liteDb.LiteDatabase.GetCollection<TeamSelectedSteamIdentity>("TeamSelectedSteamIdentity")
+            return await _liteDb.LiteDatabaseAsync.GetCollection<TeamSelectedSteamIdentity>("TeamSelectedSteamIdentity")
                 .Include(x => x.SteamIdentity)
                 .Include(x => x.SteamIdentity.LiteDbUser)
                 .Include(x => x.Team)
-                .Find(x => x.Team.Id == teamId && x.SteamIdentity.Id == steamIdentityId).FirstOrDefault();
+                .FindOneAsync(x => x.Team.Id == teamId && x.SteamIdentity.Id == steamIdentityId);
         }
 
         public async Task<int> Insert(TeamSelectedSteamIdentity teamSelectedSteamIdentity)
         {
-            return _liteDb.LiteDatabase.GetCollection<TeamSelectedSteamIdentity>("TeamSelectedSteamIdentity")
-                .Insert(teamSelectedSteamIdentity);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<TeamSelectedSteamIdentity>("TeamSelectedSteamIdentity")
+                .InsertAsync(teamSelectedSteamIdentity);
         }
 
         public async Task<int> Upsert(List<TeamSelectedSteamIdentity> teamSelectedSteamIdentities)
         {
-            return _liteDb.LiteDatabase.GetCollection<TeamSelectedSteamIdentity>("TeamSelectedSteamIdentity")
-                .Upsert(teamSelectedSteamIdentities);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<TeamSelectedSteamIdentity>("TeamSelectedSteamIdentity")
+                .UpsertAsync(teamSelectedSteamIdentities);
         }
 
         public async Task<bool> Update(TeamSelectedSteamIdentity teamSelectedSteamIdentity)
         {
-            return _liteDb.LiteDatabase.GetCollection<TeamSelectedSteamIdentity>("TeamSelectedSteamIdentity")
-                .Update(teamSelectedSteamIdentity);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<TeamSelectedSteamIdentity>("TeamSelectedSteamIdentity")
+                .UpdateAsync(teamSelectedSteamIdentity);
         }
 
         public async Task<bool> Delete(int id)
         {
-            return _liteDb.LiteDatabase.GetCollection<TeamSelectedSteamIdentity>("TeamSelectedSteamIdentity")
-                .Delete(id);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<TeamSelectedSteamIdentity>("TeamSelectedSteamIdentity")
+                .DeleteAsync(id);
         }
     }
 }

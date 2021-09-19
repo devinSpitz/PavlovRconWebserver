@@ -37,9 +37,6 @@ namespace PavlovRconWebserver
             JobStorage.Current = new MemoryStorage();
             var connectionString = Configuration.GetConnectionString("DefaultConnection");
             services.AddLiteDBIdentity(connectionString).AddDefaultTokenProviders();
-            //services.AddLiteAsyncDBIdentity(connectionString).AddDefaultTokenProviders();
-            
-            var db = new LiteDatabaseAsync("Filename=mydatabase.db;Connection=shared;Password=hunter2");
             // Add LiteDB Dependency. Thare are three ways to set database:
             // 1. By default it uses the first connection string on appsettings.json, ConnectionStrings section.
             services.AddScoped<SshServerSerivce>();
@@ -64,6 +61,7 @@ namespace PavlovRconWebserver
             services.AddScoped<SteamService>();
             services.AddSingleton(Configuration);
             services.AddScoped<IEmailSender, EmailSender>();
+            
             
             
             

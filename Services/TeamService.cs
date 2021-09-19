@@ -36,31 +36,31 @@ namespace PavlovRconWebserver.Services
 
         public async Task<IEnumerable<Team>> FindAll()
         {
-            return _liteDb.LiteDatabase.GetCollection<Team>("Team")
-                .FindAll().OrderByDescending(x => x.Id);
+            return (await _liteDb.LiteDatabaseAsync.GetCollection<Team>("Team")
+                .FindAllAsync()).OrderByDescending(x => x.Id);
         }
 
         public async Task<Team> FindOne(int id)
         {
-            return _liteDb.LiteDatabase.GetCollection<Team>("Team")
-                .Find(x => x.Id == id).FirstOrDefault();
+            return await _liteDb.LiteDatabaseAsync.GetCollection<Team>("Team")
+                .FindOneAsync(x => x.Id == id);
         }
 
         public async Task<Team> FindOne(string name)
         {
-            return _liteDb.LiteDatabase.GetCollection<Team>("Team")
-                .Find(x => x.Name == name).FirstOrDefault();
+            return await _liteDb.LiteDatabaseAsync.GetCollection<Team>("Team")
+                .FindOneAsync(x => x.Name == name);
         }
 
         public async Task<bool> Upsert(Team team)
         {
-            return _liteDb.LiteDatabase.GetCollection<Team>("Team")
-                .Upsert(team);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<Team>("Team")
+                .UpsertAsync(team);
         }
 
         public async Task<bool> Delete(int id)
         {
-            return _liteDb.LiteDatabase.GetCollection<Team>("Team").Delete(id);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<Team>("Team").DeleteAsync(id);
         }
     }
 }

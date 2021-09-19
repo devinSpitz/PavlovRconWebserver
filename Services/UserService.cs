@@ -6,6 +6,7 @@ using LiteDB;
 using LiteDB.Identity.Database;
 using LiteDB.Identity.Models;
 using Microsoft.AspNetCore.Identity;
+using PavlovRconWebserver.Extensions;
 
 namespace PavlovRconWebserver.Services
 {
@@ -26,22 +27,22 @@ namespace PavlovRconWebserver.Services
         public async Task<IEnumerable<LiteDbUser>> FindAllInRole(string roleId)
         {
             var liteDbUsers = new List<LiteDbUser>();
-            foreach (var user in FindAll())
+            foreach (var user in await FindAll())
                 if (await _userManager.IsInRoleAsync(user, roleId))
                     liteDbUsers.Add(user);
 
             return liteDbUsers;
         }
 
-        public IEnumerable<LiteDbUser> FindAll()
+        public async Task<IEnumerable<LiteDbUser>> FindAll()
         {
-            return _liteDb.LiteDatabase.GetCollection<LiteDbUser>("LiteDbUser")
-                .FindAll();
+            return await _liteDb.LiteDatabaseAsync.GetCollection<LiteDbUser>("LiteDbUser")
+                .FindAllAsync();
         }
 
-        public bool Delete(string id)
+        public async Task<bool> Delete(string id)
         {
-            return _liteDb.LiteDatabase.GetCollection<LiteDbUser>("LiteDbUser").Delete(new ObjectId(id));
+            return await _liteDb.LiteDatabaseAsync.GetCollection<LiteDbUser>("LiteDbUser").DeleteAsync(new ObjectId(id));
         }
 
 

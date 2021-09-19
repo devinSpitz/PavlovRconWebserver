@@ -31,9 +31,9 @@ namespace PavlovRconWebserver.Models
         public List<PavlovServerGameIniMap> MapRotation { get; set; } =
             new List<PavlovServerGameIniMap>(); // example string = (MapId="UGC1758245796", GameMode="GUN")
 
-        public async Task<bool> ReadFromFile(PavlovServer pavlovServer, RconService rconService)
+        public bool ReadFromFile(PavlovServer pavlovServer)
         {
-            var gameIniContent = await RconStatic.GetFile(pavlovServer,
+            var gameIniContent = RconStatic.GetFile(pavlovServer,
                 pavlovServer.ServerFolderPath + FilePaths.GameIni);
             var lines = gameIniContent.Split("\n");
             var first = true; // cause the first line is to ignore

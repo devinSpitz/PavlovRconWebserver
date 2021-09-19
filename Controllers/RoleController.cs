@@ -76,7 +76,7 @@ namespace PavlovRconWebserver.Controllers
             var role = await roleManager.FindByIdAsync(id);
             var members = new List<LiteDbUser>();
             var nonMembers = new List<LiteDbUser>();
-            foreach (var user in _userService.FindAll())
+            foreach (var user in await _userService.FindAll())
             {
                 var singleUser = await userManager.IsInRoleAsync(user, role.Name) ? members : nonMembers;
                 singleUser.Add(user);

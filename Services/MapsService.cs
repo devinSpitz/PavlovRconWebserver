@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using LiteDB.Identity.Database;
+using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
 
 namespace PavlovRconWebserver.Services
@@ -10,7 +11,6 @@ namespace PavlovRconWebserver.Services
     {
         private readonly ILiteDbIdentityContext _liteDb;
 
-
         public MapsService(ILiteDbIdentityContext liteDbContext)
         {
             _liteDb = liteDbContext;
@@ -18,25 +18,25 @@ namespace PavlovRconWebserver.Services
 
         public async Task<IEnumerable<Map>> FindAll()
         {
-            return _liteDb.LiteDatabase.GetCollection<Map>("Map")
-                .FindAll().OrderByDescending(x => x.Id);
+            return (await _liteDb.LiteDatabaseAsync.GetCollection<Map>("Map")
+                .FindAllAsync()).OrderByDescending(x => x.Id);
         }
 
         public async Task<Map> FindOne(string id)
         {
-            return _liteDb.LiteDatabase.GetCollection<Map>("Map")
-                .Find(x => x.Id == id).FirstOrDefault();
+            return await _liteDb.LiteDatabaseAsync.GetCollection<Map>("Map")
+                .FindOneAsync(x => x.Id == id);
         }
 
         public async Task<bool> Upsert(Map map)
         {
-            return _liteDb.LiteDatabase.GetCollection<Map>("Map")
-                .Upsert(map);
+            return (await _liteDb.LiteDatabaseAsync.GetCollection<Map>("Map")
+                .UpsertAsync(map));
         }
 
         public async Task<bool> Delete(string id)
         {
-            return _liteDb.LiteDatabase.GetCollection<Map>("Map").Delete(id);
+            return (await _liteDb.LiteDatabaseAsync.GetCollection<Map>("Map").DeleteAsync(id));
         }
     }
 }

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using LiteDB.Identity.Database;
+using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
 
 namespace PavlovRconWebserver.Services
@@ -17,40 +18,40 @@ namespace PavlovRconWebserver.Services
 
         public async Task<IEnumerable<ServerSelectedMap>> FindAllFrom(PavlovServer pavlovServer)
         {
-            return _liteDb.LiteDatabase.GetCollection<ServerSelectedMap>("ServerSelectedMap")
+            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedMap>("ServerSelectedMap")
                 .Include(x => x.Map)
                 .Include(x => x.PavlovServer)
-                .Find(x => x.PavlovServer.Id == pavlovServer.Id);
+                .FindAsync(x => x.PavlovServer.Id == pavlovServer.Id);
         }
 
 
         public async Task<int> Insert(ServerSelectedMap serverSelectedMap)
         {
-            return _liteDb.LiteDatabase.GetCollection<ServerSelectedMap>("ServerSelectedMap")
-                .Insert(serverSelectedMap);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedMap>("ServerSelectedMap")
+                .InsertAsync(serverSelectedMap);
         }
 
         public async Task<int> Upsert(List<ServerSelectedMap> serverSelectedMaps)
         {
-            return _liteDb.LiteDatabase.GetCollection<ServerSelectedMap>("ServerSelectedMap")
-                .Upsert(serverSelectedMaps);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedMap>("ServerSelectedMap")
+                .UpsertAsync(serverSelectedMaps);
         }
 
         public async Task<bool> Update(ServerSelectedMap serverSelectedMap)
         {
-            return _liteDb.LiteDatabase.GetCollection<ServerSelectedMap>("ServerSelectedMap")
-                .Update(serverSelectedMap);
+            return await  _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedMap>("ServerSelectedMap")
+                .UpdateAsync(serverSelectedMap);
         }
 
         public async Task<bool> Delete(int id)
         {
-            return _liteDb.LiteDatabase.GetCollection<ServerSelectedMap>("ServerSelectedMap").Delete(id);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedMap>("ServerSelectedMap").DeleteAsync(id);
         }
 
         public async Task<int> DeleteFromServer(PavlovServer server)
         {
-            return _liteDb.LiteDatabase.GetCollection<ServerSelectedMap>("ServerSelectedMap")
-                .DeleteMany(x => x.PavlovServer == server);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedMap>("ServerSelectedMap")
+                .DeleteManyAsync(x => x.PavlovServer == server);
         }
     }
 }

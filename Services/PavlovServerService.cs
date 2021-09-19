@@ -44,21 +44,21 @@ namespace PavlovRconWebserver.Services
 
         public async Task<IEnumerable<PavlovServer>> FindAll()
         {
-            return _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer").Include(x => x.SshServer)
-                .FindAll().OrderByDescending(x => x.Id);
+            return (await _liteDb.LiteDatabaseAsync.GetCollection<PavlovServer>("PavlovServer").Include(x => x.SshServer)
+                .FindAllAsync()).OrderByDescending(x => x.Id);
         }
 
-        public List<PavlovServer> FindAllFrom(int sshServerId)
+        public async Task<List<PavlovServer>> FindAllFrom(int sshServerId)
         {
-            return _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer").Include(x => x.SshServer)
-                .Find(x => x.SshServer.Id == sshServerId).ToList();
+            return (await _liteDb.LiteDatabaseAsync.GetCollection<PavlovServer>("PavlovServer").Include(x => x.SshServer)
+                .FindAsync(x => x.SshServer.Id == sshServerId)).ToList();
         }
 
         public async Task<PavlovServer> FindOne(int id)
         {
-            var pavlovServer = _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer")
+            var pavlovServer = await _liteDb.LiteDatabaseAsync.GetCollection<PavlovServer>("PavlovServer")
                 .Include(x => x.SshServer)
-                .Find(x => x.Id == id).FirstOrDefault();
+                .FindOneAsync(x => x.Id == id);
             return pavlovServer;
         }
 
@@ -105,7 +105,7 @@ namespace PavlovRconWebserver.Services
                 {
                     result += RconStatic.InstallPavlovServerService(server);
                 }
-                catch (CommandException e)
+                catch (CommandException)
                 {
                     //If crash inside here the user login is still root. If the root login is bad this will fail to remove the server afterwards
                     OverwrideTheNormalSSHLoginData(server, oldSSHcrid);
@@ -314,8 +314,8 @@ namespace PavlovRconWebserver.Services
         {
             if (withCheck)
                 pavlovServer = await ValidatePavlovServer(pavlovServer);
-            return _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer")
-                .Upsert(pavlovServer);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<PavlovServer>("PavlovServer")
+                .UpsertAsync(pavlovServer);
         }
 
         public async Task<bool> Delete(int id)
@@ -324,7 +324,7 @@ namespace PavlovRconWebserver.Services
             await _serverSelectedMapService.DeleteFromServer(server);
             await _serverSelectedModsService.DeleteFromServer(server);
             await _serverSelectedWhitelistService.DeleteFromServer(server);
-            return _liteDb.LiteDatabase.GetCollection<PavlovServer>("PavlovServer").Delete(server.Id);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<PavlovServer>("PavlovServer").DeleteAsync(server.Id);
         }
     }
 }

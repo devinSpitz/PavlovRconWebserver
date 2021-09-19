@@ -17,8 +17,10 @@ namespace PavlovRconWebserver.Services
         private readonly SshServerSerivce _sshServerSerivce;
 
         public SteamService(SshServerSerivce sshServerSerivce,
+            MapsService mapsService,
             ServerSelectedMapService serverSelectedMapService)
         {
+            _mapsService = mapsService;
             _sshServerSerivce = sshServerSerivce;
             _serverSelectedMapService = serverSelectedMapService;
         }

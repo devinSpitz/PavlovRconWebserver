@@ -12,10 +12,11 @@
     <PackageReference Include="Hangfire.AspNetCore" Version="1.7.25" />
     <PackageReference Include="Hangfire.MemoryStorage" Version="1.7.0" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.30" />
-    <PackageReference Include="LiteDB.Async" Version="0.0.11" />
-    <PackageReference Include="LiteDB.Identity" Version="1.0.3" />
+    <PackageReference Include="LiteDB" Version="5.0.11" />
+    <PackageReference Include="LiteDB.Identity.Async" Version="1.0.0" />
     <PackageReference Include="LiteGuard" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="3.1.12" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="3.1.4" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1-beta1" />
     <PackageReference Include="SSH.NET" Version="2020.0.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.0.7" />
@@ -127,6 +128,11 @@
   <ItemGroup>
     <Compile Remove="Extensions\UrlHelperExtensions.cs" />
     <Compile Remove="Models\InbuildUser.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="LiteDB.Identity, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>Libraries\LiteDB.Identity.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

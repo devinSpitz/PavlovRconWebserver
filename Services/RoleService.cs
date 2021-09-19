@@ -1,4 +1,5 @@
 using LiteDB.Identity.Database;
+using PavlovRconWebserver.Extensions;
 
 namespace PavlovRconWebserver.Services
 {

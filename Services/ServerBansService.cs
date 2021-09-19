@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using LiteDB.Identity.Database;
+using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
 
 namespace PavlovRconWebserver.Services
@@ -19,21 +20,21 @@ namespace PavlovRconWebserver.Services
 
         public async Task<IEnumerable<ServerBans>> FindAll()
         {
-            return _liteDb.LiteDatabase.GetCollection<ServerBans>("ServerBans")
-                .FindAll().OrderByDescending(x => x.Id);
+            return (await _liteDb.LiteDatabaseAsync.GetCollection<ServerBans>("ServerBans")
+                .FindAllAsync()).OrderByDescending(x => x.Id);
         }
 
         public async Task<ServerBans> FindOne(int id)
         {
-            return _liteDb.LiteDatabase.GetCollection<ServerBans>("ServerBans")
-                .Find(x => x.Id == id).FirstOrDefault();
+            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerBans>("ServerBans")
+                .FindOneAsync(x => x.Id == id);
         }
 
         public async Task<List<ServerBans>> FindAllFromPavlovServerId(int pavlovServerId, bool getActive)
         {
-            var result = _liteDb.LiteDatabase.GetCollection<ServerBans>("ServerBans")
+            var result = (await _liteDb.LiteDatabaseAsync.GetCollection<ServerBans>("ServerBans")
                 .Include(x => x.PavlovServer)
-                .Find(x => x.PavlovServer.Id == pavlovServerId).ToList();
+                .FindAsync(x => x.PavlovServer.Id == pavlovServerId)).ToList();
 
             if (getActive)
                 result = result.Where(x =>
@@ -53,13 +54,13 @@ namespace PavlovRconWebserver.Services
 
         public async Task<bool> Upsert(ServerBans serverBan)
         {
-            return _liteDb.LiteDatabase.GetCollection<ServerBans>("ServerBans")
-                .Upsert(serverBan);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerBans>("ServerBans")
+                .UpsertAsync(serverBan);
         }
 
         public async Task<bool> Delete(int id)
         {
-            return _liteDb.LiteDatabase.GetCollection<ServerBans>("ServerBans").Delete(id);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerBans>("ServerBans").DeleteAsync(id);
         }
     }
 }

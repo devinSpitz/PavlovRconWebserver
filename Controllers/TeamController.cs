@@ -101,7 +101,7 @@ namespace PavlovRconWebserver.Controllers
                 if (!await CheckRightsTeamCaptainOrCaptain(0, bla)) return Unauthorized();
                 return View("SteamIdentity", new SteamIdentity
                 {
-                    LiteDbUsers = _userService.FindAll().ToList()
+                    LiteDbUsers = (await _userService.FindAll()).ToList()
                 });
             }
 
@@ -110,7 +110,7 @@ namespace PavlovRconWebserver.Controllers
 
 
             var steamIdentity = await _steamIdentityService.FindOne(steamIdentityId);
-            steamIdentity.LiteDbUsers = _userService.FindAll().ToList();
+            steamIdentity.LiteDbUsers = (await _userService.FindAll()).ToList();
             return View("SteamIdentity", steamIdentity);
         }
 
@@ -150,7 +150,7 @@ namespace PavlovRconWebserver.Controllers
             }
             //Handle more stuff can be seen in model
 
-            steamIdentity.LiteDbUsers = _userService.FindAll().ToList();
+            steamIdentity.LiteDbUsers = (await _userService.FindAll()).ToList();
             return View("SteamIdentity", steamIdentity);
         }
 
@@ -164,7 +164,7 @@ namespace PavlovRconWebserver.Controllers
                 bla = new SteamIdentity
                 {
                     LiteDbUserId = userId,
-                    LiteDbUser = _userService.FindAll().FirstOrDefault(x => x.Id == new ObjectId(userId))
+                    LiteDbUser = (await _userService.FindAll()).FirstOrDefault(x => x.Id == new ObjectId(userId))
                 };
             //Handle more stuff can be seen in model
 
@@ -181,7 +181,7 @@ namespace PavlovRconWebserver.Controllers
             var bla = await _steamIdentityService.FindOne(new ObjectId(userId));
             var hisOwn = userId == steamIdentity.LiteDbUserId;
             var currentOwner = await _steamIdentityService.FindOne(steamIdentity.Id);
-            steamIdentity.LiteDbUsers = _userService.FindAll().ToList();
+            steamIdentity.LiteDbUsers = (await _userService.FindAll()).ToList();
             if (steamIdentity.Id == null || steamIdentity.Id == "0")
             {
                 if (!await CheckRightsTeamCaptainOrCaptain(0, bla) || !hisOwn) return Unauthorized();
@@ -193,7 +193,7 @@ namespace PavlovRconWebserver.Controllers
                         return Unauthorized();
             }
 
-            steamIdentity.LiteDbUser = _userService.FindAll()
+            steamIdentity.LiteDbUser = (await _userService.FindAll())
                 .FirstOrDefault(x => x.Id == new ObjectId(steamIdentity.LiteDbUserId));
 
             if (!ModelState.IsValid)

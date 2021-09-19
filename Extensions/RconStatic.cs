@@ -914,7 +914,7 @@ WantedBy = multi-user.target";
             return connectionInfo;
         }
 
-        public static async Task<string> GetFile(PavlovServer server, string path)
+        public static string GetFile(PavlovServer server, string path)
         {
             var connectionResult = new ConnectionResult();
             var type = GetAuthType(server);

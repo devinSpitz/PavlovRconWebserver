@@ -209,7 +209,6 @@ namespace PavlovRconWebserver.Services
 
                 //Write whitelist and set server settings
 
-                var whitelist = "";
                 try
                 {
                     RconStatic.WriteFile(server,
@@ -380,25 +379,25 @@ namespace PavlovRconWebserver.Services
                     if (team0 != null)
                     {
                         Console.WriteLine("SwitchTeam 0 " + pavlovServerPlayer.UniqueId);
-                        await SendCommandTillDone(server, "SwitchTeam 0 " + pavlovServerPlayer.UniqueId);
+                        SendCommandTillDone(server, "SwitchTeam 0 " + pavlovServerPlayer.UniqueId);
                     }
                     else if (team1 != null)
                     {
                         Console.WriteLine("SwitchTeam 1 " + pavlovServerPlayer.UniqueId);
-                        await SendCommandTillDone(server, "SwitchTeam 1 " + pavlovServerPlayer.UniqueId);
+                        SendCommandTillDone(server, "SwitchTeam 1 " + pavlovServerPlayer.UniqueId);
                     }
                 }
                 //All Players are on the right team now
                 //ResetSND
 
                 Console.WriteLine("start ResetSND!");
-                await SendCommandTillDone(server, "ResetSND");
+                SendCommandTillDone(server, "ResetSND");
                 match.Status = Status.OnGoing;
                 await Upsert(match);
             }
         }
 
-        private async Task<string> SendCommandTillDone(PavlovServer server,
+        private string SendCommandTillDone(PavlovServer server,
             string command, int timeoutInSeconds = 60)
         {
             var task = Task.Run(() => SendCommandTillDoneChild(server, command));
@@ -469,18 +468,18 @@ namespace PavlovRconWebserver.Services
 
         public async Task<IEnumerable<Match>> FindAll()
         {
-            return _liteDb.LiteDatabase.GetCollection<Match>("Match")
+            return (await _liteDb.LiteDatabaseAsync.GetCollection<Match>("Match")
                 .Include(x => x.PavlovServer)
-                .FindAll().OrderByDescending(x => x.Id);
+                .FindAllAsync()).OrderByDescending(x => x.Id);
         }
 
         public async Task<Match> FindOne(int id)
         {
             var selected = await _matchSelectedSteamIdentitiesService.FindAllSelectedForMatch(id);
-            var match = _liteDb.LiteDatabase.GetCollection<Match>("Match")
+            var match = (await _liteDb.LiteDatabaseAsync.GetCollection<Match>("Match")
                 .Include(x => x.Team0)
                 .Include(x => x.Team1)
-                .Find(x => x.Id == id).FirstOrDefault();
+                .FindOneAsync(x => x.Id == id));
             if (match == null) return null;
             match.PavlovServer = await _pavlovServerService.FindOne(match.PavlovServer.Id);
             match.MatchSelectedSteamIdentities = selected.ToList();
@@ -552,14 +551,14 @@ namespace PavlovRconWebserver.Services
             var result = false;
             if (match.Id == 0)
             {
-                var tmp = _liteDb.LiteDatabase.GetCollection<Match>("Match")
-                    .Insert(match);
+                var tmp = await _liteDb.LiteDatabaseAsync.GetCollection<Match>("Match")
+                    .InsertAsync(match);
                 if (tmp > 0) result = true;
             }
             else
             {
-                result = _liteDb.LiteDatabase.GetCollection<Match>("Match")
-                    .Update(match);
+                result = await _liteDb.LiteDatabaseAsync.GetCollection<Match>("Match")
+                    .UpdateAsync(match);
             }
 
             return result;
@@ -569,7 +568,7 @@ namespace PavlovRconWebserver.Services
         {
             await _matchSelectedTeamSteamIdentitiesService.RemoveFromMatch(id);
             await _matchSelectedSteamIdentitiesService.RemoveFromMatch(id);
-            return _liteDb.LiteDatabase.GetCollection<Match>("Match").Delete(id);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<Match>("Match").DeleteAsync(id);
         }
 
         public async Task<bool> CanBedeleted(int id)

@@ -92,7 +92,7 @@ namespace PavlovRconWebserver.Services
                 try
                 {
                     var bans = await _serverBansService.FindAllFromPavlovServerId(signleServer.Id, true);
-                    await SaveBlackListEntry(signleServer, bans);
+                    SaveBlackListEntry(signleServer, bans);
                 }
                 catch (Exception e)
                 {
@@ -100,11 +100,11 @@ namespace PavlovRconWebserver.Services
                 }
         }
 
-        public async Task<bool> SaveBlackListEntry(PavlovServer server, List<ServerBans> NewBlackListContent)
+        public bool SaveBlackListEntry(PavlovServer server, List<ServerBans> NewBlackListContent)
         {
             var blacklistArray = NewBlackListContent.Select(x => x.SteamId).ToArray();
             var content = string.Join(Environment.NewLine, blacklistArray);
-            var blacklist = RconStatic.WriteFile(server, server.ServerFolderPath + FilePaths.BanList, content);
+            RconStatic.WriteFile(server, server.ServerFolderPath + FilePaths.BanList, content);
             return true;
         }
 
@@ -298,13 +298,13 @@ namespace PavlovRconWebserver.Services
             return RconStatic.EndConnection(result);
         }
 
-        public async Task<List<ServerBans>> GetServerBansFromBlackList(PavlovServer server, List<ServerBans> banlist)
+        public List<ServerBans> GetServerBansFromBlackList(PavlovServer server, List<ServerBans> banlist)
         {
             var answer = "";
 
             try
             {
-                answer = await RconStatic.GetFile(server, server.ServerFolderPath + FilePaths.BanList);
+                answer = RconStatic.GetFile(server, server.ServerFolderPath + FilePaths.BanList);
             }
             catch (Exception e)
             {

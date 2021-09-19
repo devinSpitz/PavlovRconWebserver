@@ -220,7 +220,7 @@ namespace PavlovRconWebserver.Controllers
             var banlist = await _serverBansService.FindAllFromPavlovServerId(ban.PavlovServer.Id, true);
             try
             {
-                banlist = await _service.GetServerBansFromBlackList(ban.PavlovServer, banlist);
+                banlist = _service.GetServerBansFromBlackList(ban.PavlovServer, banlist);
             }
             catch (CommandException e)
             {
@@ -234,7 +234,7 @@ namespace PavlovRconWebserver.Controllers
                 banlist.Add(ban);
                 try
                 {
-                    await _service.SaveBlackListEntry(ban.PavlovServer, banlist);
+                    _service.SaveBlackListEntry(ban.PavlovServer, banlist);
                 }
                 catch (CommandException e)
                 {
@@ -260,7 +260,7 @@ namespace PavlovRconWebserver.Controllers
             //Remove from blacklist file
             try
             {
-                banlist = await _service.GetServerBansFromBlackList(pavlovServer, new List<ServerBans>());
+                banlist = _service.GetServerBansFromBlackList(pavlovServer, new List<ServerBans>());
             }
             catch (CommandException e)
             {
@@ -274,7 +274,7 @@ namespace PavlovRconWebserver.Controllers
                 banlist.Remove(toRemove);
                 try
                 {
-                    await _service.SaveBlackListEntry(pavlovServer, banlist);
+                    _service.SaveBlackListEntry(pavlovServer, banlist);
                 }
                 catch (CommandException e)
                 {
@@ -381,7 +381,7 @@ namespace PavlovRconWebserver.Controllers
 
                 serverInfo = result;
             }
-            catch (CommandException e)
+            catch (CommandException)
             {
             }
 

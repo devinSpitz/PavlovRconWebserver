@@ -273,7 +273,7 @@ namespace PavlovRconWebserver.Controllers
             var server = await _pavlovServerService.FindOne(serverId);
             try
             {
-                await viewModel.ReadFromFile(server, _rconService);
+                viewModel.ReadFromFile(server);
             }
             catch (CommandException e)
             {
@@ -404,7 +404,7 @@ namespace PavlovRconWebserver.Controllers
             if (await _userservice.IsUserNotInRole("Admin", HttpContext.User)) return new UnauthorizedResult();
 
             var server = await _pavlovServerService.FindOne(serverId);
-            var tmpUserIds = _userservice.FindAll().ToList();
+            var tmpUserIds = (await _userservice.FindAll()).ToList();
             var userIds = new List<LiteDbUser>();
             var isAdmin = false;
             var isMod = false;

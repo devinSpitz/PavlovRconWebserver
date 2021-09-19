@@ -32,11 +32,11 @@ namespace PavlovRconWebserver.Services
                 await Insert(entry);
             }
 
-            await SaveToFile(server, steamIds);
+            SaveToFile(server, steamIds);
             return true;
         }
 
-        private async Task<bool> SaveToFile(PavlovServer pavlovServer, List<string> steamIds)
+        private bool SaveToFile(PavlovServer pavlovServer, List<string> steamIds)
         {
             var lines = steamIds.Select(steamIdentity => steamIdentity + ";").ToList();
             var content = string.Join(Environment.NewLine, lines);
@@ -46,59 +46,59 @@ namespace PavlovRconWebserver.Services
 
         public async Task<IEnumerable<ServerSelectedWhiteList>> FindAll()
         {
-            return _liteDb.LiteDatabase.GetCollection<ServerSelectedWhiteList>("ServerSelectedWhiteList")
+            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedWhiteList>("ServerSelectedWhiteList")
                 .Include(x => x.PavlovServer)
-                .FindAll();
+                .FindAllAsync();
         }
 
         public async Task<IEnumerable<ServerSelectedWhiteList>> FindAllFrom(PavlovServer sshServer)
         {
-            return _liteDb.LiteDatabase.GetCollection<ServerSelectedWhiteList>("ServerSelectedWhiteList")
+            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedWhiteList>("ServerSelectedWhiteList")
                 .Include(x => x.PavlovServer)
-                .Find(x => x.PavlovServer.Id == sshServer.Id);
+                .FindAsync(x => x.PavlovServer.Id == sshServer.Id);
         }
 
         public async Task<IEnumerable<ServerSelectedWhiteList>> FindAllFrom(string steamIdentityId)
         {
-            return _liteDb.LiteDatabase.GetCollection<ServerSelectedWhiteList>("ServerSelectedWhiteList")
+            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedWhiteList>("ServerSelectedWhiteList")
                 .Include(x => x.PavlovServer)
-                .Find(x => x.SteamIdentityId == steamIdentityId);
+                .FindAsync(x => x.SteamIdentityId == steamIdentityId);
         }
 
         public async Task<ServerSelectedWhiteList> FindOne(int id)
         {
-            return _liteDb.LiteDatabase.GetCollection<ServerSelectedWhiteList>("ServerSelectedWhiteList")
-                .Find(x => x.Id == id).FirstOrDefault();
+            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedWhiteList>("ServerSelectedWhiteList")
+                .FindOneAsync(x => x.Id == id);
         }
 
         public async Task<ServerSelectedWhiteList> FindSelectedMap(int serverId, string steamIdentityId)
         {
-            return _liteDb.LiteDatabase.GetCollection<ServerSelectedWhiteList>("ServerSelectedWhiteList")
+            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedWhiteList>("ServerSelectedWhiteList")
                 .Include(x => x.PavlovServer)
-                .Find(x => x.SteamIdentityId == steamIdentityId && x.PavlovServer.Id == serverId).FirstOrDefault();
+                .FindOneAsync(x => x.SteamIdentityId == steamIdentityId && x.PavlovServer.Id == serverId);
         }
 
         private async Task<int> Insert(ServerSelectedWhiteList serverSelectedMap)
         {
-            return _liteDb.LiteDatabase.GetCollection<ServerSelectedWhiteList>("ServerSelectedWhiteList")
-                .Insert(serverSelectedMap);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedWhiteList>("ServerSelectedWhiteList")
+                .InsertAsync(serverSelectedMap);
         }
 
         public async Task<bool> Update(ServerSelectedWhiteList serverSelectedMap)
         {
-            return _liteDb.LiteDatabase.GetCollection<ServerSelectedWhiteList>("ServerSelectedWhiteList")
-                .Update(serverSelectedMap);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedWhiteList>("ServerSelectedWhiteList")
+                .UpdateAsync(serverSelectedMap);
         }
 
         public async Task<int> DeleteFromServer(PavlovServer server)
         {
-            return _liteDb.LiteDatabase.GetCollection<ServerSelectedWhiteList>("ServerSelectedWhiteList")
-                .DeleteMany(x => x.PavlovServer == server);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedWhiteList>("ServerSelectedWhiteList")
+                .DeleteManyAsync(x => x.PavlovServer == server);
         }
 
         public async Task<bool> Delete(int id)
         {
-            return _liteDb.LiteDatabase.GetCollection<ServerSelectedWhiteList>("ServerSelectedWhiteList").Delete(id);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedWhiteList>("ServerSelectedWhiteList").DeleteAsync(id);
         }
     }
 }

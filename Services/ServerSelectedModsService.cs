@@ -77,36 +77,36 @@ namespace PavlovRconWebserver.Services
 
         public async Task<IEnumerable<ServerSelectedMods>> FindAll()
         {
-            return _liteDb.LiteDatabase.GetCollection<ServerSelectedMods>("ServerSelectedMods")
+            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedMods>("ServerSelectedMods")
                 .Include(x => x.LiteDbUser)
                 .Include(x => x.PavlovServer)
-                .FindAll();
+                .FindAllAsync();
         }
 
         public async Task<IEnumerable<ServerSelectedMods>> FindAllFrom(PavlovServer sshServer)
         {
-            return _liteDb.LiteDatabase.GetCollection<ServerSelectedMods>("ServerSelectedMods")
+            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedMods>("ServerSelectedMods")
                 .Include(x => x.LiteDbUser)
                 .Include(x => x.PavlovServer)
-                .Find(x => x.PavlovServer.Id == sshServer.Id);
+                .FindAsync(x => x.PavlovServer.Id == sshServer.Id);
         }
 
 
         public async Task<int> Insert(ServerSelectedMods serverSelectedMap)
         {
-            return _liteDb.LiteDatabase.GetCollection<ServerSelectedMods>("ServerSelectedMods")
-                .Insert(serverSelectedMap);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedMods>("ServerSelectedMods")
+                .InsertAsync(serverSelectedMap);
         }
 
         public async Task<int> DeleteFromServer(PavlovServer server)
         {
-            return _liteDb.LiteDatabase.GetCollection<ServerSelectedMods>("ServerSelectedMods")
-                .DeleteMany(x => x.PavlovServer == server);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedMods>("ServerSelectedMods")
+                .DeleteManyAsync(x => x.PavlovServer == server);
         }
 
         public async Task<bool> Delete(int id)
         {
-            return _liteDb.LiteDatabase.GetCollection<ServerSelectedMods>("ServerSelectedMods").Delete(id);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedMods>("ServerSelectedMods").DeleteAsync(id);
         }
     }
 }

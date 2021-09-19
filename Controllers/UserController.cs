@@ -19,13 +19,13 @@ namespace PavlovRconWebserver.Controllers
         {
             await _service.CreateDefaultRoles();
             if (await _service.IsUserNotInRole("Admin", HttpContext.User)) return new UnauthorizedResult();
-            return View("Index", _service.FindAll());
+            return View("Index", await _service.FindAll());
         }
 
         public async Task<IActionResult> DeleteUser(string id)
         {
             if (await _service.IsUserNotInRole("Admin", HttpContext.User)) return new UnauthorizedResult();
-            _service.Delete(id);
+            await _service.Delete(id);
             return await Index();
         }
     }

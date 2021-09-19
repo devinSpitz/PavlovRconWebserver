@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using LiteDB;
 using LiteDB.Identity.Database;
+using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
 
 namespace PavlovRconWebserver.Services
@@ -19,41 +20,41 @@ namespace PavlovRconWebserver.Services
 
         public async Task<IEnumerable<SteamIdentity>> FindAll()
         {
-            return _liteDb.LiteDatabase.GetCollection<SteamIdentity>("SteamIdentity")
+            return (await _liteDb.LiteDatabaseAsync.GetCollection<SteamIdentity>("SteamIdentity")
                 .Include(x => x.LiteDbUser)
-                .FindAll().OrderByDescending(x => x.Id);
+                .FindAllAsync()).OrderByDescending(x => x.Id);
         }
 
 
         public async Task<SteamIdentity> FindOne(string id)
         {
-            return _liteDb.LiteDatabase.GetCollection<SteamIdentity>("SteamIdentity")
+            return await _liteDb.LiteDatabaseAsync.GetCollection<SteamIdentity>("SteamIdentity")
                 .Include(x => x.LiteDbUser)
-                .Find(x => x.Id == id).FirstOrDefault();
+                .FindOneAsync(x => x.Id == id);
         }
 
         public async Task<SteamIdentity> FindOne(ObjectId liteDbUserId)
         {
-            return _liteDb.LiteDatabase.GetCollection<SteamIdentity>("SteamIdentity")
+            return await _liteDb.LiteDatabaseAsync.GetCollection<SteamIdentity>("SteamIdentity")
                 .Include(x => x.LiteDbUser)
-                .Find(x => x.LiteDbUser.Id == liteDbUserId).FirstOrDefault();
+                .FindOneAsync(x => x.LiteDbUser.Id == liteDbUserId);
         }
 
         public async Task<IEnumerable<SteamIdentity>> FindAList(List<string> identities)
         {
-            return _liteDb.LiteDatabase.GetCollection<SteamIdentity>("SteamIdentity")
-                .FindAll().Where(x => identities.Contains(x.Id));
+            return (await _liteDb.LiteDatabaseAsync.GetCollection<SteamIdentity>("SteamIdentity")
+                .FindAllAsync()).Where(x => identities.Contains(x.Id));
         }
 
         public async Task<bool> Upsert(SteamIdentity steamIdentity)
         {
-            return _liteDb.LiteDatabase.GetCollection<SteamIdentity>("SteamIdentity")
-                .Upsert(steamIdentity);
+            return (await _liteDb.LiteDatabaseAsync.GetCollection<SteamIdentity>("SteamIdentity")
+                .UpsertAsync(steamIdentity));
         }
 
         public async Task<bool> Delete(long id)
         {
-            return _liteDb.LiteDatabase.GetCollection<SteamIdentity>("SteamIdentity").Delete(id);
+            return (await _liteDb.LiteDatabaseAsync.GetCollection<SteamIdentity>("SteamIdentity").DeleteAsync(id));
         }
     }
 }
