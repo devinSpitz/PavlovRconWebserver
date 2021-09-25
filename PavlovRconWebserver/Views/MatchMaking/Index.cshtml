@@ -1,0 +1,85 @@
+@using PavlovRconWebserver.Services
+@model IEnumerable<Match>
+
+@inject MatchService _matchService;
+@{
+    ViewBag.Title = "Matches";
+    Layout = "_Layout";
+}
+
+
+<h2>
+    @ViewBag.Title <a class="btn btn-sm btn-primary" href="@Url.Action("Index", new {showFinished = true})">Show Finished</a>
+    <a class="btn btn-sm btn-primary" href="@Url.Action("Index", new {showFinished = false})">Filter Finished</a>
+    <a class="btn btn-sm btn-primary" href="@Url.Action("CreateMatch")">
+        <span class="fas fa-plus"></span>
+    </a>
+</h2>
+@*<a asp-area="" asp-controller="MatchMaking" asp-action="EditServer">&#10133; Add Server</a>*@
+
+<table class="table table-striped table-responsive">
+    <thead>
+    <th>
+        Id
+    </th>
+    <th>
+        Name
+    </th>
+    <th>
+        Status
+    </th>
+    </thead>
+    <tbody>
+    @foreach (var match in Model)
+    {
+        <tr>
+            <td>
+                @*<a href="@Url.Action("DeleteServer", new {rconServer.Id})"><span>&#10060;</span></a>
+                <a href="@Url.Action("EditServer", "rconServer", new {serverId = rconServer.Id})"><span>Server &#8505;</span></a> or
+                <a href="@Url.Action("EditServerSelectedMaps", "rconServer", new {serverId = rconServer.Id})"><span>Maps &#128506;</span></a>*@
+                @match.Id
+                @if (await _matchService.CanBeDeleted(match.Id))
+                {
+                    <a class="btn btn-sm btn-danger" href="@Url.Action("Delete", new {match.Id})" onclick="return confirm('Are you sure you want to Delete?')">
+                        <span class="fas fa-trash-alt"></span>
+                    </a>
+                }
+                @if (match.isEditable())
+                {
+                    <a class="btn btn-sm btn-primary" href="@Url.Action("EditMatch", new {match.Id})">
+                        <span class="fas fa-edit"></span>
+                    </a>
+                }
+                @if (match.isStartable())
+                {
+                    <a class="btn btn-sm btn-primary" href="@Url.Action("StartMatch", new {match.Id})">
+                        <span class="fas fa-play"></span>
+                    </a>
+                }
+                @if (match.isForceStartable())
+                {
+                    <a class="btn btn-sm btn-primary" href="@Url.Action("ForceStartMatch", new {match.Id})">Force <span class="fas fa-play"></span></a>
+                }
+                @if (match.isForceStopatable())
+                {
+                    <a class="btn btn-sm btn-danger" href="@Url.Action("ForceStopMatch", new {match.Id})" onclick="return confirm('Are you sure you want to stop the server?')">Force <span class="fas fa-stop"></span></a>
+                }
+            </td>
+            <td>
+                @match.Name
+            </td>
+            <td>
+                @match.Status
+                @if (match.hasStats())
+                {
+                    <a class="btn btn-sm btn-primary" href="@Url.Action("PlayersFromMatches", "PublicViewLists", new {matchIds = new int[1] {match.Id}, backgroundColorHex = "#222", fontColorHex = "#ffffff"})"><span class="fas fa-eye"></span> Stats</a>
+                }
+                @if (match.isFinished())
+                {
+                    <a class="btn btn-sm btn-primary" href="@Url.Action("EditMatchResult", new {match.Id})"><span class="fas fa-edit"></span> Stats</a>
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
