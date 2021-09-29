@@ -1,18 +1,32 @@
-﻿using System;
+﻿using System.Linq;
 using Hangfire;
+using Hangfire.Annotations;
+using Hangfire.Dashboard;
 using Hangfire.MemoryStorage;
 using LiteDB.Identity.Async.Extensions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using PavlovRconWebserver;
 using PavlovRconWebserver.Services;
 
 namespace PavlovRconWebserver
 {
+    public class HangfireAuthorizeFilter : IDashboardAuthorizationFilter
+    {
+    
+        public bool Authorize(DashboardContext context)
+        {
+            var httpcontext = context.GetHttpContext();
+            return httpcontext.User.IsInRole("Admin");;
+        }
+    }
     public static class CustomRoles
     {
         public const string Admin = "Admin";
@@ -37,8 +51,9 @@ namespace PavlovRconWebserver
             services.AddHangfireServer(x =>
             {
                 x.WorkerCount = 10;
-            });
-            JobStorage.Current = new MemoryStorage();
+            }); 
+            GlobalConfiguration.Configuration.UseMemoryStorage();
+            // JobStorage.Current = new MemoryStorage();
             var connectionString = Configuration.GetConnectionString("DefaultConnection");
             services.AddLiteDbIdentityAsync(connectionString).AddDefaultTokenProviders();
             // Add LiteDB Dependency. Thare are three ways to set database:
@@ -68,14 +83,6 @@ namespace PavlovRconWebserver
             
             
             
-            
-            // services
-            //    .AddAuthentication(cfg =>
-            //    {
-            //       cfg.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-            //    })
-            //    .AddCookie();
-            // Add application services.
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v0.0.1", new OpenApiInfo
@@ -96,24 +103,13 @@ namespace PavlovRconWebserver
             else
                 app.UseExceptionHandler("/Home/Error");
 
-
             if (env.EnvironmentName != "Test")
             {
 
                 if (env.EnvironmentName == "Development")
                 {
 
-                    app.UseHangfireDashboard(
-                        "/hangfire"
-                        //,
-                        // new DashboardOptions
-                        // {
-                        //    Authorization = new IDashboardAuthorizationFilter[]
-                        //    {
-                        //       new DashboardAuthorizationFilter()
-                        //    }
-                        // }
-                    ); // Does not work on dotnet 3.1 and i can not compile dotnet 5.0 on my ubuntu right now.
+
                     // Enable middleware to serve generated Swagger as a JSON endpoint.
                     app.UseSwagger();
 
@@ -125,14 +121,6 @@ namespace PavlovRconWebserver
                     });
                 }
             }
-            // else
-            // {
-            //     if (env.EnvironmentName == "Test")
-            //     {
-            //         app.UseMiddleware<TestAuthenticationMiddleware>();
-            //         app.UseAuthorization()
-            //     }
-            // }
 
             app.UseStaticFiles();
 
@@ -140,6 +128,15 @@ namespace PavlovRconWebserver
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseHttpsRedirection();
+            
+            app.UseHangfireDashboard(
+                "/hangfire"
+                ,
+                new DashboardOptions
+                {
+                    Authorization = new[] { new HangfireAuthorizeFilter() }
+                }
+            );
             
             app.UseEndpoints(endpoints => { endpoints.MapDefaultControllerRoute(); });
             if (env.EnvironmentName != "Test")
@@ -167,15 +164,15 @@ namespace PavlovRconWebserver
                             Cron.Minutely()); // Check server states
                     }
 
-
                     RecurringJob.AddOrUpdate(
                         () => steamService.CrawlSteamMaps(),
-                        Cron.Daily(2)); // Get all Maps every day on 2 in the morning
+                        Cron.Daily(3)); // Check server states
 
 
-                    BackgroundJob.Schedule(
+                    RecurringJob.AddOrUpdate(
                         () => rconService.ReloadPlayerListFromServerAndTheServerInfo(true),
-                        new TimeSpan(0, 1, 0)); // Check for bans and remove them is necessary
+                        Cron.Minutely()); // Check server states
+                    
                 }
             }
 
@@ -184,3 +181,4 @@ namespace PavlovRconWebserver
         
     }
 }
+

@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using Hangfire;
 using Newtonsoft.Json;
 using PavlovRconWebserver.Exceptions;
 using PavlovRconWebserver.Extensions;
@@ -80,8 +79,8 @@ namespace PavlovRconWebserver.Services
             //     throw new Exception(String.Join(" | Next Exception:  ",exceptions.Select(x=>x.Message).ToList()));
             // }
 
-            BackgroundJob.Schedule(() => ReloadPlayerListFromServerAndTheServerInfo(recursive),
-                new TimeSpan(0, 1, 0)); // Check for bans and remove them is necessary
+            // BackgroundJob.Schedule(() => ReloadPlayerListFromServerAndTheServerInfo(recursive),
+            //     new TimeSpan(0, 1, 0)); // Check for bans and remove them is necessary
         }
 
         public async Task CheckBansForAllServers()
@@ -134,7 +133,9 @@ namespace PavlovRconWebserver.Services
                             if (password.Contains("Password"))
                             {
                                 await client2.WriteLine(server.TelnetPassword);
+                                
                                 var auth = await client2.ReadAsync(TimeSpan.FromMilliseconds(2000));
+                                
                                 if (auth.Contains("Authenticated=1"))
                                 {
                                     // it is authetificated
@@ -210,6 +211,8 @@ namespace PavlovRconWebserver.Services
                                         await RconStatic.SingleCommandResult(client2, "ServerInfo");
                                     var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(
                                         singleCommandResultTwo.Replace("\"\"", "\"ServerInfo\""));
+                                    if(!string.IsNullOrEmpty(tmp.ServerInfo.GameMode))
+                                        Console.WriteLine("GotThe server info for the server: "+ server.Name+"\n "+singleCommandResultTwo);
                                     var map = await _mapsService.FindOne(tmp.ServerInfo.MapLabel.Replace("UGC", ""));
                                     if (map != null)
                                         tmp.ServerInfo.MapPictureLink = map.ImageUrl;
@@ -233,6 +236,7 @@ namespace PavlovRconWebserver.Services
 
                                     result.Success = true;
 
+                                    Console.WriteLine("Set skins for "+costumesToSet.Count+" players of the server:"+ server.Name);
 
                                     foreach (var customToSet in costumesToSet)
                                         await RconStatic.SendCommandSShTunnel(server,
@@ -241,16 +245,19 @@ namespace PavlovRconWebserver.Services
                                 else
                                 {
                                     result.errors.Add("Telnet Client could not authenticate ..." + server.Name);
+                                    Console.WriteLine("Telnet Client could not authenticate ..." + server.Name);
                                 }
                             }
                             else
                             {
                                 result.errors.Add("Telnet Client did not ask for Password ..." + server.Name);
+                                Console.WriteLine("Telnet Client did not ask for Password ..." + server.Name);
                             }
                         }
                         else
                         {
                             result.errors.Add("Telnet Client could not connect ..." + server.Name);
+                            Console.WriteLine("Telnet Client could not connect ..." + server.Name);
                         }
 
                         client2.Dispose();
