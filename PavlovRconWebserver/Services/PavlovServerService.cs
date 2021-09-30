@@ -103,7 +103,7 @@ namespace PavlovRconWebserver.Services
                 server.SshServer.NotRootSshUsername = oldSSHcrid.SshUsername;
                 try
                 {
-                    result += RconStatic.InstallPavlovServerService(server);
+                    result += await RconStatic.InstallPavlovServerService(server);
                 }
                 catch (CommandException)
                 {
