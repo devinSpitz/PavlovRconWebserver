@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AspNetCoreHero.ToastNotification.Abstractions;
 using LiteDB;
 using LiteDB.Identity.Async.Database;
 using PavlovRconWebserver.Extensions;
@@ -11,13 +12,16 @@ namespace PavlovRconWebserver.Services
 {
     public class ServerSelectedModsService
     {
+        private readonly IToastifyService _notifyService;
         private readonly ILiteDbIdentityAsyncContext _liteDb;
         private readonly SteamIdentityService _steamIdentityService;
         private readonly UserService _userService;
 
         public ServerSelectedModsService(ILiteDbIdentityAsyncContext liteDbContext,
-            SteamIdentityService steamIdentityService, UserService userService)
+            SteamIdentityService steamIdentityService, UserService userService,
+            IToastifyService notyfService)
         {
+            _notifyService = notyfService;
             _liteDb = liteDbContext;
             _steamIdentityService = steamIdentityService;
             _userService = userService;
@@ -71,7 +75,7 @@ namespace PavlovRconWebserver.Services
         {
             var lines = steamIds.Select(steamIdentity => steamIdentity + ";").ToList();
             var content = string.Join(Environment.NewLine, lines);
-            RconStatic.WriteFile(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.ModList, content);
+            RconStatic.WriteFile(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.ModList, content,_notifyService);
             return true;
         }
 

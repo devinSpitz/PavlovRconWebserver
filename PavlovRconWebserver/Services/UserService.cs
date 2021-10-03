@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using AspNetCoreHero.ToastNotification.Abstractions;
 using LiteDB;
 using LiteDB.Identity.Async.Database;
 using LiteDB.Identity.Models;
@@ -11,13 +12,16 @@ namespace PavlovRconWebserver.Services
 {
     public class UserService
     {
+        private readonly IToastifyService _notifyService;
         private readonly ILiteDbIdentityAsyncContext _liteDb;
         private readonly RoleManager<LiteDbRole> _roleManager;
         private readonly UserManager<LiteDbUser> _userManager;
 
         public UserService(ILiteDbIdentityAsyncContext liteDbContext, UserManager<LiteDbUser> userMrg,
-            RoleManager<LiteDbRole> roleMgr)
+            RoleManager<LiteDbRole> roleMgr,
+            IToastifyService notyfService)
         {
+            _notifyService = notyfService;
             _userManager = userMrg;
             _roleManager = roleMgr;
             _liteDb = liteDbContext;

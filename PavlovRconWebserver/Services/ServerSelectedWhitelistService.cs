@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AspNetCoreHero.ToastNotification.Abstractions;
 using LiteDB.Identity.Async.Database;
 using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
@@ -10,10 +11,13 @@ namespace PavlovRconWebserver.Services
 {
     public class ServerSelectedWhitelistService
     {
+        private readonly IToastifyService _notifyService;
         private readonly ILiteDbIdentityAsyncContext _liteDb;
 
-        public ServerSelectedWhitelistService(ILiteDbIdentityAsyncContext liteDbContext)
+        public ServerSelectedWhitelistService(ILiteDbIdentityAsyncContext liteDbContext,
+            IToastifyService notyfService)
         {
+            _notifyService = notyfService;
             _liteDb = liteDbContext;
         }
 
@@ -40,7 +44,7 @@ namespace PavlovRconWebserver.Services
         {
             var lines = steamIds.Select(steamIdentity => steamIdentity + ";").ToArray();
             var content = string.Join(Environment.NewLine, lines);
-            RconStatic.WriteFile(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.WhiteList, content);
+            RconStatic.WriteFile(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.WhiteList, content,_notifyService);
             return true;
         }
 

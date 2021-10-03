@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AspNetCoreHero.ToastNotification.Abstractions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -9,6 +10,7 @@ using PavlovRconWebserver.Exceptions;
 using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
 using PavlovRconWebserver.Services;
+using Serilog.Events;
 
 namespace PavlovRconWebserver.Controllers
 {
@@ -16,6 +18,7 @@ namespace PavlovRconWebserver.Controllers
     [Authorize(Roles = CustomRoles.User)]
     public class RconController : Controller
     {
+        private readonly IToastifyService _notifyService;
         private readonly MapsService _mapsService;
         private readonly PavlovServerPlayerService _pavlovServerPlayerService;
         private readonly PavlovServerService _pavlovServerService;
@@ -32,8 +35,10 @@ namespace PavlovRconWebserver.Controllers
             PavlovServerService pavlovServerService,
             ServerBansService serverBansService,
             ServerSelectedModsService serverSelectedModsService,
-            PavlovServerPlayerService pavlovServerPlayerService)
+            PavlovServerPlayerService pavlovServerPlayerService,
+            IToastifyService notyfService)
         {
+            _notifyService = notyfService;
             _service = service;
             _userservice = userService;
             _serverSelectedMapService = serverSelectedMapService;
@@ -95,7 +100,7 @@ namespace PavlovRconWebserver.Controllers
             var response = "";
             try
             {
-                response = await RconStatic.SendCommandSShTunnel(singleServer, command);
+                response = await RconStatic.SendCommandSShTunnel(singleServer, command,_notifyService);
             }
             catch (Exception e)
             {
@@ -190,7 +195,7 @@ namespace PavlovRconWebserver.Controllers
                 var result1 = "";
                 try
                 {
-                    result1 = await RconStatic.SendCommandSShTunnel(ban.PavlovServer, "RefreshList");
+                    result1 = await RconStatic.SendCommandSShTunnel(ban.PavlovServer, "RefreshList",_notifyService);
                 }
                 catch (Exception e)
                 {
@@ -210,7 +215,7 @@ namespace PavlovRconWebserver.Controllers
             var result = "";
             try
             {
-                result = await RconStatic.SendCommandSShTunnel(ban.PavlovServer, "Ban " + steamId);
+                result = await RconStatic.SendCommandSShTunnel(ban.PavlovServer, "Ban " + steamId,_notifyService);
             }
             catch (Exception e)
             {
@@ -291,7 +296,7 @@ namespace PavlovRconWebserver.Controllers
             //unban command
             try
             {
-                await RconStatic.SendCommandSShTunnel(pavlovServer, "Unban " + steamId);
+                await RconStatic.SendCommandSShTunnel(pavlovServer, "Unban " + steamId,_notifyService);
             }
             catch (CommandException)
             {
@@ -372,7 +377,7 @@ namespace PavlovRconWebserver.Controllers
                 var result = "";
                 try
                 {
-                    result = await RconStatic.SendCommandSShTunnel(server, "ServerInfo");
+                    result = await RconStatic.SendCommandSShTunnel(server, "ServerInfo",_notifyService);
                 }
                 catch (Exception e)
                 {
@@ -380,9 +385,12 @@ namespace PavlovRconWebserver.Controllers
                 }
 
                 serverInfo = result;
+                
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify("controlled got serverInfo back: "+serverInfo,LogEventLevel.Verbose,_notifyService);
             }
-            catch (CommandException)
+            catch (CommandException e)
             {
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not get Serverinfo!"+e.Message,LogEventLevel.Fatal,_notifyService);
             }
 
             var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(serverInfo.Replace("\"\"", "\"ServerInfo\""));

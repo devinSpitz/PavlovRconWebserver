@@ -30,7 +30,7 @@ namespace PavlovRconWebserverTests.UnitTests
             _userManager = services.GetUserManager();
                 
             // Mock ValidatePavlovServer function
-            var tmpService = _mocker.Setup<PavlovServerService,Task<PavlovServer>>(x => x.ValidatePavlovServer(It.IsAny<PavlovServer>())).ReturnsAsync((PavlovServer server) => server);
+            var tmpService = _mocker.Setup<PavlovServerService,Task<PavlovServer>>(x => x.ValidatePavlovServer(It.IsAny<PavlovServer>(),It.IsAny<bool>())).ReturnsAsync((PavlovServer server) => server);
             _mocker.Use(tmpService);
             _pavlovServerService = _mocker.GetMock<PavlovServerService>().Object;
             

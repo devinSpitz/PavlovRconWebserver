@@ -1,32 +1,21 @@
-﻿using System.Linq;
+﻿using AspNetCoreHero.ToastNotification;
 using Hangfire;
-using Hangfire.Annotations;
-using Hangfire.Dashboard;
 using Hangfire.MemoryStorage;
 using LiteDB.Identity.Async.Extensions;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
-using PavlovRconWebserver;
+using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Services;
+using Serilog;
 
 namespace PavlovRconWebserver
 {
-    public class HangfireAuthorizeFilter : IDashboardAuthorizationFilter
-    {
-    
-        public bool Authorize(DashboardContext context)
-        {
-            var httpcontext = context.GetHttpContext();
-            return httpcontext.User.IsInRole("Admin");;
-        }
-    }
+
     public static class CustomRoles
     {
         public const string Admin = "Admin";
@@ -47,11 +36,13 @@ namespace PavlovRconWebserver
         public void ConfigureServices(IServiceCollection services)
         {
             
+
             services.AddHangfire(x => x.UseMemoryStorage());
             services.AddHangfireServer(x =>
             {
                 x.WorkerCount = 10;
             }); 
+
             GlobalConfiguration.Configuration.UseMemoryStorage();
             // JobStorage.Current = new MemoryStorage();
             var connectionString = Configuration.GetConnectionString("DefaultConnection");
@@ -78,9 +69,9 @@ namespace PavlovRconWebserver
             services.AddScoped<ServerSelectedModsService>();
             services.AddScoped<PublicViewListsService>();
             services.AddScoped<SteamService>();
+            services.AddScoped<LogService>();
             services.AddSingleton(Configuration);
             services.AddScoped<IEmailSender, EmailSender>();
-            
             
             
             services.AddSwaggerGen(c =>
@@ -93,6 +84,13 @@ namespace PavlovRconWebserver
                 });
             });
             services.AddMvc().AddRazorRuntimeCompilation();
+            services.AddToastify(config =>
+            {
+                config.DurationInSeconds = 20;
+                config.Position = Position.Right;
+                config.Gravity = Gravity.Top;
+
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -103,6 +101,7 @@ namespace PavlovRconWebserver
             else
                 app.UseExceptionHandler("/Home/Error");
 
+            app.UseSerilogRequestLogging();
             if (env.EnvironmentName != "Test")
             {
 
@@ -117,7 +116,7 @@ namespace PavlovRconWebserver
                     // specifying the Swagger JSON endpoint.
                     app.UseSwaggerUI(c =>
                     {
-                        c.SwaggerEndpoint("/swagger/v0.0.1/swagger.json", "Pavlov Rcon Webserver V0.0.1");
+                        c.SwaggerEndpoint("/swagger/v0.0.1/swagger.json", "Pavlov Rcon Webserver V0.0.3");
                     });
                 }
             }
@@ -128,7 +127,6 @@ namespace PavlovRconWebserver
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseHttpsRedirection();
-            
             app.UseHangfireDashboard(
                 "/hangfire"
                 ,
@@ -137,6 +135,8 @@ namespace PavlovRconWebserver
                     Authorization = new[] { new HangfireAuthorizeFilter() }
                 }
             );
+            
+            
             
             app.UseEndpoints(endpoints => { endpoints.MapDefaultControllerRoute(); });
             if (env.EnvironmentName != "Test")
@@ -175,7 +175,6 @@ namespace PavlovRconWebserver
                     
                 }
             }
-
         }
         
         

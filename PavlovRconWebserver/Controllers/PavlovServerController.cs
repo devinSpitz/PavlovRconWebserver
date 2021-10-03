@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using AspNetCoreHero.ToastNotification.Abstractions;
 using LiteDB.Identity.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -18,6 +19,7 @@ namespace PavlovRconWebserver.Controllers
     [Authorize(Roles = CustomRoles.Admin)]
     public class PavlovServerController : Controller
     {
+        private readonly IToastifyService _notifyService;
         private readonly MapsService _mapsService;
         private readonly PavlovServerService _pavlovServerService;
         private readonly RconService _rconService;
@@ -39,8 +41,10 @@ namespace PavlovRconWebserver.Controllers
             ServerSelectedWhitelistService whitelistService,
             ServerSelectedModsService serverSelectedModsService,
             SteamIdentityService steamIdentityService,
-            UserManager<LiteDbUser> userManager)
+            UserManager<LiteDbUser> userManager,
+            IToastifyService notyfService)
         {
+            _notifyService = notyfService;
             _service = service;
             _userservice = userService;
             _pavlovServerService = pavlovServerService;
@@ -119,9 +123,11 @@ namespace PavlovRconWebserver.Controllers
             if (!ModelState.IsValid)
                 return View("Server", server);
 
+            var resultServer = new PavlovServer();
             try
             {
                 server.SshServer = await _service.FindOne(server.sshServerId);
+                
                 if (server.create)
                     try
                     {
@@ -129,6 +135,9 @@ namespace PavlovRconWebserver.Controllers
                         {
                             await _pavlovServerService.IsValidOnly(server, false);
 
+                            if (string.IsNullOrEmpty(server.SshServer.SshPassword))
+                                throw new SaveServerException("Id",
+                                    "Please add a sshPassword to the ssh user (Not root user). Sometimes the systems asks for the password even if the keyfile and passphrase is used.");
                             if (string.IsNullOrEmpty(server.ServerFolderPath))
                                 throw new SaveServerException("ServerFolderPath",
                                     "The server ServerFolderPath is needed!");
@@ -147,7 +156,6 @@ namespace PavlovRconWebserver.Controllers
                             return await GoBackEditServer(server,
                                 "Field is not set: " + e.Message);
                         }
-
                         var result = await _pavlovServerService.CreatePavlovServer(server);
                         server = result.Key;
                         if (result.Value != null)
@@ -163,7 +171,7 @@ namespace PavlovRconWebserver.Controllers
                 try
                 {
                     //save and validate server a last time
-                    await _pavlovServerService.Upsert(server.toPavlovServer(server));
+                    resultServer = await _pavlovServerService.Upsert(server.toPavlovServer(server));
                 }
                 catch (SaveServerException e)
                 {
@@ -187,7 +195,9 @@ namespace PavlovRconWebserver.Controllers
             }
 
             if (ModelState.ErrorCount > 0) return await EditServer(server);
-
+            if (server.create)
+                return Redirect("/PavlovServer/EditServerSelectedMaps/"+resultServer.Id);
+                
             return RedirectToAction("Index", "SshServer");
         }
 
@@ -267,7 +277,7 @@ namespace PavlovRconWebserver.Controllers
             var server = await _pavlovServerService.FindOne(serverId);
             try
             {
-                viewModel.ReadFromFile(server);
+                viewModel.ReadFromFile(server,_notifyService);
             }
             catch (CommandException e)
             {
@@ -339,7 +349,7 @@ namespace PavlovRconWebserver.Controllers
             var selectedMaps = await _serverSelectedMapService.FindAllFrom(server);
             try
             {
-                pavlovServerGameIni.SaveToFile(server, selectedMaps);
+                pavlovServerGameIni.SaveToFile(server, selectedMaps,_notifyService);
             }
             catch (CommandException e)
             {

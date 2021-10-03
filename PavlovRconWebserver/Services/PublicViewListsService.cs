@@ -1,20 +1,24 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AspNetCoreHero.ToastNotification.Abstractions;
 using PavlovRconWebserver.Models;
 
 namespace PavlovRconWebserver.Services
 {
     public class PublicViewListsService
     {
+        private readonly IToastifyService _notifyService;
         private readonly PavlovServerInfoService _pavlovServerInfoService;
 
         private readonly PavlovServerPlayerService _pavlovServerPlayerService;
 
         public PublicViewListsService(
             PavlovServerInfoService pavlovServerInfoService,
-            PavlovServerPlayerService pavlovServerPlayerService)
+            PavlovServerPlayerService pavlovServerPlayerService,
+            IToastifyService notyfService)
         {
+            _notifyService = notyfService;
             _pavlovServerInfoService = pavlovServerInfoService;
             _pavlovServerPlayerService = pavlovServerPlayerService;
         }

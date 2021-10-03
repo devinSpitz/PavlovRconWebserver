@@ -317,7 +317,7 @@ namespace PavlovRconWebserver.Controllers
             return View("TeamSteamIdentitys", viewModel);
         }
 
-        [HttpGet("/{teamId}/{steamIdentityId}")]
+        [HttpGet("[controller]/{teamId}/{steamIdentityId}")]
         public async Task<IActionResult> EditTeamSelectedSteamIdentity(int teamId, string steamIdentityId)
         {
             if (teamId == 0) return BadRequest("team id is required");

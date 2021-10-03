@@ -11,5 +11,7 @@ namespace PavlovRconWebserver.Extensions
                 fmt = fmt.Substring(0, index); // This will remove all text after character ?
             return fmt;
         }
+
+
     }
 }

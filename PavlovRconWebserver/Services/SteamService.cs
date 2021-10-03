@@ -4,22 +4,27 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using AspNetCoreHero.ToastNotification.Abstractions;
 using HtmlAgilityPack;
 using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
+using Serilog.Events;
 
 namespace PavlovRconWebserver.Services
 {
     public class SteamService
     {
+        private readonly IToastifyService _notifyService;
         private readonly MapsService _mapsService;
         private readonly ServerSelectedMapService _serverSelectedMapService;
         private readonly SshServerSerivce _sshServerSerivce;
 
         public SteamService(SshServerSerivce sshServerSerivce,
             MapsService mapsService,
-            ServerSelectedMapService serverSelectedMapService)
+            ServerSelectedMapService serverSelectedMapService,
+            IToastifyService notyfService)
         {
+            _notifyService = notyfService;
             _mapsService = mapsService;
             _sshServerSerivce = sshServerSerivce;
             _serverSelectedMapService = serverSelectedMapService;
@@ -37,7 +42,7 @@ namespace PavlovRconWebserver.Services
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.Message);
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message,LogEventLevel.Verbose,_notifyService);
                     // ingore for now
                 }
         }

@@ -2,18 +2,24 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AspNetCoreHero.ToastNotification.Abstractions;
 using LiteDB.Identity.Async.Database;
+using Microsoft.AspNetCore.Authorization;
 using PavlovRconWebserver.Models;
 
 namespace PavlovRconWebserver.Services
 {
+    [Authorize]
     public class PavlovServerPlayerHistoryService
     {
+        private readonly IToastifyService _notifyService;
         private readonly ILiteDbIdentityAsyncContext _liteDb;
 
 
-        public PavlovServerPlayerHistoryService(ILiteDbIdentityAsyncContext liteDbContext)
+        public PavlovServerPlayerHistoryService(ILiteDbIdentityAsyncContext liteDbContext,
+            IToastifyService notyfService)
         {
+            _notifyService = notyfService;
             _liteDb = liteDbContext;
         }
 

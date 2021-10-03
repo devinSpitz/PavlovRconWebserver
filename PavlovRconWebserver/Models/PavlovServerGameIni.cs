@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using AspNetCoreHero.ToastNotification.Abstractions;
 using PavlovRconWebserver.Extensions;
+using Serilog.Events;
 
 namespace PavlovRconWebserver.Models
 {
@@ -20,7 +22,7 @@ namespace PavlovRconWebserver.Models
         public bool bCustomServer { get; set; } = true;
         public bool bWhitelist { get; set; } = true;
         public int RefreshListTime { get; set; } = 120;
-        public int LimitedAmmoType { get; set; }
+        public int LimitedAmmoType { get; set; } = 0;
         public int TickRate { get; set; } = 90;
         public int TimeLimit { get; set; } = 60;
         public string Password { get; set; } = "";
@@ -29,10 +31,10 @@ namespace PavlovRconWebserver.Models
         public List<PavlovServerGameIniMap> MapRotation { get; set; } =
             new List<PavlovServerGameIniMap>(); // example string = (MapId="UGC1758245796", GameMode="GUN")
 
-        public bool ReadFromFile(PavlovServer pavlovServer)
+        public bool ReadFromFile(PavlovServer pavlovServer,IToastifyService notyfService)
         {
             var gameIniContent = RconStatic.GetFile(pavlovServer,
-                pavlovServer.ServerFolderPath + FilePaths.GameIni);
+                pavlovServer.ServerFolderPath + FilePaths.GameIni,notyfService);
             var lines = gameIniContent.Split("\n");
             var first = true; // cause the first line is to ignore
             foreach (var line in lines)
@@ -132,7 +134,7 @@ namespace PavlovRconWebserver.Models
         }
 
 
-        public bool SaveToFile(PavlovServer pavlovServer, ServerSelectedMap[] serverSelectedMaps)
+        public string SaveToFile(PavlovServer pavlovServer, ServerSelectedMap[] serverSelectedMaps, IToastifyService notyfService)
         {
             var lines = new List<string>();
             lines.Add("[/Script/Pavlov.DedicatedServer]");
@@ -164,9 +166,13 @@ namespace PavlovRconWebserver.Models
                     lines.Add("MapRotation=(MapId=\"" + serverSelectedMap.Map.Id + "\", GameMode=\"" +
                               serverSelectedMap.GameMode + "\")");
             var content = string.Join(Environment.NewLine, lines);
-            RconStatic.WriteFile(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.GameIni,
-                content);
-            return true;
+            
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify("prepared game ini",LogEventLevel.Verbose,notyfService);
+            var result = RconStatic.WriteFile(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.GameIni,
+                content,notyfService);
+            
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify("saved game ini",LogEventLevel.Verbose,notyfService);
+            return result;
         }
     }
 }

@@ -188,7 +188,7 @@ else
                         </div>
                         <div class="form-group col-md-6">
                             <label asp-for="SshPassphraseRoot"></label>
-                            <input asp-for="SshPassphraseRoot" class="form-control" value="@Model.SshPassphraseRoot"/>
+                            <input asp-for="SshPassphraseRoot"  type="password" autocomplete="off" class="form-control" value="@Model.SshPassphraseRoot"/>
                             <span asp-validation-for="ServerPort" class="text-danger"></span>
                         </div>
                     </div>

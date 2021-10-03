@@ -1,0 +1,48 @@
+﻿@using Serilog.Events
+@model IEnumerable<Serilog.Sinks.Models.LiteDbLog>
+
+<style>
+    th,td{
+        overflow: overlay;
+    }
+</style>
+<div class="container-fluid col-12 ">
+
+    <table class="table table-responsive-sm  col-12 ">
+        <tr >
+            <th class="col-1">Level</th>
+            <th class="col-3 pb-4" style="max-width: 300px">RenderedMessage</th>
+            <th class="col-2">Timestamp</th>
+            <th class="col-3">LogDate</th>
+            <th class="col-3 pb-4" style="max-width: 300px">Properties</th>
+        </tr>
+        @if (Model != null)
+        {
+            foreach (var role in Model)
+            {
+                var cssClass = "";
+                switch (role.Level)
+                {
+                    case LogEventLevel.Warning:
+                        cssClass = "bg-warning";
+                        break;
+                    case LogEventLevel.Error:
+                        cssClass = "bg-danger";
+                        break;
+                    case LogEventLevel.Fatal:
+                        cssClass = "bg-danger";
+                        break;
+                }
+            
+                <tr class="@cssClass">
+                    <td class="col-1">@role.Level</td>
+                    <td class="col-3 pb-4" style="max-width: 300px">@role.RenderedMessage</td>
+                    <td class="col-2">@role.Timestamp</td>
+                    <td class="col-3">@role.LogDate</td>
+                    <td class="col-3 pb-4" style="max-width: 300px">@role.Properties</td>
+                </tr>
+            } 
+        }
+    </table>
+
+</div>

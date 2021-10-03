@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Threading.Tasks;
+using AspNetCoreHero.ToastNotification.Abstractions;
 using LiteDB.Identity.Async.Database;
 using PavlovRconWebserver.Models;
 
@@ -7,10 +8,13 @@ namespace PavlovRconWebserver.Services
 {
     public class MapsService
     {
+        private readonly IToastifyService _notifyService;
         private readonly ILiteDbIdentityAsyncContext _liteDb;
 
-        public MapsService(ILiteDbIdentityAsyncContext liteDbContext)
+        public MapsService(ILiteDbIdentityAsyncContext liteDbContext,
+            IToastifyService notyfService)
         {
+            _notifyService = notyfService;
             _liteDb = liteDbContext;
         }
 

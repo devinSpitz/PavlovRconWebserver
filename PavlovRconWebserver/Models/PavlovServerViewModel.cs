@@ -6,6 +6,7 @@ using LiteDB;
 
 namespace PavlovRconWebserver.Models
 {
+    //Todo: IConvertible
     public class PavlovServerViewModel : PavlovServer
     {
         public int sshServerId { get; set; }

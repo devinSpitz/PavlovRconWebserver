@@ -23,7 +23,6 @@
         isModSomeWhere = await _pavlovServerService.IsModSomeWhere(user, _serverSelectedModsService);
     }
 }
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -109,6 +108,9 @@
                         <li>
                             <a class="btn navbar-btn navbar-link" href="/hangfire">Hangfire</a>
                         </li>
+                        <li>
+                            <a class="btn navbar-btn navbar-link" asp-controller="Log" asp-action="Index">Logs</a>
+                        </li>
                     }
                 }
 
@@ -173,6 +175,8 @@
 <script src="~/lib/fontawesome-free/dist/js/all.min.js" asp-append-version="true"></script>
 <script src="~/js/site.js" asp-append-version="true"></script>
 <script src="~/js/Init.js" asp-append-version="true"></script>
+
+@await Component.InvokeAsync("Toastify")
 @await RenderSectionAsync("Scripts", false)
 </body>
 </html>

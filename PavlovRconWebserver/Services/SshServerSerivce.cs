@@ -2,20 +2,25 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AspNetCoreHero.ToastNotification.Abstractions;
 using LiteDB.Identity.Async.Database;
 using PavlovRconWebserver.Exceptions;
 using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
+using Serilog.Events;
 
 namespace PavlovRconWebserver.Services
 {
     public class SshServerSerivce
     {
+        private readonly IToastifyService _notifyService;
         private readonly ILiteDbIdentityAsyncContext _liteDb;
         private readonly PavlovServerService _pavlovServerService;
 
-        public SshServerSerivce(ILiteDbIdentityAsyncContext liteDbContext, PavlovServerService pavlovServerServiceService)
+        public SshServerSerivce(ILiteDbIdentityAsyncContext liteDbContext, PavlovServerService pavlovServerServiceService,
+            IToastifyService notyfService)
         {
+            _notifyService = notyfService;
             _liteDb = liteDbContext;
             _pavlovServerService = pavlovServerServiceService;
         }
@@ -63,6 +68,8 @@ namespace PavlovRconWebserver.Services
         public async Task<KeyValuePair<PavlovServerViewModel, string>> RemovePavlovServerFromDisk(
             PavlovServerViewModel server)
         {
+            
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Start remove server!",LogEventLevel.Verbose,_notifyService);
             string result = null;
             try
             {
@@ -90,20 +97,40 @@ namespace PavlovRconWebserver.Services
                 server.SshServer.SshPassword = server.SshPasswordRoot;
                 server.SshServer.SshKeyFileName = server.SshKeyFileNameRoot;
                 server.SshServer.NotRootSshUsername = oldSSHcrid.SshUsername;
+                
+                
                 result += await RconStatic.RemovePath(server,
                     "/etc/systemd/system/" + server.ServerSystemdServiceName + ".service",_pavlovServerService);
+
+                //Remove the server from the sudoers file
+                var sudoersPathParent = "/etc/sudoers.d";
+                var sudoersPath = sudoersPathParent+"/pavlovRconWebserverManagement";
+                if (RconStatic.RemoveServerLineToSudoersFile(server, _notifyService, sudoersPath, _pavlovServerService))
+                {
+                    
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("server line removed from sudoers file!",LogEventLevel.Verbose,_notifyService); 
+                }
+                else
+                {
+                    
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not remove the server line from sudoers file!",LogEventLevel.Fatal,_notifyService); 
+                    
+                    return new KeyValuePair<PavlovServerViewModel, string>(server, result + "Could not remove the server line from sudoers file!");
+                }
+
+                
+                
                 server.SshServer.SshPassphrase = oldSSHcrid.SshPassphrase;
                 server.SshServer.SshUsername = oldSSHcrid.SshUsername;
                 server.SshServer.SshPassword = oldSSHcrid.SshPassword;
                 server.SshServer.SshKeyFileName = oldSSHcrid.SshKeyFileName;
-
-
                 result += "\n *******************************delete service Done*******************************";
 
                 result += await RconStatic.RemovePath(server, server.ServerFolderPath,_pavlovServerService);
                 result += "\n *******************************delete folder Done*******************************";
 
-                Console.WriteLine(result);
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify(result,LogEventLevel.Verbose,_notifyService);            
+
             }
             catch (Exception e)
             {

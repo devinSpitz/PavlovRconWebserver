@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using AspNetCoreHero.ToastNotification.Abstractions;
 using Hangfire;
 using LiteDB.Identity.Async.Database;
 using Microsoft.VisualBasic;
@@ -12,11 +13,13 @@ using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
 using Renci.SshNet;
 using Renci.SshNet.Common;
+using Serilog.Events;
 
 namespace PavlovRconWebserver.Services
 {
     public class MatchService
     {
+        private readonly IToastifyService _notifyService;
         private readonly ILiteDbIdentityAsyncContext _liteDb;
         private readonly MapsService _mapsService;
         private readonly MatchSelectedSteamIdentitiesService _matchSelectedSteamIdentitiesService;
@@ -41,9 +44,10 @@ namespace PavlovRconWebserver.Services
             TeamService teamService,
             PavlovServerInfoService pavlovServerInfoService,
             PavlovServerPlayerService pavlovServerPlayerService,
-            TeamSelectedSteamIdentityService teamSelectedSteamIdentityService
-        )
+            TeamSelectedSteamIdentityService teamSelectedSteamIdentityService,
+            IToastifyService notyfService)
         {
+            _notifyService = notyfService;
             _liteDb = liteDbContext;
             _matchSelectedTeamSteamIdentitiesService = matchSelectedTeamSteamIdentitiesService;
             _matchSelectedSteamIdentitiesService = matchSelectedSteamIdentitiesService;
@@ -194,8 +198,7 @@ namespace PavlovRconWebserver.Services
                 var list = new List<string>();
                 if (listOfSteamIdentietiesWhichCanPlay.Count <= 0 && match.MatchSelectedSteamIdentities.Count <= 0)
                 {
-                    result.errors.Add("There are no team members so no match will start!");
-                    Console.WriteLine("There are no team members so no match will start!");
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("There are no team members so no match will start!",LogEventLevel.Fatal ,_notifyService, result);
                     return result;
                 }
                 else
@@ -213,12 +216,12 @@ namespace PavlovRconWebserver.Services
                 {
                     RconStatic.WriteFile(server,
                         server.ServerFolderPath + FilePaths.WhiteList,
-                        Strings.Join(list.ToArray()));
+                        Strings.Join(list.ToArray()),_notifyService);
                 }
                 catch (Exception e)
                 {
-                    result.errors.Add("Could not write whitelist for the match! " +
-                                      e.Message);
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not write whitelist for the match! " +
+                                      e.Message,LogEventLevel.Fatal,_notifyService , result);
                 }
 
                 var serverSettings = new PavlovServerGameIni
@@ -251,13 +254,13 @@ namespace PavlovRconWebserver.Services
                         Map = map,
                         GameMode = match.GameMode
                     }
-                });
+                },_notifyService);
                 await RconStatic.SystemDStart(server,_pavlovServerService);
 
                 //StartWatchServiceForThisMatch
                 match.Status = Status.StartetWaitingForPlayer;
                 await Upsert(match);
-                Console.WriteLine("Start backgroundjob");
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Start backgroundjob",LogEventLevel.Verbose,_notifyService);
                 BackgroundJob.Schedule(
                     () => MatchInspector(authType, match.Id),
                     new TimeSpan(0, 0, 5)); // ChecjServerState
@@ -267,16 +270,16 @@ namespace PavlovRconWebserver.Services
                 switch (e)
                 {
                     case SshAuthenticationException _:
-                        result.errors.Add("Could not Login over ssh!");
+                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not Login over ssh!",LogEventLevel.Fatal,_notifyService , result);
                         break;
                     case SshConnectionException _:
-                        result.errors.Add("Could not connect to host over ssh!");
+                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host over ssh!",LogEventLevel.Fatal,_notifyService , result);
                         break;
                     case SshOperationTimeoutException _:
-                        result.errors.Add("Could not connect to host cause of timeout over ssh!");
+                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host cause of timeout over ssh!",LogEventLevel.Fatal,_notifyService , result);
                         break;
                     case SocketException _:
-                        result.errors.Add("Could not connect to host!");
+                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host!",LogEventLevel.Fatal ,_notifyService, result);
                         break;
                     default:
                     {
@@ -299,14 +302,14 @@ namespace PavlovRconWebserver.Services
         public async Task MatchInspector(RconService.AuthType authType,
             int matchId)
         {
-            Console.WriteLine("MatchInspector started!");
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify("MatchInspector started!",LogEventLevel.Verbose,_notifyService);
             var match = await FindOne(matchId);
 
             try
             {
                 if (match.ForceSop)
                 {
-                    Console.WriteLine("Endmatch!");
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Endmatch!",LogEventLevel.Verbose,_notifyService);
                     await EndMatch(match.PavlovServer, match);
                     return;
                 }
@@ -316,12 +319,12 @@ namespace PavlovRconWebserver.Services
                 {
                     case Status.StartetWaitingForPlayer:
 
-                        Console.WriteLine("TryToStartMatch started!");
+                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("TryToStartMatch started!",LogEventLevel.Verbose,_notifyService);
                         await TryToStartMatch(match.PavlovServer, match);
                         break;
                     case Status.OnGoing:
 
-                        Console.WriteLine("OnGoing!");
+                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("OnGoing!",LogEventLevel.Verbose,_notifyService);
                         var serverInfo = await _pavlovServerInfoService.FindServer(match.PavlovServer.Id);
                         match.PlayerResults =
                             (await _pavlovServerPlayerService.FindAllFromServer(match.PavlovServer.Id)).ToList();
@@ -330,7 +333,7 @@ namespace PavlovRconWebserver.Services
 
                         if (serverInfo.RoundState == "Ended")
                         {
-                            Console.WriteLine("Round ended!");
+                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Round ended!",LogEventLevel.Verbose,_notifyService);
                             match.PlayerResults =
                                 (await _pavlovServerPlayerService.FindAllFromServer(match.PavlovServer.Id)).ToList();
                             match.EndInfo = serverInfo;
@@ -343,7 +346,7 @@ namespace PavlovRconWebserver.Services
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message,LogEventLevel.Verbose,_notifyService);
             }
 
             if (match.Status != Status.Finshed)
@@ -357,15 +360,15 @@ namespace PavlovRconWebserver.Services
             match.Status = Status.Finshed;
             await Upsert(match);
             await RconStatic.SystemDStop(server,_pavlovServerService);
-            Console.WriteLine("Stopped server!");
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Stopped server!",LogEventLevel.Verbose,_notifyService);
         }
 
 
         private async Task TryToStartMatch(PavlovServer server, Match match)
         {
             var playerList = (await _pavlovServerPlayerService.FindAllFromServer(server.Id)).ToList();
-            Console.WriteLine(" playerlistcount = " + playerList.Count());
-            Console.WriteLine(" match.PlayerSlots  = " + match.PlayerSlots);
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify(" playerlistcount = " + playerList.Count(),LogEventLevel.Verbose,_notifyService);
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify(" match.PlayerSlots  = " + match.PlayerSlots,LogEventLevel.Verbose,_notifyService);
             if (playerList.Count() == match.PlayerSlots || match.ForceStart) //All Player are here
             {
                 //Do Players in the right team
@@ -377,19 +380,19 @@ namespace PavlovRconWebserver.Services
                         x.SteamIdentityId == pavlovServerPlayer.UniqueId);
                     if (team0 != null)
                     {
-                        Console.WriteLine("SwitchTeam 0 " + pavlovServerPlayer.UniqueId);
+                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("SwitchTeam 0 " + pavlovServerPlayer.UniqueId,LogEventLevel.Verbose,_notifyService);
                         SendCommandTillDone(server, "SwitchTeam 0 " + pavlovServerPlayer.UniqueId);
                     }
                     else if (team1 != null)
                     {
-                        Console.WriteLine("SwitchTeam 1 " + pavlovServerPlayer.UniqueId);
+                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("SwitchTeam 1 " + pavlovServerPlayer.UniqueId,LogEventLevel.Verbose,_notifyService);
                         SendCommandTillDone(server, "SwitchTeam 1 " + pavlovServerPlayer.UniqueId);
                     }
                 }
                 //All Players are on the right team now
                 //ResetSND
 
-                Console.WriteLine("start ResetSND!");
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify("start ResetSND!",LogEventLevel.Verbose,_notifyService);
                 SendCommandTillDone(server, "ResetSND");
                 match.Status = Status.OnGoing;
                 await Upsert(match);
@@ -411,12 +414,12 @@ namespace PavlovRconWebserver.Services
             while (true)
                 try
                 {
-                    var result = await RconStatic.SendCommandSShTunnel(server, command);
+                    var result = await RconStatic.SendCommandSShTunnel(server, command,_notifyService);
                     return result;
                 }
                 catch (CommandException e)
                 {
-                    Console.WriteLine(e);
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message,LogEventLevel.Verbose,_notifyService);
                     throw;
                 }
         }
