@@ -11,7 +11,15 @@ namespace PavlovRconWebserver.Models
     // Its reader bean read or writen as its needed
     // Right now i don't think this this will happen that often.
     // May whithin a tournament it would be usfull but i don't think so
-
+    public enum LimitedAmmoTypeEnum
+    {
+        Unlimited = 0,
+        LimitedGeneric = 1,
+        LimitedSpecific = 2,
+        Custom = 3,
+        LimitedSpecial = 4,
+        BoxlessMode = 5
+    }
     public class PavlovServerGameIni
     {
         public int serverId { get; set; } = 0;
@@ -22,7 +30,7 @@ namespace PavlovRconWebserver.Models
         public bool bCustomServer { get; set; } = true;
         public bool bWhitelist { get; set; } = true;
         public int RefreshListTime { get; set; } = 120;
-        public int LimitedAmmoType { get; set; } = 0;
+        public LimitedAmmoTypeEnum LimitedAmmoType { get; set; } = 0;
         public int TickRate { get; set; } = 90;
         public int TimeLimit { get; set; } = 60;
         public string Password { get; set; } = "";
@@ -116,7 +124,17 @@ namespace PavlovRconWebserver.Models
                 else if (tmpLine.Contains("LimitedAmmoType="))
                 {
                     var tmp = tmpLine.Replace("LimitedAmmoType=", "");
-                    LimitedAmmoType = int.Parse((string) tmp);
+                    var numeric = int.Parse((string) tmp);
+                    LimitedAmmoType = numeric switch
+                    {
+                        (int) LimitedAmmoTypeEnum.Unlimited => LimitedAmmoTypeEnum.Unlimited,
+                        (int) LimitedAmmoTypeEnum.LimitedGeneric => LimitedAmmoTypeEnum.LimitedGeneric,
+                        (int) LimitedAmmoTypeEnum.LimitedSpecific => LimitedAmmoTypeEnum.LimitedSpecific,
+                        (int) LimitedAmmoTypeEnum.Custom => LimitedAmmoTypeEnum.Custom,
+                        (int) LimitedAmmoTypeEnum.LimitedSpecial => LimitedAmmoTypeEnum.LimitedSpecial,
+                        (int) LimitedAmmoTypeEnum.BoxlessMode => LimitedAmmoTypeEnum.BoxlessMode,
+                        _ => LimitedAmmoType
+                    };
                 }
                 else if (tmpLine.Contains("TickRate="))
                 {
@@ -145,7 +163,7 @@ namespace PavlovRconWebserver.Models
             lines.Add("bCustomServer=" + bCustomServer.ToString().ToLower());
             lines.Add("bWhitelist=" + bWhitelist.ToString().ToLower());
             lines.Add("RefreshListTime=" + RefreshListTime);
-            lines.Add("LimitedAmmoType=" + LimitedAmmoType);
+            lines.Add("LimitedAmmoType=" + (int)LimitedAmmoType);
             lines.Add("TickRate=" + TickRate);
             lines.Add("TimeLimit=" + TimeLimit);
             if (!string.IsNullOrEmpty(Password))

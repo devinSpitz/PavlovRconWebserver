@@ -1296,11 +1296,26 @@ WantedBy = multi-user.target";
                     DataBaseLogger.LogToDatabaseAndResultPlusNotify("remove if file already exist",LogEventLevel.Verbose,notyfService);
                     if (sftp.Exists(path)) sftp.DeleteFile(path);
 
+
                     //check if parent folder exist
-                    DirectoryInfo parentDir = Directory.GetParent(path);
-                    if (parentDir == null || !parentDir.Exists)
+                    var parentDirString = "";
+                    
+                    if (path.EndsWith("/"))
+                        path = path.TrimEnd('/');
+                    
+                    int idx = path.LastIndexOf('/');
+
+                    if (idx != -1)
                     {
-                        
+                        parentDirString = path.Substring(0, idx);
+                    }
+                    else
+                    {
+                        parentDirString = path;
+                    }
+
+                    if (!sftp.Exists(parentDirString))
+                    {
                         connectionResult.errors.Add("Can not write file when the parent folder does not exist!");
                         return EndConnection(connectionResult);
                     }
