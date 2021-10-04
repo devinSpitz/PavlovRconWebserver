@@ -40,8 +40,8 @@ namespace PavlovRconWebserver.Extensions
             {"TTT", true},
             {"OITC", false},
             {"PUSH", true},
-            {"HIDDEN", false},
-            {"PH", false}
+            {"HIDDEN", true},
+            {"PH", true}
         };
 
         public static IDictionary<string, bool> OneTeam = new Dictionary<string, bool>
