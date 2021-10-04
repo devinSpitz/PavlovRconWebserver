@@ -141,7 +141,7 @@ namespace PavlovRconWebserver.Models
                     InputValue = true,
                     valuesOptions = new List<string>
                     {
-                        "0", "1", "2"
+                        "0", "1", "2","3","4","5"
                     },
                     MinRole = "Admin",
                     Group = "Server commands"
