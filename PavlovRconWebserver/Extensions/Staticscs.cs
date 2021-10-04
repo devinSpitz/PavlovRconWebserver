@@ -37,7 +37,13 @@ namespace PavlovRconWebserver.Extensions
             {"WW2GUN", true},
             {"TANKTDM", true},
             {"KOTH", false},
-            {"TTT", false}
+            {"TTT", true},
+            {"OITC", false},
+            {"TANKTDM", true},
+            {"ZWV", false},
+            {"PUSH", true},
+            {"HIDDEN", false},
+            {"PH", false}
         };
 
         public static IDictionary<string, bool> OneTeam = new Dictionary<string, bool>
@@ -50,12 +56,18 @@ namespace PavlovRconWebserver.Extensions
             {"WW2GUN", false},
             {"TANKTDM", false},
             {"KOTH", false},
-            {"TTT", false}
+            {"TTT", false},
+            {"OITC", true},
+            {"TANKTDM", false},
+            {"ZWV", true},
+            {"PUSH", false},
+            {"HIDDEN", false},
+            {"PH", false}
         };
 
         public static string[] ModesString =
         {
-            "SND", "TDM", "DM", "GUN", "ZWV", "WW2GUN", "TANKTDM", "KOTH", "TTT","OITC","TANKTDM","TTT","ZWV"
+            "SND", "TDM", "DM", "GUN", "ZWV", "WW2GUN", "TANKTDM", "KOTH", "TTT","OITC","TANKTDM","ZWV","PUSH","HIDDEN","PH"
         };
     }
 }
