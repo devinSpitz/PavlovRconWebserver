@@ -49,6 +49,9 @@ newly added:
 * You can now edit the Mod and White list of a pavlov server
 * Mod on a pavlov server now also means Mod in case of commands for this single server in the GUI
 * Users are now no longer able to inspect server where they are not a mod. (they can get the infos from a website which gets the HTML from /PublicViewLists/PlayersFromServers/*)
+* Logs 24h for errors and stuff
+* Hangfire only for admins even when in production Environment
+* Better notification when something happens in the background that could interrupt your work
 
  older:   
 
@@ -67,7 +70,7 @@ newly added:
 
 Note:
 ======= 
-- If you build it by yourself be sure to add the database.db file and the other riquired folders(see release) befor start the application.  
+- If you build it by yourself be sure to add the database.db file and the other required folders(see release) befor start the application.  
 - The old user and roles system ist not compatible to the new one. So you have to restart with a new database, if you are from the version 0.0.1!  
 
 * Telnet direct connections are not supported anymore cause i have to clean the maps from the cache!  
@@ -76,10 +79,7 @@ Help:
 =======
 1. If you expirience any problem first press "CTRL"+"F5" to reload JavaScript.  
 2. Known issues found by makupi/pavlov-bot: https://github.com/makupi/pavlov-bot#known-issues-with-rcon-that-bot-cant-fix
-3. Under Windows(on my system) there is the problem that the background services can not access the db even if it is shared.  
-   Then you will get the following exception:  
-```The process cannot access the file '...\Database.db' because it is being used by another process.```  
-   I dont know how to fix this problem. It works under linux xD
+
 
    
 Donate:
@@ -100,27 +100,48 @@ For business inquiries please use:
 Credits:
 =======
 
+LiteDB.Identity  
 Implementation of AspNetCore.Identity for LiteDB database engine.   
-https://github.com/quicksln/LiteDB.Identity
+https://github.com/quicksln/LiteDB.Identity  
 
-The most simple, unambiguous, and lightweight .NET guard clause library.  
-https://github.com/adamralph/liteguard
+Serilog  
+This package routes ASP.NET Core log messages through Serilog, so you can get information about ASP.NET's internal operations written to the same Serilog sinks as your application events.  
+https://github.com/serilog/serilog-aspnetcore
 
-Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation  
-https://www.nuget.org/packages/Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation/3.1.6
+Mock & Automock  
+An automocking container for Moq. Use this if you're invested in your IoC container and want to decouple your unit tests from changes to their constructor arguments.
+https://github.com/moq/Moq.AutoMocker  
 
+Coverlet  
+Cross platform code coverage for .NET  
+https://github.com/coverlet-coverage/coverlet  
+
+ToastNotification  
+ToastNotification is a Minimal & Elegant Toast Notification Package for ASP.NET Core Web Applications that can be invoked via C#. Compatible with ASP.NET Core 3.1 and .NET 5.
+https://github.com/aspnetcorehero/ToastNotification  
+
+Fluent Assertions  
+A very extensive set of extension methods that allow you to more naturally specify the expected outcome of a TDD or BDD-style unit tests. Targets .NET Framework 4.7, .NET Core 2.1 and 3.0, as well as .NET Standard 2.0 and 2.1. Supports the unit test frameworks MSTest2, NUnit3, XUnit2, MSpec, and NSpec3.
+https://github.com/fluentassertions/fluentassertions  
+
+
+Json.NET  
 Json.NET is a popular high-performance JSON framework for .NET  
 https://www.newtonsoft.com/json
 
+SSH.NET  
 SSH.NET is a Secure Shell (SSH) library for .NET, optimized for parallelism.  
 https://github.com/sshnet/SSH.NET/
 
-Boostrap: The most popular front-end framework for developing responsive, mobile first projects on the web.  
+Boostrap:   
+The most popular front-end framework for developing responsive, mobile first projects on the web.  
 https://getbootstrap.com
 
-Html Agility Pack (HAP)
-https://github.com/zzzprojects/html-agility-pack  
+Html Agility Pack (HAP)  
+Html Agility Pack (HAP) is a free and open-source HTML parser written in C# to read/write DOM and supports plain XPATH or XSLT. It is a .NET code library that allows you to parse "out of the web" HTML files.
+https://github.com/zzzprojects/html-agility-pack
 
+Hangfire  
 An easy and reliable way to perform fire-and-forget, delayed and recurring, long-running, short-running,   
 CPU or I/O intensive tasks inside ASP.NET applications. No Windows Service / Task Scheduler required. Even ASP.NET is not required. Backed by Redis, SQL Server, SQL Azure or MSMQ. This is a .NET alternative to Sidekiq, Resque and Celery. 
 https://www.hangfire.io/   
@@ -134,17 +155,25 @@ Font Awesome
 Get vector icons and social logos on your website with Font Awesome, the web's most popular icon set and toolkit.   
 https://fontawesome.com/  
 
-
 Bootswatch  
 Free themes for Bootstrap  
 https://bootswatch.com/  
 
-=====================  
-Thanks to all this people who worked for this nuget packages. Without that it wouldn't be possible to do this.  
-  
-  
+Xunit  
+xUnit.net is a free, open source, community-focused unit testing tool for the .NET Framework.  
+https://github.com/xunit/xunit
+
 Swagger tools for documenting APIs built on ASP.NET Core  
-https://github.com/domaindrivendev/Swashbuckle.AspNetCore  
+https://github.com/domaindrivendev/Swashbuckle.AspNetCore
+
+LiteDB.Identity.Async  
+Make LiteDB.Identity async  
+https://github.com/devinSpitz/LiteDB.Identity.Async
+
+Serilog.Sinks.LiteDb.Async  
+Serilog event sink that writes to LiteDb database  
+https://github.com/devinSpitz/Serilog.Sinks.LiteDb.Async  
+
   
 Thanks to all this people who worked for this nuget packages. Without that it wouldn't be possible to do this.  
 
