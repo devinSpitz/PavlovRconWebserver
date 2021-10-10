@@ -24,12 +24,11 @@ jobs:
       # Then simply use the dotnet container as you'd expect and run your tests
       - run:
           # Update this line with the directory that contains your tests project file
-          # cd /project/PavlovRconWebserverTests
-          # dotnet test PavlovRconWebserverTests.csproj
           working_directory:  .
           name: Run tests
           command: |
-            ls -axl
+              cd PavlovRconWebserverTests/
+              dotnet test PavlovRconWebserverTests.csproj
       - persist_to_workspace:
           root: .
           paths:
@@ -41,24 +40,27 @@ jobs:
       - attach_workspace:
           at: ./artifacts  
       - run:
-          working_directory: ./artifacts/
+          working_directory: ./artifacts/PavlovRconWebserver
           name: Run Build Windows
           command: |
             apt update
             apt install -y zip
-            ls -axl
-            mkdir /build/
-            mkdir /build/Windows/
-            mkdir /build/Linux/
-            dotnet publish / -c Release -o /build/Windows/ --runtime win-x64 --self-contained true --framework net5.0
-            dotnet publish / -c Release -o /build/Linux/ --runtime linux-x64 --self-contained true --framework net5.0
-            cp /build/Windows/DefaultDB/Database.db /build/Windows/Database/Database.db
-            cp /build/Linux/DefaultDB/Database.db /build/Linux/Database/Database.db
-            zip -r /build/PavlovRconBuildLinux.zip /build/Linux/
-            zip -r /build/PavlovRconBuildWindows.zip /build/Windows/
-            rm -rf /build/Linux
-            rm -rf /build/Windows
-            cd /build/
+            mkdir build/
+            mkdir build/Windows/
+            mkdir build/Linux/
+            dotnet publish -c Release -o build/Windows/ --runtime win-x64 --self-contained true --framework net5.0
+            dotnet publish -c Release -o build/Linux/ --runtime linux-x64 --self-contained true --framework net5.0
+            cp build/Windows/DefaultDB/Database.db build/Windows/Database/Database.db
+            cp build/Linux/DefaultDB/Database.db build/Linux/Database/Database.db
+            VERSION=$(build/Linux/PavlovRconWebserver --version)
+            echo "$VERSION" > "build/Linux/version"
+            echo "$VERSION" > "build/Widnows/version"
+            echo "$VERSION" > "version"
+            zip -r build/PavlovRconBuildLinux.zip build/Linux/
+            zip -r build/PavlovRconBuildWindows.zip build/Windows/
+            rm -rf build/Linux
+            rm -rf build/Windows
+            cd build/
             ls -axl
             
   publish-github-release:
@@ -68,11 +70,12 @@ jobs:
       - attach_workspace:
           at: ./artifacts
       - run:
+          working_directory: ./artifacts/PavlovRconWebserver
           name: "Publish Release on GitHub"
           command: |
+            VERSION=$(cat version)
             go get github.com/tcnksm/ghr
-            VERSION=$(/build/Linux/PavlovRconWebserver --version)
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./artifacts/project/PavlovRconWebserver/build/
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} build/
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
@@ -83,6 +86,6 @@ workflows:
       - build:
           requires:
             - test
-      #- publish-github-release:
-      #    requires:
-      #      - build
+      - publish-github-release:
+          requires:
+            - build
