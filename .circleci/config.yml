@@ -46,6 +46,7 @@ jobs:
           command: |
             apt update
             apt install -y zip
+            ls -axl
             mkdir /build/
             mkdir /build/Windows/
             mkdir /build/Linux/
