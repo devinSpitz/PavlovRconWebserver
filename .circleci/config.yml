@@ -42,9 +42,9 @@ jobs:
           working_directory: /PavlovRconWebserver
           name: Run Build Windows
           command: |
-            dotnet publish / -c Release -o ./build/Windows/ --runtime win-x64 --self-contained true --framework net5.0 -p:Version=${CIRCLE_TAG}
+            dotnet publish / -c Release -o /build/Windows/ --runtime win-x64 --self-contained true --framework net5.0
             cp ./build/Windows/DefaultDB/Database.db ./build/Windows/Database/Database.db
-            dotnet publish / -c Release -o ./build/Linux/ --runtime linux-x64 --self-contained true --framework net5.0 -p:Version=${CIRCLE_TAG}
+            dotnet publish / -c Release -o /build/Linux/ --runtime linux-x64 --self-contained true --framework net5.0
             cp ./build/Linux/DefaultDB/Database.db ./build/Linux/Database/Database.db
             
   publish-github-release:
@@ -57,7 +57,7 @@ jobs:
           name: "Publish Release on GitHub"
           command: |
             go get github.com/tcnksm/ghr
-            VERSION=$(./build/Linux/PavlovRconWebserver --version)
+            VERSION=$(/build/Linux/PavlovRconWebserver --version)
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./artifacts/build
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
