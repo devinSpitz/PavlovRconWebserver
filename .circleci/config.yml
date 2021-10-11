@@ -63,7 +63,10 @@ jobs:
             ls -axl build/Windows
             rm -rf build/Linux
             rm -rf build/Windows
-            
+      - persist_to_workspace:
+          root: .
+          paths:
+            - ./
   publish-github-release:
     docker:
       - image: circleci/golang:1.8
