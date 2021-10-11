@@ -51,13 +51,6 @@ jobs:
             mkdir build/Linux/
             dotnet publish -c Release -o build/Windows/ --runtime win-x64 --self-contained true --framework net5.0
             dotnet publish -c Release -o build/Linux/ --runtime linux-x64 --self-contained true --framework net5.0
-            ls -axl
-            cd build
-            ls -axl
-            cd Windows
-            ls -axl
-            cd DefaultDB
-            ls -axl
             cp build/Windows/DefaultDB/Database.db build/Windows/Database/Database.db
             cp build/Linux/DefaultDB/Database.db build/Linux/Database/Database.db
             VERSION=$(build/Linux/PavlovRconWebserver --version)
