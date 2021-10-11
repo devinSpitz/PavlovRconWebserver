@@ -74,7 +74,7 @@ jobs:
       - attach_workspace:
           at: ./artifacts
       - run:
-          working_directory: ./
+          working_directory: ./artifacts
           name: "Publish Release on GitHub"
           command: |
             ls -axl
