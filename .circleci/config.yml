@@ -3,9 +3,6 @@
 version: 2.1
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
-on:
-  pull_request:
-    types: [closed]
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
