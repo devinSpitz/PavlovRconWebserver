@@ -55,7 +55,7 @@ jobs:
             cp build/Linux/DefaultDB/Database.db build/Linux/Database/Database.db
             VERSION=$(build/Linux/PavlovRconWebserver --version)
             echo "$VERSION" > "build/Linux/version"
-            echo "$VERSION" > "build/Widnows/version"
+            echo "$VERSION" > "build/Windows/version"
             echo "$VERSION" > "version"
             zip -r build/PavlovRconBuildLinux.zip build/Linux/
             zip -r build/PavlovRconBuildWindows.zip build/Windows/
