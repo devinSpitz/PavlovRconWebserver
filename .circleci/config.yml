@@ -54,9 +54,7 @@ jobs:
             ls -axl
             cd build
             ls -axl
-            cd 
-            ls -axl
-            cd project
+            cd Windows
             ls -axl
             cd DefaultDB
             ls -axl
