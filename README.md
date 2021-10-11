@@ -12,16 +12,13 @@ Pictures:
 ![PavlovServerSettings](./PavlovRconWebserver/Pictures/PavlovServerSettings.png?raw=true)
 ![MapsSelector](./PavlovRconWebserver/Pictures/MapsSelector.png?raw=true)
 
-Auth logic with priority(with added multiple options):
 
-1. ssh key + username + passphrase
-2. ssh key + username
-3. ssh username pass
-
-Default users:  
-User: admin  
-pw: A2345a$  
-
+Attention:
+=======
+This software can easily manage your pavlov servers. This also means deleting.  
+Please proceed only if you know what you are doing.  
+Otherwise ask for help first:  
+https://github.com/devinSpitz/PavlovRconWebserver/discussions
 
 Features:
 =======
@@ -85,6 +82,20 @@ Offers:
    3.6 If you are interested just contact: <a href="mailto:&#x64;&#x65;&#x76;&#x69;&#x6e;&#x40;&#x73;&#x70;&#x69;&#x74;&#x7a;&#x65;&#x6e;&#x2e;&#x73;&#x6f;&#x6c;&#x75;&#x74;&#x69;&#x6f;&#x6e;&#x73;">&#x64;&#x65;&#x76;&#x69;&#x6e;&#x40;&#x73;&#x70;&#x69;&#x74;&#x7a;&#x65;&#x6e;&#x2e;&#x73;&#x6f;&#x6c;&#x75;&#x74;&#x69;&#x6f;&#x6e;&#x73;</a>      
    3.7 You can also edit the Game Ini settings:
    ![OnPremise](./PavlovRconWebserver/Pictures/OnPremise.png?raw=true)
+
+
+Auth:
+=======
+Auth logic with priority(with added multiple options):
+
+1. ssh key + username + passphrase
+2. ssh key + username
+3. ssh username pass
+
+Default users:  
+User: admin  
+pw: A2345a$  
+
 
 Note:
 ======= 
