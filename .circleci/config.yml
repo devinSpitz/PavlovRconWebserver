@@ -58,14 +58,14 @@ jobs:
             ls -axl
             cd DefaultDB
             ls -axl
-            cp build/Windows/project/DefaultDB/Database.db build/Windows/project/Database/Database.db
-            cp build/Linux/project/DefaultDB/Database.db build/Linux/project/Database/Database.db
-            VERSION=$(build/Linux/project/PavlovRconWebserver --version)
-            echo "$VERSION" > "build/Linux/project/version"
-            echo "$VERSION" > "build/Widnows/project/version"
+            cp build/Windows/DefaultDB/Database.db build/Windows/Database/Database.db
+            cp build/Linux/DefaultDB/Database.db build/Linux/Database/Database.db
+            VERSION=$(build/Linux/PavlovRconWebserver --version)
+            echo "$VERSION" > "build/Linux/version"
+            echo "$VERSION" > "build/Widnows/version"
             echo "$VERSION" > "version"
-            zip -r build/PavlovRconBuildLinux.zip build/Linux/project/
-            zip -r build/PavlovRconBuildWindows.zip build/Windows/project/
+            zip -r build/PavlovRconBuildLinux.zip build/Linux/
+            zip -r build/PavlovRconBuildWindows.zip build/Windows/
             rm -rf build/Linux
             rm -rf build/Windows
             cd build/
