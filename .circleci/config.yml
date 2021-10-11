@@ -42,6 +42,7 @@ jobs:
           command: |
             apt update
             apt install -y zip
+            ls -axl
             mkdir build/
             mkdir build/Windows/
             mkdir build/Linux/
@@ -51,29 +52,35 @@ jobs:
             cp build/Linux/DefaultDB/Database.db build/Linux/Database/Database.db
             VERSION=$(build/Linux/PavlovRconWebserver --version)
             echo "$VERSION" > "build/Linux/version"
-            echo "$VERSION" > "build/Widnows/version"
+            echo "$VERSION" > "build/Windows/version"
             echo "$VERSION" > "version"
             zip -r build/PavlovRconBuildLinux.zip build/Linux/
             zip -r build/PavlovRconBuildWindows.zip build/Windows/
+            ls -axl build/Linux
+            ls -axl build/Windows
             rm -rf build/Linux
             rm -rf build/Windows
-            cd build/
-            ls -axl
-            
+      - persist_to_workspace:
+          root: .
+          paths:
+            - ./
   publish-github-release:
     docker:
-      - image: circleci/golang:1.8
+      - image: circleci/golang:1.17.2
     steps:
       - attach_workspace:
           at: ./artifacts
       - run:
-          working_directory: ./artifacts/PavlovRconWebserver
+          working_directory: ./artifacts/artifacts/PavlovRconWebserver
           name: "Publish Release on GitHub"
           command: |
+            ls -axl
             VERSION=$(cat version)
+            echo "$VERSION"
             go get github.com/tcnksm/ghr
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} build/
 # Invoke jobs via workflows
+#
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
   TestBuildRelease: # This is the name of the workflow, feel free to change it to better match your workflow.
