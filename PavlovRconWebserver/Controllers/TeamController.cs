@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -14,7 +15,7 @@ using PavlovRconWebserver.Services;
 
 namespace PavlovRconWebserver.Controllers
 {
-    [Authorize(Roles = CustomRoles.Admin)]
+    [Authorize(Roles = CustomRoles.User)]
     public class TeamController : Controller
     {
         private readonly SteamIdentityService _steamIdentityService;
@@ -35,37 +36,17 @@ namespace PavlovRconWebserver.Controllers
             _teamSelectedSteamIdentityService = teamSelectedSteamIdentityService;
             _userManager = userManager;
         }
-
-        public async Task<bool> CheckRightsTeamCaptainOrCaptain(int teamId, SteamIdentity steamIdentity = null)
-        {
-            return await _teamService.CheckRightsTeamCaptainOrCaptain(teamId, _teamSelectedSteamIdentityService,
-                _userService,
-                HttpContext.User, steamIdentity);
-        }
+        
 
 
         public async Task<IActionResult> Index()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var bla = await _steamIdentityService.FindOne(new ObjectId(userId));
+            
+            var user = await _userService.getUserFromCp(HttpContext.User);
+            var servers = await _teamService.FindAllTeamsWhereTheUserHasRights(HttpContext.User,user);
+            
 
-            if (!await CheckRightsTeamCaptainOrCaptain(0, bla)) return Unauthorized();
-
-            var teams = new List<Team>();
-            var tmpTeams = (await _teamService.FindAll()).ToList();
-
-            if (!await RightsHandler.IsUserAtLeastInRole("Captain", HttpContext.User, _userService))
-            {
-                foreach (var team in tmpTeams)
-                    if (await CheckRightsTeamCaptainOrCaptain(team.Id, bla))
-                        teams.Add(team);
-            }
-            else
-            {
-                teams = tmpTeams.ToList();
-            }
-
-            return View("Index", teams.ToList());
+            return View("Index", servers.ToList());
         }
 
 
@@ -73,16 +54,15 @@ namespace PavlovRconWebserver.Controllers
         public async Task<IActionResult> EditTeam(Team team)
         {
             if (team == null) return BadRequest("please set a Team");
+            
+            var user = await _userService.getUserFromCp(HttpContext.User);
+            var servers = await _teamService.FindAllTeamsWhereTheUserHasRights(HttpContext.User,user);
             if (team.Id != 0)
             {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var bla = await _steamIdentityService.FindOne(new ObjectId(userId));
-                if (!await CheckRightsTeamCaptainOrCaptain(team.Id, bla)) return Unauthorized();
-            }
-            else
-            {
-                if (!await RightsHandler.IsUserAtLeastInRole("Admin", HttpContext.User, _userService))
-                    return Unauthorized();
+                if (!servers.Select(x => x.Id).Contains(team.Id))
+                {
+                    return Forbid();
+                }
             }
 
             team.AllSteamIdentities = (await _steamIdentityService.FindAll()).ToList();
@@ -91,6 +71,7 @@ namespace PavlovRconWebserver.Controllers
             return View("Team", team);
         }
 
+        [Authorize(Roles = CustomRoles.Mod)]
         [HttpGet]
         public async Task<IActionResult> EditSteamIdentity([CanBeNull] string steamIdentityId)
         {
@@ -98,15 +79,11 @@ namespace PavlovRconWebserver.Controllers
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 var bla = await _steamIdentityService.FindOne(new ObjectId(userId));
-                if (!await CheckRightsTeamCaptainOrCaptain(0, bla)) return Unauthorized();
                 return View("SteamIdentity", new SteamIdentity
                 {
                     LiteDbUsers = (await _userService.FindAll()).ToList()
                 });
             }
-
-            if (!await RightsHandler.IsUserAtLeastInRole("Admin", HttpContext.User, _userService))
-                return Unauthorized();
 
 
             var steamIdentity = await _steamIdentityService.FindOne(steamIdentityId);
@@ -114,48 +91,34 @@ namespace PavlovRconWebserver.Controllers
             return View("SteamIdentity", steamIdentity);
         }
 
+        [Authorize(Roles = CustomRoles.Mod)]
         [HttpGet]
         public async Task<IActionResult> DeleteSteamIdentity(string steamIdentityId)
         {
-            if (!await RightsHandler.IsUserAtLeastInRole("Admin", HttpContext.User, _userService))
-                return Unauthorized();
             await _steamIdentityService.Delete(steamIdentityId);
             return await SteamIdentitiesIndex();
         }
 
+        [Authorize(Roles = CustomRoles.Mod)]
         [HttpGet]
         public async Task<IActionResult> SteamIdentitiesIndex()
         {
-            if (!await RightsHandler.IsUserAtLeastInRole("Admin", HttpContext.User, _userService))
-                return Unauthorized();
             var list = (await _steamIdentityService.FindAll()).ToList();
             foreach (var identity in list.Where(identity => !string.IsNullOrEmpty(identity.LiteDbUser.Id.ToString())))
                 identity.LiteDbUser = await _userManager.FindByIdAsync(identity.LiteDbUser.Id.ToString());
             return View("SteamIdentities", list);
         }
 
+        [Authorize(Roles = CustomRoles.Mod)]
         [HttpPost]
         public async Task<IActionResult> EditSteamIdentity(SteamIdentity steamIdentity)
         {
-            if (steamIdentity.Id == null || steamIdentity.Id == "0")
-            {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var bla = await _steamIdentityService.FindOne(new ObjectId(userId));
-                if (!await CheckRightsTeamCaptainOrCaptain(0, bla)) return Unauthorized();
-            }
-            else
-            {
-                if (!await RightsHandler.IsUserAtLeastInRole("Admin", HttpContext.User, _userService))
-                    return Unauthorized();
-            }
-            //Handle more stuff can be seen in model
-
             steamIdentity.LiteDbUsers = (await _userService.FindAll()).ToList();
             return View("SteamIdentity", steamIdentity);
         }
 
 
-        [HttpGet]
+        [HttpGet("[controller]/EditOwnSteamIdentity")]
         public async Task<IActionResult> EditOwnSteamIdentity()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -182,34 +145,22 @@ namespace PavlovRconWebserver.Controllers
             var hisOwn = userId == steamIdentity.LiteDbUserId;
             var currentOwner = await _steamIdentityService.FindOne(steamIdentity.Id);
             steamIdentity.LiteDbUsers = (await _userService.FindAll()).ToList();
-            if (steamIdentity.Id == null || steamIdentity.Id == "0")
+            if (userId != steamIdentity.LiteDbUserId)
             {
-                if (!await CheckRightsTeamCaptainOrCaptain(0, bla) || !hisOwn) return Unauthorized();
-            }
-            else
-            {
-                if (userId != steamIdentity.LiteDbUserId)
-                    if (!await RightsHandler.IsUserAtLeastInRole("Admin", HttpContext.User, _userService))
-                        return Unauthorized();
+                if (!await RightsHandler.IsUserAtLeastInRole("Mod", HttpContext.User, _userService))
+                    return Unauthorized();
             }
 
+            ViewBag.IsOwnSteamIdentity = hisOwn;
             steamIdentity.LiteDbUser = (await _userService.FindAll())
                 .FirstOrDefault(x => x.Id == new ObjectId(steamIdentity.LiteDbUserId));
 
             if (!ModelState.IsValid)
                 return View("SteamIdentity", steamIdentity);
 
-            if (steamIdentity.Id == null || steamIdentity.Id == "0")
-            {
-                userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (!await CheckRightsTeamCaptainOrCaptain(0, bla) || !hisOwn) return Unauthorized();
-            }
-            else
-            {
-                if (userId != steamIdentity.LiteDbUserId)
-                    if (!await RightsHandler.IsUserAtLeastInRole("Admin", HttpContext.User, _userService))
-                        return Unauthorized();
-            }
+            if (userId != steamIdentity.LiteDbUserId)
+                if (!await RightsHandler.IsUserAtLeastInRole("Mod", HttpContext.User, _userService))
+                    return Unauthorized();
 
             if (currentOwner == null || steamIdentity.LiteDbUserId == currentOwner.LiteDbUser.Id.ToString())
                 await _steamIdentityService.Upsert(steamIdentity);
@@ -227,39 +178,35 @@ namespace PavlovRconWebserver.Controllers
         [HttpGet]
         public async Task<IActionResult> EditTeam(int? teamId)
         {
+            var user = await _userService.getUserFromCp(HttpContext.User);
+            var teams = await _teamService.FindAllTeamsWhereTheUserHasRights(HttpContext.User,user);
             if (teamId == 0 || teamId == null)
             {
-                if (!await RightsHandler.IsUserAtLeastInRole("Admin", HttpContext.User, _userService))
-                    return Unauthorized();
+                return View("Team", new Team());
             }
             else
             {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var bla = await _steamIdentityService.FindOne(new ObjectId(userId));
-                if (!await CheckRightsTeamCaptainOrCaptain((int) teamId, bla)) return Unauthorized();
+                if (!teams.Where(x=>x.TeamRole=="Admin"||x.TeamRole=="Mod").Select(x => x.Id).Contains((int)teamId))
+                {
+                    return Forbid();
+                }
             }
 
-            if (teamId == null || teamId == 0)
-                return View("Team", new Team());
-
-            var team = await _teamService.FindOne((int) teamId);
-            return View("Team", team);
+            return View("Team", teams.FirstOrDefault(x=>x.Id==teamId));
         }
 
 
         [HttpPost("[controller]/SaveTeam")]
         public async Task<IActionResult> SaveTeam(Team team)
         {
-            if (team.Id == 0)
+            var user = await _userService.getUserFromCp(HttpContext.User);
+            var teams = await _teamService.FindAllTeamsWhereTheUserHasRights(HttpContext.User,user);
+            if(team.Id != 0)
             {
-                if (!await RightsHandler.IsUserAtLeastInRole("Admin", HttpContext.User, _userService))
-                    return Unauthorized();
-            }
-            else
-            {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var bla = await _steamIdentityService.FindOne(new ObjectId(userId));
-                if (!await CheckRightsTeamCaptainOrCaptain(team.Id, bla)) return Unauthorized();
+                if (!teams.Where(x=>x.TeamRole=="Admin"||x.TeamRole=="Mod").Select(x => x.Id).Contains(team.Id))
+                {
+                    return Forbid();
+                }
             }
 
             if (!ModelState.IsValid)
@@ -267,9 +214,26 @@ namespace PavlovRconWebserver.Controllers
 
             if (team.Id == 0)
             {
+                
                 var tmp = await _teamService.FindOne(team.Name);
                 if (tmp == null)
+                {
+                    var own = await _steamIdentityService.FindOne(user.Id);
+                    if (own == null)
+                    {
+                        ModelState.AddModelError("Name", "You need a steamIdentity to create a team!");
+                        return await EditTeam(team);
+                    }
                     await _teamService.Upsert(team);
+
+                
+                    await _teamSelectedSteamIdentityService.Insert(new TeamSelectedSteamIdentity
+                    {
+                        SteamIdentity = own,
+                        RoleOverwrite = "Admin",
+                        Team = team
+                    });
+                }
                 else
                     ModelState.AddModelError("Name", "This name is already used!");
             }
@@ -288,8 +252,12 @@ namespace PavlovRconWebserver.Controllers
         [HttpGet("[controller]/DeleteTeam/{id}")]
         public async Task<IActionResult> DeleteTeam(int id)
         {
-            if (!await RightsHandler.IsUserAtLeastInRole("Mod", HttpContext.User, _userService))
-                return Unauthorized(); // have to add that you can see your team if you are not an admin
+            var user = await _userService.getUserFromCp(HttpContext.User);
+            var teams = await _teamService.FindAllTeamsWhereTheUserHasRights(HttpContext.User,user);
+            if (!teams.Where(x=>x.TeamRole=="Admin"||x.TeamRole=="Mod").Select(x => x.Id).Contains(id))
+            {
+                return Forbid();
+            }
             await _teamService.Delete(id);
             return await Index();
         }
@@ -297,17 +265,12 @@ namespace PavlovRconWebserver.Controllers
 
         [HttpGet]
         public async Task<IActionResult> EditTeamSelectedSteamIdentities(int teamId)
-        {
-            if (teamId == 0)
+        {            
+            var user = await _userService.getUserFromCp(HttpContext.User);
+            var teams = await _teamService.FindAllTeamsWhereTheUserHasRights(HttpContext.User,user);
+            if (!teams.Where(x=>x.TeamRole=="Admin"||x.TeamRole=="Mod"||x.TeamRole=="Captain").Select(x => x.Id).Contains(teamId))
             {
-                if (!await RightsHandler.IsUserAtLeastInRole("Admin", HttpContext.User, _userService))
-                    return Unauthorized();
-            }
-            else
-            {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var bla = await _steamIdentityService.FindOne(new ObjectId(userId));
-                if (!await CheckRightsTeamCaptainOrCaptain(teamId, bla)) return Unauthorized();
+                return Forbid();
             }
 
             var viewModel = new TeamSelectedSteamIdentitiesViewModel();
@@ -320,6 +283,12 @@ namespace PavlovRconWebserver.Controllers
         [HttpGet("[controller]/{teamId}/{steamIdentityId}")]
         public async Task<IActionResult> EditTeamSelectedSteamIdentity(int teamId, string steamIdentityId)
         {
+            var user = await _userService.getUserFromCp(HttpContext.User);
+            var teams = await _teamService.FindAllTeamsWhereTheUserHasRights(HttpContext.User,user);
+            if (!teams.Where(x=>x.TeamRole=="Admin"||x.TeamRole=="Mod"||x.TeamRole=="Captain").Select(x => x.Id).Contains(teamId))
+            {
+                return Forbid();
+            }
             if (teamId == 0) return BadRequest("team id is required");
             if (steamIdentityId == "0") return BadRequest("steamIdentity id is required");
             var viewModel = new UpdateOverwriteRoleOfTeamSelectedSteamIdentityViewModel
@@ -333,6 +302,12 @@ namespace PavlovRconWebserver.Controllers
         public async Task<IActionResult> EditTeamSelectedSteamIdentity(int teamId, string steamIdentityId,
             string overWriteRole)
         {
+            var user = await _userService.getUserFromCp(HttpContext.User);
+            var teams = await _teamService.FindAllTeamsWhereTheUserHasRights(HttpContext.User,user);
+            if (!teams.Where(x=>x.TeamRole=="Admin"||x.TeamRole=="Mod").Select(x => x.Id).Contains(teamId))
+            {
+                return Forbid();
+            }
             if (teamId == 0) return BadRequest("team id is required");
             if (steamIdentityId == "0") return BadRequest("steamIdentity id is required");
             if (string.IsNullOrEmpty(overWriteRole)) return BadRequest("overWriteRole is required");
@@ -349,6 +324,12 @@ namespace PavlovRconWebserver.Controllers
             UpdateOverwriteRoleOfTeamSelectedSteamIdentityViewModel
                 updateOverwriteRoleOfTeamSelectedSteamIdentityViewModel)
         {
+            var user = await _userService.getUserFromCp(HttpContext.User);
+            var teams = await _teamService.FindAllTeamsWhereTheUserHasRights(HttpContext.User,user);
+            if (!teams.Where(x=>x.TeamRole=="Admin"||x.TeamRole=="Mod").Select(x => x.Id).Contains(updateOverwriteRoleOfTeamSelectedSteamIdentityViewModel.teamId))
+            {
+                return Forbid();
+            }
             var identity = await _teamSelectedSteamIdentityService.FindOne(
                 updateOverwriteRoleOfTeamSelectedSteamIdentityViewModel.teamId,
                 updateOverwriteRoleOfTeamSelectedSteamIdentityViewModel.steamIdentityId);
@@ -362,16 +343,11 @@ namespace PavlovRconWebserver.Controllers
         [HttpGet]
         public async Task<IActionResult> SaveTeamSelectedSteamIdentity(int teamId, string steamIdentityId)
         {
-            if (teamId == 0)
+            var user = await _userService.getUserFromCp(HttpContext.User);
+            var teams = await _teamService.FindAllTeamsWhereTheUserHasRights(HttpContext.User,user);
+            if (!teams.Where(x=>x.TeamRole=="Admin"||x.TeamRole=="Mod").Select(x => x.Id).Contains(teamId))
             {
-                if (!await RightsHandler.IsUserAtLeastInRole("Admin", HttpContext.User, _userService))
-                    return Unauthorized();
-            }
-            else
-            {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var bla = await _steamIdentityService.FindOne(new ObjectId(userId));
-                if (!await CheckRightsTeamCaptainOrCaptain(teamId, bla)) return Unauthorized();
+                return Forbid();
             }
 
             var identity = await _teamSelectedSteamIdentityService.FindOne(teamId, steamIdentityId);
@@ -388,16 +364,11 @@ namespace PavlovRconWebserver.Controllers
         [HttpGet]
         public async Task<IActionResult> DeleteTeamSelectedSteamIdentity(int teamId, string steamIdentityId)
         {
-            if (teamId == 0)
+            var user = await _userService.getUserFromCp(HttpContext.User);
+            var teams = await _teamService.FindAllTeamsWhereTheUserHasRights(HttpContext.User,user);
+            if (!teams.Where(x=>x.TeamRole=="Admin"||x.TeamRole=="Mod").Select(x => x.Id).Contains(teamId))
             {
-                if (!await RightsHandler.IsUserAtLeastInRole("Admin", HttpContext.User, _userService))
-                    return Unauthorized();
-            }
-            else
-            {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var bla = await _steamIdentityService.FindOne(new ObjectId(userId));
-                if (!await CheckRightsTeamCaptainOrCaptain(teamId, bla)) return Unauthorized();
+                return Forbid();
             }
 
             var identity = await _teamSelectedSteamIdentityService.FindOne(teamId, steamIdentityId);

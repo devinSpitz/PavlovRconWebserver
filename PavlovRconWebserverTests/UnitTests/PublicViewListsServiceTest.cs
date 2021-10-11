@@ -9,14 +9,16 @@ namespace PavlovRconWebserverTests.UnitTests
 {
     public class PublicViewListsServiceTest
     {
-        private readonly IServicesBuilder services;
         private readonly AutoMocker _mocker;
-        private readonly PavlovServerService _pavlovServerService;
-        private readonly SshServerSerivce _sshServerSerivce;
         private readonly PavlovServerInfoService _pavlovServerInfoService;
         private readonly PavlovServerPlayerService _pavlovServerPlayerService;
+        private readonly PavlovServerService _pavlovServerService;
         private readonly PublicViewListsService _publicViewListsService;
-        public PublicViewListsServiceTest() {
+        private readonly SshServerSerivce _sshServerSerivce;
+        private readonly IServicesBuilder services;
+
+        public PublicViewListsServiceTest()
+        {
             services = new ServicesBuilder();
             _mocker = new AutoMocker();
             services.Build(_mocker);
@@ -25,20 +27,26 @@ namespace PavlovRconWebserverTests.UnitTests
             _pavlovServerInfoService = _mocker.CreateInstance<PavlovServerInfoService>();
             _pavlovServerPlayerService = _mocker.CreateInstance<PavlovServerPlayerService>();
             _publicViewListsService = _mocker.CreateInstance<PublicViewListsService>();
-
         }
-        
+
         [Fact]
         public void ViewModelTest()
         {
             // arrange
-            var pavlovServers = PavlovServerServiceTests.InitializePavlovServer(_sshServerSerivce, _pavlovServerService);
-            var pavlovServerInfo = PavlovServerInfoServiceTest.CreatePavlovServerInfo(_pavlovServerInfoService, pavlovServers.First().Id);
-            var pavlovServerPlayer = PavlovServerPlayerServiceTest.CreatePavlovServerPlayer(_pavlovServerPlayerService, pavlovServers.First().Id);
+            var pavlovServers =
+                PavlovServerServiceTests.InitializePavlovServer(_sshServerSerivce, _pavlovServerService);
+            var pavlovServerInfo =
+                PavlovServerInfoServiceTest.CreatePavlovServerInfo(_pavlovServerInfoService, pavlovServers.First().Id);
+            var pavlovServerPlayer =
+                PavlovServerPlayerServiceTest.CreatePavlovServerPlayer(_pavlovServerPlayerService,
+                    pavlovServers.First().Id);
 
             // act
-            var result = _publicViewListsService.PavlovServerPlayerListPublicViewModel(pavlovServerInfo, new[] {pavlovServerPlayer});
-            var result2 = _publicViewListsService.GetPavlovServerPlayerListPublicViewModel(pavlovServers.First().Id).GetAwaiter().GetResult();
+            var result =
+                _publicViewListsService.PavlovServerPlayerListPublicViewModel(pavlovServerInfo,
+                    new[] {pavlovServerPlayer});
+            var result2 = _publicViewListsService.GetPavlovServerPlayerListPublicViewModel(pavlovServers.First().Id)
+                .GetAwaiter().GetResult();
             // assert
             result.ServerInfo.ServerName.Should().Be("test");
             result2.PlayerList.Should().NotBeNull();
@@ -46,10 +54,5 @@ namespace PavlovRconWebserverTests.UnitTests
             result.Should().NotBeNull();
             result2.Should().NotBeNull();
         }
-        
-
-        
-        
-
     }
 }

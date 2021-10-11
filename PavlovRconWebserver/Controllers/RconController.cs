@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AspNetCoreHero.ToastNotification.Abstractions;
+using LiteDB.Identity.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -14,12 +15,11 @@ using Serilog.Events;
 
 namespace PavlovRconWebserver.Controllers
 {
-    
     [Authorize(Roles = CustomRoles.User)]
     public class RconController : Controller
     {
-        private readonly IToastifyService _notifyService;
         private readonly MapsService _mapsService;
+        private readonly IToastifyService _notifyService;
         private readonly PavlovServerPlayerService _pavlovServerPlayerService;
         private readonly PavlovServerService _pavlovServerService;
         private readonly ServerBansService _serverBansService;
@@ -54,53 +54,58 @@ namespace PavlovRconWebserver.Controllers
         public async Task<IActionResult> Index()
         {
             var viewModel = new RconViewModel();
-            var servers = (await _pavlovServerService.FindAll())
-                .ToList(); // has to be the same as in await IsModSomeWhere(); 
-            var isModSomeWhere = false;
             var user = await _userservice.getUserFromCp(HttpContext.User);
-            isModSomeWhere = await _pavlovServerService.IsModSomeWhere(user, _serverSelectedModsService);
+            var isModSomeWhere = await _pavlovServerService.IsModSomeWhere(user, _serverSelectedModsService);
+            var servers = await GiveServerWhichTheUserHasRightsTo();
 
-            if (isModSomeWhere)
-            {
-                // cut off all server he is not mod
-                var tmpServers = new List<PavlovServer>();
-                foreach (var pavlovServer in servers)
-                    if (await RightsHandler.IsModOnTheServer(_serverSelectedModsService, pavlovServer, user.Id))
-                        tmpServers.Add(pavlovServer);
-
-                servers = tmpServers;
-            }
-            else
-            {
-                if (!await RightsHandler.IsUserAtLeastInRole("Captain", HttpContext.User, _userservice))
-                    return Unauthorized();
-            }
-
-            ViewBag.Servers = servers;
-            //set allowed Commands
-            var allowCommands = new List<string>();
+            ViewBag.Servers = servers.Where(x=>x.ServerServiceState==ServerServiceState.active);
             ViewBag.commandsAllow =
                 await RightsHandler.GetAllowCommands(viewModel, HttpContext.User, _userservice, isModSomeWhere);
 
             return View(viewModel);
         }
 
+        private async Task<List<PavlovServer>> GiveServerWhichTheUserHasRightsTo()
+        {
+            LiteDbUser user;
+            user = await _userservice.getUserFromCp(HttpContext.User);
+            var servers =
+                (await _pavlovServerService.FindAllServerWhereTheUserHasRights(HttpContext.User, user))
+                .ToList();
+            return servers;
+        }
+
 
         [HttpPost("[controller]/SendCommand")]
         public async Task<IActionResult> SendCommand(int server, string command)
         {
-            var singleServer = new PavlovServer();
-            singleServer = await _pavlovServerService.FindOne(server);
-            var isModOnTheServer = await IsModOnTheServer(server);
-            if (!await RightsHandler.IsUserAtLeastInRole("Captain", HttpContext.User, _userservice) &&
-                !isModOnTheServer) return Unauthorized();
-            if (!await RightsHandler.IsUserAtLeastInRoleForCommand(command, HttpContext.User, _userservice,
-                isModOnTheServer)) return Unauthorized();
-
+            var singleServer = await _pavlovServerService.FindOne(server);
+            var servers = await GiveServerWhichTheUserHasRightsTo();
+            LiteDbUser user;
+            user = await _userservice.getUserFromCp(HttpContext.User);
+            if (!servers.Select(x => x.Id).Contains(singleServer.Id))
+            {
+                return Forbid();
+            }
+            var isMod = await RightsHandler.IsModOnTheServer(_serverSelectedModsService, singleServer, user.Id);
+            var commands = await RightsHandler.GetAllowCommands(new RconViewModel(), HttpContext.User, _userservice, isMod,singleServer,user);
+            var contains = false;
+            foreach (var singleCommand in commands)
+            {
+                if (command.Contains(singleCommand))
+                {
+                    contains = true;
+                }
+            }
+            if (contains != true)
+            {
+                return Forbid();
+            }
+            
             var response = "";
             try
             {
-                response = await RconStatic.SendCommandSShTunnel(singleServer, command,_notifyService);
+                response = await RconStatic.SendCommandSShTunnel(singleServer, command, _notifyService);
             }
             catch (Exception e)
             {
@@ -114,9 +119,14 @@ namespace PavlovRconWebserver.Controllers
         [HttpPost("[controller]/SingleServerInfoPartialView")]
         public async Task<IActionResult> SingleServerInfoPartialView(string server, int serverId)
         {
-            var isModOnTheServer = await IsModOnTheServer(serverId);
-            if (!await RightsHandler.IsUserAtLeastInRole("Captain", HttpContext.User, _userservice) &&
-                !isModOnTheServer) return Unauthorized();
+            var servers = await GiveServerWhichTheUserHasRightsTo();
+
+            if (!servers.Select(x => x.Id).Contains(serverId))
+            {
+                return Forbid();
+            }
+            
+            
             var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(server.Replace("\"\"", "\"ServerInfo\""));
             if (tmp == null) return BadRequest("Could not Desirialize Object!");
             var pavlovServer = await _pavlovServerService.FindOne(serverId);
@@ -138,12 +148,17 @@ namespace PavlovRconWebserver.Controllers
         [HttpPost("[controller]/PavlovChooseMapPartialView")]
         public async Task<IActionResult> PavlovChooseMapPartialView(int? serverId)
         {
-            //onMutliRcon do not handle the selected maps
             List<Map> listOfMaps;
 
             listOfMaps = (await _mapsService.FindAll()).ToList();
             if (serverId != null)
             {
+                var servers = await GiveServerWhichTheUserHasRightsTo();
+
+                if (!servers.Select(x => x.Id).Contains((int)serverId))
+                {
+                    return Forbid();
+                }
                 var server = await _pavlovServerService.FindOne((int) serverId);
                 var mapsSelected = await _serverSelectedMapService.FindAllFrom(server);
                 if (mapsSelected != null)
@@ -161,9 +176,14 @@ namespace PavlovRconWebserver.Controllers
         [HttpPost("[controller]/GetBansFromServers")]
         public async Task<IActionResult> GetBansFromServers(int serverId)
         {
-            var isModOnTheServer = await IsModOnTheServer(serverId);
-            if (!await RightsHandler.IsUserAtLeastInRole("Captain", HttpContext.User, _userservice) &&
-                !isModOnTheServer) return Unauthorized();
+            var servers = await GiveServerWhichTheUserHasRightsTo();
+
+            if (!servers.Select(x => x.Id).Contains((int)serverId))
+            {
+                return Forbid();
+            }
+
+
             if (serverId <= 0) return BadRequest("Please choose a server!");
             var server = await _pavlovServerService.FindOne(serverId);
             var banlist = await _serverBansService.FindAllFromPavlovServerId(serverId, true);
@@ -175,9 +195,15 @@ namespace PavlovRconWebserver.Controllers
         [HttpPost("[controller]/AddBanPlayer")]
         public async Task<IActionResult> AddBanPlayer(int serverId, string steamId, string timespan)
         {
-            var isModOnTheServer = await IsModOnTheServer(serverId);
-            if (!await RightsHandler.IsUserAtLeastInRole("Mod", HttpContext.User, _userservice) && !isModOnTheServer)
-                return Unauthorized();
+            var servers = await GiveServerWhichTheUserHasRightsTo();
+
+            if (!servers.Select(x => x.Id).Contains(serverId))
+            {
+                return Forbid();
+            }
+            
+            
+            
             if (serverId <= 0) return BadRequest("Please choose a server!");
             if (string.IsNullOrEmpty(steamId) || steamId == "-") return BadRequest("SteamId must be set!");
             if (string.IsNullOrEmpty(timespan)) return BadRequest("TimeSpan  must be set!");
@@ -195,7 +221,7 @@ namespace PavlovRconWebserver.Controllers
                 var result1 = "";
                 try
                 {
-                    result1 = await RconStatic.SendCommandSShTunnel(ban.PavlovServer, "RefreshList",_notifyService);
+                    result1 = await RconStatic.SendCommandSShTunnel(ban.PavlovServer, "RefreshList", _notifyService);
                 }
                 catch (Exception e)
                 {
@@ -215,7 +241,7 @@ namespace PavlovRconWebserver.Controllers
             var result = "";
             try
             {
-                result = await RconStatic.SendCommandSShTunnel(ban.PavlovServer, "Ban " + steamId,_notifyService);
+                result = await RconStatic.SendCommandSShTunnel(ban.PavlovServer, "Ban " + steamId, _notifyService);
             }
             catch (Exception e)
             {
@@ -256,7 +282,13 @@ namespace PavlovRconWebserver.Controllers
         [HttpPost("[controller]/RemoveBanPlayer")]
         public async Task<IActionResult> RemoveBanPlayer(int serverId, string steamId)
         {
-            if (!await RightsHandler.IsUserAtLeastInRole("Mod", HttpContext.User, _userservice)) return Unauthorized();
+            var servers = await GiveServerWhichTheUserHasRightsTo();
+
+            if (!servers.Select(x => x.Id).Contains(serverId))
+            {
+                return Forbid();
+            }
+            
             if (serverId <= 0) return BadRequest("Please choose a server!");
             if (string.IsNullOrEmpty(steamId) || steamId == "-") return BadRequest("SteamID must be set!");
             var pavlovServer = await _pavlovServerService.FindOne(serverId);
@@ -296,7 +328,7 @@ namespace PavlovRconWebserver.Controllers
             //unban command
             try
             {
-                await RconStatic.SendCommandSShTunnel(pavlovServer, "Unban " + steamId,_notifyService);
+                await RconStatic.SendCommandSShTunnel(pavlovServer, "Unban " + steamId, _notifyService);
             }
             catch (CommandException)
             {
@@ -330,9 +362,12 @@ namespace PavlovRconWebserver.Controllers
         [HttpPost("[controller]/GetAllPlayers")]
         public async Task<IActionResult> GetAllPlayers(int serverId)
         {
-            var isModOnTheServer = await IsModOnTheServer(serverId);
-            if (!await RightsHandler.IsUserAtLeastInRole("Captain", HttpContext.User, _userservice) &&
-                !isModOnTheServer) return Unauthorized();
+            var servers = await GiveServerWhichTheUserHasRightsTo();
+
+            if (!servers.Select(x => x.Id).Contains(serverId))
+            {
+                return Forbid();
+            }
             if (serverId <= 0) return BadRequest("Please choose a server!");
             var playersList = new PlayerListClass();
 
@@ -345,28 +380,16 @@ namespace PavlovRconWebserver.Controllers
             }).ToList();
             return Ok(playersList);
         }
-
-        private async Task<bool> IsModOnTheServer(int serverId)
-        {
-            var singleServer = new PavlovServer();
-            singleServer = await _pavlovServerService.FindOne(serverId);
-            if (HttpContext.User == null) return false;
-            var user = await _userservice.getUserFromCp(HttpContext.User);
-            if (user == null) return false;
-            if (singleServer == null) return false;
-            if (_serverSelectedModsService == null) return false;
-            var isModOnTheServer = await RightsHandler.IsModOnTheServer(_serverSelectedModsService, singleServer,
-                user.Id);
-            return isModOnTheServer;
-        }
-
-
+        
         [HttpPost("[controller]/GetTeamList")]
         public async Task<IActionResult> GetTeamList(int serverId)
         {
-            var isModOnTheServer = await IsModOnTheServer(serverId);
-            if (!await RightsHandler.IsUserAtLeastInRole("Captain", HttpContext.User, _userservice) &&
-                !isModOnTheServer) return Unauthorized();
+            var servers = await GiveServerWhichTheUserHasRightsTo();
+
+            if (!servers.Select(x => x.Id).Contains(serverId))
+            {
+                return Forbid();
+            }
             if (serverId <= 0) return BadRequest("Please choose a server!");
 
             var server = await _pavlovServerService.FindOne(serverId);
@@ -377,7 +400,7 @@ namespace PavlovRconWebserver.Controllers
                 var result = "";
                 try
                 {
-                    result = await RconStatic.SendCommandSShTunnel(server, "ServerInfo",_notifyService);
+                    result = await RconStatic.SendCommandSShTunnel(server, "ServerInfo", _notifyService);
                 }
                 catch (Exception e)
                 {
@@ -385,12 +408,14 @@ namespace PavlovRconWebserver.Controllers
                 }
 
                 serverInfo = result;
-                
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify("controlled got serverInfo back: "+serverInfo,LogEventLevel.Verbose,_notifyService);
+
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify("controlled got serverInfo back: " + serverInfo,
+                    LogEventLevel.Verbose, _notifyService);
             }
             catch (CommandException e)
             {
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not get Serverinfo!"+e.Message,LogEventLevel.Fatal,_notifyService);
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not get Serverinfo!" + e.Message,
+                    LogEventLevel.Fatal, _notifyService);
             }
 
             var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(serverInfo.Replace("\"\"", "\"ServerInfo\""));

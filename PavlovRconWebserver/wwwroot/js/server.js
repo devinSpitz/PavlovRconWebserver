@@ -35,12 +35,18 @@ function SaveApiCall(method, serverId, mapId, gameMode, object,Move) {
         url: "/SshServer/" + method + "ServerSelectedMap",
         data: {serverId: serverId, mapId: mapId, gameMode: gameMode},
         success: function (data) {
-            if (method === "Save" && Move) {
-              
-                $("#DeletecardBodyAppend").append($(object).parent().parent().parent());
-            } else if (method === "Delete" && Move) {
-              
-                $("#SavecardBodyAppend").append($(object).parent().parent().parent());
+            if(data===true)
+            {
+                if (method === "Save" && Move) {
+
+                    $("#DeletecardBodyAppend").append($(object).parent().parent().parent());
+                } else if (method === "Delete" && Move) {
+
+                    $("#SavecardBodyAppend").append($(object).parent().parent().parent());
+                }
+            }else if(data===false)
+            {
+                alert('Could not ' + method + ' Map!');
             }
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {

@@ -12,5 +12,8 @@ namespace PavlovRconWebserver.Models
         [NotMapped] [BsonIgnore] public List<SteamIdentity> AllSteamIdentities { get; set; }
 
         public string Name { get; set; }
+        
+        
+        [NotMapped] [BsonIgnore] public string TeamRole { get; set; }
     }
 }

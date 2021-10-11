@@ -20,17 +20,17 @@ namespace PavlovRconWebserver.Models
 
         [DisplayName("SSH key filename")]
         [Display(Description = "Select a filename")]
-        public string SshKeyFileNameRoot { get; set; }
+        public byte[] SshKeyFileNameRoot { get; set; }
 
         [DisplayName("SSH passphrase")]
         [Display(Description = "CAUTION: WILL BE SAVED BLANK")]
         public string SshPassphraseRoot { get; set; }
 
-        [NotMapped] [BsonIgnore] public List<string> SshKeyFileNames { get; set; } = new List<string>();
+        [NotMapped] [BsonIgnore] public List<string> SshKeyFileNames { get; set; } = new();
 
         public PavlovServerViewModel fromPavlovServer(PavlovServer pavlovServer, int sshServerId)
         {
-            return new PavlovServerViewModel
+            return new()
             {
                 Id = pavlovServer.Id,
                 Name = pavlovServer.Name,
@@ -41,13 +41,14 @@ namespace PavlovRconWebserver.Models
                 TelnetPassword = pavlovServer.TelnetPassword,
                 TelnetPort = pavlovServer.TelnetPort,
                 DeletAfter = pavlovServer.DeletAfter,
-                sshServerId = sshServerId
+                sshServerId = sshServerId,
+                Owner = pavlovServer.Owner
             };
         }
 
         public PavlovServer toPavlovServer(PavlovServerViewModel viewModel)
         {
-            return new PavlovServer
+            return new()
             {
                 Id = viewModel.Id,
                 Name = viewModel.Name,
@@ -58,7 +59,8 @@ namespace PavlovRconWebserver.Models
                 ServerPort = viewModel.ServerPort,
                 TelnetPassword = viewModel.TelnetPassword,
                 TelnetPort = viewModel.TelnetPort,
-                DeletAfter = viewModel.DeletAfter
+                DeletAfter = viewModel.DeletAfter,
+                Owner = viewModel.Owner
             };
         }
     }

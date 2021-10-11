@@ -10,8 +10,8 @@ namespace PavlovRconWebserver.Services
 {
     public class SteamIdentityService
     {
-        private readonly IToastifyService _notifyService;
         private readonly ILiteDbIdentityAsyncContext _liteDb;
+        private readonly IToastifyService _notifyService;
 
 
         public SteamIdentityService(ILiteDbIdentityAsyncContext liteDbContext,
@@ -51,13 +51,13 @@ namespace PavlovRconWebserver.Services
 
         public async Task<bool> Upsert(SteamIdentity steamIdentity)
         {
-            return (await _liteDb.LiteDatabaseAsync.GetCollection<SteamIdentity>("SteamIdentity")
-                .UpsertAsync(steamIdentity));
+            return await _liteDb.LiteDatabaseAsync.GetCollection<SteamIdentity>("SteamIdentity")
+                .UpsertAsync(steamIdentity);
         }
 
         public async Task<bool> Delete(string id)
         {
-            return (await _liteDb.LiteDatabaseAsync.GetCollection<SteamIdentity>("SteamIdentity").DeleteAsync(id));
+            return await _liteDb.LiteDatabaseAsync.GetCollection<SteamIdentity>("SteamIdentity").DeleteAsync(id);
         }
     }
 }

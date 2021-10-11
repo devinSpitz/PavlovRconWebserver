@@ -101,21 +101,20 @@ namespace PavlovRconWebserver.Controllers
             return new ObjectResult((await _pavlovServerPlayerHistoryService.FindAllFromPlayer(uniqueId))?.ToArray());
         }
 
-        [Authorize(Roles = CustomRoles.Admin)]
+        [Authorize(Roles = CustomRoles.OnPremiseOrRent)]
         [HttpGet("[controller]/GetHistoryOfServer/{serverId}")]
         // GET
         public async Task<IActionResult> GetHistoryOfServer(int serverId)
         {
+            var user = await _userService.getUserFromCp(HttpContext.User);
+            var server = await _pavlovServerService.FindAllServerWhereTheUserHasRights(HttpContext.User, user);
+            if (!server.Select(x => x.Id).Contains(serverId))
+            {
+                return Forbid();
+            }
             return View("PlayersHistory",
                 (await _pavlovServerPlayerHistoryService.FindAllFromServer(serverId))?.ToList());
         }
-
-        [Authorize(Roles = CustomRoles.Admin)]
-        [HttpGet("[controller]/API/GetHistoryOfServer/{serverId}")]
-        // GET
-        public async Task<IActionResult> GetHistoryOfServerApi(int serverId)
-        {
-            return new ObjectResult((await _pavlovServerPlayerHistoryService.FindAllFromServer(serverId))?.ToList());
-        }
+        
     }
 }

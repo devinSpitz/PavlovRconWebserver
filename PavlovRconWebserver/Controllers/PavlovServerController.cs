@@ -1,9 +1,11 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AspNetCoreHero.ToastNotification.Abstractions;
+using LiteDB;
 using LiteDB.Identity.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -15,14 +17,12 @@ using PavlovRconWebserver.Services;
 
 namespace PavlovRconWebserver.Controllers
 {
-    
-    [Authorize(Roles = CustomRoles.Admin)]
+    [Authorize(Roles = CustomRoles.OnPremiseOrRent)]
     public class PavlovServerController : Controller
     {
-        private readonly IToastifyService _notifyService;
         private readonly MapsService _mapsService;
+        private readonly IToastifyService _notifyService;
         private readonly PavlovServerService _pavlovServerService;
-        private readonly RconService _rconService;
         private readonly ServerSelectedMapService _serverSelectedMapService;
         private readonly ServerSelectedModsService _serverSelectedModsService;
         private readonly SshServerSerivce _service;
@@ -35,7 +35,6 @@ namespace PavlovRconWebserver.Controllers
         public PavlovServerController(SshServerSerivce service,
             UserService userService,
             PavlovServerService pavlovServerService,
-            RconService rconService,
             ServerSelectedMapService serverSelectedMapService,
             MapsService mapsService,
             ServerSelectedWhitelistService whitelistService,
@@ -48,7 +47,6 @@ namespace PavlovRconWebserver.Controllers
             _service = service;
             _userservice = userService;
             _pavlovServerService = pavlovServerService;
-            _rconService = rconService;
             _serverSelectedMapService = serverSelectedMapService;
             _mapsService = mapsService;
             _whitelistService = whitelistService;
@@ -58,50 +56,45 @@ namespace PavlovRconWebserver.Controllers
         }
 
 
+        [Authorize(Roles = CustomRoles.OnPremise)]
         [HttpGet("[controller]/EditServer/{serverId}/{sshServerId}/{create?}/{remove?}")]
         public async Task<IActionResult> EditServer(int serverId, int sshServerId, bool create = false,
             bool remove = false)
         {
+            if (!await RightsHandler.HasRightsToThisPavlovServer(HttpContext.User,
+                await _userservice.getUserFromCp(HttpContext.User), serverId, _service, _pavlovServerService))
+                return Forbid();
             var server = new PavlovServer();
             if (serverId != 0) server = await _pavlovServerService.FindOne(serverId);
 
             var viewModel = new PavlovServerViewModel();
             viewModel = viewModel.fromPavlovServer(server, sshServerId);
 
-            try
-            {
-                viewModel.SshKeyFileNames = Directory.EnumerateFiles("KeyFiles/", "*", SearchOption.AllDirectories)
-                    .Select(x => x.Replace("KeyFiles/", "")).ToList();
-            }
-            catch (Exception)
-            {
-                // ignore there is maybe no folder or the folder is empty 
-            }
+            viewModel.LiteDbUsers = (await _userservice.FindAll()).ToList();
 
             viewModel.create = create;
             viewModel.remove = remove;
             return View("Server", viewModel);
         }
 
+        [Authorize(Roles = CustomRoles.OnPremise)]
         [HttpPost]
         public async Task<IActionResult> EditServer(PavlovServerViewModel server)
         {
-            try
-            {
-                server.SshKeyFileNames = Directory.EnumerateFiles("KeyFiles/", "*", SearchOption.AllDirectories)
-                    .Select(x => x.Replace("KeyFiles/", "")).ToList();
-            }
-            catch (Exception)
-            {
-                // ignore there is maybe no folder or the folder is empty 
-            }
-
+            if (!await RightsHandler.HasRightsToThisPavlovServer(HttpContext.User,
+                await _userservice.getUserFromCp(HttpContext.User), server.Id, _service, _pavlovServerService))
+                return Forbid();
+            
+            server.LiteDbUsers = (await _userservice.FindAll()).ToList();
             return View("Server", server);
         }
 
         [HttpGet("[controller]/EditServerSelectedMaps/{serverId}")]
         public async Task<IActionResult> EditServerSelectedMaps(int serverId)
         {
+            if (!await RightsHandler.HasRightsToThisPavlovServer(HttpContext.User,
+                await _userservice.getUserFromCp(HttpContext.User), serverId, _service, _pavlovServerService))
+                return Forbid();
             var serverSelectedMap = new List<ServerSelectedMap>();
             var server = await _pavlovServerService.FindOne(serverId);
             serverSelectedMap = (await _serverSelectedMapService.FindAllFrom(server)).ToList();
@@ -123,11 +116,19 @@ namespace PavlovRconWebserver.Controllers
             if (!ModelState.IsValid)
                 return View("Server", server);
 
+            if (!await RightsHandler.HasRightsToThisPavlovServer(HttpContext.User,
+                await _userservice.getUserFromCp(HttpContext.User), server.Id, _service, _pavlovServerService))
+                return Forbid();
+
+            server.LiteDbUsers = (await _userservice.FindAll()).ToList();
+            
+            server.Owner = (await _userservice.FindAll())
+                .FirstOrDefault(x => x.Id == new ObjectId(server.LiteDbUserId));
             var resultServer = new PavlovServer();
             try
             {
                 server.SshServer = await _service.FindOne(server.sshServerId);
-                
+
                 if (server.create)
                     try
                     {
@@ -156,6 +157,7 @@ namespace PavlovRconWebserver.Controllers
                             return await GoBackEditServer(server,
                                 "Field is not set: " + e.Message);
                         }
+
                         var result = await _pavlovServerService.CreatePavlovServer(server);
                         server = result.Key;
                         if (result.Value != null)
@@ -196,14 +198,17 @@ namespace PavlovRconWebserver.Controllers
 
             if (ModelState.ErrorCount > 0) return await EditServer(server);
             if (server.create)
-                return Redirect("/PavlovServer/EditServerSelectedMaps/"+resultServer.Id);
-                
+                return Redirect("/PavlovServer/EditServerSelectedMaps/" + resultServer.Id);
+
             return RedirectToAction("Index", "SshServer");
         }
 
         private async Task<IActionResult> GoBackEditServer(PavlovServerViewModel server, string error,
             bool remove = false)
         {
+            if (!await RightsHandler.HasRightsToThisPavlovServer(HttpContext.User,
+                await _userservice.getUserFromCp(HttpContext.User), server.Id, _service, _pavlovServerService))
+                return Forbid();
             if (remove)
                 await _service.RemovePavlovServerFromDisk(server);
             ModelState.AddModelError("Id", error
@@ -215,6 +220,9 @@ namespace PavlovRconWebserver.Controllers
         [HttpGet("[controller]/DeleteServer/{id}")]
         public async Task<IActionResult> DeleteServer(int id)
         {
+            if (!await RightsHandler.HasRightsToThisPavlovServer(HttpContext.User,
+                await _userservice.getUserFromCp(HttpContext.User), id, _service, _pavlovServerService))
+                return Forbid();
             try
             {
                 await _pavlovServerService.Delete(id);
@@ -230,6 +238,9 @@ namespace PavlovRconWebserver.Controllers
         [HttpGet("[controller]/CompleteRemoveView/{id}")]
         public async Task<IActionResult> CompleteRemoveView(int id)
         {
+            if (!await RightsHandler.HasRightsToThisPavlovServer(HttpContext.User,
+                await _userservice.getUserFromCp(HttpContext.User), id, _service, _pavlovServerService))
+                return Forbid();
             var server = await _pavlovServerService.FindOne(id);
             if (server == null) return BadRequest("There is no Server with this id!");
 
@@ -240,6 +251,10 @@ namespace PavlovRconWebserver.Controllers
         [HttpPost("[controller]/CompleteRemove/")]
         public async Task<IActionResult> CompleteRemove(PavlovServerViewModel viewModel)
         {
+            if (!await RightsHandler.HasRightsToThisPavlovServer(HttpContext.User,
+                await _userservice.getUserFromCp(HttpContext.User), viewModel.sshServerId, _service,
+                _pavlovServerService))
+                return Forbid();
             try
             {
                 var result = await _service.RemovePavlovServerFromDisk(viewModel);
@@ -258,6 +273,10 @@ namespace PavlovRconWebserver.Controllers
         [HttpPost("[controller]/DeleteServerFromFolder/")]
         public async Task<IActionResult> DeleteServerFromFolder(PavlovServerViewModel viewModel)
         {
+            if (!await RightsHandler.HasRightsToThisPavlovServer(HttpContext.User,
+                await _userservice.getUserFromCp(HttpContext.User), viewModel.sshServerId, _service,
+                _pavlovServerService))
+                return Forbid();
             try
             {
                 await _service.RemovePavlovServerFromDisk(viewModel);
@@ -273,11 +292,14 @@ namespace PavlovRconWebserver.Controllers
         [HttpGet("[controller]/EditServerSettings/{serverId}")]
         public async Task<IActionResult> EditServerSettings(int serverId)
         {
+            if (!await RightsHandler.HasRightsToThisPavlovServer(HttpContext.User,
+                await _userservice.getUserFromCp(HttpContext.User), serverId, _service, _pavlovServerService))
+                return Forbid();
             var viewModel = new PavlovServerGameIni();
             var server = await _pavlovServerService.FindOne(serverId);
             try
             {
-                viewModel.ReadFromFile(server,_notifyService);
+                viewModel.ReadFromFile(server, _notifyService);
             }
             catch (CommandException e)
             {
@@ -291,11 +313,13 @@ namespace PavlovRconWebserver.Controllers
         [HttpGet("[controller]/StartSystemdService/{serverId}")]
         public async Task<IActionResult> StartSystemdService(int serverId)
         {
-
+            if (!await RightsHandler.HasRightsToThisPavlovServer(HttpContext.User,
+                await _userservice.getUserFromCp(HttpContext.User), serverId, _service, _pavlovServerService))
+                return Forbid();
             var server = await _pavlovServerService.FindOne(serverId);
             try
             {
-                await RconStatic.SystemDStart(server,_pavlovServerService);
+                await RconStatic.SystemDStart(server, _pavlovServerService);
             }
             catch (CommandException e)
             {
@@ -308,13 +332,15 @@ namespace PavlovRconWebserver.Controllers
         [HttpGet("[controller]/UpdatePavlovServer/{serverId}")]
         public async Task<IActionResult> UpdatePavlovServer(int serverId)
         {
-
+            if (!await RightsHandler.HasRightsToThisPavlovServer(HttpContext.User,
+                await _userservice.getUserFromCp(HttpContext.User), serverId, _service, _pavlovServerService))
+                return Forbid();
             var server = await _pavlovServerService.FindOne(serverId);
 
             var result = "";
             try
             {
-                result = await RconStatic.UpdateInstallPavlovServer(server,_pavlovServerService);
+                result = await RconStatic.UpdateInstallPavlovServer(server, _pavlovServerService);
             }
             catch (CommandException e)
             {
@@ -327,11 +353,13 @@ namespace PavlovRconWebserver.Controllers
         [HttpGet("[controller]/StopSystemdService/{serverId}")]
         public async Task<IActionResult> StopSystemdService(int serverId)
         {
-
+            if (!await RightsHandler.HasRightsToThisPavlovServer(HttpContext.User,
+                await _userservice.getUserFromCp(HttpContext.User), serverId, _service, _pavlovServerService))
+                return Forbid();
             var server = await _pavlovServerService.FindOne(serverId);
             try
             {
-                await RconStatic.SystemDStop(server,_pavlovServerService);
+                await RconStatic.SystemDStop(server, _pavlovServerService);
             }
             catch (CommandException e)
             {
@@ -344,12 +372,28 @@ namespace PavlovRconWebserver.Controllers
         [HttpPost("[controller]/SaveServerSettings/")]
         public async Task<IActionResult> SaveServerSettings(PavlovServerGameIni pavlovServerGameIni)
         {
-
+            var user = await _userservice.getUserFromCp(HttpContext.User);
+            if (!await RightsHandler.HasRightsToThisPavlovServer(HttpContext.User,user
+                , pavlovServerGameIni.serverId, _service,
+                _pavlovServerService))
+                return Forbid();
             var server = await _pavlovServerService.FindOne(pavlovServerGameIni.serverId);
             var selectedMaps = await _serverSelectedMapService.FindAllFrom(server);
+
+
+            if (server.Owner != null && server.Owner.Id == user.Id)
+            {
+                if (pavlovServerGameIni.MaxPlayers > 30)
+                {
+                    
+                    ModelState.AddModelError("MaxPlayers", "As a rental you can only have MaxPlayers of 30.");
+                    return await EditServerSettings(pavlovServerGameIni.serverId);
+                }
+            }
+            
             try
             {
-                pavlovServerGameIni.SaveToFile(server, selectedMaps,_notifyService);
+                pavlovServerGameIni.SaveToFile(server, selectedMaps, _notifyService);
             }
             catch (CommandException e)
             {
@@ -363,7 +407,9 @@ namespace PavlovRconWebserver.Controllers
         [HttpGet("[controller]/EditWhiteList/{serverId}")]
         public async Task<IActionResult> EditWhiteList(int serverId)
         {
-
+            if (!await RightsHandler.HasRightsToThisPavlovServer(HttpContext.User,
+                await _userservice.getUserFromCp(HttpContext.User), serverId, _service, _pavlovServerService))
+                return Forbid();
             var server = await _pavlovServerService.FindOne(serverId);
             var steamIds = (await _steamIdentityService.FindAll()).ToArray();
             var selectedSteamIds = (await _whitelistService.FindAllFrom(server)).ToArray();
@@ -374,13 +420,17 @@ namespace PavlovRconWebserver.Controllers
                 pavlovServerId = server.Id
             };
 
-            ViewBag.SteamIdentities = steamIds.Select(x => x.Id).ToList();
+            ViewBag.SteamIdentities = steamIds.ToList();
             return View("WhiteList", model);
         }
 
         [HttpPost("[controller]/SaveWhiteList/")]
         public async Task<IActionResult> SaveWhiteList(PavlovServerWhitelistViewModel pavlovServerWhitelistViewModel)
         {
+            if (!await RightsHandler.HasRightsToThisPavlovServer(HttpContext.User,
+                await _userservice.getUserFromCp(HttpContext.User), pavlovServerWhitelistViewModel.pavlovServerId,
+                _service, _pavlovServerService))
+                return Forbid();
             var server = await _pavlovServerService.FindOne(pavlovServerWhitelistViewModel.pavlovServerId);
             try
             {
@@ -399,9 +449,11 @@ namespace PavlovRconWebserver.Controllers
         [HttpGet("[controller]/EditModList/{serverId}")]
         public async Task<IActionResult> EditModList(int serverId)
         {
-
+            if (!await RightsHandler.HasRightsToThisPavlovServer(HttpContext.User,
+                await _userservice.getUserFromCp(HttpContext.User), serverId, _service, _pavlovServerService))
+                return Forbid();
             var server = await _pavlovServerService.FindOne(serverId);
-            var tmpUserIds = (await _userservice.FindAll());
+            var tmpUserIds = await _userservice.FindAll();
             var userIds = new List<LiteDbUser>();
             var isAdmin = false;
             var isMod = false;
@@ -412,10 +464,10 @@ namespace PavlovRconWebserver.Controllers
                     isAdmin = await UserManager.IsInRoleAsync(user, "Admin");
                     isMod = await UserManager.IsInRoleAsync(user, "Mod");
                     var steamIdentity = await _steamIdentityService.FindOne(user.Id);
-                    if (!isAdmin && !isMod && steamIdentity!=null) userIds.Add(user);
+                    if (!isAdmin && !isMod && steamIdentity != null) userIds.Add(user);
                 }
 
-            var selectedUserIds = (await _serverSelectedModsService.FindAllFrom(server));
+            var selectedUserIds = await _serverSelectedModsService.FindAllFrom(server);
             //service
             var model = new PavlovServerModlistViewModel
             {
@@ -430,10 +482,14 @@ namespace PavlovRconWebserver.Controllers
         [HttpPost("[controller]/SaveModList/")]
         public async Task<IActionResult> SaveModList(PavlovServerModlistViewModel pavlovServerModlistViewModel)
         {
+            if (!await RightsHandler.HasRightsToThisPavlovServer(HttpContext.User,
+                await _userservice.getUserFromCp(HttpContext.User), pavlovServerModlistViewModel.pavlovServerId,
+                _service, _pavlovServerService))
+                return Forbid();
             var server = await _pavlovServerService.FindOne(pavlovServerModlistViewModel.pavlovServerId);
             try
             {
-                await _serverSelectedModsService.SaveWhiteListToFileAndDb(pavlovServerModlistViewModel.userIds, server);
+                await _serverSelectedModsService.SaveModListToFileAndDb(pavlovServerModlistViewModel.userIds, server);
             }
             catch (CommandException e)
             {

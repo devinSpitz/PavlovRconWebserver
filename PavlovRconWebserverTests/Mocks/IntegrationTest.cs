@@ -11,18 +11,18 @@ using PavlovRconWebserverTests.UnitTests;
 
 namespace PavlovRconWebserverTests.Mocks
 {
-
     /// <summary>
-    /// WIP
+    ///     WIP
     /// </summary>
-    
     public static class IntegrationTest
     {
         public static TestServer _server;
+
         public static TestServer RunTestHost()
         {
             if (_server != null) return _server;
-            var applicationPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../PavlovRconWebserver/"));
+            var applicationPath =
+                Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../PavlovRconWebserver/"));
             var hostBuilder = new HostBuilder()
                 .ConfigureWebHost(webHost =>
                 {
@@ -35,7 +35,7 @@ namespace PavlovRconWebserverTests.Mocks
                     webHost.ConfigureAppConfiguration((hostContext, config) =>
                     {
                         var integrationConfig = new ConfigurationBuilder()
-                            .AddJsonFile(Path.GetFullPath(Path.Combine("appsettings.json")), optional: false)
+                            .AddJsonFile(Path.GetFullPath(Path.Combine("appsettings.json")), false)
                             .Build();
                         config.AddConfiguration(integrationConfig);
                     });
@@ -52,18 +52,15 @@ namespace PavlovRconWebserverTests.Mocks
                         //         "Test", options => { });
                         services.AddMvc()
                             .AddApplicationPart(typeof(Startup).Assembly);
-                        services.AddRazorPages(options =>
-                        {
-                            options.Conventions.AuthorizePage("/Account/Login");
-                        });
+                        services.AddRazorPages(options => { options.Conventions.AuthorizePage("/Account/Login"); });
                     });
-                    
                 });
             var host = hostBuilder.Start();
             _server = host.GetTestServer();
 
             return _server;
         }
+
         //
         // public static Task<AuthenticateResult> MockUsers(string role)
         // {

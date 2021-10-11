@@ -87,7 +87,7 @@ function TwoValuesSendCommand()
 
 function search(searchInput,attr)
 {
-    $( ".mapcard" ).each(function( index ) {
+    $( ".mapcard" ).each(function( ) {
         if($(this).attr(attr).toLowerCase().indexOf(searchInput)>=0)
         {
             $(this).parent().show();
@@ -124,7 +124,7 @@ function UpdatePlayers(server){
             });
 
         },
-        error: function(XMLHttpRequest, textStatus, errorThrown)
+        error: function(XMLHttpRequest)
         {
             if(typeof XMLHttpRequest.status !== "undefined" && XMLHttpRequest.status===400&&typeof XMLHttpRequest.responseText !== "undefined" && XMLHttpRequest.responseText !== "")
             {
@@ -157,7 +157,7 @@ function UpdatePlayerList(){
         {
             PlayerListBig.html(data);
         },
-        error: function(XMLHttpRequest, textStatus, errorThrown)
+        error: function(XMLHttpRequest)
         {
             if(typeof XMLHttpRequest.status !== "undefined" && XMLHttpRequest.status===400&&typeof XMLHttpRequest.responseText !== "undefined" && XMLHttpRequest.responseText !== "")
             {
@@ -366,7 +366,7 @@ function BanMenu()
             $('#modal-placeholder > .modal').modal('show');
 
         },
-        error: function(XMLHttpRequest, textStatus, errorThrown)
+        error: function(XMLHttpRequest)
         {
 
             $(".overlay").hide();
@@ -411,8 +411,6 @@ function RemoveBannedPlayer(steamId)
 
 function AddBanPlayer(steamId,timespan)
 {
-    let data = {};
-    let servers = [];
     $("#SingleServer :selected").each(function(){
         servers.push($(this).val())
     });
@@ -452,7 +450,7 @@ function ValueFieldPartialView(playerCommands,twoValueCommands,atualCommandName,
             
             callbackPositive(data);
         },
-        error: function(XMLHttpRequest, textStatus, errorThrown)
+        error: function(XMLHttpRequest)
         {
             jsonTOHtmlPartialView(JSON.stringify(XMLHttpRequest))
         }

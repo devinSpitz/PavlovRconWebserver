@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using AspNetCoreHero.ToastNotification.Abstractions;
 using LiteDB.Identity.Async.Database;
+using LiteDB.Identity.Models;
 using PavlovRconWebserver.Exceptions;
 using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
@@ -13,11 +15,12 @@ namespace PavlovRconWebserver.Services
 {
     public class SshServerSerivce
     {
-        private readonly IToastifyService _notifyService;
         private readonly ILiteDbIdentityAsyncContext _liteDb;
+        private readonly IToastifyService _notifyService;
         private readonly PavlovServerService _pavlovServerService;
 
-        public SshServerSerivce(ILiteDbIdentityAsyncContext liteDbContext, PavlovServerService pavlovServerServiceService,
+        public SshServerSerivce(ILiteDbIdentityAsyncContext liteDbContext,
+            PavlovServerService pavlovServerServiceService,
             IToastifyService notyfService)
         {
             _notifyService = notyfService;
@@ -28,23 +31,60 @@ namespace PavlovRconWebserver.Services
         public async Task<SshServer[]> FindAll()
         {
             var list = (await _liteDb.LiteDatabaseAsync.GetCollection<SshServer>("SshServer")
+                .Include(x=>x.Owner)
                 .FindAllAsync()).ToArray();
-            
+
             foreach (var single in list)
-            {
-               single.PavlovServers = (await _pavlovServerService.FindAllFrom(single.Id)).ToList();
-            }
+                single.PavlovServers = (await _pavlovServerService.FindAllFrom(single.Id)).ToList();
+
             return list;
         }
 
+        public async Task<SshServer[]> FindAllWithRightsCheck(ClaimsPrincipal principal, LiteDbUser user)
+        {
+            var query = _liteDb.LiteDatabaseAsync.GetCollection<SshServer>("SshServer")
+                .Include(x=>x.Owner).Query();
+            var list = new List<SshServer>();
+            var rental = principal.IsInRole("ServerRent");
+            if (principal.IsInRole("Admin"))
+            {
+                list.AddRange(await query.Where(x => true).ToListAsync());
+            }
+            else
+            {
+                if (principal.IsInRole("OnPremise"))
+                    list.AddRange(await query.Where(x => x.Owner!=null &&  x.Owner.Id == user.Id).ToListAsync());
+            }
+            //var list = (
+            //    .FindAllAsync()).ToArray();
+
+            foreach (var single in list)
+                    single.PavlovServers = (await _pavlovServerService.FindAllFrom(single.Id)).ToList();
+
+            if (rental)
+            {
+                var all = await FindAll();
+                foreach (var single in all)
+                    single.PavlovServers = (await _pavlovServerService.FindAllFrom(single.Id))
+                .Where(x => x.Owner !=null && x.Owner.Id == user.Id).ToList();
+
+                return all.Where(x => x.PavlovServers.Any()).ToArray();
+
+            }
+
+            return list.ToArray();
+        }
+
+
         public async Task<SshServer> FindOne(int id)
         {
-             var single = (await _liteDb.LiteDatabaseAsync.GetCollection<SshServer>("SshServer")
-                .FindOneAsync(x => x.Id == id));
-                
-             single.PavlovServers = (await  _pavlovServerService.FindAllFrom(single.Id)).ToList();
+            var single = await _liteDb.LiteDatabaseAsync.GetCollection<SshServer>("SshServer")
+                .Include(x=>x.Owner)
+                .FindOneAsync(x => x.Id == id);
 
-             return single;
+            single.PavlovServers = (await _pavlovServerService.FindAllFrom(single.Id)).ToList();
+
+            return single;
         }
 
         public async Task<int> Insert(SshServer sshServer)
@@ -61,22 +101,22 @@ namespace PavlovRconWebserver.Services
             if (string.IsNullOrEmpty(server.SshUsername))
                 throw new SaveServerException("SshUsername", "You need a username!");
 
-            if (string.IsNullOrEmpty(server.SshPassword) && string.IsNullOrEmpty(server.SshKeyFileName))
+            if (string.IsNullOrEmpty(server.SshPassword) && (server.SshKeyFileName==null||!server.SshKeyFileName.Any()))
                 throw new SaveServerException("SshPassword", "You need at least a password or a key file!");
         }
 
         public async Task<KeyValuePair<PavlovServerViewModel, string>> RemovePavlovServerFromDisk(
             PavlovServerViewModel server)
         {
-            
-            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Start remove server!",LogEventLevel.Verbose,_notifyService);
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Start remove server!", LogEventLevel.Verbose,
+                _notifyService);
             string result = null;
             try
             {
                 //start server and stop server to get Saved folder etc.
                 try
                 {
-                    await RconStatic.SystemDStop(server,_pavlovServerService);
+                    await RconStatic.SystemDStop(server, _pavlovServerService);
                 }
                 catch (Exception)
                 {
@@ -97,40 +137,39 @@ namespace PavlovRconWebserver.Services
                 server.SshServer.SshPassword = server.SshPasswordRoot;
                 server.SshServer.SshKeyFileName = server.SshKeyFileNameRoot;
                 server.SshServer.NotRootSshUsername = oldSSHcrid.SshUsername;
-                
-                
+
+
                 result += await RconStatic.RemovePath(server,
-                    "/etc/systemd/system/" + server.ServerSystemdServiceName + ".service",_pavlovServerService);
+                    "/etc/systemd/system/" + server.ServerSystemdServiceName + ".service", _pavlovServerService);
 
                 //Remove the server from the sudoers file
                 var sudoersPathParent = "/etc/sudoers.d";
-                var sudoersPath = sudoersPathParent+"/pavlovRconWebserverManagement";
+                var sudoersPath = sudoersPathParent + "/pavlovRconWebserverManagement";
                 if (RconStatic.RemoveServerLineToSudoersFile(server, _notifyService, sudoersPath, _pavlovServerService))
                 {
-                    
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("server line removed from sudoers file!",LogEventLevel.Verbose,_notifyService); 
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("server line removed from sudoers file!",
+                        LogEventLevel.Verbose, _notifyService);
                 }
                 else
                 {
-                    
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not remove the server line from sudoers file!",LogEventLevel.Fatal,_notifyService); 
-                    
-                    return new KeyValuePair<PavlovServerViewModel, string>(server, result + "Could not remove the server line from sudoers file!");
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                        "Could not remove the server line from sudoers file!", LogEventLevel.Fatal, _notifyService);
+
+                    return new KeyValuePair<PavlovServerViewModel, string>(server,
+                        result + "Could not remove the server line from sudoers file!");
                 }
 
-                
-                
+
                 server.SshServer.SshPassphrase = oldSSHcrid.SshPassphrase;
                 server.SshServer.SshUsername = oldSSHcrid.SshUsername;
                 server.SshServer.SshPassword = oldSSHcrid.SshPassword;
                 server.SshServer.SshKeyFileName = oldSSHcrid.SshKeyFileName;
                 result += "\n *******************************delete service Done*******************************";
 
-                result += await RconStatic.RemovePath(server, server.ServerFolderPath,_pavlovServerService);
+                result += await RconStatic.RemovePath(server, server.ServerFolderPath, _pavlovServerService);
                 result += "\n *******************************delete folder Done*******************************";
 
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify(result,LogEventLevel.Verbose,_notifyService);            
-
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify(result, LogEventLevel.Verbose, _notifyService);
             }
             catch (Exception e)
             {

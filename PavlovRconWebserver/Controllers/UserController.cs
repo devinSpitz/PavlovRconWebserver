@@ -5,7 +5,6 @@ using PavlovRconWebserver.Services;
 
 namespace PavlovRconWebserver.Controllers
 {
-    
     [Authorize(Roles = CustomRoles.Admin)]
     public class UserController : Controller
     {
@@ -18,8 +17,6 @@ namespace PavlovRconWebserver.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var user = HttpContext.User;
-            await _service.CreateDefaultRoles();
             return View("Index", await _service.FindAll());
         }
 

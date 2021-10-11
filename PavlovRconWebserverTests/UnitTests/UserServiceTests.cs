@@ -11,44 +11,47 @@ namespace PavlovRconWebserverTests.UnitTests
 {
     public class UserServiceTests
     {
-        private readonly IServicesBuilder services;
         private readonly AutoMocker _mocker;
-        private readonly UserService _userService;
         private readonly RoleManager<LiteDbRole> _roleManager;
         private readonly UserManager<LiteDbUser> _userManager;
-        public UserServiceTests() {
+        private readonly UserService _userService;
+        private readonly IServicesBuilder services;
+
+        public UserServiceTests()
+        {
             services = new ServicesBuilder();
             _mocker = new AutoMocker();
             services.Build(_mocker);
 
 
             _roleManager = services.GetRoleManager();
-            _mocker.Use( _roleManager );
-            
+            _mocker.Use(_roleManager);
+
             _userManager = services.GetUserManager();
-            _mocker.Use( _userManager );
-            
-            _roleManager.CreateAsync(new LiteDbRole() {Name = "Admin"}).GetAwaiter().GetResult();
-            _roleManager.CreateAsync(new LiteDbRole() {Name = "Mod"}).GetAwaiter().GetResult();
-            _roleManager.CreateAsync(new LiteDbRole() {Name = "Captain"}).GetAwaiter().GetResult();
-            _roleManager.CreateAsync(new LiteDbRole() {Name = "User"}).GetAwaiter().GetResult();
+            _mocker.Use(_userManager);
+
+            _roleManager.CreateAsync(new LiteDbRole {Name = "Admin"}).GetAwaiter().GetResult();
+            _roleManager.CreateAsync(new LiteDbRole {Name = "Mod"}).GetAwaiter().GetResult();
+            _roleManager.CreateAsync(new LiteDbRole {Name = "Captain"}).GetAwaiter().GetResult();
+            _roleManager.CreateAsync(new LiteDbRole {Name = "User"}).GetAwaiter().GetResult();
 
             _userService = _mocker.CreateInstance<UserService>();
         }
-        
-        public static LiteDbUser SetUpUser(UserManager<LiteDbUser> manager, string name = "Test",string email = "test@test.com")
+
+        public static LiteDbUser SetUpUser(UserManager<LiteDbUser> manager, string name = "Test",
+            string email = "test@test.com")
         {
-            var user = new LiteDbUser()
+            var user = new LiteDbUser
             {
                 UserName = name,
-                Email = email,
+                Email = email
             };
 
             manager.CreateAsync(user).GetAwaiter().GetResult();
 
             return user;
         }
-        
+
         [Fact]
         public void FindAllInRole()
         {
@@ -63,8 +66,8 @@ namespace PavlovRconWebserverTests.UnitTests
             usersResult.Should().NotBeNullOrEmpty();
             usersResult.Should().HaveCount(1);
         }
-        
-        
+
+
         [Fact]
         public void IsUserNotInRole()
         {
@@ -73,14 +76,14 @@ namespace PavlovRconWebserverTests.UnitTests
             var role = _roleManager.Roles.FirstOrDefault();
             _userManager.AddToRoleAsync(user, role.Name).GetAwaiter().GetResult();
             // act
-            
-            var usersResult = !_userService.IsUserInRole(role.Name,user).GetAwaiter().GetResult();
+
+            var usersResult = !_userService.IsUserInRole(role.Name, user).GetAwaiter().GetResult();
 
             // assert
             usersResult.Should().BeFalse();
         }
-        
-        
+
+
         [Fact]
         public void FindAll()
         {
@@ -109,8 +112,5 @@ namespace PavlovRconWebserverTests.UnitTests
             userResult.Should().BeTrue();
             userResultAfter.Should().BeNull();
         }
-        
-        
-
     }
 }

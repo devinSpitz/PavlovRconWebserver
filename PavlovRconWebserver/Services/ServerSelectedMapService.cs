@@ -9,8 +9,8 @@ namespace PavlovRconWebserver.Services
 {
     public class ServerSelectedMapService
     {
-        private readonly IToastifyService _notifyService;
         private readonly ILiteDbIdentityAsyncContext _liteDb;
+        private readonly IToastifyService _notifyService;
 
         public ServerSelectedMapService(ILiteDbIdentityAsyncContext liteDbContext,
             IToastifyService notyfService)
@@ -42,13 +42,14 @@ namespace PavlovRconWebserver.Services
 
         public async Task<bool> Update(ServerSelectedMap serverSelectedMap)
         {
-            return await  _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedMap>("ServerSelectedMap")
+            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedMap>("ServerSelectedMap")
                 .UpdateAsync(serverSelectedMap);
         }
 
         public async Task<bool> Delete(int id)
         {
-            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedMap>("ServerSelectedMap").DeleteAsync(id);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedMap>("ServerSelectedMap")
+                .DeleteAsync(id);
         }
 
         public async Task<int> DeleteFromServer(PavlovServer server)

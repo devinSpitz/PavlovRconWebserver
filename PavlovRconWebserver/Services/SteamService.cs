@@ -14,8 +14,8 @@ namespace PavlovRconWebserver.Services
 {
     public class SteamService
     {
-        private readonly IToastifyService _notifyService;
         private readonly MapsService _mapsService;
+        private readonly IToastifyService _notifyService;
         private readonly ServerSelectedMapService _serverSelectedMapService;
         private readonly SshServerSerivce _sshServerSerivce;
 
@@ -42,7 +42,7 @@ namespace PavlovRconWebserver.Services
                 }
                 catch (Exception e)
                 {
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message,LogEventLevel.Verbose,_notifyService);
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message, LogEventLevel.Verbose, _notifyService);
                     // ingore for now
                 }
         }
@@ -122,35 +122,35 @@ namespace PavlovRconWebserver.Services
                 ImageUrl = "",
                 Author = "Vankrupt Games"
             }).ToList();
-            rconMapsViewModels = maps.Prepend(new Map
+            rconMapsViewModels = rconMapsViewModels.Prepend(new Map
             {
                 Id = "stalingrad",
                 Name = "stalingrad",
                 ImageUrl = "",
                 Author = "Vankrupt Games"
             }).ToList();
-            rconMapsViewModels = maps.Prepend(new Map
+            rconMapsViewModels = rconMapsViewModels.Prepend(new Map
             {
                 Id = "santorini",
                 Name = "santorini",
                 ImageUrl = "",
                 Author = "Vankrupt Games"
             }).ToList();
-            rconMapsViewModels = maps.Prepend(new Map
+            rconMapsViewModels = rconMapsViewModels.Prepend(new Map
             {
                 Id = "station",
                 Name = "station",
                 ImageUrl = "",
                 Author = "Vankrupt Games"
             }).ToList();
-            rconMapsViewModels = maps.Prepend(new Map
+            rconMapsViewModels = rconMapsViewModels.Prepend(new Map
             {
                 Id = "industry",
                 Name = "industry",
                 ImageUrl = "",
                 Author = "Vankrupt Games"
             }).ToList();
-            rconMapsViewModels = maps.Prepend(new Map
+            rconMapsViewModels = rconMapsViewModels.Prepend(new Map
             {
                 Id = "ogcontainers",
                 Name = "ogcontainers",

@@ -12,15 +12,18 @@ namespace PavlovRconWebserver.Services
         private readonly PavlovServerInfoService _pavlovServerInfoService;
 
         private readonly PavlovServerPlayerService _pavlovServerPlayerService;
+        private readonly PavlovServerService _pavlovServerService;
 
         public PublicViewListsService(
             PavlovServerInfoService pavlovServerInfoService,
             PavlovServerPlayerService pavlovServerPlayerService,
+            PavlovServerService pavlovServerService,
             IToastifyService notyfService)
         {
             _notifyService = notyfService;
             _pavlovServerInfoService = pavlovServerInfoService;
             _pavlovServerPlayerService = pavlovServerPlayerService;
+            _pavlovServerService = pavlovServerService;
         }
 
 
@@ -30,6 +33,23 @@ namespace PavlovRconWebserver.Services
             var serverInfo = await _pavlovServerInfoService.FindServer(serverId);
             var model = PavlovServerPlayerListPublicViewModel(serverInfo, players);
             return model;
+        }        
+        
+        public async Task<List<PavlovServerPlayerListPublicViewModel>> GetAllStatsFromAllPavlovServers()
+        {
+            var result = new List<PavlovServerPlayerListPublicViewModel>();
+            var servers = (await _pavlovServerService.FindAll()).ToArray();
+            foreach (var server in servers)
+            {
+                if (server == null) continue;
+                if (server.ServerServiceState != ServerServiceState.active &&
+                    server.ServerType == ServerType.Community) continue;
+                if (server.ServerType == ServerType.Event) continue;
+                result.Add(await GetPavlovServerPlayerListPublicViewModel(server.Id));
+            }
+
+
+            return result;
         }
 
         public PavlovServerPlayerListPublicViewModel PavlovServerPlayerListPublicViewModel(PavlovServerInfo serverInfo,

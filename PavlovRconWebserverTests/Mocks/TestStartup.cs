@@ -8,7 +8,5 @@ namespace PavlovRconWebserverTests.UnitTests
         public TestStartup(IConfiguration env) : base(env)
         {
         }
-        
-        
     }
 }

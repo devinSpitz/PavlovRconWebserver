@@ -22,5 +22,9 @@ namespace PavlovRconWebserver.Models
         [NotMapped] [BsonIgnore] public string LiteDbUserId { get; set; }
 
         [NotMapped] [BsonIgnore] public List<LiteDbUser> LiteDbUsers { get; set; }
+
+        [NotMapped] 
+        [BsonIgnore]
+        public string ShowName => Id + ", " + Name;
     }
 }

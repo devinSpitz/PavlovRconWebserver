@@ -1,8 +1,18 @@
+@using PavlovRconWebserver.Services
+@using LiteDB.Identity.Models
+@using Microsoft.AspNetCore.Identity
 @model IEnumerable<SshServer>
-
+@inject UserService _userService;
+@inject UserManager<LiteDbUser> _userManager;
+@inject ServerSelectedModsService _serverSelectedModsService;
+@inject PavlovServerService _pavlovServerService;
 @{
     ViewBag.Title = "Rcon Servers";
     Layout = "_Layout";
+
+
+    var user = await _userManager.GetUserAsync(User);
+    _userService.UserInRole(user, _serverSelectedModsService, _pavlovServerService, out var isAdmin, out _, out _, out var isOnPremise, out _, out _, out _);
 }
 
 
@@ -32,15 +42,21 @@
     {
         <tr>
             <td>
-                <a class="btn btn-sm btn-danger" href="@Url.Action("DeleteServer", new {sshServer.Id})" onclick="return confirm('Are you sure you want to Delete?\nYou will also delete all pavlov servers!')">
-                    <span class="fas fa-trash-alt"></span>
-                </a>
+                @if (isOnPremise || isAdmin)
+                {
+                    <a class="btn btn-sm btn-danger" href="@Url.Action("DeleteServer", new {sshServer.Id})" onclick="return confirm('Are you sure you want to Delete?\nYou will also delete all pavlov servers!')">
+                        <span class="fas fa-trash-alt"></span>
+                    </a>
+                }
                 @sshServer.Id
             </td>
             <td>
-                <a class="btn btn-sm btn-primary"href="@Url.Action("EditServer", "SshServer", new {serverId = sshServer.Id})">
-                    <span class="fas fa-edit"></span>
-                </a>
+                @if (isOnPremise || isAdmin)
+                {
+                    <a class="btn btn-sm btn-primary"href="@Url.Action("EditServer", "SshServer", new {serverId = sshServer.Id})">
+                        <span class="fas fa-edit"></span>
+                    </a>
+                }
             </td>
             <td>
                 @sshServer.Name
@@ -59,9 +75,12 @@
                         <tr>
                             <th class="col-sm-3">Gui Name <button class="btn btn-primary col-5 m-1" onclick="showHideTable(this)"><span class="fas fa-eye"></span> All columns</button></th>
                             <th class="col-sm-1">Service state</th>
-                            <th class="toHide">Delete<br>from list</th>
-                            <th class="toHide">Delete<br>incl. files</th>
-                            <th class="toHide">System</th>
+                            @if (isOnPremise || isAdmin)
+                            {
+                                <th class="toHide">Delete<br>from list</th>
+                                <th class="toHide">Delete<br>incl. files</th>
+                                <th class="toHide">System</th>
+                            }
                             <th class="toHide">Maps</th>
                             <th class="toHide col-sm-2">ServerSettings</th>
                             <th class="toHide">Stop/Start</th>
@@ -91,25 +110,30 @@
                             }
                             <tr>
                                 <td> @pavlovServer.Name </td>
+
                                 <td class="@bg"> @pavlovServer.ServerServiceState </td>
-                                <td class="toHide">
-                                    <a class="btn btn-sm btn-danger" alt="Remove from list" href="@Url.Action("DeleteServer", "PavlovServer", new {pavlovServer.Id})" onclick="return confirm('Are you sure you want to remove the server from list?')">
-                                        <span class="fas fa-trash-alt"></span>
-                                    </a>
-                                </td>
-                                <td class="toHide">
-                                    @if (sshServer.SteamIsAvailable)
-                                    {
-                                        <a class="btn btn-sm btn-danger" alt="Complete Remove" href="@Url.Action("CompleteRemoveView", "PavlovServer", new {pavlovServer.Id})" onclick="return confirm('Are you sure you want to Delete the hole Pavlov Server inlc. files?')">
+                                @if (isOnPremise || isAdmin)
+                                {
+                                    <td class="toHide">
+                                        <a class="btn btn-sm btn-danger" alt="Remove from list" href="@Url.Action("DeleteServer", "PavlovServer", new {pavlovServer.Id})" onclick="return confirm('Are you sure you want to remove the server from list?')">
                                             <span class="fas fa-trash-alt"></span>
                                         </a>
-                                    }
-                                </td>
-                                <td class="toHide">
-                                    <a class="btn btn-sm btn-primary" href="@Url.Action("EditServer", "PavlovServer", new {serverId = pavlovServer.Id, sshServerId = sshServer.Id})">
-                                        <span class="fas fa-edit"></span>
-                                    </a>
-                                </td>
+                                    </td>
+                                    <td class="toHide">
+                                        @if (sshServer.SteamIsAvailable)
+                                        {
+                                            <a class="btn btn-sm btn-danger" alt="Complete Remove" href="@Url.Action("CompleteRemoveView", "PavlovServer", new {pavlovServer.Id})" onclick="return confirm('Are you sure you want to Delete the hole Pavlov Server inlc. files?')">
+                                                <span class="fas fa-trash-alt"></span>
+                                            </a>
+                                        }
+                                    </td>
+                                    <td class="toHide">
+                                        <a class="btn btn-sm btn-primary" href="@Url.Action("EditServer", "PavlovServer", new {serverId = pavlovServer.Id, sshServerId = sshServer.Id})">
+                                            <span class="fas fa-edit"></span>
+                                        </a>
+                                    </td>
+                                }
+
                                 <td class="toHide">
                                     <a class="btn btn-sm btn-primary" href="@Url.Action("EditServerSelectedMaps", "PavlovServer", new {serverId = pavlovServer.Id})">
                                         <span class="fas fa-map"></span>
@@ -150,14 +174,17 @@
                         }
                         </tbody>
                     </table>
-                    <a class="btn btn-sm btn-primary mb-1" href="@Url.Action("EditServer", "PavlovServer", new {serverId = 0, sshServerId = sshServer.Id})">
-                        <span class="fas fa-plus"></span>
-                    </a>
-                    @if (sshServer.SteamIsAvailable)
+                    @if (isOnPremise || isAdmin)
                     {
-                        <a class="btn btn-sm btn-primary mb-1" href="@Url.Action("EditServer", "PavlovServer", new {serverId = 0, sshServerId = sshServer.Id, create = true})">
-                            Create Pavlov Server
+                        <a class="btn btn-sm btn-primary mb-1" href="@Url.Action("EditServer", "PavlovServer", new {serverId = 0, sshServerId = sshServer.Id})">
+                            <span class="fas fa-plus"></span>
                         </a>
+                        @if (sshServer.SteamIsAvailable)
+                        {
+                            <a class="btn btn-sm btn-primary mb-1" href="@Url.Action("EditServer", "PavlovServer", new {serverId = 0, sshServerId = sshServer.Id, create = true})">
+                                Create Pavlov Server
+                            </a>
+                        }
                     }
                     <a class="btn btn-sm btn-primary mb-1" href="@Url.Action("PlayersFromServers", "PublicViewLists", new {servers = sshServer.PavlovServers?.Select(x => x.Id).ToArray(), backgroundColorHex = "#222", fontColorHex = "#ffffff"})"><span class="fas fa-eye"></span> All Stats</a>
 

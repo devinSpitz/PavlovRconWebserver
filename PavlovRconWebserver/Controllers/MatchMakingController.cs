@@ -10,7 +10,7 @@ using PavlovRconWebserver.Services;
 namespace PavlovRconWebserver.Controllers
 {
     
-    [Authorize(Roles = CustomRoles.Admin)]
+    [Authorize(Roles = CustomRoles.User)]
     public class MatchMakingController : Controller
     {
         private readonly MapsService _mapsService;
@@ -50,14 +50,27 @@ namespace PavlovRconWebserver.Controllers
         [HttpGet("[controller]/{showFinished?}")]
         public async Task<IActionResult> Index(bool showFinished = false)
         {
+            
+            var user = await _userservice.getUserFromCp(HttpContext.User);
+            var servers = await _matchService.FindAllMatchesWhereTheUserHasRights(HttpContext.User,user);
+            
             return showFinished
-                ? View(await _matchService.FindAll())
-                : View((await _matchService.FindAll()).Where(x => x.Status != Status.Finshed));
+                ? View(servers)
+                : View(servers.Where(x => x.Status != Status.Finshed));
         }
 
         [HttpGet]
         public async Task<IActionResult> EditMatchResult(int id)
         {
+            
+            var user = await _userservice.getUserFromCp(HttpContext.User);
+            var servers = await _matchService.FindAllMatchesWhereTheUserHasRights(HttpContext.User,user);
+            
+            if (!servers.Select(x => x.Id).Contains(id))
+            {
+                return Forbid();
+            }
+            
             var match = await _matchService.FindOne(id);
             if (match == null) return BadRequest("No match like that exists!");
             if (!match.isFinished()) return BadRequest("Match is not finished jet!");
@@ -84,6 +97,13 @@ namespace PavlovRconWebserver.Controllers
         [HttpPost("[controller]/SaveMatchResult")]
         public async Task<IActionResult> SaveMatchResult(PavlovServerPlayerListPublicViewModel match)
         {
+            var user = await _userservice.getUserFromCp(HttpContext.User);
+            var servers = await _matchService.FindAllMatchesWhereTheUserHasRights(HttpContext.User,user);
+            
+            if (!servers.Select(x => x.Id).Contains(match.MatchId))
+            {
+                return Forbid();
+            }
             var realMatch = await _matchService.FindOne(match.MatchId);
             if (realMatch == null) return BadRequest("No match like that exists!");
 
@@ -93,9 +113,16 @@ namespace PavlovRconWebserver.Controllers
         }
 
 
-        [HttpGet]
+        [HttpGet("[controller]/EditMatch/{id}")]
         public async Task<IActionResult> EditMatch(int id)
         {
+            var user = await _userservice.getUserFromCp(HttpContext.User);
+            var servers = await _matchService.FindAllMatchesWhereTheUserHasRights(HttpContext.User,user);
+            
+            if (!servers.Select(x => x.Id).Contains(id))
+            {
+                return Forbid();
+            }
             var oldMatch = await _matchService.FindOne(id);
             if (!oldMatch.isEditable()) return BadRequest("No meets requirement!");
             var match = await _matchService.PrepareViewModel(oldMatch);
@@ -103,13 +130,16 @@ namespace PavlovRconWebserver.Controllers
             return View("Match", match);
         }
 
-
+        
+        [Authorize(Roles = CustomRoles.AnyOtherThanUser)]
+        [HttpGet("[controller]/CreateMatch/")]
         public async Task<IActionResult> CreateMatch()
         {
+            var user = await _userservice.getUserFromCp(HttpContext.User);
             var match = new MatchViewModel
             {
                 AllTeams = (await _teamService.FindAll()).ToList(),
-                AllPavlovServers = (await _pavlovServerService.FindAll()).Where(x => x.ServerType == ServerType.Event)
+                AllPavlovServers = (await _pavlovServerService.FindAllServerWhereTheUserHasRights(HttpContext.User,user)).Where(x => x.ServerType == ServerType.Event)
                     .ToList() // and where no match is already running
             };
             return View("Match", match);
@@ -138,9 +168,17 @@ namespace PavlovRconWebserver.Controllers
         [HttpGet("[controller]/ForceStartMatch")]
         public async Task<IActionResult> ForceStartMatch(int id)
         {
+            
+            var user = await _userservice.getUserFromCp(HttpContext.User);
+            var servers = await _matchService.FindAllMatchesWhereTheUserHasRights(HttpContext.User,user);
+            
+            if (!servers.Select(x => x.Id).Contains(id))
+            {
+                return Forbid();
+            }
             var match = await _matchService.FindOne(id);
             if (match == null) return BadRequest("No match found!");
-            if (!match.isForceStopatable()) return BadRequest("No meets requirement!");
+            if (!match.isForceStartable()) return BadRequest("No meets requirement!");
             match.ForceStart = true;
             await _matchService.Upsert(match);
             return RedirectToAction("Index", "MatchMaking");
@@ -148,7 +186,14 @@ namespace PavlovRconWebserver.Controllers
 
         [HttpGet("[controller]/StartMatch")]
         public async Task<IActionResult> StartMatch(int id)
-        {
+        {            
+            var user = await _userservice.getUserFromCp(HttpContext.User);
+            var servers = await _matchService.FindAllMatchesWhereTheUserHasRights(HttpContext.User,user);
+            
+            if (!servers.Select(x => x.Id).Contains(id))
+            {
+                return Forbid();
+            }
             var match = await _matchService.FindOne(id);
             if (match == null) return BadRequest("No match found!");
             if (!match.isStartable()) return BadRequest("No meets requirement!");
@@ -159,6 +204,13 @@ namespace PavlovRconWebserver.Controllers
         [HttpGet("[controller]/ForceSopMatch")]
         public async Task<IActionResult> ForceStopMatch(int id)
         {
+            var user = await _userservice.getUserFromCp(HttpContext.User);
+            var servers = await _matchService.FindAllMatchesWhereTheUserHasRights(HttpContext.User,user);
+            
+            if (!servers.Select(x => x.Id).Contains(id))
+            {
+                return Forbid();
+            }
             var match = await _matchService.FindOne(id);
             if (match == null) return BadRequest("No match found!");
             if (!match.isForceStopatable()) return BadRequest("No meets requirement!");
@@ -167,13 +219,22 @@ namespace PavlovRconWebserver.Controllers
             return RedirectToAction("Index", "MatchMaking");
         }
 
+        [Authorize(Roles = CustomRoles.AnyOtherThanUser)]
         [HttpPost("[controller]/SaveMatch")]
         public async Task<IActionResult> SaveMatch(MatchViewModel match)
         {
+
             var realmatch = new Match();
             // make from viewmodel right model
             if (match.Id != 0) //edit or new
             {
+                var user = await _userservice.getUserFromCp(HttpContext.User);
+                var servers = await _matchService.FindAllMatchesWhereTheUserHasRights(HttpContext.User,user);
+            
+                if (!servers.Select(x => x.Id).Contains(match.Id))
+                {
+                    return Forbid();
+                }
                 realmatch = await _matchService.FindOne(match.Id);
                 if (realmatch.Status != Status.Preparing)
                     return BadRequest("The match already started so you can not change anything!");
@@ -195,6 +256,13 @@ namespace PavlovRconWebserver.Controllers
         [HttpGet("[controller]/Delete")]
         public async Task<IActionResult> Delete(int Id)
         {
+            var user = await _userservice.getUserFromCp(HttpContext.User);
+            var servers = await _matchService.FindAllMatchesWhereTheUserHasRights(HttpContext.User,user);
+            
+            if (!servers.Select(x => x.Id).Contains(Id))
+            {
+                return Forbid();
+            }
             if (await _matchService.CanBeDeleted(Id))
             {
                 await _matchService.Delete(Id);
@@ -208,7 +276,13 @@ namespace PavlovRconWebserver.Controllers
         [HttpPost("[controller]/PartialViewPerGameMode")]
         public async Task<IActionResult> PartialViewPerGameMode(string gameMode, Match match)
         {
-
+            var user = await _userservice.getUserFromCp(HttpContext.User);
+            var servers = await _matchService.FindAllMatchesWhereTheUserHasRights(HttpContext.User,user);
+            
+            if (match.Id!=0&&!servers.Select(x => x.Id).Contains(match.Id))
+            {
+                return Forbid();
+            }
             var selectedSteamIdentitiesRaw =
                 (await _matchSelectedSteamIdentitiesService.FindAllSelectedForMatch(match.Id)).ToList();
             var selectedTeam0SteamIdentitiesRaw =

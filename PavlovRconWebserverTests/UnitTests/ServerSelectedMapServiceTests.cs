@@ -11,13 +11,15 @@ namespace PavlovRconWebserverTests.UnitTests
 {
     public class ServerSelectedMapServiceTests
     {
-        private readonly IServicesBuilder services;
+        private readonly MapsService _mapsService;
         private readonly AutoMocker _mocker;
+        private readonly PavlovServerService _pavlovServerService;
         private readonly ServerSelectedMapService _serverSelectedMapService;
         private readonly SshServerSerivce _sshServerSerivce;
-        private readonly PavlovServerService _pavlovServerService;
-        private readonly MapsService _mapsService;
-        public ServerSelectedMapServiceTests() {
+        private readonly IServicesBuilder services;
+
+        public ServerSelectedMapServiceTests()
+        {
             services = new ServicesBuilder();
             _mocker = new AutoMocker();
             services.Build(_mocker);
@@ -30,9 +32,9 @@ namespace PavlovRconWebserverTests.UnitTests
         private PavlovServer[] InitializeServerSelectetMapUpsert()
         {
             var maps = InitializeServerSelectetMap(out var pavlovServers);
-            _serverSelectedMapService.Upsert(new List<ServerSelectedMap>()
+            _serverSelectedMapService.Upsert(new List<ServerSelectedMap>
             {
-                new ServerSelectedMap()
+                new()
                 {
                     GameMode = "TDM",
                     Id = 1,
@@ -42,7 +44,7 @@ namespace PavlovRconWebserverTests.UnitTests
             }).GetAwaiter().GetResult();
             return pavlovServers;
         }
-        
+
         private Map[] InitializeServerSelectetMap(out PavlovServer[] pavlovServers)
         {
             InitializePavlovServerAndSShServerAndMap(_sshServerSerivce, _pavlovServerService, _mapsService);
@@ -53,20 +55,21 @@ namespace PavlovRconWebserverTests.UnitTests
             return maps;
         }
 
-        private static void InitializePavlovServerAndSShServerAndMap(SshServerSerivce sshServerSerivce,PavlovServerService pavlovServerService,MapsService mapsService)
+        private static void InitializePavlovServerAndSShServerAndMap(SshServerSerivce sshServerSerivce,
+            PavlovServerService pavlovServerService, MapsService mapsService)
         {
             var sshServer = SshServerServiceTests.SshServerInsert(sshServerSerivce);
-            PavlovServerServiceTests.PavlovServers(sshServer,pavlovServerService);
+            PavlovServerServiceTests.PavlovServers(sshServer, pavlovServerService);
             MapServiceTests.InsertMap(mapsService);
         }
-        
+
         [Fact]
         public void InsertMap()
         {
             // arrange
             var maps = InitializeServerSelectetMap(out var pavlovServers);
             // act
-            _serverSelectedMapService.Insert(new ServerSelectedMap()
+            _serverSelectedMapService.Insert(new ServerSelectedMap
             {
                 GameMode = "TDM",
                 Id = 1,
@@ -77,8 +80,6 @@ namespace PavlovRconWebserverTests.UnitTests
             var mapsResult = _serverSelectedMapService.FindAllFrom(pavlovServers.First()).GetAwaiter().GetResult();
             mapsResult.Should().HaveCount(1);
         }
-
-
 
 
         [Fact]
@@ -94,7 +95,7 @@ namespace PavlovRconWebserverTests.UnitTests
             mapsResult = _serverSelectedMapService.FindAllFrom(pavlovServers.First()).GetAwaiter().GetResult();
             mapsResult.Should().BeEmpty();
         }
-        
+
         [Fact]
         public void DeleteMapFromServer()
         {
@@ -108,7 +109,7 @@ namespace PavlovRconWebserverTests.UnitTests
             mapsResult = _serverSelectedMapService.FindAllFrom(pavlovServers.First()).GetAwaiter().GetResult();
             mapsResult.Should().BeEmpty();
         }
-        
+
         [Fact]
         public void UpdateMap()
         {
@@ -126,7 +127,7 @@ namespace PavlovRconWebserverTests.UnitTests
             var mapResult = mapsResult.First();
             mapResult.GameMode.Should().Be("GUN");
         }
-        
+
         // [Fact]
         // public void FindOne()
         // {
@@ -139,6 +140,5 @@ namespace PavlovRconWebserverTests.UnitTests
         //     map.Should().NotBe(null);
         //     map.Name.Should().Be("test");
         // }
-
     }
 }

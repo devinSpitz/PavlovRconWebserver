@@ -11,11 +11,12 @@ namespace PavlovRconWebserverTests.Mocks
     {
         private readonly IServiceCollection services;
         private ServiceProvider provider;
+
         public ServicesBuilder()
         {
             services = new ServiceCollection();
-            
         }
+
         public void Build(AutoMocker mocker)
         {
             services.AddHttpContextAccessor();
@@ -23,11 +24,11 @@ namespace PavlovRconWebserverTests.Mocks
             services.AddLiteDbIdentityAsync("Filename=:memory:;");
             provider = services.BuildServiceProvider();
             var db = provider.GetService<ILiteDbIdentityAsyncContext>();
-            mocker.Use( db );
+            mocker.Use(db);
             var roleManager = provider.GetService<RoleManager<LiteDbRole>>();
-            mocker.Use( roleManager );
+            mocker.Use(roleManager);
             var userManager = provider.GetService<UserManager<LiteDbUser>>();
-            mocker.Use( userManager );
+            mocker.Use(userManager);
         }
 
         public RoleManager<LiteDbRole> GetRoleManager()
@@ -39,8 +40,5 @@ namespace PavlovRconWebserverTests.Mocks
         {
             return provider.GetService<UserManager<LiteDbUser>>();
         }
-        
-        
-        
     }
 }

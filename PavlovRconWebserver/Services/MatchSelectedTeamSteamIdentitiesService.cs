@@ -9,8 +9,8 @@ namespace PavlovRconWebserver.Services
 {
     public class MatchSelectedTeamSteamIdentitiesService
     {
-        private readonly IToastifyService _notifyService;
         private readonly ILiteDbIdentityAsyncContext _liteDb;
+        private readonly IToastifyService _notifyService;
 
         public MatchSelectedTeamSteamIdentitiesService(ILiteDbIdentityAsyncContext liteDbContext,
             IToastifyService notyfService)
@@ -21,14 +21,16 @@ namespace PavlovRconWebserver.Services
 
         public async Task<MatchTeamSelectedSteamIdentity[]> FindAll()
         {
-            return (await _liteDb.LiteDatabaseAsync.GetCollection<MatchTeamSelectedSteamIdentity>("MatchTeamSelectedSteamIdentity")
+            return (await _liteDb.LiteDatabaseAsync
+                .GetCollection<MatchTeamSelectedSteamIdentity>("MatchTeamSelectedSteamIdentity")
                 .FindAllAsync()).ToArray();
         }
 
         public async Task<MatchTeamSelectedSteamIdentity[]> FindAllSelectedForMatchAndTeam(int matchId,
             int teamId)
         {
-            return (await _liteDb.LiteDatabaseAsync.GetCollection<MatchTeamSelectedSteamIdentity>("MatchTeamSelectedSteamIdentity")
+            return (await _liteDb.LiteDatabaseAsync
+                .GetCollection<MatchTeamSelectedSteamIdentity>("MatchTeamSelectedSteamIdentity")
                 .FindAllAsync()).Where(x => x.matchId == matchId && x.TeamId == teamId).ToArray();
         }
 
@@ -36,10 +38,12 @@ namespace PavlovRconWebserver.Services
             int teamId)
         {
             if (matchId != 0)
-                await _liteDb.LiteDatabaseAsync.GetCollection<MatchTeamSelectedSteamIdentity>("MatchTeamSelectedSteamIdentity")
+                await _liteDb.LiteDatabaseAsync
+                    .GetCollection<MatchTeamSelectedSteamIdentity>("MatchTeamSelectedSteamIdentity")
                     .DeleteManyAsync(x => x.matchId == matchId && x.TeamId == teamId);
 
-            return await _liteDb.LiteDatabaseAsync.GetCollection<MatchTeamSelectedSteamIdentity>("MatchTeamSelectedSteamIdentity")
+            return await _liteDb.LiteDatabaseAsync
+                .GetCollection<MatchTeamSelectedSteamIdentity>("MatchTeamSelectedSteamIdentity")
                 .Include(x => x.matchId == matchId && x.TeamId == teamId)
                 .UpsertAsync(matchTeamSelectedSteamIdentity);
         }
@@ -47,7 +51,8 @@ namespace PavlovRconWebserver.Services
 
         public async Task<int> RemoveFromMatch(int matchId)
         {
-            return await _liteDb.LiteDatabaseAsync.GetCollection<MatchTeamSelectedSteamIdentity>("MatchTeamSelectedSteamIdentity")
+            return await _liteDb.LiteDatabaseAsync
+                .GetCollection<MatchTeamSelectedSteamIdentity>("MatchTeamSelectedSteamIdentity")
                 .DeleteManyAsync(x => x.matchId == matchId);
         }
     }

@@ -8,8 +8,8 @@ namespace PavlovRconWebserver.Services
 {
     public class LogService
     {
-        private readonly IToastifyService _notifyService;
         private readonly ILiteDbIdentityAsyncContext _liteDb;
+        private readonly IToastifyService _notifyService;
 
         public LogService(ILiteDbIdentityAsyncContext liteDbContext,
             IToastifyService notyfService)
@@ -20,8 +20,8 @@ namespace PavlovRconWebserver.Services
 
         public async Task<LiteDbLog[]> FindAll()
         {
-            return (await _liteDb.LiteDatabaseAsync.GetCollection<LiteDbLog>("LiteDbLog").FindAllAsync()).OrderByDescending(x => x.Id).ToArray();
+            return (await _liteDb.LiteDatabaseAsync.GetCollection<LiteDbLog>("LiteDbLog").FindAllAsync())
+                .OrderByDescending(x => x.Id).ToArray();
         }
-
     }
 }

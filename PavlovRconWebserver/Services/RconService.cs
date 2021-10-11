@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using AspNetCoreHero.ToastNotification.Abstractions;
@@ -11,14 +10,12 @@ using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
 using PrimS.Telnet;
 using Renci.SshNet;
-using Renci.SshNet.Common;
 using Serilog.Events;
 
 namespace PavlovRconWebserver.Services
 {
     public class RconService
     {
-        private readonly IToastifyService _notifyService;
         public enum AuthType
         {
             PrivateKey,
@@ -27,6 +24,7 @@ namespace PavlovRconWebserver.Services
         }
 
         private readonly MapsService _mapsService;
+        private readonly IToastifyService _notifyService;
         private readonly PavlovServerInfoService _pavlovServerInfoService;
         private readonly PavlovServerPlayerHistoryService _pavlovServerPlayerHistoryService;
         private readonly PavlovServerPlayerService _pavlovServerPlayerService;
@@ -70,13 +68,14 @@ namespace PavlovRconWebserver.Services
                     catch (Exception e)
                     {
                         exceptions.Add(e);
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message,LogEventLevel.Verbose,_notifyService);
+                        DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message, LogEventLevel.Verbose,
+                            _notifyService);
                     }
             }
             catch (Exception e)
             {
                 exceptions.Add(e);
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message,LogEventLevel.Verbose,_notifyService);
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message, LogEventLevel.Verbose, _notifyService);
             }
             // Ignore them for now
             // if (exceptions.Count > 0)
@@ -100,7 +99,7 @@ namespace PavlovRconWebserver.Services
                 }
                 catch (Exception e)
                 {
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message,LogEventLevel.Verbose,_notifyService);
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message, LogEventLevel.Verbose, _notifyService);
                 }
         }
 
@@ -108,15 +107,13 @@ namespace PavlovRconWebserver.Services
         {
             var blacklistArray = NewBlackListContent.Select(x => x.SteamId).ToArray();
             var content = string.Join(Environment.NewLine, blacklistArray);
-            RconStatic.WriteFile(server, server.ServerFolderPath + FilePaths.BanList, content,_notifyService);
+            RconStatic.WriteFile(server, server.ServerFolderPath + FilePaths.BanList, content, _notifyService);
             return true;
         }
 
         public async Task<string> SShTunnelGetAllInfoFromPavlovServer(PavlovServer server)
         {
-            var type = RconStatic.GetAuthType(server);
-            var connectionInfo = RconStatic.ConnectionInfoInternal(server, type, out var result);
-            using var client = new SshClient(connectionInfo);
+            var result = RconStatic.StartClient(server, out var client);
             var costumesToSet = new Dictionary<string, string>();
             try
             {
@@ -134,16 +131,20 @@ namespace PavlovRconWebserver.Services
                         if (client2.IsConnected)
                         {
                             var password = await client2.ReadAsync(TimeSpan.FromMilliseconds(2000));
-                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Answer: " + password,LogEventLevel.Verbose,_notifyService);
+                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Answer: " + password,
+                                LogEventLevel.Verbose, _notifyService);
                             if (password.ToLower().Contains("password"))
                             {
-                                DataBaseLogger.LogToDatabaseAndResultPlusNotify("start sending password!",LogEventLevel.Verbose,_notifyService);
+                                DataBaseLogger.LogToDatabaseAndResultPlusNotify("start sending password!",
+                                    LogEventLevel.Verbose, _notifyService);
                                 await client2.WriteLine(server.TelnetPassword);
-                                DataBaseLogger.LogToDatabaseAndResultPlusNotify("did send password and wait for auth",LogEventLevel.Verbose,_notifyService);
-                                
+                                DataBaseLogger.LogToDatabaseAndResultPlusNotify("did send password and wait for auth",
+                                    LogEventLevel.Verbose, _notifyService);
+
                                 var auth = await client2.ReadAsync(TimeSpan.FromMilliseconds(2000));
-                                
-                                DataBaseLogger.LogToDatabaseAndResultPlusNotify("waited for auth get : "+auth,LogEventLevel.Verbose,_notifyService);
+
+                                DataBaseLogger.LogToDatabaseAndResultPlusNotify("waited for auth get : " + auth,
+                                    LogEventLevel.Verbose, _notifyService);
                                 if (auth.ToLower().Contains("authenticated=1"))
                                 {
                                     // it is authetificated
@@ -219,8 +220,10 @@ namespace PavlovRconWebserver.Services
                                         await RconStatic.SingleCommandResult(client2, "ServerInfo");
                                     var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(
                                         singleCommandResultTwo.Replace("\"\"", "\"ServerInfo\""));
-                                    if(!string.IsNullOrEmpty(tmp.ServerInfo.GameMode))
-                                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Got the server info for the server: "+ server.Name+"\n "+singleCommandResultTwo,LogEventLevel.Verbose,_notifyService);
+                                    if (!string.IsNullOrEmpty(tmp.ServerInfo.GameMode))
+                                        DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                                            "Got the server info for the server: " + server.Name + "\n " +
+                                            singleCommandResultTwo, LogEventLevel.Verbose, _notifyService);
                                     var map = await _mapsService.FindOne(tmp.ServerInfo.MapLabel.Replace("UGC", ""));
                                     if (map != null)
                                         tmp.ServerInfo.MapPictureLink = map.ImageUrl;
@@ -244,27 +247,37 @@ namespace PavlovRconWebserver.Services
 
                                     result.Success = true;
 
-                                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Set skins for "+costumesToSet.Count+" players of the server:"+ server.Name,LogEventLevel.Verbose,_notifyService);
+                                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                                        "Set skins for " + costumesToSet.Count + " players of the server:" +
+                                        server.Name, LogEventLevel.Verbose, _notifyService);
 
                                     foreach (var customToSet in costumesToSet)
                                         await RconStatic.SendCommandSShTunnel(server,
-                                            "SetPlayerSkin " + customToSet.Key + " " + customToSet.Value,_notifyService);
+                                            "SetPlayerSkin " + customToSet.Key + " " + customToSet.Value,
+                                            _notifyService);
                                 }
                                 else
                                 {
-                                    
-                                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Send password but did not get Authenticated=1 answer: "+auth,LogEventLevel.Verbose,_notifyService);
-                                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Telnet Client could not authenticate ..." + server.Name,LogEventLevel.Fatal ,_notifyService, result);
+                                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                                        "Send password but did not get Authenticated=1 answer: " + auth,
+                                        LogEventLevel.Verbose, _notifyService);
+                                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                                        "Telnet Client could not authenticate ..." + server.Name, LogEventLevel.Fatal,
+                                        _notifyService, result);
                                 }
                             }
                             else
                             {
-                                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Telnet Client did not ask for Password ..." + server.Name,LogEventLevel.Fatal,_notifyService , result);
+                                DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                                    "Telnet Client did not ask for Password ..." + server.Name, LogEventLevel.Fatal,
+                                    _notifyService, result);
                             }
                         }
                         else
                         {
-                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Telnet Client could not connect ..." + server.Name,LogEventLevel.Fatal,_notifyService , result);
+                            DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                                "Telnet Client could not connect ..." + server.Name, LogEventLevel.Fatal,
+                                _notifyService, result);
                         }
 
                         client2.Dispose();
@@ -274,34 +287,13 @@ namespace PavlovRconWebserver.Services
                 }
                 else
                 {
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Telnet Client cannot be reached..." + server.Name,LogEventLevel.Fatal,_notifyService , result);
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Telnet Client cannot be reached..." + server.Name,
+                        LogEventLevel.Fatal, _notifyService, result);
                 }
             }
             catch (Exception e)
             {
-                switch (e)
-                {
-                    case SshAuthenticationException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not Login over ssh!" + server.Name,LogEventLevel.Fatal ,_notifyService, result);
-                        break;
-                    case SshConnectionException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host over ssh!" + server.Name,LogEventLevel.Fatal,_notifyService , result);
-                        break;
-                    case SshOperationTimeoutException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host cause of timeout over ssh!" + server.Name,LogEventLevel.Fatal,_notifyService , result);
-                        break;
-                    case SocketException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host!" + server.Name,LogEventLevel.Fatal ,_notifyService, result);
-                        break;
-                    case InvalidOperationException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message + " <- most lily this error is from telnet" + server.Name,LogEventLevel.Fatal ,_notifyService, result);
-                        break;
-                    default:
-                    {
-                        client.Disconnect();
-                        throw;
-                    }
-                }
+                RconStatic.ExcpetionHandlingSshSftp(server, _notifyService, e, result, client);
             }
             finally
             {
@@ -317,7 +309,7 @@ namespace PavlovRconWebserver.Services
 
             try
             {
-                answer = RconStatic.GetFile(server, server.ServerFolderPath + FilePaths.BanList,_notifyService);
+                answer = RconStatic.GetFile(server, server.ServerFolderPath + FilePaths.BanList, _notifyService);
             }
             catch (Exception e)
             {

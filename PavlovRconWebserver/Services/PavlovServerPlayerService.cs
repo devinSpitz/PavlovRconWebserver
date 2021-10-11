@@ -9,8 +9,8 @@ namespace PavlovRconWebserver.Services
 {
     public class PavlovServerPlayerService
     {
-        private readonly IToastifyService _notifyService;
         private readonly ILiteDbIdentityAsyncContext _liteDb;
+        private readonly IToastifyService _notifyService;
 
 
         public PavlovServerPlayerService(ILiteDbIdentityAsyncContext liteDbContext,

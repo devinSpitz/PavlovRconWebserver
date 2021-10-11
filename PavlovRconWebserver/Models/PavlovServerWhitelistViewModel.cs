@@ -10,6 +10,6 @@ namespace PavlovRconWebserver.Models
     public class PavlovServerWhitelistViewModel
     {
         public int pavlovServerId { get; set; } = 0;
-        public List<string> steamIds { get; set; } = new List<string>();
+        public List<string> steamIds { get; set; } = new();
     }
 }

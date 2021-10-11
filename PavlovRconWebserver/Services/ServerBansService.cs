@@ -9,8 +9,8 @@ namespace PavlovRconWebserver.Services
 {
     public class ServerBansService
     {
-        private readonly IToastifyService _notifyService;
         private readonly ILiteDbIdentityAsyncContext _liteDb;
+        private readonly IToastifyService _notifyService;
 
 
         public ServerBansService(ILiteDbIdentityAsyncContext liteDbContext,

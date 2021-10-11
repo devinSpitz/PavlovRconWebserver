@@ -4,7 +4,7 @@
 @{
     ViewBag.Title = "Edit pavlov server white list";
     Layout = "_Layout";
-    var steamIdentities = ViewBag.SteamIdentities;
+    List<SteamIdentity> steamIdentities = ViewBag.SteamIdentities;
 
 }
 
@@ -18,7 +18,7 @@
 
     <div class="form-group col-md-12">
         <label asp-for="steamIds"></label>
-        @Html.ListBoxFor(m => m.steamIds, new MultiSelectList(steamIdentities, Model.steamIds), new {@class = "form-control form-control-sm"})
+        @Html.ListBoxFor(m => m.steamIds, new MultiSelectList(steamIdentities, "Id","ShowName",Model.steamIds), new {@class = "form-control form-control-sm"})
     </div>
 
     <div class="row">

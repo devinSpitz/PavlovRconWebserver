@@ -11,31 +11,31 @@ namespace PavlovRconWebserver.Models
         {
             SpecialCommands = new List<Command>
             {
-                new Command
+                new()
                 {
                     Name = "ServerInfo",
                     InputValue = false,
                     MinRole = "User"
                 },
-                new Command
+                new()
                 {
                     Name = "RefreshList",
                     InputValue = false,
                     MinRole = "User"
                 },
-                new Command
+                new()
                 {
                     Name = "ResetSND",
                     InputValue = false,
                     MinRole = "Captain"
                 },
-                new Command
+                new()
                 {
                     Name = "Blacklist",
                     InputValue = false,
                     MinRole = "Captain"
                 },
-                new Command
+                new()
                 {
                     Name = "RotateMap",
                     InputValue = false,
@@ -44,7 +44,7 @@ namespace PavlovRconWebserver.Models
             };
             PlayerCommands = new List<Command>
             {
-                new Command
+                new()
                 {
                     Name = "Ban",
                     InputValue = true,
@@ -55,49 +55,49 @@ namespace PavlovRconWebserver.Models
                         "unlimited", "5min", "10min", "30min", "1h", "3h", "6h", "12h", "24h", "48h"
                     }
                 },
-                new Command
+                new()
                 {
                     Name = "Unban",
                     InputValue = false,
                     MinRole = "Mod",
                     Group = "Player commands"
                 },
-                new Command
+                new()
                 {
                     Name = "Kill",
                     InputValue = false,
                     MinRole = "Mod",
                     Group = "Player commands"
                 },
-                new Command
+                new()
                 {
                     Name = "Kick",
                     InputValue = false,
                     MinRole = "Mod",
                     Group = "Player commands"
                 },
-                new Command
+                new()
                 {
                     Name = "AddMod",
                     InputValue = false,
                     MinRole = "Mod",
                     Group = "Player commands"
                 },
-                new Command
+                new()
                 {
                     Name = "RemoveMod",
                     InputValue = false,
                     MinRole = "Mod",
                     Group = "Player commands"
                 },
-                new Command
+                new()
                 {
                     Name = "InspectPlayer",
                     InputValue = false,
                     MinRole = "User",
                     Group = "Player commands"
                 },
-                new Command
+                new()
                 {
                     Name = "SwitchTeam",
                     InputValue = true,
@@ -108,7 +108,7 @@ namespace PavlovRconWebserver.Models
                     MinRole = "Captain",
                     Group = "Player commands"
                 },
-                new Command
+                new()
                 {
                     Name = "GiveItem",
                     InputValue = true,
@@ -116,7 +116,7 @@ namespace PavlovRconWebserver.Models
                     MinRole = "Admin",
                     Group = "Player commands"
                 },
-                new Command
+                new()
                 {
                     Name = "SetPlayerSkin",
                     InputValue = true,
@@ -124,7 +124,7 @@ namespace PavlovRconWebserver.Models
                     MinRole = "Admin",
                     Group = "Player commands"
                 },
-                new Command
+                new()
                 {
                     Name = "GiveCash",
                     InputValue = true,
@@ -135,18 +135,18 @@ namespace PavlovRconWebserver.Models
                     MinRole = "Admin",
                     Group = "Player commands"
                 },
-                new Command
+                new()
                 {
                     Name = "SetLimitedAmmoType",
                     InputValue = true,
                     valuesOptions = new List<string>
                     {
-                        "0", "1", "2","3","4","5"
+                        "0", "1", "2", "3", "4", "5"
                     },
                     MinRole = "Admin",
                     Group = "Server commands"
                 },
-                new Command
+                new()
                 {
                     Name = "ItemList",
                     InputValue = false,
@@ -156,7 +156,7 @@ namespace PavlovRconWebserver.Models
             };
             TwoValueCommands = new List<ExtendedCommand>
             {
-                new ExtendedCommand
+                new()
                 {
                     Name = "GiveTeamCash",
                     InputValue = true,
@@ -171,7 +171,7 @@ namespace PavlovRconWebserver.Models
                     },
                     MinRole = "Admin"
                 },
-                new ExtendedCommand
+                new()
                 {
                     Name = "SwitchMap",
                     InputValue = true,
@@ -188,14 +188,14 @@ namespace PavlovRconWebserver.Models
         public List<PavlovServer> SingleServer { get; set; }
 
         public string Command { get; set; }
-        public List<PlayerModel> Players { get; set; } = new List<PlayerModel>();
-        public List<PlayerModel> PlayersSelected { get; set; } = new List<PlayerModel>();
+        public List<PlayerModel> Players { get; set; } = new();
+        public List<PlayerModel> PlayersSelected { get; set; } = new();
 
         [DisplayName("Server/Player commands")]
-        public List<Command> PlayerCommands { get; } = new List<Command>();
+        public List<Command> PlayerCommands { get; } = new();
 
-        public List<Command> SpecialCommands { get; } = new List<Command>();
-        public List<ExtendedCommand> TwoValueCommands { get; } = new List<ExtendedCommand>();
+        public List<Command> SpecialCommands { get; } = new();
+        public List<ExtendedCommand> TwoValueCommands { get; } = new();
 
         [DisplayName("Value")] public string PlayerValue { get; set; }
 
@@ -205,7 +205,7 @@ namespace PavlovRconWebserver.Models
     public class PlayerListClass
     {
         public List<PlayerModel> PlayerList { get; set; }
-        public List<PlayerModelExtended> PlayerListExtended { get; set; } = new List<PlayerModelExtended>();
+        public List<PlayerModelExtended> PlayerListExtended { get; set; } = new();
     }
 
     public class PlayerModel
@@ -216,7 +216,7 @@ namespace PavlovRconWebserver.Models
 
     public class PlayerModelExtendedRconModel
     {
-        public PlayerModelExtended PlayerInfo = new PlayerModelExtended();
+        public PlayerModelExtended PlayerInfo = new();
     }
 
     public class PlayerModelExtended : PlayerModel
@@ -250,7 +250,6 @@ namespace PavlovRconWebserver.Models
         {
             if (Assists != 0) return Assists.ToString();
             var tmp = KDA?.Split("/");
-            ;
             if (tmp?.Length != 3) return "0";
             return tmp[2];
         }
@@ -262,7 +261,7 @@ namespace PavlovRconWebserver.Models
 
         [DisplayName("Amoint/ItemId/etc.")] public bool InputValue { get; set; }
 
-        public List<string> valuesOptions { get; set; } = new List<string>();
+        public List<string> valuesOptions { get; set; } = new();
         public string PartialViewName { get; set; }
 
         public string MinRole { get; set; }
@@ -276,6 +275,6 @@ namespace PavlovRconWebserver.Models
 
         [DisplayName("Amount/GameMode")] public bool InputValueTwo { get; set; }
 
-        public List<string> valuesTwoOptions { get; set; } = new List<string>();
+        public List<string> valuesTwoOptions { get; set; } = new();
     }
 }

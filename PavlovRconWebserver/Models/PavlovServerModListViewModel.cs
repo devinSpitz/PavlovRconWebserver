@@ -10,6 +10,6 @@ namespace PavlovRconWebserver.Models
     public class PavlovServerModlistViewModel
     {
         public int pavlovServerId { get; set; } = 0;
-        public List<string> userIds { get; set; } = new List<string>();
+        public List<string> userIds { get; set; } = new();
     }
 }

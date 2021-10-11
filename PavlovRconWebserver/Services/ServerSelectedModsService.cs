@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AspNetCoreHero.ToastNotification.Abstractions;
 using LiteDB;
 using LiteDB.Identity.Async.Database;
+using LiteDB.Identity.Models;
 using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
 
@@ -12,8 +13,8 @@ namespace PavlovRconWebserver.Services
 {
     public class ServerSelectedModsService
     {
-        private readonly IToastifyService _notifyService;
         private readonly ILiteDbIdentityAsyncContext _liteDb;
+        private readonly IToastifyService _notifyService;
         private readonly SteamIdentityService _steamIdentityService;
         private readonly UserService _userService;
 
@@ -27,7 +28,7 @@ namespace PavlovRconWebserver.Services
             _userService = userService;
         }
 
-        public async Task<bool> SaveWhiteListToFileAndDb(List<string> userIds, PavlovServer server)
+        public async Task<bool> SaveModListToFileAndDb(List<string> userIds, PavlovServer server)
         {
             var steamIdentities = (await _steamIdentityService.FindAll()).ToList();
             //delete old stuff
@@ -37,8 +38,13 @@ namespace PavlovRconWebserver.Services
             var steamIdentitiesToReturn = await SteamIdentitiesToReturn(userIds, server, steamIdentities);
 
             //Find all mods and add it to the list steamIdentitiesToReturn
-            var additionalUsers = (await _userService.FindAllInRole("Admin")).ToList(); // admins
-            additionalUsers.AddRange(await _userService.FindAllInRole("Mod")); // mods
+            //Todo onPremiseRentalStuff to be sure about
+            var additionalUsers = new List<LiteDbUser>();
+            if (server.Owner == null || server.SshServer.Owner == null)
+            {
+                additionalUsers = (await _userService.FindAllInRole("Admin")).ToList(); // admins
+                additionalUsers.AddRange(await _userService.FindAllInRole("Mod")); // mods
+            }
 
             steamIdentitiesToReturn.AddRange(await SteamIdentitiesToReturn(
                 additionalUsers.Select(x => x.Id.ToString()).ToList(), server, steamIdentities, false));
@@ -75,7 +81,8 @@ namespace PavlovRconWebserver.Services
         {
             var lines = steamIds.Select(steamIdentity => steamIdentity + ";").ToList();
             var content = string.Join(Environment.NewLine, lines);
-            RconStatic.WriteFile(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.ModList, content,_notifyService);
+            RconStatic.WriteFile(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.ModList, content,
+                _notifyService);
             return true;
         }
 
@@ -95,6 +102,13 @@ namespace PavlovRconWebserver.Services
                 .FindAsync(x => x.PavlovServer.Id == pavlovServer.Id)).ToArray();
         }
 
+        public async Task<ServerSelectedMods[]> FindAllFrom(LiteDbUser liteDbUser)
+        {
+            return (await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedMods>("ServerSelectedMods")
+                .Include(x => x.LiteDbUser)
+                .Include(x => x.PavlovServer)
+                .FindAsync(x => x.LiteDbUser.Id == liteDbUser.Id)).ToArray();
+        }
 
         public async Task<int> Insert(ServerSelectedMods serverSelectedMap)
         {
@@ -110,7 +124,8 @@ namespace PavlovRconWebserver.Services
 
         public async Task<bool> Delete(int id)
         {
-            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedMods>("ServerSelectedMods").DeleteAsync(id);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedMods>("ServerSelectedMods")
+                .DeleteAsync(id);
         }
     }
 }

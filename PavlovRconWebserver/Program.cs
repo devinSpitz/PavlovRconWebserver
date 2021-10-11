@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Globalization;
+using System.Reflection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -11,13 +13,18 @@ namespace PavlovRconWebserver
     {
         public static void Main(string[] args)
         {
+            if (args.Length > 0 && args[0] == "--version")
+            {
+                Console.WriteLine(Assembly.GetEntryAssembly().GetName().Version);
+                Environment.Exit(0);
+            }
             var configSettings = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json")
                 .Build();
 
             var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-            
-            LogEventLevel logLevel = LogEventLevel.Warning;
+
+            var logLevel = LogEventLevel.Warning;
             var logTime = new TimeSpan(1, 0, 0, 0);
             // if development than show all logs in the console otherwise only warning and above
             if (environment == Environments.Development)
@@ -25,7 +32,7 @@ namespace PavlovRconWebserver
                 logLevel = LogEventLevel.Verbose;
                 logTime = new TimeSpan(0, 0, 30, 0);
             }
-            
+
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
                 .ReadFrom.Configuration(configSettings)
@@ -33,8 +40,8 @@ namespace PavlovRconWebserver
                 .WriteTo.LiteDbAsync(configSettings.GetConnectionString("DefaultConnection"), logLevel,
                     logTime)
                 .CreateBootstrapLogger();
-            
-            
+
+
             Log.Information("Starting up!");
 
             try
@@ -53,10 +60,12 @@ namespace PavlovRconWebserver
                 Log.CloseAndFlush();
             }
         }
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
+
+        public static IHostBuilder CreateHostBuilder(string[] args)
+        {
+            return Host.CreateDefaultBuilder(args)
                 .UseSerilog()
                 .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
-
+        }
     }
 }

@@ -11,16 +11,18 @@ namespace PavlovRconWebserverTests.UnitTests
 {
     public class SteamIdentityServiceTest
     {
-        private readonly IServicesBuilder services;
         private readonly AutoMocker _mocker;
         private readonly SteamIdentityService _steamIdentityService;
-        public SteamIdentityServiceTest() {
+        private readonly IServicesBuilder services;
+
+        public SteamIdentityServiceTest()
+        {
             services = new ServicesBuilder();
             _mocker = new AutoMocker();
             services.Build(_mocker);
             _steamIdentityService = _mocker.CreateInstance<SteamIdentityService>();
         }
-        
+
         [Fact]
         public void InsertSteamIdentity()
         {
@@ -29,13 +31,13 @@ namespace PavlovRconWebserverTests.UnitTests
             // act
             var result = _steamIdentityService.Upsert(SteamIdentity()).GetAwaiter().GetResult();
             // assert
-            var steamIdentities =_steamIdentityService.FindAll().GetAwaiter().GetResult();
+            var steamIdentities = _steamIdentityService.FindAll().GetAwaiter().GetResult();
             steamIdentities.Should().HaveCount(1);
         }
 
-        public static SteamIdentity SteamIdentity(string id = "1",string name = "test")
+        public static SteamIdentity SteamIdentity(string id = "1", string name = "test")
         {
-            return new SteamIdentity()
+            return new()
             {
                 Id = id,
                 Name = name
@@ -44,27 +46,28 @@ namespace PavlovRconWebserverTests.UnitTests
 
         public static List<SteamIdentity> SteamIdentities()
         {
-            return new List<SteamIdentity>
+            return new()
             {
                 SteamIdentity(),
-                SteamIdentity("2","test2"),
-                SteamIdentity("3","test3"),
-                SteamIdentity("4","test4"),
-                SteamIdentity("5","test5"),
+                SteamIdentity("2", "test2"),
+                SteamIdentity("3", "test3"),
+                SteamIdentity("4", "test4"),
+                SteamIdentity("5", "test5")
             };
         }
+
         public static List<SteamIdentity> SteamIdentitiesForTeam2()
         {
-            return new List<SteamIdentity>
+            return new()
             {
                 SteamIdentity(),
-                SteamIdentity("6","test6"),
-                SteamIdentity("7","test7"),
-                SteamIdentity("8","test8"),
-                SteamIdentity("9","test9"),
+                SteamIdentity("6", "test6"),
+                SteamIdentity("7", "test7"),
+                SteamIdentity("8", "test8"),
+                SteamIdentity("9", "test9")
             };
         }
-        
+
         [Fact]
         public void DeleteSteamIdentity()
         {
@@ -73,7 +76,7 @@ namespace PavlovRconWebserverTests.UnitTests
             // act
             _steamIdentityService.Delete("1");
             // assert
-            var steamIdentity =_steamIdentityService.FindAll().GetAwaiter().GetResult();
+            var steamIdentity = _steamIdentityService.FindAll().GetAwaiter().GetResult();
             steamIdentity.Should().BeEmpty();
         }
 
@@ -88,7 +91,7 @@ namespace PavlovRconWebserverTests.UnitTests
             steamIdentity.Should().NotBe(null);
             steamIdentity.Name.Should().Be("test");
         }
-        
+
 
         [Fact]
         public void FindOneAList()
@@ -96,12 +99,13 @@ namespace PavlovRconWebserverTests.UnitTests
             // arrange
             _steamIdentityService.Upsert(SteamIdentity()).GetAwaiter().GetResult();
             // act
-            var steamIdentity = _steamIdentityService.FindAList(new List<string>(){SteamIdentity().Id}).GetAwaiter().GetResult();
+            var steamIdentity = _steamIdentityService.FindAList(new List<string> {SteamIdentity().Id}).GetAwaiter()
+                .GetResult();
             // assert
             steamIdentity.Should().NotBeEmpty(null);
             steamIdentity.FirstOrDefault()?.Name.Should().Be("test");
         }
-        
+
         [Fact]
         public void FindOne()
         {
@@ -113,7 +117,5 @@ namespace PavlovRconWebserverTests.UnitTests
             steamIdentity.Should().NotBeNull();
             steamIdentity.Name.Should().Be("test");
         }
-
-        
     }
 }

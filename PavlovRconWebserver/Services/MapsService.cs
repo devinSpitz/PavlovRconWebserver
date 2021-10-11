@@ -8,8 +8,8 @@ namespace PavlovRconWebserver.Services
 {
     public class MapsService
     {
-        private readonly IToastifyService _notifyService;
         private readonly ILiteDbIdentityAsyncContext _liteDb;
+        private readonly IToastifyService _notifyService;
 
         public MapsService(ILiteDbIdentityAsyncContext liteDbContext,
             IToastifyService notyfService)
@@ -32,13 +32,13 @@ namespace PavlovRconWebserver.Services
 
         public async Task<bool> Upsert(Map map)
         {
-            return (await _liteDb.LiteDatabaseAsync.GetCollection<Map>("Map")
-                .UpsertAsync(map));
+            return await _liteDb.LiteDatabaseAsync.GetCollection<Map>("Map")
+                .UpsertAsync(map);
         }
 
         public async Task<bool> Delete(string id)
         {
-            return (await _liteDb.LiteDatabaseAsync.GetCollection<Map>("Map").DeleteAsync(id));
+            return await _liteDb.LiteDatabaseAsync.GetCollection<Map>("Map").DeleteAsync(id);
         }
     }
 }

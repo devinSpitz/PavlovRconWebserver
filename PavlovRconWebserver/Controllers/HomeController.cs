@@ -1,5 +1,7 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using PavlovRconWebserver.Models;
 
 namespace PavlovRconWebserver.Controllers
@@ -8,7 +10,8 @@ namespace PavlovRconWebserver.Controllers
     {
         public IActionResult Index()
         {
-            var claims = HttpContext.User.Claims;
+            ViewBag.background = "#222";
+            ViewBag.textColor = "#ffffff";
             return View();
         }
 
@@ -19,5 +22,6 @@ namespace PavlovRconWebserver.Controllers
                 RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
             });
         }
+        
     }
 }

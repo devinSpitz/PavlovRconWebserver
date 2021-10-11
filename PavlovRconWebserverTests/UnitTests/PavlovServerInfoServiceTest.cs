@@ -10,24 +10,26 @@ namespace PavlovRconWebserverTests.UnitTests
 {
     public class PavlovServerInfoServiceTest
     {
-        private readonly IServicesBuilder services;
         private readonly AutoMocker _mocker;
+        private readonly PavlovServerInfoService _pavlovServerInfoService;
         private readonly PavlovServerService _pavlovServerService;
         private readonly SshServerSerivce _sshServerSerivce;
-        private readonly PavlovServerInfoService _pavlovServerInfoService;
-        public PavlovServerInfoServiceTest() {
+        private readonly IServicesBuilder services;
+
+        public PavlovServerInfoServiceTest()
+        {
             services = new ServicesBuilder();
             _mocker = new AutoMocker();
             services.Build(_mocker);
             _pavlovServerService = _mocker.CreateInstance<PavlovServerService>();
             _sshServerSerivce = _mocker.CreateInstance<SshServerSerivce>();
             _pavlovServerInfoService = _mocker.CreateInstance<PavlovServerInfoService>();
-
         }
 
-        public static PavlovServerInfo CreatePavlovServerInfo(PavlovServerInfoService pavlovServerInfoService,int pavlovServerId)
+        public static PavlovServerInfo CreatePavlovServerInfo(PavlovServerInfoService pavlovServerInfoService,
+            int pavlovServerId)
         {
-            pavlovServerInfoService.Upsert(new PavlovServerInfo()
+            pavlovServerInfoService.Upsert(new PavlovServerInfo
             {
                 GameMode = "TDM",
                 MapLabel = "test",
@@ -42,21 +44,19 @@ namespace PavlovRconWebserverTests.UnitTests
             }).GetAwaiter().GetResult();
             return pavlovServerInfoService.FindServer(pavlovServerId).GetAwaiter().GetResult();
         }
-        
+
         [Fact]
         public void FindServer()
         {
             // arrange
-            var pavlovServers = PavlovServerServiceTests.InitializePavlovServer(_sshServerSerivce, _pavlovServerService);
-           CreatePavlovServerInfo(_pavlovServerInfoService, pavlovServers.First().Id);
+            var pavlovServers =
+                PavlovServerServiceTests.InitializePavlovServer(_sshServerSerivce, _pavlovServerService);
+            CreatePavlovServerInfo(_pavlovServerInfoService, pavlovServers.First().Id);
             // act
-            var serverInfoResult = _pavlovServerInfoService.FindServer(pavlovServers.First().Id).GetAwaiter().GetResult();
+            var serverInfoResult =
+                _pavlovServerInfoService.FindServer(pavlovServers.First().Id).GetAwaiter().GetResult();
             // assert
             serverInfoResult.Should().NotBeNull();
         }
-
-        
-        
-
     }
 }

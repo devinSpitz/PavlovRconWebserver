@@ -12,19 +12,21 @@ namespace PavlovRconWebserverTests.UnitTests
 {
     public class SshServerServiceTests
     {
-        private readonly IServicesBuilder services;
         private readonly AutoMocker _mocker;
-        private readonly SshServerSerivce _sshServerSerivce;
         private readonly PavlovServerService _pavlovServerService;
-        public SshServerServiceTests() {
+        private readonly SshServerSerivce _sshServerSerivce;
+        private readonly IServicesBuilder services;
+
+        public SshServerServiceTests()
+        {
             services = new ServicesBuilder();
             _mocker = new AutoMocker();
             services.Build(_mocker);
             _sshServerSerivce = _mocker.CreateInstance<SshServerSerivce>();
             _pavlovServerService = _mocker.CreateInstance<PavlovServerService>();
         }
-        
-        
+
+
         [Fact]
         public void InsertSshServer()
         {
@@ -32,19 +34,19 @@ namespace PavlovRconWebserverTests.UnitTests
             // act
             var result = _sshServerSerivce.Insert(SshServer()).GetAwaiter().GetResult();
             // assert
-            var SshServers =_sshServerSerivce.FindAll().GetAwaiter().GetResult();
+            var SshServers = _sshServerSerivce.FindAll().GetAwaiter().GetResult();
             SshServers.Should().HaveCount(1);
         }
 
         public static SshServer SshServer(List<PavlovServer> pavlovServers = null)
         {
-            return new SshServer()
+            return new()
             {
                 Adress = "localhost",
                 SshUsername = "steam",
                 SshPassword = "1234",
                 Name = "test",
-                PavlovServers = pavlovServers ?? new List<PavlovServer>() 
+                PavlovServers = pavlovServers ?? new List<PavlovServer>()
             };
         }
 
@@ -54,6 +56,7 @@ namespace PavlovRconWebserverTests.UnitTests
             var sshServer = sshServerSerivce.FindAll().GetAwaiter().GetResult().FirstOrDefault();
             return sshServer;
         }
+
         [Fact]
         public void DeleteSshServer()
         {
@@ -64,7 +67,7 @@ namespace PavlovRconWebserverTests.UnitTests
             // act
             _sshServerSerivce.Delete(sshServer.Id).GetAwaiter().GetResult();
             // assert
-            var SshServers =_sshServerSerivce.FindAll().GetAwaiter().GetResult();
+            var SshServers = _sshServerSerivce.FindAll().GetAwaiter().GetResult();
             SshServers.Should().BeEmpty();
         }
 
@@ -80,14 +83,14 @@ namespace PavlovRconWebserverTests.UnitTests
             sshServerResult.Should().NotBe(null);
             sshServerResult.Name.Should().Be("test");
         }
-        
-        
+
+
         [Fact]
         public void Update()
         {
             // arrange
             var sshServer = SshServerInsert(_sshServerSerivce);
-            var sshServers =_sshServerSerivce.FindAll().GetAwaiter().GetResult();
+            var sshServers = _sshServerSerivce.FindAll().GetAwaiter().GetResult();
             sshServer.Should().NotBeNull();
             // act
             sshServer.Name = "UpdateTest";
@@ -95,14 +98,14 @@ namespace PavlovRconWebserverTests.UnitTests
             sshServer.SshPassphrase = "";
             var sshServerResult = _sshServerSerivce.Update(sshServer).GetAwaiter().GetResult();
             // assert
-            
-            var sshServersAfterUpdate =_sshServerSerivce.FindAll().GetAwaiter().GetResult();
+
+            var sshServersAfterUpdate = _sshServerSerivce.FindAll().GetAwaiter().GetResult();
             var sshServerAfterUpdate = sshServersAfterUpdate.FirstOrDefault();
             sshServerAfterUpdate.Should().NotBeNull();
             sshServerAfterUpdate.Name.Should().Be("UpdateTest");
             sshServerResult.Should().BeTrue();
         }
-        
+
         [Fact]
         public void InsertNoPassword()
         {
@@ -119,7 +122,7 @@ namespace PavlovRconWebserverTests.UnitTests
                 Assert.Equal("You need at least a password or a key file!", e.Message);
             }
         }
-        
+
         [Fact]
         public void InsertNoUserName()
         {
@@ -136,7 +139,7 @@ namespace PavlovRconWebserverTests.UnitTests
                 Assert.Equal("You need a username!", e.Message);
             }
         }
-        
+
         [Fact]
         public void InsertNoSsPort()
         {

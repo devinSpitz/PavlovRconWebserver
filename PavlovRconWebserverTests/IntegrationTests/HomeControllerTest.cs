@@ -2,17 +2,15 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using PavlovRconWebserverTests.Mocks;
 using Xunit;
+
 namespace PavlovRconWebserverTests.UnitTests
 {
     public class HomeControllerTest
     {
-        
         /// <summary>
-        /// WIP todo full integration tests
+        ///     WIP todo full integration tests
         /// </summary>
-        
-        
-        
+
         // [Fact]
         public void IndexAdmin()
         {
@@ -37,7 +35,7 @@ namespace PavlovRconWebserverTests.UnitTests
             Assert.Contains("Matchmaking", responseString);
             //DefaultDB(true);
         }
-        
+
         // [Fact]
         public void IndexMod()
         {
@@ -57,7 +55,7 @@ namespace PavlovRconWebserverTests.UnitTests
             Assert.Contains("Matchmaking", responseString);
             //DefaultDB(true);
         }
-        
+
         // [Fact]
         public void IndexCap()
         {
@@ -77,7 +75,7 @@ namespace PavlovRconWebserverTests.UnitTests
             Assert.Contains("Matchmaking", responseString);
             //DefaultDB(true);
         }
-        
+
         // [Fact]
         public void IndexNoAuth()
         {
@@ -85,7 +83,7 @@ namespace PavlovRconWebserverTests.UnitTests
             var server = IntegrationTest.RunTestHost();
             var client = server.CreateClient();
             client.DefaultRequestHeaders.Authorization = null;
-            
+
             // Act
             var response = client.GetAsync("/Home").GetAwaiter().GetResult();
 
@@ -95,12 +93,5 @@ namespace PavlovRconWebserverTests.UnitTests
             Assert.Contains("Pavlov Rcon Webserver", responseString);
             //DefaultDB(true);
         }
-        
-
-        
-
-        
-        
-
     }
 }

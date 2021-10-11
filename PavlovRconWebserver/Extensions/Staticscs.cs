@@ -7,7 +7,7 @@ namespace PavlovRconWebserver.Extensions
     {
         public static string[] Models =
         {
-            "none", "clown", "prisoner", "naked", "farmer", "russian", "nato", "us", "soviet", "german","cop"
+            "none", "clown", "prisoner", "naked", "farmer", "russian", "nato", "us", "soviet", "german", "cop"
         };
 
         public static IDictionary<string, TimeSpan> BanList { get; } = new Dictionary<string, TimeSpan>
@@ -63,7 +63,7 @@ namespace PavlovRconWebserver.Extensions
 
         public static string[] ModesString =
         {
-            "SND", "TDM", "DM", "GUN", "ZWV", "WW2GUN", "TANKTDM", "KOTH", "TTT","OITC","PUSH","HIDDEN","PH"
+            "SND", "TDM", "DM", "GUN", "ZWV", "WW2GUN", "TANKTDM", "KOTH", "TTT", "OITC", "PUSH", "HIDDEN", "PH"
         };
     }
 }

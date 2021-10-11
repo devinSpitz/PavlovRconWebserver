@@ -20,6 +20,7 @@ namespace PavlovRconWebserver.Models
         LimitedSpecial = 4,
         BoxlessMode = 5
     }
+
     public class PavlovServerGameIni
     {
         public int serverId { get; set; } = 0;
@@ -37,12 +38,12 @@ namespace PavlovRconWebserver.Models
         public string BalanceTableURL { get; set; } = "";
 
         public List<PavlovServerGameIniMap> MapRotation { get; set; } =
-            new List<PavlovServerGameIniMap>(); // example string = (MapId="UGC1758245796", GameMode="GUN")
+            new(); // example string = (MapId="UGC1758245796", GameMode="GUN")
 
-        public bool ReadFromFile(PavlovServer pavlovServer,IToastifyService notyfService)
+        public bool ReadFromFile(PavlovServer pavlovServer, IToastifyService notyfService)
         {
             var gameIniContent = RconStatic.GetFile(pavlovServer,
-                pavlovServer.ServerFolderPath + FilePaths.GameIni,notyfService);
+                pavlovServer.ServerFolderPath + FilePaths.GameIni, notyfService);
             var lines = gameIniContent.Split("\n");
             var first = true; // cause the first line is to ignore
             foreach (var line in lines)
@@ -152,7 +153,8 @@ namespace PavlovRconWebserver.Models
         }
 
 
-        public string SaveToFile(PavlovServer pavlovServer, ServerSelectedMap[] serverSelectedMaps, IToastifyService notyfService)
+        public string SaveToFile(PavlovServer pavlovServer, ServerSelectedMap[] serverSelectedMaps,
+            IToastifyService notyfService)
         {
             var lines = new List<string>();
             lines.Add("[/Script/Pavlov.DedicatedServer]");
@@ -163,7 +165,7 @@ namespace PavlovRconWebserver.Models
             lines.Add("bCustomServer=" + bCustomServer.ToString().ToLower());
             lines.Add("bWhitelist=" + bWhitelist.ToString().ToLower());
             lines.Add("RefreshListTime=" + RefreshListTime);
-            lines.Add("LimitedAmmoType=" + (int)LimitedAmmoType);
+            lines.Add("LimitedAmmoType=" + (int) LimitedAmmoType);
             lines.Add("TickRate=" + TickRate);
             lines.Add("TimeLimit=" + TimeLimit);
             if (!string.IsNullOrEmpty(Password))
@@ -184,12 +186,12 @@ namespace PavlovRconWebserver.Models
                     lines.Add("MapRotation=(MapId=\"" + serverSelectedMap.Map.Id + "\", GameMode=\"" +
                               serverSelectedMap.GameMode + "\")");
             var content = string.Join(Environment.NewLine, lines);
-            
-            DataBaseLogger.LogToDatabaseAndResultPlusNotify("prepared game ini",LogEventLevel.Verbose,notyfService);
+
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify("prepared game ini", LogEventLevel.Verbose, notyfService);
             var result = RconStatic.WriteFile(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.GameIni,
-                content,notyfService);
-            
-            DataBaseLogger.LogToDatabaseAndResultPlusNotify("saved game ini",LogEventLevel.Verbose,notyfService);
+                content, notyfService);
+
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify("saved game ini", LogEventLevel.Verbose, notyfService);
             return result;
         }
     }

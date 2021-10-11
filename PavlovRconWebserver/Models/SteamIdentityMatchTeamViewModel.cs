@@ -5,11 +5,11 @@ namespace PavlovRconWebserver.Models
 {
     public class SteamIdentityMatchTeamViewModel
     {
-        public List<Team> AvailableTeams { get; set; } = new List<Team>();
+        public List<Team> AvailableTeams { get; set; } = new();
         public int? selectedTeam0 { get; set; }
         public int? selectedTeam1 { get; set; }
-        public List<SteamIdentity> SelectedSteamIdentitiesTeam0 { get; set; } = new List<SteamIdentity>();
-        public List<SteamIdentity> SelectedSteamIdentitiesTeam1 { get; set; } = new List<SteamIdentity>();
+        public List<SteamIdentity> SelectedSteamIdentitiesTeam0 { get; set; } = new();
+        public List<SteamIdentity> SelectedSteamIdentitiesTeam1 { get; set; } = new();
     }
 
     public class SteamIdentityMatchTeamSingleViewModel
@@ -20,10 +20,10 @@ namespace PavlovRconWebserver.Models
         public int? selectedTeam { get; set; }
 
         [DisplayName("Selected Steam Identities")]
-        public List<SteamIdentity> SelectedSteamIdentities { get; set; } = new List<SteamIdentity>();
+        public List<SteamIdentity> SelectedSteamIdentities { get; set; } = new();
 
         [DisplayName("Available Steam Identities")]
-        public List<SteamIdentity> AvailableSteamIdentities { get; set; } = new List<SteamIdentity>();
+        public List<SteamIdentity> AvailableSteamIdentities { get; set; } = new();
 
         public string SelectId { get; set; } = "";
         public string SelectedId { get; set; } = "";

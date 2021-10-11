@@ -9,16 +9,18 @@ namespace PavlovRconWebserverTests.UnitTests
 {
     public class MapServiceTests
     {
-        private readonly IServicesBuilder services;
-        private readonly AutoMocker _mocker;
         private readonly MapsService _mapsService;
-        public MapServiceTests() {
+        private readonly AutoMocker _mocker;
+        private readonly IServicesBuilder services;
+
+        public MapServiceTests()
+        {
             services = new ServicesBuilder();
             _mocker = new AutoMocker();
             services.Build(_mocker);
             _mapsService = _mocker.CreateInstance<MapsService>();
         }
-        
+
         [Fact]
         public void InsertMapTest()
         {
@@ -27,7 +29,7 @@ namespace PavlovRconWebserverTests.UnitTests
             // act
             InsertMap(_mapsService);
             // assert
-            var maps =_mapsService.FindAll().GetAwaiter().GetResult();
+            var maps = _mapsService.FindAll().GetAwaiter().GetResult();
             maps.Should().HaveCount(1);
         }
 
@@ -44,7 +46,7 @@ namespace PavlovRconWebserverTests.UnitTests
             // act
             _mapsService.Delete("1");
             // assert
-            var maps =_mapsService.FindAll().GetAwaiter().GetResult();
+            var maps = _mapsService.FindAll().GetAwaiter().GetResult();
             maps.Should().BeEmpty();
         }
 
@@ -62,7 +64,7 @@ namespace PavlovRconWebserverTests.UnitTests
 
         private static Map Map()
         {
-            return new Map()
+            return new()
             {
                 Author = "test",
                 ImageUrl = "",

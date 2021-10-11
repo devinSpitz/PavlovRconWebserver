@@ -86,7 +86,7 @@ namespace PavlovRconWebserver.Extensions
             throw new CommandException("No auth method worked!");
         }
 
-        public static async Task<string> SystemDCheckState(PavlovServer server,IToastifyService notyfService)
+        public static async Task<string> SystemDCheckState(PavlovServer server, IToastifyService notyfService)
         {
             var type = GetAuthType(server);
             var connectionInfo = ConnectionInfoInternal(server, type, out var result);
@@ -103,7 +103,8 @@ namespace PavlovRconWebserver.Extensions
                     stream, @".*(enabled|disabled).*");
                 if (state == null)
                 {
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Service does not exist!" + server.Name,LogEventLevel.Fatal ,notyfService, result);
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Service does not exist!" + server.Name,
+                        LogEventLevel.Fatal, notyfService, result);
                 }
                 else
                 {
@@ -124,36 +125,15 @@ namespace PavlovRconWebserver.Extensions
                     else
                     {
                         result.answer = "notAvailable";
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Service does not exist cause he is not enabled and not disabled!" +
-                                                              server.Name,LogEventLevel.Fatal,notyfService , result);
+                        DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                            "Service does not exist cause he is not enabled and not disabled!" +
+                            server.Name, LogEventLevel.Fatal, notyfService, result);
                     }
                 }
             }
             catch (Exception e)
             {
-                switch (e)
-                {
-                    case SshAuthenticationException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not Login over ssh!" + server.Name,LogEventLevel.Fatal,notyfService , result);
-                        break;
-                    case SshConnectionException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host over ssh!" + server.Name,LogEventLevel.Fatal,notyfService , result);
-                        break;
-                    case SshOperationTimeoutException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host cause of timeout over ssh!" + server.Name,LogEventLevel.Fatal ,notyfService, result);
-                        break;
-                    case SocketException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host!" + server.Name,LogEventLevel.Fatal,notyfService , result);
-                        break;
-                    case InvalidOperationException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message + " <- most lily this error is from telnet" + server.Name,LogEventLevel.Fatal,notyfService , result);
-                        break;
-                    default:
-                    {
-                        client.Disconnect();
-                        throw;
-                    }
-                }
+                ExcpetionHandlingSshSftp(server, notyfService, e, result, client);
             }
             finally
             {
@@ -165,14 +145,16 @@ namespace PavlovRconWebserver.Extensions
         }
 
 
-        public static async Task<string> UpdateInstallPavlovServer(PavlovServer server,PavlovServerService pavlovServerService)
+        public static async Task<string> UpdateInstallPavlovServer(PavlovServer server,
+            PavlovServerService pavlovServerService)
         {
             var type = GetAuthType(server);
             var connectionInfo = ConnectionInfoInternal(server, type, out var result);
             if (!server.SshServer.SteamIsAvailable)
             {
                 result.Success = false;
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify(" Steam is now enabled on this server!",LogEventLevel.Fatal,pavlovServerService._notifyService , result);
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify(" Steam is now enabled on this server!",
+                    LogEventLevel.Fatal, pavlovServerService._notifyService, result);
                 return EndConnection(result);
             }
 
@@ -180,7 +162,7 @@ namespace PavlovRconWebserver.Extensions
             if (server.ServerServiceState == ServerServiceState.active)
             {
                 restart = true;
-                await SystemDStop(server,pavlovServerService);
+                await SystemDStop(server, pavlovServerService);
             }
 
             using var client = new SshClient(connectionInfo);
@@ -193,41 +175,21 @@ namespace PavlovRconWebserver.Extensions
                     "cd " + server.SshServer.SteamPath + " && ./steamcmd.sh +login anonymous +force_install_dir " +
                     server.ServerFolderPath + " +app_update 622970 +exit", stream,
                     @".*(Success! App '622970' already up to date|Success! App '622970' fully installed).*", 60000);
-                if (update == null) DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not update the pavlovserver " + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , result);
+                if (update == null)
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not update the pavlovserver " + server.Name,
+                        LogEventLevel.Fatal, pavlovServerService._notifyService, result);
                 result.answer = update;
             }
             catch (Exception e)
             {
-                switch (e)
-                {
-                    case SshAuthenticationException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not Login over ssh!" + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , result);
-                        break;
-                    case SshConnectionException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host over ssh!" + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , result);
-                        break;
-                    case SshOperationTimeoutException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host cause of timeout over ssh!" + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , result);
-                        break;
-                    case SocketException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host!" + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , result);
-                        break;
-                    case InvalidOperationException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message + " <- most lily this error is from telnet" + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , result);
-                        break;
-                    default:
-                    {
-                        client.Disconnect();
-                        throw;
-                    }
-                }
+                ExcpetionHandlingSshSftp(server, pavlovServerService._notifyService, e, result, client);
             }
             finally
             {
                 client.Disconnect();
             }
 
-            if (restart) await SystemDStart(server,pavlovServerService);
+            if (restart) await SystemDStart(server, pavlovServerService);
 
             if (result.errors.Count <= 0 || result.answer != "") result.Success = true;
 
@@ -236,7 +198,8 @@ namespace PavlovRconWebserver.Extensions
         }
 
 
-        public static async Task<ConnectionResult> SystemDStart(PavlovServer server,PavlovServerService pavlovServerService)
+        public static async Task<ConnectionResult> SystemDStart(PavlovServer server,
+            PavlovServerService pavlovServerService)
         {
             var type = GetAuthType(server);
             var connectionInfo = ConnectionInfoInternal(server, type, out var result);
@@ -256,28 +219,33 @@ namespace PavlovRconWebserver.Extensions
                         "sudo /bin/systemctl  enable " + server.ServerSystemdServiceName + ".service", stream, null);
                     if (enable == null)
                     {
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not enable service " + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , result);
+                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not enable service " + server.Name,
+                            LogEventLevel.Fatal, pavlovServerService._notifyService, result);
                     }
                     else if (enable.ToLower().Contains("password"))
                     {
                         var enteredPassword = await SendCommandForShell(
                             server.SshServer.SshPassword, stream, @".*[pP]assword.*");
                         if (enteredPassword == "\r\n" || enteredPassword == null)
-                        {
-                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not enable service after entering the password again!",LogEventLevel.Fatal ,pavlovServerService._notifyService, result);
-                        }
-                        
+                            DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                                "Could not enable service after entering the password again!", LogEventLevel.Fatal,
+                                pavlovServerService._notifyService, result);
+
                         if (enteredPassword != null && enteredPassword.ToLower().Contains("password"))
                         {
                             var enteredPasswordReload = await SendCommandForShell(
                                 server.SshServer.SshPassword, stream, null);
                             if (enteredPasswordReload == "\r\n" || enteredPasswordReload == null)
-                                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not enable service after entering the password again second try!",LogEventLevel.Fatal ,pavlovServerService._notifyService, result);
+                                DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                                    "Could not enable service after entering the password again second try!",
+                                    LogEventLevel.Fatal, pavlovServerService._notifyService, result);
                         }
                     }
                     else
                     {
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Didn't had the enter the password again the enable the server. Good info",LogEventLevel.Verbose ,pavlovServerService._notifyService);
+                        DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                            "Didn't had the enter the password again the enable the server. Good info",
+                            LogEventLevel.Verbose, pavlovServerService._notifyService);
                     }
 
                     //enable for reload
@@ -285,51 +253,36 @@ namespace PavlovRconWebserver.Extensions
 
                 var start = await SendCommandForShell(
                     "sudo /bin/systemctl restart " + server.ServerSystemdServiceName + ".service", stream, null);
-                
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify($"started service result = "+start + " " + server.Name,LogEventLevel.Verbose,pavlovServerService._notifyService);
+
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify("started service result = " + start + " " + server.Name,
+                    LogEventLevel.Verbose, pavlovServerService._notifyService);
                 if (start == null)
                 {
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not start service " + server.Name,LogEventLevel.Fatal ,pavlovServerService._notifyService, result);
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not start service " + server.Name,
+                        LogEventLevel.Fatal, pavlovServerService._notifyService, result);
                 }
                 else if (start.ToLower().Contains("password"))
                 {
                     var enteredPassword = await SendCommandForShell(
                         server.SshServer.SshPassword, stream, null);
                     if (enteredPassword == "\r\n" || enteredPassword == null)
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not start service after entering the password again!",LogEventLevel.Fatal ,pavlovServerService._notifyService, result);
-                    
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("answer from entered password when trying to start: "+enteredPassword,LogEventLevel.Verbose ,pavlovServerService._notifyService);
+                        DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                            "Could not start service after entering the password again!", LogEventLevel.Fatal,
+                            pavlovServerService._notifyService, result);
+
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                        "answer from entered password when trying to start: " + enteredPassword, LogEventLevel.Verbose,
+                        pavlovServerService._notifyService);
                 }
                 else
                 {
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(start,LogEventLevel.Verbose,pavlovServerService._notifyService);
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(start, LogEventLevel.Verbose,
+                        pavlovServerService._notifyService);
                 }
             }
             catch (Exception e)
             {
-                switch (e)
-                {
-                    case SshAuthenticationException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not Login over ssh!" + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , result);
-                        break;
-                    case SshConnectionException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host over ssh!" + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , result);
-                        break;
-                    case SshOperationTimeoutException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host cause of timeout over ssh!" + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , result);
-                        break;
-                    case SocketException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host!" + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , result);
-                        break;
-                    case InvalidOperationException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message + " <- most lily this error is from telnet" + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , result);
-                        break;
-                    default:
-                    {
-                        client.Disconnect();
-                        throw;
-                    }
-                }
+                ExcpetionHandlingSshSftp(server, pavlovServerService._notifyService, e, result, client);
             }
             finally
             {
@@ -340,19 +293,18 @@ namespace PavlovRconWebserver.Extensions
             var serverWithState = await pavlovServerService.GetServerServiceState(server);
 
             if (serverWithState.ServerServiceState != ServerServiceState.active)
-            {
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Server could not start! ",LogEventLevel.Fatal,pavlovServerService._notifyService , result);
-            }
-            
-            
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Server could not start! ", LogEventLevel.Fatal,
+                    pavlovServerService._notifyService, result);
+
+
             if (result.errors.Count <= 0) result.Success = true;
 
-            //ToDo check serverstats when stop or start server
             await pavlovServerService.CheckStateForAllServers();
             return result;
         }
 
-        public static async Task<ConnectionResult> SystemDStop(PavlovServer server,PavlovServerService pavlovServerService)
+        public static async Task<ConnectionResult> SystemDStop(PavlovServer server,
+            PavlovServerService pavlovServerService)
         {
             var type = GetAuthType(server);
             var connectionInfo = ConnectionInfoInternal(server, type, out var result);
@@ -372,70 +324,60 @@ namespace PavlovRconWebserver.Extensions
                         null);
                     if (enable == null)
                     {
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not disable service " + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , result);
+                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not disable service " + server.Name,
+                            LogEventLevel.Fatal, pavlovServerService._notifyService, result);
                     }
                     else if (enable.ToLower().Contains("password"))
                     {
                         var enteredPassword = await SendCommandForShell(
                             server.SshServer.SshPassword, stream, @".*[pP]assword.*");
                         if (enteredPassword == "\r\n" || enteredPassword == null)
-                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not disable service after entering the password again!",LogEventLevel.Fatal,pavlovServerService._notifyService , result);
+                            DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                                "Could not disable service after entering the password again!", LogEventLevel.Fatal,
+                                pavlovServerService._notifyService, result);
                         if (enteredPassword != null && enteredPassword.ToLower().Contains("password"))
                         {
                             var enteredPasswordReload = await SendCommandForShell(
                                 server.SshServer.SshPassword, stream, null);
                             if (enteredPasswordReload == "\r\n" || enteredPasswordReload == null)
-                                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not disable service after entering the password again second try!",LogEventLevel.Fatal ,pavlovServerService._notifyService, result);
+                                DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                                    "Could not disable service after entering the password again second try!",
+                                    LogEventLevel.Fatal, pavlovServerService._notifyService, result);
                         }
 
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("answer from entered password when trying to start: "+enteredPassword,LogEventLevel.Verbose ,pavlovServerService._notifyService);
+                        DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                            "answer from entered password when trying to start: " + enteredPassword,
+                            LogEventLevel.Verbose, pavlovServerService._notifyService);
                     }
                 }
 
                 //var start = await SendCommandForShell("systemctl stop " + server.ServerSystemdServiceName + ".service",
-                var start = await SendCommandForShell("sudo /bin/systemctl  stop " + server.ServerSystemdServiceName + ".service",
+                var start = await SendCommandForShell(
+                    "sudo /bin/systemctl  stop " + server.ServerSystemdServiceName + ".service",
                     stream, null);
                 if (start == null)
                 {
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not stop service " + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , result);
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not stop service " + server.Name,
+                        LogEventLevel.Fatal, pavlovServerService._notifyService, result);
                 }
                 else if (start.ToLower().Contains("password"))
                 {
                     var enteredPassword = await SendCommandForShell(
                         server.SshServer.SshPassword, stream, null);
                     if (enteredPassword == "\r\n" || enteredPassword == null)
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not stop service after entering the password again!",LogEventLevel.Fatal,pavlovServerService._notifyService , result);
+                        DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                            "Could not stop service after entering the password again!", LogEventLevel.Fatal,
+                            pavlovServerService._notifyService, result);
                 }
                 else
                 {
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(start,LogEventLevel.Verbose,pavlovServerService._notifyService);
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(start, LogEventLevel.Verbose,
+                        pavlovServerService._notifyService);
                 }
             }
             catch (Exception e)
             {
-                switch (e)
-                {
-                    case SshAuthenticationException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not Login over ssh!" + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , result);
-                        break;
-                    case SshConnectionException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host over ssh!" + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , result);
-                        break;
-                    case SshOperationTimeoutException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host cause of timeout over ssh!" + server.Name,LogEventLevel.Fatal ,pavlovServerService._notifyService, result);
-                        break;
-                    case SocketException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host!" + server.Name,LogEventLevel.Fatal ,pavlovServerService._notifyService, result);
-                        break;
-                    case InvalidOperationException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message + " <- most lily this error is from telnet" + server.Name,LogEventLevel.Fatal ,pavlovServerService._notifyService, result);
-                        break;
-                    default:
-                    {
-                        client.Disconnect();
-                        throw;
-                    }
-                }
+                ExcpetionHandlingSshSftp(server, pavlovServerService._notifyService, e, result, client);
             }
             finally
             {
@@ -445,12 +387,10 @@ namespace PavlovRconWebserver.Extensions
             var serverWithState = await pavlovServerService.GetServerServiceState(server);
 
             if (serverWithState.ServerServiceState == ServerServiceState.active)
-            {
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Server could not stop! ",LogEventLevel.Fatal,pavlovServerService._notifyService , result);
-            }
-            
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Server could not stop! ", LogEventLevel.Fatal,
+                    pavlovServerService._notifyService, result);
+
             if (result.errors.Count <= 0) result.Success = true;
-            //ToDo check serverstats when stop or start server
             await pavlovServerService.CheckStateForAllServers();
             return result;
         }
@@ -544,15 +484,16 @@ namespace PavlovRconWebserver.Extensions
             return connectionResult;
         }
 
-        public static async Task<string> InstallPavlovServerService(PavlovServer server,IToastifyService notyfService,PavlovServerService pavlovServerService)
+        public static async Task<string> InstallPavlovServerService(PavlovServer server, IToastifyService notyfService,
+            PavlovServerService pavlovServerService)
         {
-            var type =  GetAuthType(server);
+            var type = GetAuthType(server);
             var connectionInfo = ConnectionInfoInternal(server, type, out var result);
             if (!server.SshServer.SteamIsAvailable)
             {
-                
                 result.Success = false;
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Steam is not enabled on this server!",LogEventLevel.Fatal ,notyfService, result);
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Steam is not enabled on this server!",
+                    LogEventLevel.Fatal, notyfService, result);
                 return EndConnection(result);
             }
 
@@ -580,20 +521,22 @@ WantedBy = multi-user.target";
                 sftp.BufferSize = 4 * 1024; // bypass Payload error large files
                 sftp.Connect();
                 //var path = "/etc/systemd/system/" + server.ServerSystemdServiceName + ".service";
-                
+
                 //these folders are not always presend.
 
                 var path = "/etc/systemd/system/" + server.ServerSystemdServiceName + ".service";
                 //check if file exist
                 if (sftp.Exists(path)) sftp.DeleteFile(path);
 
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify("try to upload service!",LogEventLevel.Verbose ,notyfService);
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify("try to upload service!", LogEventLevel.Verbose,
+                    notyfService);
                 await using (var fileStream = new MemoryStream(Encoding.ASCII.GetBytes(serviceTempalte)))
                 {
                     sftp.UploadFile(fileStream, path);
                 }
 
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Uploaded service!",LogEventLevel.Verbose ,notyfService);
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Uploaded service!", LogEventLevel.Verbose,
+                    notyfService);
                 //Download file again to valid result
                 var outPutStream = new MemoryStream();
                 await using (Stream fileStream = outPutStream)
@@ -601,87 +544,75 @@ WantedBy = multi-user.target";
                     sftp.DownloadFile(path, fileStream);
                 }
 
-                
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Downloaded service again service!",LogEventLevel.Verbose ,notyfService);
+
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Downloaded service again service!",
+                    LogEventLevel.Verbose, notyfService);
                 var fileContentArray = outPutStream.ToArray();
                 var fileContent = Encoding.Default.GetString(fileContentArray);
 
                 if (fileContent.Replace(Environment.NewLine, "") != serviceTempalte.Replace(Environment.NewLine, ""))
                 {
-                    
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Files are not the same!",LogEventLevel.Verbose ,notyfService);
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Files are not the same!", LogEventLevel.Verbose,
+                        notyfService);
                     result.Success = false;
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not upload service file!",LogEventLevel.Fatal ,notyfService , result);
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not upload service file!",
+                        LogEventLevel.Fatal, notyfService, result);
                     return EndConnection(result);
                 }
+
                 //
                 // //daemon reload
                 client.Connect();
                 var stream =
                     client.CreateShellStream("pavlovRconWebserverSShTunnelSystemdCheck", 80, 24, 800, 600, 1024);
-                
-                
+
+
                 var state = await SendCommandForShell("systemctl  daemon-reload", stream, null);
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Daemon reload result: "+state,LogEventLevel.Verbose ,notyfService);
-                
-                //TOdo: add to sudoers so PAm etc doesnt need to get supported
-                
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Daemon reload result: " + state, LogEventLevel.Verbose,
+                    notyfService);
+
+
                 //add own sudoers file if needed:
                 var sudoersPathParent = "/etc/sudoers.d";
-                
-                var sudoersPath = sudoersPathParent+"/pavlovRconWebserverManagement";
+
+                var sudoersPath = sudoersPathParent + "/pavlovRconWebserverManagement";
 
                 if (!sftp.Exists(sudoersPathParent))
                 {
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not add own sudoers file! Check if the "+sudoersPathParent+ " exists and get loaded in the sudoers file!",LogEventLevel.Fatal ,notyfService,result);
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                        "Could not add own sudoers file! Check if the " + sudoersPathParent +
+                        " exists and get loaded in the sudoers file!", LogEventLevel.Fatal, notyfService, result);
                     return EndConnection(result);
                 }
+
                 if (!sftp.Exists(sudoersPath))
                 {
                     sftp.Create(sudoersPath);
                     if (!sftp.Exists(sudoersPath))
                     {
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not create the sudoers file: "+sudoersPath,LogEventLevel.Fatal ,notyfService,result);
+                        DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                            "Could not create the sudoers file: " + sudoersPath, LogEventLevel.Fatal, notyfService,
+                            result);
                         return EndConnection(result);
                     }
                 }
-                
-                
+
+
                 // add line
-                var success = AddServerLineToSudoersFile(server, notyfService, pavlovServerService, sudoersPath, result);
-                
-                if(!success) return EndConnection(result);
-                
-                
+                var success =
+                    AddServerLineToSudoersFile(server, notyfService, pavlovServerService, sudoersPath, result);
+
+                if (!success) return EndConnection(result);
+
+
                 var justToMakeSureSudoKnowsTheChanges = await SendCommandForShell("sudo su", stream, null);
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify("sudo su answer after changes from the sudoersfile: "+justToMakeSureSudoKnowsTheChanges,LogEventLevel.Verbose ,notyfService);
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                    "sudo su answer after changes from the sudoersfile: " + justToMakeSureSudoKnowsTheChanges,
+                    LogEventLevel.Verbose, notyfService);
             }
             catch (Exception e)
             {
-                switch (e)
-                {
-                    case SshAuthenticationException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not Login over ssh!" + server.Name,LogEventLevel.Fatal  ,notyfService, result);
-                        break;
-                    case SshConnectionException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host over ssh!" + server.Name,LogEventLevel.Fatal ,notyfService , result);
-                        break;
-                    case SshOperationTimeoutException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host cause of timeout over ssh!" + server.Name,LogEventLevel.Fatal  ,notyfService, result);
-                        break;
-                    case SocketException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host!" + server.Name,LogEventLevel.Fatal ,notyfService , result);
-                        break;
-                    case InvalidOperationException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message + " <- most lily this error is from telnet" + server.Name,LogEventLevel.Fatal  ,notyfService, result);
-                        break;
-                    default:
-                    {
-                        client.Disconnect();
-                        sftp.Disconnect();
-                        throw;
-                    }
-                }
+                ExcpetionHandlingSshSftp(server, notyfService, e, result, client, sftp);
             }
             finally
             {
@@ -695,94 +626,67 @@ WantedBy = multi-user.target";
             return EndConnection(result);
         }
 
-        public static bool RemoveServerLineToSudoersFile(PavlovServer server, IToastifyService notyfService,string sudoersPath,PavlovServerService pavlovServerService)
+        public static bool RemoveServerLineToSudoersFile(PavlovServer server, IToastifyService notyfService,
+            string sudoersPath, PavlovServerService pavlovServerService)
         {
-         
             var type = GetAuthType(server);
             var connectionInfo = ConnectionInfoInternal(server, type, out var result);
 
             using var clientSftp = new SftpClient(connectionInfo);
-            
-            
+
+
             var success = false;
             try
             {
                 clientSftp.Connect();
-                
-                
+
+
                 var sudoersLine = SudoersLine(server);
                 var sudoers = clientSftp.ReadAllText(sudoersPath);
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify("sudoers content: " + sudoers, LogEventLevel.Verbose, notyfService);
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify("sudoers content: " + sudoers, LogEventLevel.Verbose,
+                    notyfService);
                 if (!sudoers.Contains(sudoersLine))
                 {
-                
                     DataBaseLogger.LogToDatabaseAndResultPlusNotify("the server is removed from sudoers file.",
                         LogEventLevel.Verbose, notyfService);
                     success = true;
                 }
                 else
-                {              
+                {
                     var sudoersFileContent = clientSftp.ReadAllLines(sudoersPath);
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("sudoers content: " + string.Join("\n",sudoersFileContent),
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                        "sudoers content: " + string.Join("\n", sudoersFileContent),
                         LogEventLevel.Verbose, notyfService);
 
                     for (var i = 0; i < sudoersFileContent.Length; i++)
-                    {
                         if (sudoersFileContent[i].Trim().Contains(sudoersLine.Trim()))
                         {
                             DataBaseLogger.LogToDatabaseAndResultPlusNotify("Found line and replace it with emptyness",
                                 LogEventLevel.Verbose, notyfService);
                             sudoersFileContent[i] = "";
                         }
-                    }
-                    
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("recreate the sudoers file",LogEventLevel.Verbose, notyfService);
+
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("recreate the sudoers file", LogEventLevel.Verbose,
+                        notyfService);
                     clientSftp.Create(sudoersPath);
-                    
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("refill the sudoers file",LogEventLevel.Verbose, notyfService);
-                    clientSftp.AppendAllLines(sudoersPath,sudoersFileContent.Where(x=>x!=""));
-                
-                
+
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("refill the sudoers file", LogEventLevel.Verbose,
+                        notyfService);
+                    clientSftp.AppendAllLines(sudoersPath, sudoersFileContent.Where(x => x != ""));
+
+
                     var sudoersFileContentAfterRemove = clientSftp.ReadAllLines(sudoersPath);
                     if (sudoersFileContentAfterRemove.Contains(sudoersLine))
-                    {
                         DataBaseLogger.LogToDatabaseAndResultPlusNotify(
                             "Could not remove server line from the sudoers file!", LogEventLevel.Fatal,
                             notyfService);
-                    }
                     else
-                    {
                         success = true;
-                    }
                 }
-
-            
             }
             catch (Exception e)
             {
-                switch (e)
-                {
-                    case SshAuthenticationException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not Login over ssh!" + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , result);
-                        break;
-                    case SshConnectionException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host over ssh!" + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , result);
-                        break;
-                    case SshOperationTimeoutException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host cause of timeout over ssh!" + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , result);
-                        break;
-                    case SocketException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host!" + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , result);
-                        break;
-                    case InvalidOperationException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message + " <- most lily this error is from telnet" + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , result);
-                        break;
-                    default:
-                    {
-                        clientSftp.Disconnect();
-                        throw;
-                    }
-                }
+                ExcpetionHandlingSshSftp(server, pavlovServerService._notifyService, e, result, null, clientSftp);
             }
             finally
             {
@@ -791,27 +695,28 @@ WantedBy = multi-user.target";
 
             return success;
         }
-        
-        public static bool AddServerLineToSudoersFile(PavlovServer server, IToastifyService notyfService,PavlovServerService pavlovServerService,
+
+        public static bool AddServerLineToSudoersFile(PavlovServer server, IToastifyService notyfService,
+            PavlovServerService pavlovServerService,
             string sudoersPath, ConnectionResult connectionResult)
         {
-            
             var type = GetAuthType(server);
             var connectionInfo = ConnectionInfoInternal(server, type, out var result);
 
             using var clientSftp = new SftpClient(connectionInfo);
             using var clientSsh = new SshClient(connectionInfo);
-            
-            
+
+
             var success = false;
             try
             {
                 clientSftp.Connect();
                 clientSsh.Connect();
-            
+
                 var sudoersLine = SudoersLine(server);
                 var sudoers = clientSftp.ReadAllText(sudoersPath);
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify("sudoers content: " + sudoers, LogEventLevel.Verbose, notyfService);
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify("sudoers content: " + sudoers, LogEventLevel.Verbose,
+                    notyfService);
                 if (!sudoers.Contains(sudoersLine))
                 {
                     clientSftp.AppendAllLines(sudoersPath, new[] {sudoersLine});
@@ -821,15 +726,11 @@ WantedBy = multi-user.target";
                         LogEventLevel.Verbose, notyfService);
 
                     if (!afterAdding.Contains(sudoersLine))
-                    {
                         DataBaseLogger.LogToDatabaseAndResultPlusNotify(
                             "Could not add line to the sudoers file to start and stop the server!", LogEventLevel.Fatal,
                             notyfService, connectionResult);
-                    }
                     else
-                    {
                         success = true;
-                    }
                 }
                 else
                 {
@@ -837,36 +738,10 @@ WantedBy = multi-user.target";
                     DataBaseLogger.LogToDatabaseAndResultPlusNotify("the server is already in the sudoers file.",
                         LogEventLevel.Verbose, notyfService);
                 }
-
-            
-            
             }
             catch (Exception e)
             {
-                switch (e)
-                {
-                    case SshAuthenticationException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not Login over ssh!" + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , connectionResult);
-                        break;
-                    case SshConnectionException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host over ssh!" + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , connectionResult);
-                        break;
-                    case SshOperationTimeoutException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host cause of timeout over ssh!" + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , connectionResult);
-                        break;
-                    case SocketException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host!" + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , connectionResult);
-                        break;
-                    case InvalidOperationException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message + " <- most lily this error is from telnet" + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , connectionResult);
-                        break;
-                    default:
-                    {
-                        clientSftp.Disconnect();
-                        clientSsh.Disconnect();
-                        throw;
-                    }
-                }
+                ExcpetionHandlingSshSftp(server, notyfService, e, result, clientSsh, clientSftp);
             }
             finally
             {
@@ -875,8 +750,6 @@ WantedBy = multi-user.target";
             }
 
             return success;
-            
-            
         }
 
         private static string SudoersLine(PavlovServer server)
@@ -886,11 +759,12 @@ WantedBy = multi-user.target";
                               server.ServerSystemdServiceName + ".service, /bin/systemctl status " +
                               server.ServerSystemdServiceName + ".service, /bin/systemctl enable " +
                               server.ServerSystemdServiceName + ".service, /bin/systemctl disable " +
-                              server.ServerSystemdServiceName+".service";
+                              server.ServerSystemdServiceName + ".service";
             return sudoersLine;
         }
 
-        public static async Task<string> RemovePath(PavlovServer server, string path,PavlovServerService pavlovServerService)
+        public static async Task<string> RemovePath(PavlovServer server, string path,
+            PavlovServerService pavlovServerService)
         {
             var type = GetAuthType(server);
             var connectionInfo = ConnectionInfoInternal(server, type, out var result);
@@ -898,7 +772,7 @@ WantedBy = multi-user.target";
             if (server.ServerServiceState == ServerServiceState.active)
             {
                 restart = true;
-                await SystemDStop(server,pavlovServerService);
+                await SystemDStop(server, pavlovServerService);
             }
 
             using var client = new SshClient(connectionInfo);
@@ -913,7 +787,10 @@ WantedBy = multi-user.target";
                         client.CreateShellStream("pavlovRconWebserverSShTunnelSystemdCheck", 80, 24, 800, 600, 1024);
                     var update = await SendCommandForShell(
                         "rm -rf " + path, stream, null);
-                    if (update == null) DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not remove the " + path + "! " + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , result);
+                    if (update == null)
+                        DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                            "Could not remove the " + path + "! " + server.Name, LogEventLevel.Fatal,
+                            pavlovServerService._notifyService, result);
                     result.answer = update;
                 }
                 else
@@ -923,30 +800,7 @@ WantedBy = multi-user.target";
             }
             catch (Exception e)
             {
-                switch (e)
-                {
-                    case SshAuthenticationException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not Login over ssh!" + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , result);
-                        break;
-                    case SshConnectionException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host over ssh!" + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , result);
-                        break;
-                    case SshOperationTimeoutException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host cause of timeout over ssh!" + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , result);
-                        break;
-                    case SocketException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host!" + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , result);
-                        break;
-                    case InvalidOperationException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message + " <- most lily this error is from telnet" + server.Name,LogEventLevel.Fatal,pavlovServerService._notifyService , result);
-                        break;
-                    default:
-                    {
-                        client.Disconnect();
-                        clientSftp.Disconnect();
-                        throw;
-                    }
-                }
+                ExcpetionHandlingSshSftp(server, pavlovServerService._notifyService, e, result, client, clientSftp);
             }
             finally
             {
@@ -954,14 +808,50 @@ WantedBy = multi-user.target";
                 clientSftp.Disconnect();
             }
 
-            if (restart) await SystemDStart(server,pavlovServerService);
+            if (restart) await SystemDStart(server, pavlovServerService);
 
             if (result.errors.Count <= 0 || result.answer != "") result.Success = true;
 
             return EndConnection(result);
         }
 
-        public static string DoesPathExist(PavlovServer server, string path,IToastifyService notyfService)
+        public static void ExcpetionHandlingSshSftp(PavlovServer server, IToastifyService notyfService, Exception e,
+            ConnectionResult result, SshClient client = null, SftpClient clientSftp = null)
+        {
+            switch (e)
+            {
+                case SshAuthenticationException _:
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not Login over ssh!" + server.Name,
+                        LogEventLevel.Fatal, notyfService, result);
+                    break;
+                case SshConnectionException _:
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host over ssh!" + server.Name,
+                        LogEventLevel.Fatal, notyfService, result);
+                    break;
+                case SshOperationTimeoutException _:
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                        "Could not connect to host cause of timeout over ssh!" + server.Name, LogEventLevel.Fatal,
+                        notyfService, result);
+                    break;
+                case SocketException _:
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host!" + server.Name,
+                        LogEventLevel.Fatal, notyfService, result);
+                    break;
+                case InvalidOperationException _:
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                        e.Message + " <- most lily this error is from telnet" + server.Name, LogEventLevel.Fatal,
+                        notyfService, result);
+                    break;
+                default:
+                {
+                    client?.Disconnect();
+                    clientSftp?.Disconnect();
+                    throw e;
+                }
+            }
+        }
+
+        public static string DoesPathExist(PavlovServer server, string path, IToastifyService notyfService)
         {
             var type = GetAuthType(server);
             var connectionInfo = ConnectionInfoInternal(server, type, out var result);
@@ -981,29 +871,7 @@ WantedBy = multi-user.target";
             }
             catch (Exception e)
             {
-                switch (e)
-                {
-                    case SshAuthenticationException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not Login over ssh!" + server.Name,LogEventLevel.Fatal,notyfService , result);
-                        break;
-                    case SshConnectionException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host over ssh!" + server.Name,LogEventLevel.Fatal,notyfService , result);
-                        break;
-                    case SshOperationTimeoutException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host cause of timeout over ssh!" + server.Name,LogEventLevel.Fatal ,notyfService, result);
-                        break;
-                    case SocketException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host!" + server.Name,LogEventLevel.Fatal ,notyfService, result);
-                        break;
-                    case InvalidOperationException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message + " <- most lily this error is from telnet" + server.Name,LogEventLevel.Fatal,notyfService , result);
-                        break;
-                    default:
-                    {
-                        clientSftp.Disconnect();
-                        throw;
-                    }
-                }
+                ExcpetionHandlingSshSftp(server, notyfService, e, result, null, clientSftp);
             }
             finally
             {
@@ -1016,13 +884,9 @@ WantedBy = multi-user.target";
         }
 
         public static async Task<ConnectionResult> SShTunnelMultipleCommands(PavlovServer server,
-            string[] commands,IToastifyService notyfService)
+            string[] commands, IToastifyService notyfService)
         {
-            if (server.ServerServiceState != ServerServiceState.active)
-                throw new CommandException("will not do command while server service is inactive!");
-            var type = GetAuthType(server);
-            var connectionInfo = ConnectionInfoInternal(server, type, out var result);
-            using var client = new SshClient(connectionInfo);
+            var result = StartClient(server, out var client);
             try
             {
                 client.Connect();
@@ -1039,39 +903,52 @@ WantedBy = multi-user.target";
                         if (client2.IsConnected)
                         {
                             var password = await client2.ReadAsync(TimeSpan.FromMilliseconds(2000));
-                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Answer: " + password,LogEventLevel.Verbose,notyfService);
+                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Answer: " + password,
+                                LogEventLevel.Verbose, notyfService);
                             if (password.ToLower().Contains("password"))
                             {
-                                DataBaseLogger.LogToDatabaseAndResultPlusNotify("start sending password!",LogEventLevel.Verbose,notyfService);
+                                DataBaseLogger.LogToDatabaseAndResultPlusNotify("start sending password!",
+                                    LogEventLevel.Verbose, notyfService);
                                 await client2.WriteLine(server.TelnetPassword);
-                                DataBaseLogger.LogToDatabaseAndResultPlusNotify("did send password and wait for auth",LogEventLevel.Verbose,notyfService);
+                                DataBaseLogger.LogToDatabaseAndResultPlusNotify("did send password and wait for auth",
+                                    LogEventLevel.Verbose, notyfService);
                                 var auth = await client2.ReadAsync(TimeSpan.FromMilliseconds(2000));
-                                DataBaseLogger.LogToDatabaseAndResultPlusNotify("waited for auth got : "+auth,LogEventLevel.Verbose,notyfService);
+                                DataBaseLogger.LogToDatabaseAndResultPlusNotify("waited for auth got : " + auth,
+                                    LogEventLevel.Verbose, notyfService);
                                 if (auth.ToLower().Contains("authenticated=1"))
                                 {
                                     foreach (var command in commands)
                                     {
-                                        
-                                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("send command: "+command,LogEventLevel.Verbose,notyfService);
+                                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("send command: " + command,
+                                            LogEventLevel.Verbose, notyfService);
                                         var singleCommandResult = await SingleCommandResult(client2, command);
-                                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Got answer: "+singleCommandResult,LogEventLevel.Verbose,notyfService);
+                                        DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                                            "Got answer: " + singleCommandResult, LogEventLevel.Verbose, notyfService);
                                         result.MultiAnswer.Add(singleCommandResult);
                                     }
                                 }
                                 else
                                 {
-                                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Send password but did not get Authenticated=1 answer: "+auth,LogEventLevel.Verbose,notyfService);
-                                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Telnet Client could not authenticate ..." + server.Name,LogEventLevel.Fatal,notyfService , result);
+                                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                                        "Send password but did not get Authenticated=1 answer: " + auth,
+                                        LogEventLevel.Verbose, notyfService);
+                                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                                        "Telnet Client could not authenticate ..." + server.Name, LogEventLevel.Fatal,
+                                        notyfService, result);
                                 }
                             }
                             else
                             {
-                                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Telnet Client did not ask for Password ..." + server.Name,LogEventLevel.Fatal ,notyfService, result);
+                                DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                                    "Telnet Client did not ask for Password ..." + server.Name, LogEventLevel.Fatal,
+                                    notyfService, result);
                             }
                         }
                         else
                         {
-                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Telnet Client could not connect ..." + server.Name,LogEventLevel.Fatal ,notyfService, result);
+                            DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                                "Telnet Client could not connect ..." + server.Name, LogEventLevel.Fatal, notyfService,
+                                result);
                         }
 
                         client2.Dispose();
@@ -1081,34 +958,13 @@ WantedBy = multi-user.target";
                 }
                 else
                 {
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Telnet Client cannot be reached..." + server.Name,LogEventLevel.Fatal,notyfService , result);
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Telnet Client cannot be reached..." + server.Name,
+                        LogEventLevel.Fatal, notyfService, result);
                 }
             }
             catch (Exception e)
             {
-                switch (e)
-                {
-                    case SshAuthenticationException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not Login over ssh!" + server.Name,LogEventLevel.Fatal,notyfService , result);
-                        break;
-                    case SshConnectionException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host over ssh!" + server.Name,LogEventLevel.Fatal,notyfService , result);
-                        break;
-                    case SshOperationTimeoutException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host cause of timeout over ssh!" + server.Name,LogEventLevel.Fatal,notyfService , result);
-                        break;
-                    case SocketException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host!" + server.Name,LogEventLevel.Fatal ,notyfService, result);
-                        break;
-                    case InvalidOperationException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message + " <- most lily this error is from telnet" + server.Name,LogEventLevel.Fatal ,notyfService, result);
-                        break;
-                    default:
-                    {
-                        client.Disconnect();
-                        throw;
-                    }
-                }
+                ExcpetionHandlingSshSftp(server, notyfService, e, result, client);
             }
             finally
             {
@@ -1126,11 +982,22 @@ WantedBy = multi-user.target";
             }
             else
             {
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify("there was no answer" + server.Name,LogEventLevel.Fatal ,notyfService, result);
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify("there was no answer" + server.Name,
+                    LogEventLevel.Fatal, notyfService, result);
             }
 
             if (result.errors.Count <= 0 || result.answer != "") result.Success = true;
 
+            return result;
+        }
+
+        public static ConnectionResult StartClient(PavlovServer server, out SshClient client)
+        {
+            if (server.ServerServiceState != ServerServiceState.active)
+                throw new CommandException("will not do command while server service is inactive!");
+            var type = GetAuthType(server);
+            var connectionInfo = ConnectionInfoInternal(server, type, out var result);
+            client = new SshClient(connectionInfo);
             return result;
         }
 
@@ -1154,9 +1021,10 @@ WantedBy = multi-user.target";
             return singleCommandResult;
         }
 
-        public static async Task<string> SendCommandSShTunnel(PavlovServer server, string command,IToastifyService notyfService)
+        public static async Task<string> SendCommandSShTunnel(PavlovServer server, string command,
+            IToastifyService notyfService)
         {
-            var result = await SShTunnelMultipleCommands(server, new[] {command},notyfService);
+            var result = await SShTunnelMultipleCommands(server, new[] {command}, notyfService);
 
             return EndConnection(result);
         }
@@ -1170,7 +1038,7 @@ WantedBy = multi-user.target";
             //auth
             if (type == RconService.AuthType.PrivateKey)
             {
-                var keyFiles = new[] {new PrivateKeyFile("KeyFiles/" + server.SshServer.SshKeyFileName)};
+                var keyFiles = new[] {new PrivateKeyFile(new MemoryStream(server.SshServer.SshKeyFileName))};
                 connectionInfo = new ConnectionInfo(server.SshServer.Adress, server.SshServer.SshPort,
                     server.SshServer.SshUsername,
                     new PrivateKeyAuthenticationMethod(server.SshServer.SshUsername, keyFiles));
@@ -1184,7 +1052,7 @@ WantedBy = multi-user.target";
             else if (type == RconService.AuthType.PrivateKeyPassphrase)
             {
                 var keyFiles = new[]
-                    {new PrivateKeyFile("KeyFiles/" + server.SshServer.SshKeyFileName, server.SshServer.SshPassphrase)};
+                    {new PrivateKeyFile(new MemoryStream(server.SshServer.SshKeyFileName), server.SshServer.SshPassphrase)};
                 connectionInfo = new ConnectionInfo(server.SshServer.Adress, server.SshServer.SshPort,
                     server.SshServer.SshUsername,
                     new PasswordAuthenticationMethod(server.SshServer.SshUsername, server.SshServer.SshPassphrase),
@@ -1194,7 +1062,7 @@ WantedBy = multi-user.target";
             return connectionInfo;
         }
 
-        public static string GetFile(PavlovServer server, string path,IToastifyService notyfService)
+        public static string GetFile(PavlovServer server, string path, IToastifyService notyfService)
         {
             var connectionResult = new ConnectionResult();
             var type = GetAuthType(server);
@@ -1228,20 +1096,25 @@ WantedBy = multi-user.target";
                     switch (e)
                     {
                         case SshConnectionException _:
-                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not Login over ssh! " + server.Name,LogEventLevel.Fatal,notyfService , result);
+                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not Login over ssh! " + server.Name,
+                                LogEventLevel.Fatal, notyfService, result);
                             sftp.Disconnect();
                             return EndConnection(connectionResult);
                         case SftpPathNotFoundException _:
-                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not find file! (" + path + ") on the server: " + server.Name,LogEventLevel.Fatal ,notyfService, result);
+                            DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                                "Could not find file! (" + path + ") on the server: " + server.Name,
+                                LogEventLevel.Fatal, notyfService, result);
                             sftp.Disconnect();
                             return EndConnection(connectionResult);
                         case SftpPermissionDeniedException _:
-                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Permissions denied for file: (" + path + ") on the server: " +
-                                              server.Name,LogEventLevel.Fatal,notyfService , result);
+                            DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                                "Permissions denied for file: (" + path + ") on the server: " +
+                                server.Name, LogEventLevel.Fatal, notyfService, result);
                             sftp.Disconnect();
                             return EndConnection(connectionResult);
                         case SshException _:
-                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host!" + server.Name,LogEventLevel.Fatal,notyfService , result);
+                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host!" + server.Name,
+                                LogEventLevel.Fatal, notyfService, result);
                             sftp.Disconnect();
                             return EndConnection(connectionResult);
                         default:
@@ -1277,13 +1150,13 @@ WantedBy = multi-user.target";
             return connectionResult.answer;
         }
 
-        public static string WriteFile(PavlovServer server, string path, string content,IToastifyService notyfService)
+        public static string WriteFile(PavlovServer server, string path, string content, IToastifyService notyfService)
         {
             var connectionResult = new ConnectionResult();
             var type = GetAuthType(server);
             var connectionInfo = ConnectionInfoInternal(server, type, out var result);
             //check if first scripts exist
-            using var sftp = new SftpClient(connectionInfo); 
+            using var sftp = new SftpClient(connectionInfo);
             sftp.BufferSize = 4 * 1024; // bypass Payload error large files
             var outPutStream = new MemoryStream();
             try
@@ -1292,78 +1165,83 @@ WantedBy = multi-user.target";
                 //check if file exist
                 try
                 {
-                    
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("remove if file already exist",LogEventLevel.Verbose,notyfService);
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("remove if file already exist",
+                        LogEventLevel.Verbose, notyfService);
                     if (sftp.Exists(path)) sftp.DeleteFile(path);
 
 
                     //check if parent folder exist
                     var parentDirString = "";
-                    
+
                     if (path.EndsWith("/"))
                         path = path.TrimEnd('/');
-                    
-                    int idx = path.LastIndexOf('/');
+
+                    var idx = path.LastIndexOf('/');
 
                     if (idx != -1)
-                    {
                         parentDirString = path.Substring(0, idx);
-                    }
                     else
-                    {
                         parentDirString = path;
-                    }
 
                     if (!sftp.Exists(parentDirString))
                     {
                         connectionResult.errors.Add("Can not write file when the parent folder does not exist!");
                         return EndConnection(connectionResult);
                     }
-                    
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("create file",LogEventLevel.Verbose,notyfService);
+
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("create file", LogEventLevel.Verbose, notyfService);
                     if (!sftp.Exists(path)) sftp.Create(path);
-                    
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("fill the file",LogEventLevel.Verbose,notyfService);
+
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("fill the file", LogEventLevel.Verbose,
+                        notyfService);
                     using (var fileStream = new MemoryStream(Encoding.ASCII.GetBytes(content)))
                     {
                         sftp.UploadFile(fileStream, path);
                     }
 
 
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Uploaded finish now download file",LogEventLevel.Verbose,notyfService);
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Uploaded finish now download file",
+                        LogEventLevel.Verbose, notyfService);
                     //Download file again to valid result
                     using (Stream fileStream = outPutStream)
                     {
                         sftp.DownloadFile(path, fileStream);
                     }
-                    
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Download finish now compare",LogEventLevel.Verbose,notyfService);
+
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Download finish now compare",
+                        LogEventLevel.Verbose, notyfService);
                 }
                 catch (Exception e)
                 {
                     switch (e)
                     {
                         case SshConnectionException _:
-                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not Login over ssh! " + server.Name,LogEventLevel.Fatal ,notyfService,result);
+                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not Login over ssh! " + server.Name,
+                                LogEventLevel.Fatal, notyfService, result);
                             sftp.Disconnect();
                             return EndConnection(connectionResult);
                         case SftpPathNotFoundException _:
-                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not find file! (" + path + ") on the server: " + server.Name,LogEventLevel.Fatal,notyfService , result);
+                            DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                                "Could not find file! (" + path + ") on the server: " + server.Name,
+                                LogEventLevel.Fatal, notyfService, result);
                             sftp.Disconnect();
                             return EndConnection(connectionResult);
                         case SftpPermissionDeniedException _:
-                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Permissions denied for file: (" + path + ") on the server: " +
-                                                                  server.Name,LogEventLevel.Fatal ,notyfService, result);
+                            DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                                "Permissions denied for file: (" + path + ") on the server: " +
+                                server.Name, LogEventLevel.Fatal, notyfService, result);
                             sftp.Disconnect();
                             return EndConnection(connectionResult);
                         case SshException _:
-                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host!" + server.Name,LogEventLevel.Fatal,notyfService , result);
+                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host!" + server.Name,
+                                LogEventLevel.Fatal, notyfService, result);
                             sftp.Disconnect();
                             return EndConnection(connectionResult);
                         default:
                         {
                             sftp.Disconnect();
-                            DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message,LogEventLevel.Fatal ,notyfService, result);
+                            DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message, LogEventLevel.Fatal,
+                                notyfService, result);
                             return EndConnection(connectionResult);
                         }
                     }
@@ -1374,15 +1252,17 @@ WantedBy = multi-user.target";
 
                 if (fileContent.Replace(Environment.NewLine, "") == content.Replace(Environment.NewLine, ""))
                 {
-                    
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Upload complet finished. also checked and its the same",LogEventLevel.Verbose,notyfService);
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                        "Upload complet finished. also checked and its the same", LogEventLevel.Verbose, notyfService);
                     connectionResult.Success = true;
                     connectionResult.answer = "File upload successfully " + server.Name;
                 }
                 else
                 {
                     connectionResult.Success = false;
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("File in not the same as uploaded. So upload failed! " + server.Name,LogEventLevel.Fatal,notyfService, connectionResult);
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                        "File in not the same as uploaded. So upload failed! " + server.Name, LogEventLevel.Fatal,
+                        notyfService, connectionResult);
                 }
             }
             finally

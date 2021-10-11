@@ -186,8 +186,8 @@ namespace PavlovRconWebserver.Controllers
             return View();
         }
 
-        
-        [Authorize(Roles = CustomRoles.Admin)]
+
+        [Authorize(Roles = CustomRoles.AnyOtherThanUser)]
         [HttpGet]
         public async Task<IActionResult> Register(string returnUrl = null)
         {
@@ -195,7 +195,7 @@ namespace PavlovRconWebserver.Controllers
             return View();
         }
 
-        [Authorize(Roles = CustomRoles.Admin)]
+        [Authorize(Roles = CustomRoles.AnyOtherThanUser)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model, string returnUrl = null)

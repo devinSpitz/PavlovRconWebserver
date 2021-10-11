@@ -11,22 +11,14 @@
 @inject TeamSelectedSteamIdentityService _teamSelectedSteamIdentityService;
 @{
     var user = await UserManager.GetUserAsync(User);
-    var isAdmin = false;
-    var isCaptain = false;
-    var isMod = false;
-    var isModSomeWhere = false;
-    if (user != null)
-    {
-        isAdmin = await UserManager.IsInRoleAsync(user, "Admin");
-        isCaptain = await UserManager.IsInRoleAsync(user, "Captain");
-        isMod = await UserManager.IsInRoleAsync(user, "Mod");
-        isModSomeWhere = await _pavlovServerService.IsModSomeWhere(user, _serverSelectedModsService);
-    }
+    _userService.UserInRole(user, _serverSelectedModsService, _pavlovServerService, out var isAdmin, out var isCaptain, out var isMod, out var isOnPremise, out var isServerRent, out var isModSomeWhere, out _);
 }
 <!DOCTYPE html>
 <html>
 <head>
 
+    <meta name="description" content="PavlovRconWebserver" />
+    <meta name="keywords" content="ssh,mobile, database, administration, server, webserver, rcon, vr, telnet, priority, game-server-content, roles-management, pavlov" />
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>@ViewData["Title"] - Pavlov Rcon Webserver</title>
@@ -65,14 +57,14 @@
                             </ul>
                         </li>
                     }
-                    if (isModSomeWhere || isCaptain || isMod || isAdmin)
+                    if (isModSomeWhere || isCaptain || isMod || isAdmin || isServerRent || isOnPremise)
                     {
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 Servers
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                @if (isAdmin)
+                                @if (isAdmin || isOnPremise || isServerRent)
                                 {
                                     <li>
                                         <a class="btn navbar-btn navbar-link" asp-area="" asp-controller="SshServer" asp-action="Index">Servers</a>
@@ -84,19 +76,30 @@
                             </ul>
                         </li>
                     }
-                    if (await _teamService.CheckRightsTeamCaptainOrCaptain(0, _teamSelectedSteamIdentityService, _userService, User, await _steamIdentityService.FindOne(user.Id)))
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Team Management
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+
+                            <li>
+                                <a class="btn navbar-btn navbar-link" asp-area="" asp-controller="Team" asp-action="Index">Teams</a>
+                            </li>
+                            @if (isMod || isAdmin)
+                            {
+                                <li>
+                                    <a class="btn navbar-btn navbar-link" asp-area="" asp-controller="Team" asp-action="SteamIdentitiesIndex">Steam Identities</a>
+                                </li>
+                            }
+                        </ul>
+                    </li>
+                    if (isModSomeWhere || isCaptain || isMod || isAdmin || isServerRent || isOnPremise)
                     {
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 Matchmaking (WIP)
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                <li>
-                                    <a class="btn navbar-btn navbar-link" asp-area="" asp-controller="Team" asp-action="Index">Teams</a>
-                                </li>
-                                <li>
-                                    <a class="btn navbar-btn navbar-link" asp-area="" asp-controller="Team" asp-action="SteamIdentitiesIndex">Steam Identities</a>
-                                </li>
                                 <li>
                                     <a class="btn navbar-btn navbar-link" asp-area="" asp-controller="MatchMaking" asp-action="Index">Matches</a>
                                 </li>
@@ -110,6 +113,13 @@
                         </li>
                         <li>
                             <a class="btn navbar-btn navbar-link" asp-controller="Log" asp-action="Index">Logs</a>
+                        </li>
+                    }
+                    
+                    @if (isModSomeWhere || isCaptain || isMod || isAdmin || isServerRent || isOnPremise)
+                    {
+                        <li>
+                            <a class="btn navbar-btn navbar-link" asp-controller="Account" asp-action="Register">Register</a>
                         </li>
                     }
                 }

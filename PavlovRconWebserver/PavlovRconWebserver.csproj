@@ -76,10 +76,10 @@
     <Content Remove="Views\Account\ForgotPassword.cshtml" />
   </ItemGroup>
   <ItemGroup>
-    <None Update="KeyFiles\CopyOnPublish.txt">
+    <None Update="Temp\CopyOnPublish.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Temp\CopyOnPublish.txt">
+    <None Update="Config\CopyOnPublish.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
@@ -134,11 +134,6 @@
   <ItemGroup>
     <Compile Remove="Extensions\UrlHelperExtensions.cs" />
     <Compile Remove="Models\InbuildUser.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="LiteDB.Identity, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>Libraries\LiteDB.Identity.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>

@@ -12,8 +12,8 @@ namespace PavlovRconWebserver.Services
 {
     public class UserService
     {
-        private readonly IToastifyService _notifyService;
         private readonly ILiteDbIdentityAsyncContext _liteDb;
+        private readonly IToastifyService _notifyService;
         private readonly RoleManager<LiteDbRole> _roleManager;
         private readonly UserManager<LiteDbUser> _userManager;
 
@@ -37,6 +37,28 @@ namespace PavlovRconWebserver.Services
             return liteDbUsers;
         }
 
+        public void UserInRole(LiteDbUser user, ServerSelectedModsService serverSelectedModsService,
+            PavlovServerService pavlovServerService, out bool isAdmin, out bool isCaptain, out bool isMod,
+            out bool isOnPremise, out bool isServerRent, out bool isModSomeWhere, out bool Premium)
+        {
+            isAdmin = false;
+            isCaptain = false;
+            isMod = false;
+            isOnPremise = false;
+            isServerRent = false;
+            isModSomeWhere = false;
+            Premium = false;
+            if (user == null) return;
+            isAdmin = _userManager.IsInRoleAsync(user, "Admin").GetAwaiter().GetResult();
+            isCaptain = _userManager.IsInRoleAsync(user, "Captain").GetAwaiter().GetResult();
+            isMod = _userManager.IsInRoleAsync(user, "Mod").GetAwaiter().GetResult();
+            isOnPremise = _userManager.IsInRoleAsync(user, "OnPremise").GetAwaiter().GetResult();
+            isServerRent = _userManager.IsInRoleAsync(user, "ServerRent").GetAwaiter().GetResult();
+            Premium = _userManager.IsInRoleAsync(user, "Premium").GetAwaiter().GetResult();
+            isModSomeWhere = pavlovServerService.IsModSomeWhere(user, serverSelectedModsService).GetAwaiter()
+                .GetResult();
+        }
+
         public async Task<LiteDbUser[]> FindAll()
         {
             return (await _liteDb.LiteDatabaseAsync.GetCollection<LiteDbUser>("LiteDbUser")
@@ -45,13 +67,15 @@ namespace PavlovRconWebserver.Services
 
         public async Task<bool> Delete(string id)
         {
-            return await _liteDb.LiteDatabaseAsync.GetCollection<LiteDbUser>("LiteDbUser").DeleteAsync(new ObjectId(id));
+            return await _liteDb.LiteDatabaseAsync.GetCollection<LiteDbUser>("LiteDbUser")
+                .DeleteAsync(new ObjectId(id));
         }
 
         public async Task<bool> IsUserInRole(string role, ClaimsPrincipal principal)
         {
             return await _userManager.IsInRoleAsync(await _userManager.GetUserAsync(principal), role);
         }
+
         public async Task<bool> IsUserInRole(string role, LiteDbUser user)
         {
             return await _userManager.IsInRoleAsync(user, role);
@@ -74,6 +98,23 @@ namespace PavlovRconWebserver.Services
                 await _roleManager.CreateAsync(new LiteDbRole
                 {
                     Name = "Captain"
+                });
+
+            if (_roleManager.Roles?.FirstOrDefault(x => x.Name == "OnPremise") == null)
+                await _roleManager.CreateAsync(new LiteDbRole
+                {
+                    Name = "OnPremise"
+                });
+
+            if (_roleManager.Roles?.FirstOrDefault(x => x.Name == "ServerRent") == null)
+                await _roleManager.CreateAsync(new LiteDbRole
+                {
+                    Name = "ServerRent"
+                });
+            if (_roleManager.Roles?.FirstOrDefault(x => x.Name == "Premium") == null)
+                await _roleManager.CreateAsync(new LiteDbRole
+                {
+                    Name = "Premium"
                 });
         }
     }

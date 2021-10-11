@@ -2,29 +2,29 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Sockets;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using AspNetCoreHero.ToastNotification.Abstractions;
 using Hangfire;
 using LiteDB.Identity.Async.Database;
+using LiteDB.Identity.Models;
 using Microsoft.VisualBasic;
 using PavlovRconWebserver.Exceptions;
 using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
 using Renci.SshNet;
-using Renci.SshNet.Common;
 using Serilog.Events;
 
 namespace PavlovRconWebserver.Services
 {
     public class MatchService
     {
-        private readonly IToastifyService _notifyService;
         private readonly ILiteDbIdentityAsyncContext _liteDb;
         private readonly MapsService _mapsService;
         private readonly MatchSelectedSteamIdentitiesService _matchSelectedSteamIdentitiesService;
 
         private readonly MatchSelectedTeamSteamIdentitiesService _matchSelectedTeamSteamIdentitiesService;
+        private readonly IToastifyService _notifyService;
         private readonly PavlovServerInfoService _pavlovServerInfoService;
         private readonly PavlovServerPlayerService _pavlovServerPlayerService;
         private readonly PavlovServerService _pavlovServerService;
@@ -32,6 +32,7 @@ namespace PavlovRconWebserver.Services
         private readonly SteamIdentityService _steamIdentityService;
         private readonly TeamSelectedSteamIdentityService _teamSelectedSteamIdentityService;
         private readonly TeamService _teamService;
+        private readonly ServerSelectedModsService _serverSelectedModsService;
 
 
         public MatchService(ILiteDbIdentityAsyncContext liteDbContext,
@@ -44,6 +45,7 @@ namespace PavlovRconWebserver.Services
             TeamService teamService,
             PavlovServerInfoService pavlovServerInfoService,
             PavlovServerPlayerService pavlovServerPlayerService,
+            ServerSelectedModsService serverSelectedModsService,
             TeamSelectedSteamIdentityService teamSelectedSteamIdentityService,
             IToastifyService notyfService)
         {
@@ -59,6 +61,7 @@ namespace PavlovRconWebserver.Services
             _mapsService = mapsService;
             _pavlovServerPlayerService = pavlovServerPlayerService;
             _pavlovServerInfoService = pavlovServerInfoService;
+            _serverSelectedModsService = serverSelectedModsService;
         }
 
         public async Task<bool> SaveMatchToService(MatchViewModel match, Match realmatch)
@@ -91,7 +94,8 @@ namespace PavlovRconWebserver.Services
                             {
                                 matchId = realmatch.Id,
                                 SteamIdentityId = team0SelectedSteamIdentity,
-                                TeamId = 0
+                                TeamId = 0,
+                                OverWriteRole = tmp.RoleOverwrite
                             });
                         else
                             return true;
@@ -106,7 +110,8 @@ namespace PavlovRconWebserver.Services
                             {
                                 matchId = realmatch.Id,
                                 SteamIdentityId = team1SelectedSteamIdentity,
-                                TeamId = 1
+                                TeamId = 1,
+                                OverWriteRole = tmp.RoleOverwrite
                             });
                         else
                             return true;
@@ -198,30 +203,57 @@ namespace PavlovRconWebserver.Services
                 var list = new List<string>();
                 if (listOfSteamIdentietiesWhichCanPlay.Count <= 0 && match.MatchSelectedSteamIdentities.Count <= 0)
                 {
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("There are no team members so no match will start!",LogEventLevel.Fatal ,_notifyService, result);
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("There are no team members so no match will start!",
+                        LogEventLevel.Fatal, _notifyService, result);
                     return result;
                 }
-                else
-                {
-                    if (match.MatchSelectedSteamIdentities.Count > 0)
-                        list = match.MatchSelectedSteamIdentities
-                            .Select(x => Strings.Trim(x.SteamIdentityId + ";" + Environment.NewLine)).ToList();
-                    else if (listOfSteamIdentietiesWhichCanPlay.Count > 0)
-                        list = listOfSteamIdentietiesWhichCanPlay.Select(x => Strings.Trim(x.SteamIdentityId)).ToList();
-                }
+                
+                
+                if (match.MatchSelectedSteamIdentities.Count > 0)
+                    list = match.MatchSelectedSteamIdentities
+                        .Select(x => Strings.Trim(x.SteamIdentityId + ";" + Environment.NewLine)).ToList();
+                else if (listOfSteamIdentietiesWhichCanPlay.Count > 0)
+                    list = listOfSteamIdentietiesWhichCanPlay.Select(x => Strings.Trim(x.SteamIdentityId)).ToList();
 
+                //GetAllAdminsForTheMatch
+                var mods = new List<string>();
+                mods = listOfSteamIdentietiesWhichCanPlay.Where(x => x.OverWriteRole == "Mod" || x.OverWriteRole == "Admin").Select(x=>x.SteamIdentityId).ToList();
+                foreach (var mod in mods)
+                {
+                    await _serverSelectedModsService.Insert(new ServerSelectedMods()
+                    {
+                        LiteDbUser = listOfSteamIdentietiesWhichCanPlay.FirstOrDefault(x=>x.SteamIdentityId==mod)?.SteamIdentity.LiteDbUser,
+                        PavlovServer = server
+                        
+                    });
+                }
+                
                 //Write whitelist and set server settings
 
                 try
                 {
                     RconStatic.WriteFile(server,
                         server.ServerFolderPath + FilePaths.WhiteList,
-                        Strings.Join(list.ToArray()),_notifyService);
+                        Strings.Join(list.ToArray()), _notifyService);
                 }
                 catch (Exception e)
                 {
                     DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not write whitelist for the match! " +
-                                      e.Message,LogEventLevel.Fatal,_notifyService , result);
+                                                                    e.Message, LogEventLevel.Fatal, _notifyService,
+                        result);
+                }                
+                
+                try
+                {
+                    RconStatic.WriteFile(server,
+                        server.ServerFolderPath + FilePaths.ModList,
+                        Strings.Join(mods.ToArray()), _notifyService);
+                }
+                catch (Exception e)
+                {
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not write modlist for the match! " +
+                                                                    e.Message, LogEventLevel.Fatal, _notifyService,
+                        result);
                 }
 
                 var serverSettings = new PavlovServerGameIni
@@ -240,7 +272,7 @@ namespace PavlovRconWebserver.Services
                     BalanceTableURL = null,
                     MapRotation = new List<PavlovServerGameIniMap>
                     {
-                        new PavlovServerGameIniMap
+                        new()
                         {
                             MapLabel = match.MapId,
                             GameMode = match.GameMode
@@ -248,46 +280,28 @@ namespace PavlovRconWebserver.Services
                     }
                 };
                 var map = await _mapsService.FindOne(match.MapId.Replace("UGC", ""));
-                serverSettings.SaveToFile(server, new ServerSelectedMap[] {
-                    new ServerSelectedMap
+                serverSettings.SaveToFile(server, new[]
+                {
+                    new ServerSelectedMap()
                     {
                         Map = map,
                         GameMode = match.GameMode
                     }
-                },_notifyService);
-                await RconStatic.SystemDStart(server,_pavlovServerService);
+                }, _notifyService);
+                await RconStatic.SystemDStart(server, _pavlovServerService);
 
                 //StartWatchServiceForThisMatch
                 match.Status = Status.StartetWaitingForPlayer;
                 await Upsert(match);
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Start backgroundjob",LogEventLevel.Verbose,_notifyService);
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Start backgroundjob", LogEventLevel.Verbose,
+                    _notifyService);
                 BackgroundJob.Schedule(
                     () => MatchInspector(authType, match.Id),
                     new TimeSpan(0, 0, 5)); // ChecjServerState
             }
             catch (Exception e)
             {
-                switch (e)
-                {
-                    case SshAuthenticationException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not Login over ssh!",LogEventLevel.Fatal,_notifyService , result);
-                        break;
-                    case SshConnectionException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host over ssh!",LogEventLevel.Fatal,_notifyService , result);
-                        break;
-                    case SshOperationTimeoutException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host cause of timeout over ssh!",LogEventLevel.Fatal,_notifyService , result);
-                        break;
-                    case SocketException _:
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not connect to host!",LogEventLevel.Fatal ,_notifyService, result);
-                        break;
-                    default:
-                    {
-                        clientSsh.Disconnect();
-                        clientSftp.Disconnect();
-                        throw;
-                    }
-                }
+                RconStatic.ExcpetionHandlingSshSftp(server, _notifyService, e, result, clientSsh, clientSftp);
             }
             finally
             {
@@ -302,14 +316,15 @@ namespace PavlovRconWebserver.Services
         public async Task MatchInspector(RconService.AuthType authType,
             int matchId)
         {
-            DataBaseLogger.LogToDatabaseAndResultPlusNotify("MatchInspector started!",LogEventLevel.Verbose,_notifyService);
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify("MatchInspector started!", LogEventLevel.Verbose,
+                _notifyService);
             var match = await FindOne(matchId);
 
             try
             {
                 if (match.ForceSop)
                 {
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Endmatch!",LogEventLevel.Verbose,_notifyService);
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Endmatch!", LogEventLevel.Verbose, _notifyService);
                     await EndMatch(match.PavlovServer, match);
                     return;
                 }
@@ -319,12 +334,14 @@ namespace PavlovRconWebserver.Services
                 {
                     case Status.StartetWaitingForPlayer:
 
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("TryToStartMatch started!",LogEventLevel.Verbose,_notifyService);
+                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("TryToStartMatch started!",
+                            LogEventLevel.Verbose, _notifyService);
                         await TryToStartMatch(match.PavlovServer, match);
                         break;
                     case Status.OnGoing:
 
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("OnGoing!",LogEventLevel.Verbose,_notifyService);
+                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("OnGoing!", LogEventLevel.Verbose,
+                            _notifyService);
                         var serverInfo = await _pavlovServerInfoService.FindServer(match.PavlovServer.Id);
                         match.PlayerResults =
                             (await _pavlovServerPlayerService.FindAllFromServer(match.PavlovServer.Id)).ToList();
@@ -333,7 +350,8 @@ namespace PavlovRconWebserver.Services
 
                         if (serverInfo.RoundState == "Ended")
                         {
-                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Round ended!",LogEventLevel.Verbose,_notifyService);
+                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Round ended!", LogEventLevel.Verbose,
+                                _notifyService);
                             match.PlayerResults =
                                 (await _pavlovServerPlayerService.FindAllFromServer(match.PavlovServer.Id)).ToList();
                             match.EndInfo = serverInfo;
@@ -346,7 +364,7 @@ namespace PavlovRconWebserver.Services
             }
             catch (Exception e)
             {
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message,LogEventLevel.Verbose,_notifyService);
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message, LogEventLevel.Verbose, _notifyService);
             }
 
             if (match.Status != Status.Finshed)
@@ -358,17 +376,24 @@ namespace PavlovRconWebserver.Services
         private async Task EndMatch(PavlovServer server, Match match)
         {
             match.Status = Status.Finshed;
+            var mods = await _serverSelectedModsService.FindAllFrom(server);
+            foreach (var mod in mods)
+            {
+                await _serverSelectedModsService.Delete(mod.Id);
+            }
             await Upsert(match);
-            await RconStatic.SystemDStop(server,_pavlovServerService);
-            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Stopped server!",LogEventLevel.Verbose,_notifyService);
+            await RconStatic.SystemDStop(server, _pavlovServerService);
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Stopped server!", LogEventLevel.Verbose, _notifyService);
         }
 
 
         private async Task TryToStartMatch(PavlovServer server, Match match)
         {
             var playerList = (await _pavlovServerPlayerService.FindAllFromServer(server.Id)).ToList();
-            DataBaseLogger.LogToDatabaseAndResultPlusNotify(" playerlistcount = " + playerList.Count(),LogEventLevel.Verbose,_notifyService);
-            DataBaseLogger.LogToDatabaseAndResultPlusNotify(" match.PlayerSlots  = " + match.PlayerSlots,LogEventLevel.Verbose,_notifyService);
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify(" playerlistcount = " + playerList.Count(),
+                LogEventLevel.Verbose, _notifyService);
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify(" match.PlayerSlots  = " + match.PlayerSlots,
+                LogEventLevel.Verbose, _notifyService);
             if (playerList.Count() == match.PlayerSlots || match.ForceStart) //All Player are here
             {
                 //Do Players in the right team
@@ -380,19 +405,22 @@ namespace PavlovRconWebserver.Services
                         x.SteamIdentityId == pavlovServerPlayer.UniqueId);
                     if (team0 != null)
                     {
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("SwitchTeam 0 " + pavlovServerPlayer.UniqueId,LogEventLevel.Verbose,_notifyService);
+                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("SwitchTeam 0 " + pavlovServerPlayer.UniqueId,
+                            LogEventLevel.Verbose, _notifyService);
                         SendCommandTillDone(server, "SwitchTeam 0 " + pavlovServerPlayer.UniqueId);
                     }
                     else if (team1 != null)
                     {
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("SwitchTeam 1 " + pavlovServerPlayer.UniqueId,LogEventLevel.Verbose,_notifyService);
+                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("SwitchTeam 1 " + pavlovServerPlayer.UniqueId,
+                            LogEventLevel.Verbose, _notifyService);
                         SendCommandTillDone(server, "SwitchTeam 1 " + pavlovServerPlayer.UniqueId);
                     }
                 }
                 //All Players are on the right team now
                 //ResetSND
 
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify("start ResetSND!",LogEventLevel.Verbose,_notifyService);
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify("start ResetSND!", LogEventLevel.Verbose,
+                    _notifyService);
                 SendCommandTillDone(server, "ResetSND");
                 match.Status = Status.OnGoing;
                 await Upsert(match);
@@ -414,12 +442,12 @@ namespace PavlovRconWebserver.Services
             while (true)
                 try
                 {
-                    var result = await RconStatic.SendCommandSShTunnel(server, command,_notifyService);
+                    var result = await RconStatic.SendCommandSShTunnel(server, command, _notifyService);
                     return result;
                 }
                 catch (CommandException e)
                 {
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message,LogEventLevel.Verbose,_notifyService);
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message, LogEventLevel.Verbose, _notifyService);
                     throw;
                 }
         }
@@ -436,17 +464,20 @@ namespace PavlovRconWebserver.Services
                 match.MatchTeam1SelectedSteamIdentities =
                     (await _matchSelectedTeamSteamIdentitiesService.FindAllSelectedForMatchAndTeam(matchId, 1))
                     .ToList();
+                match.MatchSelectedSteamIdentities =
+                    (await _matchSelectedSteamIdentitiesService.FindAllSelectedForMatch(matchId))
+                    .ToList();
                 var server = await _pavlovServerService.FindOne(match.PavlovServer.Id);
 
                 var connectionResult = new ConnectionResult();
                 if (!string.IsNullOrEmpty(server.SshServer.SshPassphrase) &&
-                    !string.IsNullOrEmpty(server.SshServer.SshKeyFileName) &&
+                    (server.SshServer.SshKeyFileName==null||!server.SshServer.SshKeyFileName.Any()) &&
                     File.Exists("KeyFiles/" + server.SshServer.SshKeyFileName) &&
                     !string.IsNullOrEmpty(server.SshServer.SshUsername))
                     connectionResult = await StartMatchWithAuth(
                         RconService.AuthType.PrivateKeyPassphrase, server, match);
 
-                if (!connectionResult.Success && !string.IsNullOrEmpty(server.SshServer.SshKeyFileName) &&
+                if (!connectionResult.Success && (server.SshServer.SshKeyFileName==null||!server.SshServer.SshKeyFileName.Any())&&
                     File.Exists("KeyFiles/" + server.SshServer.SshKeyFileName) &&
                     !string.IsNullOrEmpty(server.SshServer.SshUsername))
                     connectionResult = await StartMatchWithAuth(
@@ -466,6 +497,38 @@ namespace PavlovRconWebserver.Services
                 exceptions.Add(e);
             }
         }
+        
+        
+
+        public async Task<Match[]> FindAllMatchesWhereTheUserHasRights(ClaimsPrincipal cp, LiteDbUser user)
+        {
+            //var matches = matchSelectedSteamIdentities.Select(x=>x.matchId).Distinct()
+            var matches = await FindAll();
+            if (cp.IsInRole("Admin") || cp.IsInRole("Mod") || cp.IsInRole("Captain"))
+            {
+                return matches;
+            }
+            var ownSteamIdentity = await _steamIdentityService.FindOne(user.Id);
+
+            var tmpMatches = new List<Match>();
+            foreach (var match in matches)
+            {
+                var matchTeamSelectedSteamIdentities = (await _matchSelectedTeamSteamIdentitiesService.FindAllSelectedForMatchAndTeam(match.Id,0)).ToList();
+                matchTeamSelectedSteamIdentities.AddRange( await _matchSelectedTeamSteamIdentitiesService.FindAllSelectedForMatchAndTeam(match.Id,1));
+
+                var role = matchTeamSelectedSteamIdentities.Where(x => x.SteamIdentityId == ownSteamIdentity.Id)
+                    .Select(x => x.OverWriteRole).FirstOrDefault();
+
+
+                if (!string.IsNullOrEmpty(role)&&(role=="Mod"||role=="Admin"))
+                {
+                    tmpMatches.Add(match);
+                }
+            }
+
+            return tmpMatches.ToArray();
+
+        }
 
 
         public async Task<Match[]> FindAll()
@@ -478,10 +541,10 @@ namespace PavlovRconWebserver.Services
         public async Task<Match> FindOne(int id)
         {
             var selected = await _matchSelectedSteamIdentitiesService.FindAllSelectedForMatch(id);
-            var match = (await _liteDb.LiteDatabaseAsync.GetCollection<Match>("Match")
+            var match = await _liteDb.LiteDatabaseAsync.GetCollection<Match>("Match")
                 .Include(x => x.Team0)
                 .Include(x => x.Team1)
-                .FindOneAsync(x => x.Id == id));
+                .FindOneAsync(x => x.Id == id);
             if (match == null) return null;
             match.PavlovServer = await _pavlovServerService.FindOne(match.PavlovServer.Id);
             match.MatchSelectedSteamIdentities = selected.ToList();

@@ -10,7 +10,6 @@ using PavlovRconWebserver.Services;
 
 namespace PavlovRconWebserver.Controllers
 {
-    
     [Authorize(Roles = CustomRoles.Admin)]
     public class RoleController : Controller
     {
@@ -41,7 +40,6 @@ namespace PavlovRconWebserver.Controllers
         public async Task<IActionResult> Index()
         {
             return View(roleManager.Roles);
-            
         }
 
         [HttpGet]
@@ -69,7 +67,7 @@ namespace PavlovRconWebserver.Controllers
             return View(name);
         }
 
-        [HttpGet]
+        [HttpGet("[controller]/Update/{id}")]
         public async Task<IActionResult> Update(string id)
         {
             var role = await roleManager.FindByIdAsync(id);

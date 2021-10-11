@@ -1,6 +1,10 @@
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Hangfire.Annotations;
 using LiteDB;
+using LiteDB.Identity.Models;
 
 namespace PavlovRconWebserver.Models
 {
@@ -51,5 +55,13 @@ namespace PavlovRconWebserver.Models
         public ServerServiceState ServerServiceState { get; set; } = ServerServiceState.none;
 
         [BsonRef("SshServer")] public SshServer SshServer { get; set; }
+
+        [DisplayName("Owner (ServerRent)")]
+        [CanBeNull]
+        public LiteDbUser Owner { get; set; }
+        
+        
+        [NotMapped] [BsonIgnore] public List<LiteDbUser> LiteDbUsers { get; set; }
+        [NotMapped] [BsonIgnore] public string LiteDbUserId { get; set; }
     }
 }

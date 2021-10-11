@@ -15,14 +15,18 @@ using Serilog;
 
 namespace PavlovRconWebserver
 {
-
     public static class CustomRoles
     {
         public const string Admin = "Admin";
         public const string Mod = "Admin,Mod";
         public const string Captain = "Captain,Admin,Mod";
-        public const string User = "User,Captain,Mod,Admin";
+        public const string User = "User,Captain,Mod,Admin,OnPremise,ServerRent";
+        public const string OnPremise = "OnPremise,Admin";
+        public const string OnPremiseOrRent = "OnPremise,ServerRent,Admin";
+        public const string ServerRent = "ServerRent,Admin";
+        public const string AnyOtherThanUser = "Captain,Mod,Admin,OnPremise,ServerRent";
     }
+
     public class Startup
     {
         public Startup(IConfiguration configuration)
@@ -35,13 +39,8 @@ namespace PavlovRconWebserver
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            
-
             services.AddHangfire(x => x.UseMemoryStorage());
-            services.AddHangfireServer(x =>
-            {
-                x.WorkerCount = 10;
-            }); 
+            services.AddHangfireServer(x => { x.WorkerCount = 10; });
 
             GlobalConfiguration.Configuration.UseMemoryStorage();
             // JobStorage.Current = new MemoryStorage();
@@ -72,8 +71,8 @@ namespace PavlovRconWebserver
             services.AddScoped<LogService>();
             services.AddSingleton(Configuration);
             services.AddScoped<IEmailSender, EmailSender>();
-            
-            
+
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v0.0.1", new OpenApiInfo
@@ -89,26 +88,21 @@ namespace PavlovRconWebserver
                 config.DurationInSeconds = 20;
                 config.Position = Position.Right;
                 config.Gravity = Gravity.Top;
-
             });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment()||env.EnvironmentName == "Test")
+            if (env.IsDevelopment() || env.EnvironmentName == "Test")
                 app.UseDeveloperExceptionPage();
             else
                 app.UseExceptionHandler("/Home/Error");
 
             app.UseSerilogRequestLogging();
             if (env.EnvironmentName != "Test")
-            {
-
                 if (env.EnvironmentName == "Development")
                 {
-
-
                     // Enable middleware to serve generated Swagger as a JSON endpoint.
                     app.UseSwagger();
 
@@ -119,7 +113,6 @@ namespace PavlovRconWebserver
                         c.SwaggerEndpoint("/swagger/v0.0.1/swagger.json", "Pavlov Rcon Webserver V0.0.3");
                     });
                 }
-            }
 
             app.UseStaticFiles();
 
@@ -132,25 +125,24 @@ namespace PavlovRconWebserver
                 ,
                 new DashboardOptions
                 {
-                    Authorization = new[] { new HangfireAuthorizeFilter() }
+                    Authorization = new[] {new HangfireAuthorizeFilter()}
                 }
             );
-            
-            
-            
+
+
             app.UseEndpoints(endpoints => { endpoints.MapDefaultControllerRoute(); });
             if (env.EnvironmentName != "Test")
-            {
-
                 using (var serviceScope =
                     app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope())
                 {
                     var steamService = serviceScope.ServiceProvider.GetService<SteamService>();
                     var rconService = serviceScope.ServiceProvider.GetService<RconService>();
                     var pavlovServerService = serviceScope.ServiceProvider.GetService<PavlovServerService>();
+                    var userService = serviceScope.ServiceProvider.GetService<UserService>();
+
+                    userService?.CreateDefaultRoles().GetAwaiter().GetResult();
                     if (env.EnvironmentName != "Development")
                     {
-
                         RecurringJob.AddOrUpdate(
                             () => steamService.DeleteAllUnsedMapsFromAllServers(),
                             Cron.Daily(3)); // Delete all unusedMaps every day on 3 in the morning
@@ -172,12 +164,7 @@ namespace PavlovRconWebserver
                     RecurringJob.AddOrUpdate(
                         () => rconService.ReloadPlayerListFromServerAndTheServerInfo(true),
                         Cron.Minutely()); // Check server states
-                    
                 }
-            }
         }
-        
-        
     }
 }
-

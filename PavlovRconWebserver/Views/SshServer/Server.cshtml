@@ -1,3 +1,5 @@
+@using LiteDB
+@using LiteDB.Identity.Models
 @model SshServer
 
 @{
@@ -8,7 +10,15 @@
     {
         placeholder = "Leave blank if you don't want to update it";
     }
-    var keyFiles = Model.SshKeyFileNames.Prepend("");
+    
+    var users = new List<LiteDbUser>();
+
+        users = Model.LiteDbUsers;
+        users = users.Prepend(new LiteDbUser
+        {
+            NormalizedUserName = "nothingSet",
+            Id = new ObjectId()
+        }).ToList();
 
 }
 
@@ -22,9 +32,7 @@
         <li>I can not recommend to take the root user.</li>
     </ul>
 </div>
-
-
-<form asp-controller="SshServer" asp-action="SaveServer" method="post">
+<form asp-controller="SshServer" asp-action="SaveServer" method="post" enctype="multipart/form-data">
     <div asp-validation-summary="All" class="text-danger"></div>
     <div class="col-md-11">
         <div class="card m-1 m-1">
@@ -71,12 +79,12 @@
                         <span asp-validation-for="SshPassword" class="text-danger"></span>
                     </div>
                     <div class="form-group col-md-6">
-                        <label asp-for="SshKeyFileName"></label>
-                        @Html.DropDownListFor(m => m.SshKeyFileName, new SelectList(keyFiles, "", "", Model.SshKeyFileName), new {@class = "form-control form-select form-control-sm"})
+                        <label asp-for="SshKeyFileNameForm"></label>
                         <p class="form-text">
-                            @ViewData.ModelMetadata.Properties.Where(m => m.PropertyName == "SshKeyFileName").FirstOrDefault().Description
+                            @ViewData.ModelMetadata.Properties.Where(m => m.PropertyName == "SshKeyFileNameForm").FirstOrDefault().Description
                         </p>
-                        <span asp-validation-for="SshKeyFileName" class="text-danger"></span>
+                        <input asp-for="SshKeyFileNameForm" class="form-control-file" />
+                        <span asp-validation-for="SshKeyFileNameForm" class="text-danger"></span>
                     </div>
                 </div>
 
@@ -94,7 +102,7 @@
             </div>
         </div>
         <div class="card m-1">
-            <div class="card-header">Steam (WIP)</div>
+            <div class="card-header">Steam</div>
             <div class="card-body">
                 <div class="card m-1 bg-info">
                     <ul>
@@ -118,6 +126,20 @@
                     </div>
                 </div>
 
+                
+            </div>
+        </div>
+        <div class="card m-1">
+            <div class="card-header">On Premise</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="form-group col-md-12">
+                        <label asp-for="LiteDbUserId"></label>
+                        @Html.DropDownListFor(m => m.LiteDbUserId, new SelectList(users, "Id", "NormalizedUserName", Model.Owner?.Id), new {@class = "form-control form-control-sm form-select "})
+                    </div>
+                </div>
+
+                
             </div>
         </div>
 

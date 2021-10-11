@@ -16,16 +16,10 @@ namespace PavlovRconWebserver.Models
 
         [BsonIgnore] [NotMapped] public int PavlovServerId { get; set; }
 
-        [BsonIgnore]
-        [NotMapped]
-        public List<string> MatchSelectedSteamIdentitiesStrings { get; set; } = new List<string>();
+        [BsonIgnore] [NotMapped] public List<string> MatchSelectedSteamIdentitiesStrings { get; set; } = new();
 
-        [BsonIgnore]
-        [NotMapped]
-        public List<string> MatchTeam0SelectedSteamIdentitiesStrings { get; set; } = new List<string>();
+        [BsonIgnore] [NotMapped] public List<string> MatchTeam0SelectedSteamIdentitiesStrings { get; set; } = new();
 
-        [BsonIgnore]
-        [NotMapped]
-        public List<string> MatchTeam1SelectedSteamIdentitiesStrings { get; set; } = new List<string>();
+        [BsonIgnore] [NotMapped] public List<string> MatchTeam1SelectedSteamIdentitiesStrings { get; set; } = new();
     }
 }

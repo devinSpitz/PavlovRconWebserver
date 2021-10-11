@@ -34,21 +34,21 @@ namespace PavlovRconWebserver.Models
         [BsonIgnore]
         [NotMapped]
         public List<MatchSelectedSteamIdentity> MatchSelectedSteamIdentities { get; set; } =
-            new List<MatchSelectedSteamIdentity>();
+            new();
 
         [BsonIgnore]
         [NotMapped]
         public List<MatchTeamSelectedSteamIdentity> MatchTeam0SelectedSteamIdentities { get; set; } =
-            new List<MatchTeamSelectedSteamIdentity>();
+            new();
 
         [BsonIgnore]
         [NotMapped]
         public List<MatchTeamSelectedSteamIdentity> MatchTeam1SelectedSteamIdentities { get; set; } =
-            new List<MatchTeamSelectedSteamIdentity>();
+            new();
 
-        public List<PavlovServerPlayer> PlayerResults { get; set; } = new List<PavlovServerPlayer>();
+        public List<PavlovServerPlayer> PlayerResults { get; set; } = new();
 
-        public ServerInfo EndInfo { get; set; } = new ServerInfo();
+        public ServerInfo EndInfo { get; set; } = new();
 
         [BsonRef("PavlovServer")] public PavlovServer PavlovServer { get; set; }
 

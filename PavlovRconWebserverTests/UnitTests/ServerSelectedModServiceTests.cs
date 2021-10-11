@@ -13,14 +13,16 @@ namespace PavlovRconWebserverTests.UnitTests
 {
     public class ServerSelectedModServiceTests
     {
-        private readonly IServicesBuilder services;
         private readonly AutoMocker _mocker;
+        private readonly PavlovServerService _pavlovServerService;
         private readonly ServerSelectedModsService _serverSelectedModsService;
+        private readonly SshServerSerivce _sshServerSerivce;
         private readonly SteamIdentityService _steamIdentityService;
         private readonly UserManager<LiteDbUser> _userManager;
-        private readonly PavlovServerService _pavlovServerService;
-        private readonly SshServerSerivce _sshServerSerivce;
-        public ServerSelectedModServiceTests() {
+        private readonly IServicesBuilder services;
+
+        public ServerSelectedModServiceTests()
+        {
             services = new ServicesBuilder();
             _mocker = new AutoMocker();
             services.Build(_mocker);
@@ -30,9 +32,11 @@ namespace PavlovRconWebserverTests.UnitTests
             _sshServerSerivce = _mocker.CreateInstance<SshServerSerivce>();
             _userManager = services.GetUserManager();
         }
-        public static LiteDbUser InsertUserAndSteamIdentity(SteamIdentityService steamIdentityService,UserManager<LiteDbUser> userManager,string userName = "Test",string steamIdentityId = "1")
+
+        public static LiteDbUser InsertUserAndSteamIdentity(SteamIdentityService steamIdentityService,
+            UserManager<LiteDbUser> userManager, string userName = "Test", string steamIdentityId = "1")
         {
-            var user = UserServiceTests.SetUpUser(userManager,userName);
+            var user = UserServiceTests.SetUpUser(userManager, userName);
             var identity = SteamIdentityServiceTest.SteamIdentity(steamIdentityId);
             identity.LiteDbUser = user;
             identity.LiteDbUserId = user.Id.ToString();
@@ -40,13 +44,15 @@ namespace PavlovRconWebserverTests.UnitTests
             return user;
         }
 
-        private static PavlovServer[] InsertToPavlovServer(LiteDbUser user,SshServerSerivce sshServerSerivce,PavlovServerService pavlovServerService,ServerSelectedModsService serverSelectedModsService,bool withInsert = true)
+        private static PavlovServer[] InsertToPavlovServer(LiteDbUser user, SshServerSerivce sshServerSerivce,
+            PavlovServerService pavlovServerService, ServerSelectedModsService serverSelectedModsService,
+            bool withInsert = true)
         {
             var pavlovServers =
                 PavlovServerServiceTests.InitializePavlovServer(sshServerSerivce, pavlovServerService);
-            
-            if(withInsert)
-                serverSelectedModsService.Insert(new ServerSelectedMods()
+
+            if (withInsert)
+                serverSelectedModsService.Insert(new ServerSelectedMods
                 {
                     LiteDbUser = user,
                     PavlovServer = pavlovServers.First()
@@ -58,11 +64,12 @@ namespace PavlovRconWebserverTests.UnitTests
         public void SteamIdentitiesToReturn()
         {
             // arrange
-            var user = InsertUserAndSteamIdentity(_steamIdentityService,_userManager);
-            var pavlovServers = InsertToPavlovServer(user,_sshServerSerivce,_pavlovServerService,_serverSelectedModsService,false);
+            var user = InsertUserAndSteamIdentity(_steamIdentityService, _userManager);
+            var pavlovServers = InsertToPavlovServer(user, _sshServerSerivce, _pavlovServerService,
+                _serverSelectedModsService, false);
             // act
             var steamIdentities = _serverSelectedModsService
-                .SteamIdentitiesToReturn(new List<string>() {user.Id.ToString()}, pavlovServers.First(),
+                .SteamIdentitiesToReturn(new List<string> {user.Id.ToString()}, pavlovServers.First(),
                     _steamIdentityService.FindAll().GetAwaiter().GetResult().ToList()).GetAwaiter().GetResult();
             var steamIdentitiesInserted =
                 _serverSelectedModsService.FindAllFrom(pavlovServers.First()).GetAwaiter().GetResult();
@@ -70,29 +77,31 @@ namespace PavlovRconWebserverTests.UnitTests
             steamIdentities.Should().HaveCount(1);
             steamIdentitiesInserted.Should().HaveCount(1);
         }
-        
+
         [Fact]
         public void SteamIdentitiesToReturnWithoutInsert()
         {
             // arrange
-            var user = InsertUserAndSteamIdentity(_steamIdentityService,_userManager);
-            var pavlovServers = InsertToPavlovServer(user,_sshServerSerivce,_pavlovServerService,_serverSelectedModsService,false);
+            var user = InsertUserAndSteamIdentity(_steamIdentityService, _userManager);
+            var pavlovServers = InsertToPavlovServer(user, _sshServerSerivce, _pavlovServerService,
+                _serverSelectedModsService, false);
             // act
             var steamIdentities = _serverSelectedModsService
-                .SteamIdentitiesToReturn(new List<string>() {user.Id.ToString()}, pavlovServers.First(),
-                    _steamIdentityService.FindAll().GetAwaiter().GetResult().ToList(),false).GetAwaiter().GetResult();
+                .SteamIdentitiesToReturn(new List<string> {user.Id.ToString()}, pavlovServers.First(),
+                    _steamIdentityService.FindAll().GetAwaiter().GetResult().ToList(), false).GetAwaiter().GetResult();
             var steamIdentitiesInserted =
                 _serverSelectedModsService.FindAllFrom(pavlovServers.First()).GetAwaiter().GetResult();
             // assert
             steamIdentities.Should().HaveCount(1);
             steamIdentitiesInserted.Should().BeNullOrEmpty();
-        } 
-        
+        }
+
         [Fact]
         public void FindAll()
         {
             // arrange
-            InsertToPavlovServer(InsertUserAndSteamIdentity(_steamIdentityService,_userManager),_sshServerSerivce,_pavlovServerService,_serverSelectedModsService);
+            InsertToPavlovServer(InsertUserAndSteamIdentity(_steamIdentityService, _userManager), _sshServerSerivce,
+                _pavlovServerService, _serverSelectedModsService);
             // act
             var steamIdentities = _serverSelectedModsService.FindAll().GetAwaiter().GetResult();
             // assert
@@ -104,11 +113,11 @@ namespace PavlovRconWebserverTests.UnitTests
         public void Delete()
         {
             // arrange
-            var user = InsertUserAndSteamIdentity(_steamIdentityService,_userManager);
-            InsertToPavlovServer(user,_sshServerSerivce,_pavlovServerService,_serverSelectedModsService);
+            var user = InsertUserAndSteamIdentity(_steamIdentityService, _userManager);
+            InsertToPavlovServer(user, _sshServerSerivce, _pavlovServerService, _serverSelectedModsService);
 
             var steamIdentities = _serverSelectedModsService.FindAll().GetAwaiter().GetResult();
-            
+
             // act
             var result = _serverSelectedModsService.Delete(steamIdentities.First().Id).GetAwaiter().GetResult();
             steamIdentities = _serverSelectedModsService.FindAll().GetAwaiter().GetResult();
@@ -116,6 +125,5 @@ namespace PavlovRconWebserverTests.UnitTests
             result.Should().BeTrue();
             steamIdentities.Should().BeNullOrEmpty();
         }
-
     }
 }

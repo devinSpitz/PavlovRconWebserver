@@ -11,8 +11,8 @@ namespace PavlovRconWebserver.Services
 {
     public class ServerSelectedWhitelistService
     {
-        private readonly IToastifyService _notifyService;
         private readonly ILiteDbIdentityAsyncContext _liteDb;
+        private readonly IToastifyService _notifyService;
 
         public ServerSelectedWhitelistService(ILiteDbIdentityAsyncContext liteDbContext,
             IToastifyService notyfService)
@@ -44,7 +44,8 @@ namespace PavlovRconWebserver.Services
         {
             var lines = steamIds.Select(steamIdentity => steamIdentity + ";").ToArray();
             var content = string.Join(Environment.NewLine, lines);
-            RconStatic.WriteFile(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.WhiteList, content,_notifyService);
+            RconStatic.WriteFile(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.WhiteList, content,
+                _notifyService);
             return true;
         }
 
@@ -102,7 +103,8 @@ namespace PavlovRconWebserver.Services
 
         public async Task<bool> Delete(int id)
         {
-            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedWhiteList>("ServerSelectedWhiteList").DeleteAsync(id);
+            return await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedWhiteList>("ServerSelectedWhiteList")
+                .DeleteAsync(id);
         }
     }
 }

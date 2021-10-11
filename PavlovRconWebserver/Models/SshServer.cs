@@ -2,7 +2,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Hangfire.Annotations;
 using LiteDB;
+using LiteDB.Identity.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace PavlovRconWebserver.Models
 {
@@ -25,9 +28,8 @@ namespace PavlovRconWebserver.Models
 
         [DisplayName("SSH key filename")]
         [Display(Description = "Select a filename")]
-        public string SshKeyFileName { get; set; }
+        public byte[] SshKeyFileName { get; set; }
 
-        [NotMapped] [BsonIgnore] public List<string> SshKeyFileNames { get; set; } = new List<string>();
 
         [DisplayName("SSH passphrase")]
         [Display(Description = "CAUTION: WILL BE SAVED BLANK")]
@@ -41,5 +43,21 @@ namespace PavlovRconWebserver.Models
         public bool SteamIsAvailable { get; set; } = false;
 
         [DisplayName("SteamCMD folder path")] public string SteamPath { get; set; }
+
+
+        [DisplayName("Owner (OnPremise)")]
+        [CanBeNull]
+        public LiteDbUser Owner { get; set; }
+        
+        [BsonIgnore]
+        [NotMapped]
+        [CanBeNull]
+        [DisplayName("SSH key file")]
+        [Display(Description = "Select a file (only if you want to overwrite the possible existing one)")]
+        public IFormFile SshKeyFileNameForm { get; set; }
+        
+        
+        [NotMapped] [BsonIgnore] public List<LiteDbUser> LiteDbUsers { get; set; }
+        [NotMapped] [BsonIgnore] public string LiteDbUserId { get; set; }
     }
 }

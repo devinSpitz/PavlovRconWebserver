@@ -9,8 +9,8 @@ namespace PavlovRconWebserver.Services
 {
     public class MatchSelectedSteamIdentitiesService
     {
-        private readonly IToastifyService _notifyService;
         private readonly ILiteDbIdentityAsyncContext _liteDb;
+        private readonly IToastifyService _notifyService;
 
         public MatchSelectedSteamIdentitiesService(ILiteDbIdentityAsyncContext liteDbContext,
             IToastifyService notyfService)
@@ -21,19 +21,22 @@ namespace PavlovRconWebserver.Services
 
         public async Task<int> RemoveFromMatch(int matchId)
         {
-            return (await _liteDb.LiteDatabaseAsync.GetCollection<MatchSelectedSteamIdentity>("MatchSelectedSteamIdentity")
-                .DeleteManyAsync(x => x.matchId == matchId));
+            return await _liteDb.LiteDatabaseAsync
+                .GetCollection<MatchSelectedSteamIdentity>("MatchSelectedSteamIdentity")
+                .DeleteManyAsync(x => x.matchId == matchId);
         }
 
         public async Task<MatchSelectedSteamIdentity[]> FindAll()
         {
-            return (await _liteDb.LiteDatabaseAsync.GetCollection<MatchSelectedSteamIdentity>("MatchSelectedSteamIdentity")
+            return (await _liteDb.LiteDatabaseAsync
+                .GetCollection<MatchSelectedSteamIdentity>("MatchSelectedSteamIdentity")
                 .FindAllAsync()).ToArray();
         }
 
         public async Task<MatchSelectedSteamIdentity[]> FindAllSelectedForMatch(int matchId)
         {
-            return (await _liteDb.LiteDatabaseAsync.GetCollection<MatchSelectedSteamIdentity>("MatchSelectedSteamIdentity")
+            return (await _liteDb.LiteDatabaseAsync
+                .GetCollection<MatchSelectedSteamIdentity>("MatchSelectedSteamIdentity")
                 .FindAllAsync()).Where(x => x.matchId == matchId).ToArray();
         }
 
@@ -43,7 +46,8 @@ namespace PavlovRconWebserver.Services
                 await _liteDb.LiteDatabaseAsync.GetCollection<MatchSelectedSteamIdentity>("MatchSelectedSteamIdentity")
                     .DeleteManyAsync(x => x.matchId == matchId);
 
-            return await _liteDb.LiteDatabaseAsync.GetCollection<MatchSelectedSteamIdentity>("MatchSelectedSteamIdentity")
+            return await _liteDb.LiteDatabaseAsync
+                .GetCollection<MatchSelectedSteamIdentity>("MatchSelectedSteamIdentity")
                 .UpsertAsync(matchSelectedSteamIdentities);
         }
     }
