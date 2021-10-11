@@ -75,14 +75,14 @@ Offers:
    2.3 You can appoint mods and configure maps yourself etc.  
    ![Rent](./PavlovRconWebserver/Pictures/Rent.png?raw=true)
    2.4 There is no uptime guarantee and no other guarantee. This package mainly supports this software.  
-   2.5 If you are interested just contact: <a href="mailto:&#x64;&#x65;&#x76;&#x69;&#x6e;&#x40;&#x73;&#x70;&#x69;&#x74;&#x7a;&#x65;&#x6e;&#x2e;&#x73;&#x6f;&#x6c;&#x75;&#x74;&#x69;&#x6f;&#x6e;&#x73;">&#x64;&#x65;&#x76;&#x69;&#x6e;&#x40;&#x73;&#x70;&#x69;&#x74;&#x7a;&#x65;&#x6e;&#x2e;&#x73;&#x6f;&#x6c;&#x75;&#x74;&#x69;&#x6f;&#x6e;&#x73;</a> melden.
+   2.5 If you are interested just contact: <a href="mailto:&#x64;&#x65;&#x76;&#x69;&#x6e;&#x40;&#x73;&#x70;&#x69;&#x74;&#x7a;&#x65;&#x6e;&#x2e;&#x73;&#x6f;&#x6c;&#x75;&#x74;&#x69;&#x6f;&#x6e;&#x73;">&#x64;&#x65;&#x76;&#x69;&#x6e;&#x40;&#x73;&#x70;&#x69;&#x74;&#x7a;&#x65;&#x6e;&#x2e;&#x73;&#x6f;&#x6c;&#x75;&#x74;&#x69;&#x6f;&#x6e;&#x73;</a>
 3. you can now get an account with the on Promise Role for 30$/€ a month.  
    3.1 You will need your own Debian/Ubuntu server that has a static IP.  
    3.2 You will get support with normally answer within 2 working days. Time zone Europe/Zurich from 9:00 to 16:00 Mon-Fri.  
    3.3 You only have to enter your ssh login data and install steamcmd to create new Pavlov servers with this software.  
    3.4 You can then also appoint mods yourself etc. and everything that a rental can do.  
    3.5 There is no uptime guarantee and no other guarantee. This package mainly supports this software.  
-   3.6 If you are interested just contact: <a href="mailto:&#x64;&#x65;&#x76;&#x69;&#x6e;&#x40;&#x73;&#x70;&#x69;&#x74;&#x7a;&#x65;&#x6e;&#x2e;&#x73;&#x6f;&#x6c;&#x75;&#x74;&#x69;&#x6f;&#x6e;&#x73;">&#x64;&#x65;&#x76;&#x69;&#x6e;&#x40;&#x73;&#x70;&#x69;&#x74;&#x7a;&#x65;&#x6e;&#x2e;&#x73;&#x6f;&#x6c;&#x75;&#x74;&#x69;&#x6f;&#x6e;&#x73;</a> melden.      
+   3.6 If you are interested just contact: <a href="mailto:&#x64;&#x65;&#x76;&#x69;&#x6e;&#x40;&#x73;&#x70;&#x69;&#x74;&#x7a;&#x65;&#x6e;&#x2e;&#x73;&#x6f;&#x6c;&#x75;&#x74;&#x69;&#x6f;&#x6e;&#x73;">&#x64;&#x65;&#x76;&#x69;&#x6e;&#x40;&#x73;&#x70;&#x69;&#x74;&#x7a;&#x65;&#x6e;&#x2e;&#x73;&#x6f;&#x6c;&#x75;&#x74;&#x69;&#x6f;&#x6e;&#x73;</a>      
    3.7 You can also edit the Game Ini settings:
    ![OnPremise](./PavlovRconWebserver/Pictures/OnPremise.png?raw=true)
 
