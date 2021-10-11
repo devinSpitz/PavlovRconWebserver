@@ -59,13 +59,10 @@ jobs:
             echo "$VERSION" > "version"
             zip -r build/PavlovRconBuildLinux.zip build/Linux/
             zip -r build/PavlovRconBuildWindows.zip build/Windows/
+            ls -axl build/Linux
+            ls -axl build/Windows
             rm -rf build/Linux
             rm -rf build/Windows
-            ls -axl
-            cd build/
-            ls -axl
-            cd Windows/
-            ls -axl
             
   publish-github-release:
     docker:
