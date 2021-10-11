@@ -1,0 +1,63 @@
+@model ValueFieldPartialViewViewModel
+@if (Model.IsNormalCommand)
+{
+    var command = Model.PlayerCommands.FirstOrDefault(x => x.Name == Model.ActualCommandName);
+    if (command != null)
+    {
+        if (!string.IsNullOrEmpty(command.PartialViewName))
+        {
+            if (command.PartialViewName == "ItemView")
+            {
+                <text>
+                    <button type="button" class="btn btn-sm btn-primary valueFieldButtons" onclick="RconChooseItemPartialView()">Open selector</button>
+                </text>
+            }
+        }
+        if (command.valuesOptions != null && command.valuesOptions.Count > 0 && command.InputValue)
+        {
+            @Html.DropDownListFor(m => new RconViewModel().PlayerValue, new SelectList(command.valuesOptions, "Name"), new {@class = "form-control form-control-sm form-select "})
+        }
+        else if (command.InputValue)
+        {
+            <input name="PlayerValue" id="PlayerValue" class="form-control"/>
+        }
+    }
+}
+else
+{
+    var command = Model.TwoValueCommands.FirstOrDefault(x => x.Name == Model.ActualCommandName);
+    if (command != null)
+    {
+        if (!string.IsNullOrEmpty(command.PartialViewName) && (!Model.firstValue && command.Name == "GiveTeamCash" || Model.firstValue && command.Name == "SwitchMap"))
+        {
+            <text>
+                <button type="button" class="btn btn-sm btn-primary valueFieldButtons" onclick="RconChooseMapPartialView()">Open selector</button>
+            </text>
+      @*<text>
+         <a href="@command.PartialViewName" target="_blank">Link</a>
+      </text>*@
+        }
+        if (Model.firstValue && command.Name == "GiveTeamCash" || !Model.firstValue && command.Name == "SwitchMap")
+        {
+            if (Model.firstValue)
+            {
+                @Html.DropDownListFor(m => new RconViewModel().PlayerValue, new SelectList(command.valuesOptions, "Name"), new {@class = "form-control form-control-sm form-select "})
+            }
+            else
+            {
+                @Html.DropDownListFor(m => new RconViewModel().PlayerValueTwo, new SelectList(command.valuesTwoOptions, "Name"), new {@class = "form-control form-control-sm form-select "})
+            }
+        }
+        else
+        {
+            if (command.Name == "GiveTeamCash")
+            {
+                @Html.DropDownListFor(m => new RconViewModel().PlayerValueTwo, new SelectList(command.valuesTwoOptions, "Name"), new {@class = "form-control form-control-sm form-select "})
+            }
+            else
+            {
+                <input name="PlayerValue" id="PlayerValue" class="form-control"/>
+            }
+        }
+    }
+}

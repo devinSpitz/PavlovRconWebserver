@@ -1,0 +1,45 @@
+@model List<SteamIdentity>
+
+@{
+    ViewBag.Title = "Steam Identities";
+    Layout = "_Layout";
+}
+
+
+<h2>
+    @ViewBag.Title
+    <a class="btn btn-sm btn-primary m-2" asp-area="" asp-controller="Team" asp-action="EditSteamIdentity">
+        <span class="fas fa-plus"></span>
+    </a>
+</h2>
+
+<table class="table table-striped table-responsive">
+    <thead>
+    <th class="col-3">Steam id:</th>
+    <th class="col-3">Steam name:</th>
+    <th class="col-3">PRW Name</th>
+    </thead>
+    <tbody>
+    @foreach (var steamIdentity in Model)
+    {
+        <tr>
+            <td>
+                <a class="btn btn-sm btn-danger" href="@Url.Action("DeleteSteamIdentity", new {steamIdentity.Id})" onclick="return confirm('Are you sure you want to Delete?')">
+                    <span class="fas fa-trash-alt"></span>
+                </a>
+                <a class="btn btn-sm btn-primary" href="@Url.Action("EditSteamIdentity", "Team", new {steamIdentityId = steamIdentity.Id})">
+                    <span class="fas fa-edit"></span>
+                </a>
+
+                @steamIdentity.Id
+            </td>
+            <td>
+                @steamIdentity.Name
+            </td>
+            <td>
+                @steamIdentity.LiteDbUser?.NormalizedUserName
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

@@ -1,0 +1,31 @@
+@model SteamIdentityMatchTeamViewModel
+
+<div class="row">
+    <div class="col-sm-6">
+        @await Html.PartialAsync("TeamSinglePartailView", new SteamIdentityMatchTeamSingleViewModel
+        {
+            selectedTeam = Model.selectedTeam0,
+            AvailableTeams = Model.AvailableTeams,
+            SelectedSteamIdentities = Model.SelectedSteamIdentitiesTeam0,
+            SelectId = "SelectIdTeam0",
+            SelectedId = "MatchTeam0SelectedSteamIdentitiesStrings",
+            TeamsDropDownId = "Team0Id",
+            SelectButtonId = "selectButtonTeam0"
+        })
+    </div>
+
+    <div class="col-sm-6">
+        @await Html.PartialAsync("TeamSinglePartailView", new SteamIdentityMatchTeamSingleViewModel
+        {
+            selectedTeam = Model.selectedTeam1,
+            AvailableTeams = Model.AvailableTeams,
+            SelectedSteamIdentities = Model.SelectedSteamIdentitiesTeam1,
+            SelectId = "SelectIdTeam1",
+            SelectedId = "MatchTeam1SelectedSteamIdentitiesStrings",
+            TeamsDropDownId = "Team1Id",
+            SelectButtonId = "selectButtonTeam1"
+        })
+
+    </div>
+</div>
+<script>bindSelectButtons();</script>

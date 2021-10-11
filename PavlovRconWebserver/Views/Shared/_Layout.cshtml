@@ -1,0 +1,192 @@
+﻿@using LiteDB.Identity.Models
+@using Microsoft.AspNetCore.Identity
+@using PavlovRconWebserver.Services
+@inject SignInManager<LiteDbUser> SignInManager
+@inject UserManager<LiteDbUser> UserManager
+@inject SteamIdentityService _steamIdentityService;
+@inject TeamService _teamService;
+@inject PavlovServerService _pavlovServerService;
+@inject ServerSelectedModsService _serverSelectedModsService;
+@inject UserService _userService;
+@inject TeamSelectedSteamIdentityService _teamSelectedSteamIdentityService;
+@{
+    var user = await UserManager.GetUserAsync(User);
+    _userService.UserInRole(user, _serverSelectedModsService, _pavlovServerService, out var isAdmin, out var isCaptain, out var isMod, out var isOnPremise, out var isServerRent, out var isModSomeWhere, out _);
+}
+<!DOCTYPE html>
+<html>
+<head>
+
+    <meta name="description" content="PavlovRconWebserver" />
+    <meta name="keywords" content="ssh,mobile, database, administration, server, webserver, rcon, vr, telnet, priority, game-server-content, roles-management, pavlov" />
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>@ViewData["Title"] - Pavlov Rcon Webserver</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" asp-append-version="true"/>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap-theme.css" asp-append-version="true"/>
+    <link rel="stylesheet" href="~/lib/fontawesome-free/dist/css/all.min.css" asp-append-version="true"/>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
+
+</head>
+<body>
+<nav class="navbar navbar-inverse fixed-top navbar-expand-sm navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Pavlov Rcon Webserver</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="true" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    if (isAdmin)
+                    {
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                User Management
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+
+                                <li>
+                                    <a class="btn navbar-btn navbar-link" asp-area="" asp-controller="User" asp-action="Index">Users</a>
+                                </li>
+                                <li>
+                                    <a class="btn navbar-btn navbar-link" asp-area="" asp-controller="Role" asp-action="Index">Roles</a>
+                                </li>
+                            </ul>
+                        </li>
+                    }
+                    if (isModSomeWhere || isCaptain || isMod || isAdmin || isServerRent || isOnPremise)
+                    {
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Servers
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                @if (isAdmin || isOnPremise || isServerRent)
+                                {
+                                    <li>
+                                        <a class="btn navbar-btn navbar-link" asp-area="" asp-controller="SshServer" asp-action="Index">Servers</a>
+                                    </li>
+                                }
+                                <li>
+                                    <a class="btn navbar-btn navbar-link" asp-area="" asp-controller="Rcon" asp-action="Index">Commands</a>
+                                </li>
+                            </ul>
+                        </li>
+                    }
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Team Management
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+
+                            <li>
+                                <a class="btn navbar-btn navbar-link" asp-area="" asp-controller="Team" asp-action="Index">Teams</a>
+                            </li>
+                            @if (isMod || isAdmin)
+                            {
+                                <li>
+                                    <a class="btn navbar-btn navbar-link" asp-area="" asp-controller="Team" asp-action="SteamIdentitiesIndex">Steam Identities</a>
+                                </li>
+                            }
+                        </ul>
+                    </li>
+                    if (isModSomeWhere || isCaptain || isMod || isAdmin || isServerRent || isOnPremise)
+                    {
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Matchmaking (WIP)
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                <li>
+                                    <a class="btn navbar-btn navbar-link" asp-area="" asp-controller="MatchMaking" asp-action="Index">Matches</a>
+                                </li>
+                            </ul>
+                        </li>
+                    }
+                    @if (isAdmin)
+                    {
+                        <li>
+                            <a class="btn navbar-btn navbar-link" href="/hangfire">Hangfire</a>
+                        </li>
+                        <li>
+                            <a class="btn navbar-btn navbar-link" asp-controller="Log" asp-action="Index">Logs</a>
+                        </li>
+                    }
+                    
+                    @if (isModSomeWhere || isCaptain || isMod || isAdmin || isServerRent || isOnPremise)
+                    {
+                        <li>
+                            <a class="btn navbar-btn navbar-link" asp-controller="Account" asp-action="Register">Register</a>
+                        </li>
+                    }
+                }
+
+
+
+
+
+
+            </ul>
+            @await Html.PartialAsync("_LoginPartial")
+        </div>
+    </div>
+</nav>
+
+<div class="container body-content na">
+    <div class="overlay">
+        <div id="loadingDiv">
+        </div>
+    </div>
+
+
+    <div id="modal-placeholder"></div>
+    @RenderBody()
+    <footer class="col-md-12">
+        <hr/>
+        <p>Pavlov Rcon Webserver</p>
+    </footer>
+</div>
+
+<style>
+.overlay {
+    background: #e9e9e9; 
+    display: none;      
+    position: absolute;  
+    top: 0;                  
+    right: 0;              
+    bottom: 0;
+    left: 0;
+    opacity: 0.5;
+    z-index: 999999;
+}
+
+#loadingDiv{
+  position:absolute;
+  top:0px;
+  right:0px;
+  width:100%;
+  height:100%;
+  background-color:#666;
+  background-image:url("/images/Loadingsome.gif");
+  background-repeat:no-repeat;
+  background-position:center;
+  z-index:10000000;
+  filter: alpha(opacity=40); /* For IE8 and earlier */
+}
+.nowrap{white-space: nowrap;}
+
+ 
+</style>
+<script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.js" asp-append-version="true"></script>
+<script src="~/lib/fontawesome-free/dist/js/all.min.js" asp-append-version="true"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+<script src="~/js/Init.js" asp-append-version="true"></script>
+
+@await Component.InvokeAsync("Toastify")
+@await RenderSectionAsync("Scripts", false)
+</body>
+</html>

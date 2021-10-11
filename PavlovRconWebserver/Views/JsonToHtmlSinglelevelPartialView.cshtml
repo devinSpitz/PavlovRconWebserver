@@ -1,0 +1,64 @@
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Linq
+@model string
+@{
+    var jsonAsArray = JsonConvert.DeserializeObject(Model) as JArray;
+
+    var classes = jsonAsArray
+        .OfType<JObject>()
+        .ToList();
+    var nonClasses = jsonAsArray
+        .Where(x => x.Type != JTokenType.Object)
+        .ToList();
+}
+
+<table class="table">
+    <thead>
+    <tr>
+        @{
+            var anyClass = classes.FirstOrDefault();
+            if (anyClass != null)
+            {
+                var properties = anyClass.Properties().Select(x => x.Name).ToList();
+                foreach (var property in properties)
+                {
+                    <th>@property</th>
+                }
+            }
+            else
+            {
+                <th>Data</th>
+            }
+        }
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var item in classes)
+    {
+        await Html.RenderPartialAsync("JsonToHtmlSinglelevelChildPartialViewcshtml.cshtml", item);
+    }
+    @foreach (JValue item in nonClasses)
+    {
+        try
+        {
+            var tmp = JsonConvert.DeserializeObject(item.Value.ToString());
+            if (tmp != null)
+            {
+                await Html.RenderPartialAsync("JsonToHtmlSinglelevelChildPartialViewcshtml.cshtml", tmp);
+            }
+            else
+            {
+                <tr>
+                    <td>@item.Value</td>
+                </tr>
+            }
+        }
+        catch (Exception)
+        {
+            <tr>
+                <td>@item.Value</td>
+            </tr>
+        }
+    }
+    </tbody>
+</table>

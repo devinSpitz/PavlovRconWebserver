@@ -1,0 +1,10 @@
+﻿@using PavlovRconWebserver.Controllers
+@using PavlovRconWebserver.Services
+@{
+    ViewData["Title"] = "Home Page";
+}
+@inject PublicViewListsService PublicViewListsService;
+
+@{
+    await Html.RenderPartialAsync("/Views/PublicViewLists/PlayersFromServers.cshtml", await PublicViewListsService.GetAllStatsFromAllPavlovServers());
+} 

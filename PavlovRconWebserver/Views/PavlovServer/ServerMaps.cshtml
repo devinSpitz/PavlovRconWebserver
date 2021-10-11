@@ -1,0 +1,162 @@
+@using PavlovRconWebserver.Extensions
+@model SelectedServerMapsViewModel
+
+@{
+    ViewBag.Title = "Add maps to the Server";
+    Layout = "_Layout";
+    var maxLength = 20;
+    var gameModes = GameModes.ModesString;
+}
+<style>
+    .bigFont{
+    font-size: 30px;
+    }
+</style>
+
+<h2>@ViewBag.Title</h2>
+<div class="bg-info">
+    <ul>
+        <li>Just select the maps you want by pressing the picture and then change the gamemode to whatever you want.</li>
+        <li>The Pavlov Rcon server cleans your cache of the maps you have installed on the server.</li>
+        <li>So any maps you select here will not be removed when cleaning the cache, which happens every time you change a map via the Pavlov Rcon web server.</li>
+        <li class="bg-warning">Only when you SAVE the server settings, the maps including game modes will be saved in the Game.ini.***</li>
+    </ul>
+</div>
+<br>
+<a class="btn btn-success" href="/PavlovServer/EditServerSettings/@Model.ServerId">Goto server settings <span class="fas fa-cogs"></span></a>
+<br>
+<div class="row">
+    <div class="col-sm-6" id="Save">
+        <div class="card m-1 ">
+            <div class="card-header">
+                Select the maps you wanne play on the server
+            </div>
+            <div class="card-body" id="SavecardBody">
+                <div class="search row" style="margin-bottom: 15px;padding-bottom: 15px;">
+                    <input class="col-sm-6" id="searchAuthor" type="text" placeholder="Search for authors" name="search">
+                    <input class="col-sm-6" id="searchName" type="text" placeholder="Search for map name" name="search">
+                </div>
+
+                @Html.Raw("<div class='row' id='SavecardBodyAppend'>")
+                @foreach (var map in Model.AllMaps)
+                {
+                    var selectedMap = Model.SelectedMaps.FirstOrDefault(x => x.Map?.Id == map.Id);
+                    if (selectedMap != null)
+                    {
+                        continue; // This map is selected
+                    }
+                    <div class="col-sm-6">
+                        <div class="card m-1  mapcard" data-Author="@map.Author" data-Name="@map.Name">
+                            <div class="card-header">
+                                @map.Id
+                                <button class="btn btn-success btn-sm" onclick="duplicateButton(this)">clone</button>
+                            </div>
+                            <div class="card-body">
+                                <input class="mapId" value="@map.Id" type="hidden"/>
+                                @if (map.Name?.Length > maxLength)
+                                {
+                                    <b>@map.Name.Substring(0, maxLength) ...</b>
+                                }
+                                else
+                                {
+                                    <b>@map.Name</b>
+                                }
+                                <br>
+                                <button onclick="ChangeMap('@map.Id',this,$(this).parent().find('.gameMode').val())">
+                                    <img class="card-img-top" src="@map.ImageUrl">
+                                </button>
+                                @if (map.Author?.Length > maxLength)
+                                {
+                                    <br>
+                                    <b>by @map.Author.Substring(0, maxLength) ...</b>
+                                }
+                                else
+                                {
+                                    <br>
+                                    <b>by @map.Author</b>
+                                }
+
+                                @Html.DropDownList("TDM", new SelectList(gameModes, "TDM"), new {@class = "gameMode form-control form-control-sm form-select ", onchange = "ChangeMap($(this).parent().find('.mapId').val(),this,$(this).parent().find('.gameMode').val(),true)"})
+
+                            </div>
+                        </div>
+                    </div>
+                }
+                @Html.Raw("</div>")
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6" id="Delete">
+        <div class="card m-1 ">
+            <div class="card-header">
+                Here are all selected maps for the server
+            </div>
+            <div class="card-body" id="DeletecardBody">
+
+                @Html.Raw("<div class='row' id='DeletecardBodyAppend'>")
+                @foreach (var map in Model.SelectedMaps)
+                {
+                    map.Map = Model.AllMaps.FirstOrDefault(x => x.Id == map.Map?.Id);
+                    if (map.Map == null)
+                    {
+                        continue; // have to delete the map some when cause its no longer on steam workskhops :(
+                    }
+                    <div class="col-sm-6">
+                        <div class="card m-1 " data-Author="@map.Map.Author" data-Name="@map.Map.Name">
+                            @{
+                                //Backwardscompatibility
+                                if (string.IsNullOrEmpty(map.GameMode))
+                                {
+                                    map.GameMode = "TDM";
+                                }
+                            }
+                            <div class="card-header">
+                                @map.Map.Id
+
+                                <button class="btn btn-success btn-sm" onclick="duplicateButton(this)">clone</button>
+                            </div>
+                            <div class="card-body">
+                                <input class="mapId" value="@map.Map.Id" type="hidden"/>
+                                @if (map.Map.Name?.Length > maxLength)
+                                {
+                                    <b>@map.Map.Name.Substring(0, maxLength) ...</b>
+                                }
+                                else
+                                {
+                                    <b>@map.Map.Name</b>
+                                }
+                                <br>
+                                <button onclick="ChangeMap('@map.Map.Id',this,$(this).parent().find('.gameMode').val())">
+                                    <img class="card-img-top" src="@map.Map.ImageUrl">
+                                </button>
+                                @if (map.Map.Author?.Length > maxLength)
+                                {
+                                    <br>
+                                    <b>by @map.Map.Author.Substring(0, maxLength) ...</b>
+                                }
+                                else
+                                {
+                                    <br>
+                                    <b>by @map.Map.Author</b>
+                                }
+                                @Html.DropDownList(map.GameMode, new SelectList(gameModes, map.GameMode), new {@class = "gameMode form-control form-control-sm form-select ", onchange = "ChangeMap($(this).parent().find('.mapId').val(),this,$(this).parent().find('.gameMode').val(),true)"})
+
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @Html.Raw("</div>")
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts{
+    <script>
+    let serverId = @Model.ServerId
+    </script>
+}
+
+<script src="~/js/server.js" asp-append-version="true"></script>

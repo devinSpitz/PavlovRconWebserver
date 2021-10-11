@@ -1,0 +1,68 @@
+@using LiteDB.Identity.Models
+@using Microsoft.AspNetCore.Identity
+@model ServerBans
+
+@inject SignInManager<LiteDbUser> SignInManager
+@inject UserManager<LiteDbUser> UserManager
+@{
+    var banDate = "";
+    if (Model?.BannedDateTime.ToLongDateString() == new DateTime().ToLongDateString())
+    {
+        banDate = "Unkown";
+    }
+    else
+    {
+        banDate = Model?.BannedDateTime.ToShortDateString() + " " + Model?.BannedDateTime.ToShortTimeString();
+    }
+}
+<tr>
+    <td>
+        @Model?.Id
+    </td>
+    <td>
+        @Model?.SteamName
+    </td>
+    <td>
+        @Model?.SteamId
+        <Button alt="Remove ban" class="btn-danger" onclick="RemoveBannedPlayer('@Model?.SteamId')">
+            <span class="fas fa-trash-alt"></span>
+        </Button>
+    </td>
+    <td>
+        @Model?.Comment
+    </td>
+    <td class="date col-sm-3">
+        @banDate
+    </td>
+    <td class="date col-sm-3">
+        @{
+            var tmp = new DateTime();
+            var tmpString = "";
+            if (Model != null)
+            {
+                try
+                {
+                    tmp = Model.BannedDateTime.Add(Model.BanSpan);
+                }
+                catch
+                {
+                    //Ignore
+                }
+                if (tmp.ToLongDateString() + " : " + tmp.ToShortTimeString() == new DateTime().ToLongDateString() + " : " + new DateTime().ToShortTimeString())
+                {
+                    tmpString = "Permanent";
+                }
+                else
+                {
+                    tmpString = tmp.ToShortDateString() + " " + tmp.ToShortTimeString();
+                }
+            }
+            if (tmpString == "00:00:00")
+            {
+                tmpString = "Permanent";
+            }
+
+        }
+        @tmpString
+    </td>
+</tr>

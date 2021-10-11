@@ -1,0 +1,77 @@
+@using Newtonsoft.Json
+@using PavlovRconWebserver.Extensions
+@model MatchViewModel
+
+@{
+    ViewBag.Title = "Match";
+    Layout = "_Layout";
+
+    var PavlovServers = Model.AllPavlovServers.Select(x => new
+    {
+        x.Id, x.Name
+    });
+}
+
+@section Scripts{
+    <script>
+    const match = jQuery.parseJSON('@Html.Raw(JsonConvert.SerializeObject(Model))');
+    </script>
+}
+
+<script src="~/js/MatchMaking.js" asp-append-version="true"></script>
+
+<h2>@ViewBag.Title</h2>
+
+
+<div asp-validation-summary="All" class="text-danger"></div>
+<div class="col-md-11">
+    <div class="card m-1 ">
+        <div class="card-header">Main match settings</div>
+        <div class="card-body row">
+            <input asp-for="Id" class="form-control" value="@Model.Id" type="hidden"/>
+            <span asp-validation-for="Id" class="text-danger"></span>
+            <div class="form-group col-md-5">
+                <label asp-for="Name"></label>
+                <input asp-for="Name" class="form-control" value="@Model.Name"/>
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group col-md-7">
+                <label asp-for="PavlovServer"></label>
+                @Html.DropDownListFor(m => m.PavlovServerId, new SelectList(PavlovServers, "Id", "Name", Model.PavlovServer), new {@class = "form-control form-select form-control-sm"})
+                <span asp-validation-for="PavlovServer" class="text-danger"></span>
+            </div>
+            <div class="form-group col-md-3">
+                <label asp-for="MapId"></label> <button type="button" id="RconChooseMapPartialView" class="btn btn-sm btn-primary valueFieldButtons">Open selector</button>
+                <input asp-for="MapId" class="form-control" value="@Model.MapId"/>
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group col-md-3">
+                <label asp-for="GameMode"></label>
+                @Html.DropDownListFor(m => m.GameMode, new SelectList(GameModes.ModesString, Model.GameMode), new {@class = "form-control form-select form-control-sm"})
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group col-md-3">
+                <label asp-for="TimeLimit"></label>
+                <input asp-for="TimeLimit" class="form-control" value="@Model.TimeLimit"/>
+                <span asp-validation-for="TimeLimit" class="text-danger"></span>
+            </div>
+            <div class="form-group col-md-3">
+                <label asp-for="PlayerSlots"></label>
+                <input asp-for="PlayerSlots" class="form-control" value="@Model.PlayerSlots"/>
+                <span asp-validation-for="PlayerSlots" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-md-11">
+    <div class="card m-1 ">
+        <div class="card-header">Player/Teams Select</div>
+        <div class="card-body" id="GameModeSpecificcard">
+            @* Gets auto populatet *@
+        </div>
+    </div>
+</div>
+
+
+<br>
+<Button alt="Save" class="btn-success col-md-12" onclick="SaveMatch()">Save</Button>

@@ -1,0 +1,113 @@
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Linq
+@model string
+@{
+    var json = JsonConvert.DeserializeObject(Model) as JObject;
+}
+
+<table class="display table table-bordered" cellspacing="0">
+    <tbody>
+    @foreach (var property in json.Properties())
+    {
+        <tr>
+            <td>
+                <b>@property.Name</b>
+            </td>
+            <td>
+                @foreach (var data in property)
+                {
+                    if (data.Type == JTokenType.Array)
+                    {
+                        <table class="table table-bordered">
+                            <thead>
+                            <tr>
+                                @{
+                                    var firstProperty = data.First;
+                                }
+                                @if (firstProperty != null)
+                                {
+                                    foreach (JProperty propertyData in firstProperty)
+                                    {
+                                        <th>@propertyData.Name</th>
+                                    }
+                                }
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var propertyData in data as JArray)
+                            {
+                                <tr>
+                                    @foreach (JProperty jProperty in propertyData)
+                                    {
+                                        if (jProperty.HasValues)
+                                        {
+                                            if (jProperty.Value.Type == JTokenType.Object)
+                                            {
+                                                var inlineClass = ((JObject) jProperty.Value).Properties();
+                                                var result = inlineClass.Select(x => string.Format("<div><b>{0}:</b><span> {1}</span></div>", x.Name, x.Value)).ToList();
+                                                var joinedResult = string.Join("", result);
+                                                <td>
+                                                    <div>@Html.Raw(joinedResult)</div>
+                                                </td>
+                                            }
+                                            else
+                                            {
+                                                <td>@jProperty.Value</td>
+                                            }
+                                        }
+                                    }
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    }
+                    else if (data.Type == JTokenType.Object)
+                    {
+                        var uniqueClass = data as JObject;
+
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                @{
+                                    var classProperties = uniqueClass.Properties()
+                                        .Select(x => x.Name)
+                                        .ToList();
+                                    foreach (var classProperty in classProperties)
+                                    {
+                                        <th>@classProperty</th>
+                                    }
+                                }
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                @foreach (var classProperty in uniqueClass.Properties())
+                                {
+                                    if (classProperty.Value.Type == JTokenType.Object)
+                                    {
+                                        var inlineClass = ((JObject) classProperty.Value).Properties();
+                                        var result = inlineClass.Select(x => string.Format("<div><b>{0}</b> <span>: {1}</span></div>", x.Name, x.Value)).ToList();
+                                        var joinedResult = string.Join("", result);
+                                        <td>
+                                            <div>@Html.Raw(joinedResult)</div>
+                                        </td>
+                                    }
+                                    else
+                                    {
+                                        <td>@classProperty.Value</td>
+                                    }
+                                }
+                            </tr>
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        @data
+                    }
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

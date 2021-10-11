@@ -1,0 +1,120 @@
+﻿@using PavlovRconWebserver.Services
+@using LiteDB.Identity.Models
+@using Microsoft.AspNetCore.Identity
+@model PavlovServerGameIni
+@inject PavlovServerService PavlovServerService;
+@inject UserManager<LiteDbUser> UserManager
+
+@{
+    ViewBag.Title = "Edit pavlov server settings";
+    Layout = "_Layout";
+    var owner = false;
+    var user = await UserManager.GetUserAsync(User);
+    var server = await PavlovServerService.FindOne(Model.serverId);
+    if (server.Owner != null && server.Owner.Id == user.Id)
+    {
+        owner = true;
+    }
+
+}
+
+<h2>@ViewBag.Title</h2>
+<div class="bg-info">
+    <ul>
+        <li>When you save the server settings, they are written directly to Game.ini, including the maps and game modes you have already selected.</li>
+        <li class="bg-warning">To apply the server settings you have to stop the server and start it again.</li>
+    </ul>
+</div>
+
+<form asp-controller="PavlovServer" asp-action="SaveServerSettings" method="post">
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <input asp-for="serverId" class="form-control" value="@Model.serverId" type="hidden"/>
+    <span asp-validation-for="serverId" class="text-danger"></span>
+
+    <div class="row">
+        <div class="form-group col-md-12">
+            <label asp-for="ServerName"></label>
+            <input asp-for="ServerName" class="form-control" value="@Model.ServerName"/>
+            <span asp-validation-for="ServerName" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group col-md-2">
+            <label asp-for="bEnabled"></label>
+            <input asp-for="bEnabled" class="form-control form-check-input" value="@Model.bEnabled"/>
+            <span asp-validation-for="bEnabled" class="text-danger"></span>
+        </div>
+        @if (owner)
+        {
+            <div class="form-group col-md-2">
+                <label asp-for="MaxPlayers"></label>
+                <input asp-for="MaxPlayers" class="form-control" min="1" max="30" value="@Model.MaxPlayers"/>
+                <span asp-validation-for="MaxPlayers" class="text-danger"></span>
+            </div>
+        }
+        else
+        {
+            <div class="form-group col-md-2">
+                <label asp-for="MaxPlayers"></label>
+                <input asp-for="MaxPlayers" class="form-control" min="1" value="@Model.MaxPlayers"/>
+                <span asp-validation-for="MaxPlayers" class="text-danger"></span>
+            </div>
+        }
+        <div class="form-group col-md-2">
+            <label asp-for="bSecured"></label>
+            <input asp-for="bSecured" class="form-control form-check-input" value="@Model.bSecured"/>
+            <span asp-validation-for="bSecured" class="text-danger"></span>
+        </div>
+        <div class="form-group col-md-2">
+            <label asp-for="bCustomServer"></label>
+            <input asp-for="bCustomServer" class="form-control form-check-input" value="@Model.bCustomServer"/>
+            <span asp-validation-for="bCustomServer" class="text-danger"></span>
+        </div>
+        <div class="form-group col-md-2">
+            <label asp-for="bWhitelist"></label>
+            <input asp-for="bWhitelist" class="form-control form-check-input" value="@Model.bWhitelist"/>
+            <span asp-validation-for="bWhitelist" class="text-danger"></span>
+        </div>
+        <div class="form-group col-md-2">
+            <label asp-for="RefreshListTime"></label>
+            <input asp-for="RefreshListTime" class="form-control" value="@Model.RefreshListTime"/>
+            <span asp-validation-for="RefreshListTime" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group col-md-2">
+            <label asp-for="LimitedAmmoType"></label>
+            <select asp-for="LimitedAmmoType" asp-items="Html.GetEnumSelectList<LimitedAmmoTypeEnum>()" class="form-control form-control-sm"></select>
+            <span asp-validation-for="LimitedAmmoType" class="text-danger"></span>
+        </div>
+        <div class="form-group col-md-2">
+            <label asp-for="TickRate"></label>
+            <input asp-for="TickRate" class="form-control" value="@Model.TickRate"/>
+            <span asp-validation-for="TickRate" class="text-danger"></span>
+        </div>
+        <div class="form-group col-md-2">
+            <label asp-for="TimeLimit"></label>
+            <input asp-for="TimeLimit" class="form-control" value="@Model.TimeLimit"/>
+            <span asp-validation-for="TimeLimit" class="text-danger"></span>
+        </div>
+        <div class="form-group col-md-2">
+            <label asp-for="Password"></label>
+            <input asp-for="Password" class="form-control" value="@Model.Password"/>
+            <span asp-validation-for="Password" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group col-md-12">
+            <label asp-for="BalanceTableURL"></label>
+            <input asp-for="BalanceTableURL" class="form-control" value="@Model.BalanceTableURL"/>
+            <span asp-validation-for="BalanceTableURL" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-1 mt-3">
+            <button type="submit" class="btn btn-success col-md-12">Save</button>
+        </div>
+    </div>
+
+</form>

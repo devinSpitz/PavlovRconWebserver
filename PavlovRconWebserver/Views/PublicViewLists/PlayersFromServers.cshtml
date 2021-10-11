@@ -1,0 +1,91 @@
+@model List<PavlovServerPlayerListPublicViewModel>
+
+<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" asp-append-version="true"/>
+<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap-theme.css" asp-append-version="true"/>
+<style>
+.Team0{
+    --bs-table-accent-bg: #30303000 !important;
+      background-color: rgba(40,180,232,0.5) !important;
+}
+.Team1{                    
+    --bs-table-accent-bg: #30303000 !important;
+      background-color: #892224 !important;  
+}
+    .stylePavlovServers{
+        background-color: @ViewBag.background;
+        color: @ViewBag.textColor;
+        text-align: center;
+    }
+    .pavlovTable{
+        margin-left: auto;
+        margin-right: auto;
+        color: @ViewBag.textColor;
+    }
+    .Team0{
+        background-color: #2b669a;
+    }
+    
+    .Team1{
+        background-color: #f98787;
+    }
+    
+</style>
+@if (!Model.Any())
+{
+    <div class="bg-info">
+        <h1>There is no server available!</h1>
+    </div>
+}
+@foreach (var viewModel in Model)
+{
+    <div class="stylePavlovServers">
+        @await Html.PartialAsync("/Views/Rcon/PavlovServerInfoSinglePartialView.cshtml", new ServerInfoViewModel
+        {
+            Name = viewModel.ServerInfo.ServerName,
+            ServerInfo = viewModel.ServerInfo
+        })
+        @{
+            var hasTwoTeams = viewModel.PlayerList.GroupBy(x => x.TeamId).Count() == 2;
+            var tableHeaer = "<thead><tr><th>Name</th><th>Score</th><th>Kills</th><th>Deaths</th><th>Assits</th><th>Cash</th></tr></thead>";
+        }
+        @if (hasTwoTeams)
+        {
+            <div class="row  col-ms-6">
+                <table class="table pavlovTable table-responsive table-bordered bg-primary Team0">
+                    @Html.Raw(tableHeaer)
+                    <tr>
+                        <th colspan="7">Team score: @viewModel.team0Score</th>
+                    </tr>
+                    @foreach (var player in viewModel.PlayerList.Where(x => x.TeamId == 0).OrderByDescending(x => x.Score))
+                    {
+                        @await Html.PartialAsync("/Views/PublicViewLists/PlayerSingle.cshtml", player)
+                    }
+
+                </table>
+            </div>
+            <div class="row col-ms-6">
+                <table class="table pavlovTable table-responsive table-bordered Team1  ">
+                    @Html.Raw(tableHeaer)
+                    <tr>
+                        <th colspan="7">Team score: @viewModel.team1Score</th>
+                    </tr>
+                    @foreach (var player in viewModel.PlayerList.Where(x => x.TeamId == 1).OrderByDescending(x => x.Score))
+                    {
+                        @await Html.PartialAsync("/Views/PublicViewLists/PlayerSingle.cshtml", player)
+                    }
+                </table>
+            </div>
+        }
+        else
+        {
+            <table class="table pavlovTable table-bordered table-responsive col-ms-12">
+                @Html.Raw(tableHeaer)
+                @foreach (var player in viewModel.PlayerList.OrderByDescending(x => x.Score))
+                {
+                    @await Html.PartialAsync("/Views/PublicViewLists/PlayerSingle.cshtml", player)
+                }
+
+            </table>
+        }
+    </div>
+}

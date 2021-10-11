@@ -1,0 +1,21 @@
+version: "3.3"
+services:
+  PavlovRconWebserver:
+    container_name: PavlovRconWebserver
+    ports:
+      - 5001:5001
+    restart: always
+    image: mcr.microsoft.com/dotnet/sdk:5.0
+    volumes:
+      - /opt/PavlovRconWebserver/Database/:/build/Database/
+    command:
+      - bash
+      - -c
+      - >
+        git clone https://github.com/devinSpitz/PavlovRconWebserver.git;
+        cd /PavlovRconWebserver/PavlovRconWebserver/;
+        dotnet publish -c release -o /build --runtime linux-x64 --self-contained true --framework net5.0;
+        cd /build/;
+        [ ! -f build/Database/Database.db ] && cp /PavlovRconWebserver/PavlovRconWebserver/DefaultDB/Database.db /build/Database/Database.db;
+        /build/PavlovRconWebserver --urls=http://*:5001/;
+        

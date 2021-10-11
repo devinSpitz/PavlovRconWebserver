@@ -1,0 +1,197 @@
+@model ServerInfoViewModel
+@{
+    var items = new Dictionary<string, List<string>>();
+
+    items.Add("Guns", new List<string>
+    {
+        "cet9",
+        "m9",
+        "1911",
+        "sock",
+        "57",
+        "de",
+        "revolver",
+        "sawedoff",
+        "shotgun",
+        "autoshotgun",
+        "drumshotgun",
+        "lmga",
+        "uzi",
+        "mp5",
+        "smg",
+        "vanas",
+        "p90",
+        "kar98",
+        "ak47",
+        "ak12",
+        "ak",
+        "ar",
+        "aug",
+        "autosniper",
+        "awp",
+        "antitank"
+    });
+
+
+    items.Add("Granates", new List<string>
+    {
+        "grenade",
+        "grenade_ru",
+        "flash",
+        "smoke",
+        "smoke_ru"
+    });
+
+    items.Add("Attachments", new List<string>
+    {
+        "reddot",
+        "holo",
+        "acog",
+        "scope",
+        "supp_pistol",
+        "supp_rifle",
+        "grip_angled",
+        "grip_vertical",
+        "armour",
+        "kevlarhelmet",
+        "pistol_reddot",
+        "canted_reddot"
+    });
+
+    items.Add("Misc", new List<string>
+    {
+        "defuse",
+        "knife",
+        "painkillers",
+        "taser",
+        "syringe"
+    });
+
+    items.Add("Ammo", new List<string>
+    {
+        "ammo_rifle",
+        "ammo_sniper",
+        "ammo_pistol",
+        "ammo_smg",
+        "ammo_shotgun",
+        "ammo_special"
+    });
+
+
+    //WW2
+    items.Add("GunsWW", new List<string>
+    {
+        "ppsh",
+        "mp40",
+        "g43",
+        "m1garand",
+        "svt40",
+        "luger",
+        "tokarev",
+        "webley",
+        "bren",
+        "bar",
+        "sten",
+        "stg44",
+        "mosin",
+        "springfield",
+        "thompson",
+        "mg42",
+        "leeenfield",
+        "bayonet_kar98",
+        "bayonet_springfield",
+        "bayonet_mosin",
+        "bayonet_leeenfield",
+        "bayonet_m1garand",
+        "bayonet_trenchgun"
+    });
+
+
+    items.Add("LootCrate", new List<string>
+    {
+        "Attachments",
+        "Heavy1",
+        "Heavy2",
+        "MedicRifle",
+        "MedicSMG",
+        "Pistol",
+        "Rifle1",
+        "Rifle2",
+        "Rifle3",
+        "SMG1",
+        "SMG2",
+        "SMG3"
+    });
+
+    items.Add("GranatesWW", new List<string>
+    {
+        "grenade_us",
+        "grenade_ger",
+        "smoke_us",
+        "smoke_ger",
+        "grenade_svt",
+        "smoke_svt"
+    });
+
+    items.Add("LauncherWW", new List<string>
+    {
+        "rl_piat",
+        "rl_m1a1",
+        "rl_panzer"
+    });
+
+
+    items.Add("Vehicle", new List<string>
+    {
+        "panzer",
+        "sherman",
+        "t34",
+        "truck",
+        "atv",
+        "tiger"
+    });
+
+    items.Add("Others (bunch of items from the wiki)", new List<string>
+    {
+        "AK", "57", "1911", "acog", "adrenaline", "ak12", "AK47", "akshorty", "ammo_pistol", "ammo_rifle", "ammo_shotgun", "ammo_smg", "ammo_sniper", "ammo_special", "ammocrate", "antipersonnelmine", "AntiTank", "antitankmine", "AR", "ar9", "aug", "AutoShotgun", "AutoSniper", "awp", "ballisticsshield", "bandage", "bar", "bayonet_leeenfield", "bayonet_m1garand", "bayonet_mosin", "bayonet_trenchgun", "boltcutters", "bren", "Canted_Reddot", "cet9", "crowbar", "de", "detectivesmg", "dnascanner", "dp27", "DrumShotgun", "flaregun", "flash", "flash_ru", "Flashlight_Rifle", "G43", "galul", "goldengun", "Grenade", "grenade_dis", "grenade_ger", "grenade_ru", "grenade_svt", "grenade_us", "Grip_Angled", "Grip_Vertical", "handcuffs", "healthstation", "Holo", "kar98", "keycard", "Knife", "kross", "Laser_Pistol", "Laser_Rifle", "leeenfield", "LMGA", "lockpick", "luger", "m16", "m1garand", "m9", "medkit", "mg42", "monocular", "mosin", "mp40", "MP5", "newtonlauncher", "P90", "Painkillers", "pickaxe", "pipe", "Pliers", "ppsh", "PushBomb", "reddot", "reddot_pistol", "RepairTool", "Revolver", "RL_M1A1", "rl_panzer", "RL_PIAT", "rl_rpg", "sawedoff", "Scope", "scope_kar98", "scope_leeenfield", "scope_mosin", "scope_springfield", "scur", "Shotgun", "silentcet9", "skinhelmet_ger", "skinhelmet_svt", "skinhelmet_us", "sks", "SMG", "Smoke", "smoke_ger", "smoke_ru", "smoke_svt", "smoke_us", "sock", "springfield", "sten", "stg44", "supp_pistol", "supp_rifle", "svt40", "Syringe", "tankmg", "tankturret", "taser", "teleporter", "thompson", "Tokarev", "tranqgun", "trenchgun", "tripalarm", "tttc4", "tttknife", "uzi", "vanas", "vzz", "webley"
+    });
+
+
+
+}
+
+
+<!-- Modal -->
+<div class="modal" id="add-contact" tabindex="-1" role="dialog" aria-labelledby="addContactLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content cssModalSizeAsChildren">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addContactLabel">Choose item</h5>
+                <button type="button" class="close btn btn-danger" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @foreach (var list in items)
+                {
+                    <div class="card m-1 ">
+
+                        <div class="card-header">
+                            @list.Key
+                        </div>
+                        <div class="card-body">
+                            @Html.Raw("<div class='row' >")
+                            @foreach (var item in list.Value)
+                            {
+                                <button type="button" class="btn btn-success col-sm-3 m-1" data-bs-dismiss="modal" onclick="setItem('@item')">@item</button>
+                            }
+                            @Html.Raw("</div>")
+                        </div>
+                    </div>
+                }
+
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

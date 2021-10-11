@@ -1,0 +1,152 @@
+@using LiteDB
+@using LiteDB.Identity.Models
+@model SshServer
+
+@{
+    ViewBag.Title = "Add/Update rcon server";
+    Layout = "_Layout";
+    var placeholder = "";
+    if (Model.Id > 0)
+    {
+        placeholder = "Leave blank if you don't want to update it";
+    }
+    
+    var users = new List<LiteDbUser>();
+
+        users = Model.LiteDbUsers;
+        users = users.Prepend(new LiteDbUser
+        {
+            NormalizedUserName = "nothingSet",
+            Id = new ObjectId()
+        }).ToList();
+
+}
+
+<h2>@ViewBag.Title</h2>
+<div class="card m-1 bg-info">
+    <ul>
+        <li>Tipp: Use the steam user ass SSH user.</li>
+        <li>The SSH user needs the rights to enable and disable a service, as well as start and stop.</li>
+        <li>He also needs the right to delete maps: /tmp/workshop/{port}/content/555160/*</li>
+        <li>As well as the rights to write and delete for the pavlov server folder and all subfolders including files.</li>
+        <li>I can not recommend to take the root user.</li>
+    </ul>
+</div>
+<form asp-controller="SshServer" asp-action="SaveServer" method="post" enctype="multipart/form-data">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="col-md-11">
+        <div class="card m-1 m-1">
+            <div class="card-header">Main server settings</div>
+            <div class="card-body">
+
+                <input asp-for="Id" class="form-control" value="@Model.Id" type="hidden"/>
+                <span asp-validation-for="Id" class="text-danger"></span>
+                <div class="form-group col-md-12">
+                    <label asp-for="Name"></label>
+                    <input asp-for="Name" class="form-control" value="@Model.Name"/>
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <div class="form-group col-md-12">
+                    <label asp-for="Adress"></label>
+                    <input asp-for="Adress" class="form-control" value="@Model.Adress"/>
+                    <span asp-validation-for="Adress" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+        <div class="card m-1">
+            <div class="card-header">SSH</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="form-group col-md-6">
+                        <label asp-for="SshPort"></label>
+                        <input asp-for="SshPort" class="form-control" value="@Model.SshPort"/>
+                        <span asp-validation-for="SshPort" class="text-danger"></span>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label asp-for="SshUsername"></label>
+                        <input asp-for="SshUsername" class="form-control" value="@Model.SshUsername"/>
+                        <span asp-validation-for="SshUsername" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="form-group col-md-6">
+                        <label asp-for="SshPassword"></label>
+                        <input asp-for="SshPassword" class="form-control" placeholder="@placeholder" type="password" value="" autocomplete="off"/>
+                        <p class="form-text">
+                            @ViewData.ModelMetadata.Properties.Where(m => m.PropertyName == "SshPassword").FirstOrDefault().Description
+                        </p>
+                        <span asp-validation-for="SshPassword" class="text-danger"></span>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label asp-for="SshKeyFileNameForm"></label>
+                        <p class="form-text">
+                            @ViewData.ModelMetadata.Properties.Where(m => m.PropertyName == "SshKeyFileNameForm").FirstOrDefault().Description
+                        </p>
+                        <input asp-for="SshKeyFileNameForm" class="form-control-file" />
+                        <span asp-validation-for="SshKeyFileNameForm" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="form-group col-md-6">
+                        <label asp-for="SshPassphrase"></label>
+                        <input asp-for="SshPassphrase" class="form-control" placeholder="@placeholder" value="" type="password" autocomplete="off"/>
+                        <p class="form-text">
+                            @ViewData.ModelMetadata.Properties.Where(m => m.PropertyName == "SshPassphrase").FirstOrDefault().Description
+                        </p>
+                        <span asp-validation-for="SshPassphrase" class="text-danger"></span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="card m-1">
+            <div class="card-header">Steam</div>
+            <div class="card-body">
+                <div class="card m-1 bg-info">
+                    <ul>
+                        <li>The steam user will get used over "sudo -iu {user}" so make sure that the ssh user has sudo rights</li>
+                        <li>With that you can update your Pavlov server over the gui</li>
+                    </ul>
+                </div>
+                <div class="row">
+                    <div class="form-group col-md-2">
+                        <label asp-for="SteamIsAvailable"></label>
+                        <input asp-for="SteamIsAvailable" class="form-control form-check-input" value="@Model.SteamIsAvailable"/>
+                        <span asp-validation-for="SteamIsAvailable" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="form-group col-md-6">
+                        <label asp-for="SteamPath"></label>
+                        <input asp-for="SteamPath" class="form-control" value="@Model.SteamPath"/>
+                        <span asp-validation-for="SteamPath" class="text-danger"></span>
+                    </div>
+                </div>
+
+                
+            </div>
+        </div>
+        <div class="card m-1">
+            <div class="card-header">On Premise</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="form-group col-md-12">
+                        <label asp-for="LiteDbUserId"></label>
+                        @Html.DropDownListFor(m => m.LiteDbUserId, new SelectList(users, "Id", "NormalizedUserName", Model.Owner?.Id), new {@class = "form-control form-control-sm form-select "})
+                    </div>
+                </div>
+
+                
+            </div>
+        </div>
+
+
+        <div class="saveButton col-md-1 mt-3">
+            <button type="submit" class="btn btn-success col-md-12">Save</button>
+        </div>
+    </div>
+
+</form>

@@ -1,0 +1,30 @@
+﻿@model PavlovServerModlistViewModel
+
+
+@{
+    ViewBag.Title = "Edit pavlov server mod list";
+    Layout = "_Layout";
+    var users = ViewBag.Users;
+
+}
+
+<h2>@ViewBag.Title</h2>
+
+<form asp-controller="PavlovServer" asp-action="SaveModList" method="post">
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <input asp-for="pavlovServerId" class="form-control" value="@Model.pavlovServerId" type="hidden"/>
+    <span asp-validation-for="pavlovServerId" class="text-danger"></span>
+
+    <div class="form-group col-md-12">
+        <label asp-for="userIds"></label>
+        @Html.ListBoxFor(m => m.userIds, new MultiSelectList(users, "Id", "UserName", Model.userIds), new {@class = "form-control form-control-sm"})
+    </div>
+
+    <div class="row">
+        <div class="col-md-1 mt-3">
+            <button type="submit" class="btn btn-success  col-md-12">Save</button>
+        </div>
+    </div>
+
+</form>
