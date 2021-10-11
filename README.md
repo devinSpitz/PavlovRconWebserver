@@ -11,6 +11,9 @@ Pictures:
 ![PavlovServerSystemSettings](./PavlovRconWebserver/Pictures/PavlovServerSystemSettings.png?raw=true)
 ![PavlovServerSettings](./PavlovRconWebserver/Pictures/PavlovServerSettings.png?raw=true)
 ![MapsSelector](./PavlovRconWebserver/Pictures/MapsSelector.png?raw=true)
+![Rcon](./PavlovRconWebserver/Pictures/rcon.png?raw=true)
+![Commands](./PavlovRconWebserver/Pictures/Commands.png?raw=true)
+![ChooseItem.png](./PavlovRconWebserver/Pictures/chooseItem.png?raw=true)
 
 
 Attention:
