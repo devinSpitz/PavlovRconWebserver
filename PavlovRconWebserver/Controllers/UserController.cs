@@ -20,6 +20,7 @@ namespace PavlovRconWebserver.Controllers
             return View("Index", await _service.FindAll());
         }
 
+        [HttpGet]
         public async Task<IActionResult> DeleteUser(string id)
         {
             await _service.Delete(id);

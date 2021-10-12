@@ -298,7 +298,7 @@ namespace PavlovRconWebserver.Controllers
             return View("TeamSteamIdentity", viewModel);
         }
 
-        [HttpGet("/{teamId}/{steamIdentityId}/{overWriteRole}")]
+        [HttpGet("[controller]/{teamId}/{steamIdentityId}/{overWriteRole}")]
         public async Task<IActionResult> EditTeamSelectedSteamIdentity(int teamId, string steamIdentityId,
             string overWriteRole)
         {
