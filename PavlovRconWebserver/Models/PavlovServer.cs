@@ -40,12 +40,12 @@ namespace PavlovRconWebserver.Models
         [Display(Description = "Will get converted if not md5 already")]
         public string TelnetPassword { get; set; }
 
-        [Required] public int ServerPort { get; set; }
+        [Required] public int ServerPort { get; set; } = 7777;
 
         [Required] public string ServerFolderPath { get; set; }
 
         [Required]
-        [DisplayName("Server service name (without .service)")]
+        [DisplayName("Service name (no .service and special chars)")]
         public string ServerSystemdServiceName { get; set; }
 
 

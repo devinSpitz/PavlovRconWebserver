@@ -142,6 +142,12 @@ namespace PavlovRconWebserver.Controllers
                             if (string.IsNullOrEmpty(server.ServerFolderPath))
                                 throw new SaveServerException("ServerFolderPath",
                                     "The server ServerFolderPath is needed!");
+                            if (!server.ServerFolderPath.EndsWith("/"))
+                                throw new SaveServerException("ServerFolderPath",
+                                    "The server ServerFolderPath needs a / at the end!");
+                            if (!server.ServerFolderPath.StartsWith("/"))
+                                throw new SaveServerException("ServerFolderPath",
+                                    "The server ServerFolderPath needs a / at the start!");
                             if (server.ServerPort <= 0)
                                 throw new SaveServerException("ServerPort", "The server port is needed!");
                             if (server.TelnetPort <= 0)
