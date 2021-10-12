@@ -38,7 +38,6 @@ namespace PavlovRconWebserver.Services
             var steamIdentitiesToReturn = await SteamIdentitiesToReturn(userIds, server, steamIdentities);
 
             //Find all mods and add it to the list steamIdentitiesToReturn
-            //Todo onPremiseRentalStuff to be sure about
             var additionalUsers = new List<LiteDbUser>();
             if (server.Owner == null || server.SshServer.Owner == null)
             {

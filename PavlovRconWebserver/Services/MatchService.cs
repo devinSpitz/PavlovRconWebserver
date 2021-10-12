@@ -217,6 +217,7 @@ namespace PavlovRconWebserver.Services
 
                 //GetAllAdminsForTheMatch
                 var mods = new List<string>();
+                //Todo what if the match is not team based? there are no mods or admins?
                 mods = listOfSteamIdentietiesWhichCanPlay.Where(x => x.OverWriteRole == "Mod" || x.OverWriteRole == "Admin").Select(x=>x.SteamIdentityId).ToList();
                 foreach (var mod in mods)
                 {
@@ -311,8 +312,7 @@ namespace PavlovRconWebserver.Services
 
             return result;
         }
-
-
+        
         public async Task MatchInspector(RconService.AuthType authType,
             int matchId)
         {
