@@ -104,7 +104,7 @@ namespace PavlovRconWebserver.Controllers
         public async Task<IActionResult> SteamIdentitiesIndex()
         {
             var list = (await _steamIdentityService.FindAll()).ToList();
-            foreach (var identity in list.Where(identity => !string.IsNullOrEmpty(identity.LiteDbUser.Id.ToString())))
+            foreach (var identity in list.Where(identity =>identity.LiteDbUser != null &&  !string.IsNullOrEmpty(identity.LiteDbUser.Id.ToString())))
                 identity.LiteDbUser = await _userManager.FindByIdAsync(identity.LiteDbUser.Id.ToString());
             return View("SteamIdentities", list);
         }
@@ -162,7 +162,7 @@ namespace PavlovRconWebserver.Controllers
                 if (!await RightsHandler.IsUserAtLeastInRole("Mod", HttpContext.User, _userService))
                     return Unauthorized();
 
-            if (currentOwner == null || steamIdentity.LiteDbUserId == currentOwner.LiteDbUser.Id.ToString())
+            if (currentOwner == null || steamIdentity.LiteDbUserId == currentOwner.LiteDbUser?.Id.ToString()||currentOwner.LiteDbUser==null)
                 await _steamIdentityService.Upsert(steamIdentity);
             else
                 return BadRequest("That would be a duplicate entry!");
@@ -298,7 +298,7 @@ namespace PavlovRconWebserver.Controllers
             return View("TeamSteamIdentity", viewModel);
         }
 
-        [HttpGet("/{teamId}/{steamIdentityId}/{overWriteRole}")]
+        [HttpGet("[controller]/{teamId}/{steamIdentityId}/{overWriteRole}")]
         public async Task<IActionResult> EditTeamSelectedSteamIdentity(int teamId, string steamIdentityId,
             string overWriteRole)
         {

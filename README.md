@@ -111,7 +111,8 @@ Help:
 ======= 
 1. Known issues found by makupi/pavlov-bot: https://github.com/makupi/pavlov-bot#known-issues-with-rcon-that-bot-cant-fix
 2. If you are had KeyFiles before 0.0.3 you need to restart with the defaultDb or drop the tables sshserver and pavlovServer with Lite DB Studio https://github.com/mbdavid/LiteDB.Studio  
-3. If you are coming from an older version then you have to copy the database to the new location. ./Database/Database.db
+3. If you are coming from an older version then you have to copy the database to the new location. ./Database/Database.db  
+
 Install Linux:
 ======= 
 
@@ -144,7 +145,7 @@ ExecStart="Full build path"/PavlovRconWebserver --urls=http://*:5001/
 Restart=always
 RestartSec=10 # Restart service after 10 seconds if dotnet service crashes
 SyslogIdentifier=dotnet-core-app
-User=pavlov
+User=steam
 Environment=ASPNETCORE_ENVIRONMENT=Production
 #Environment=ASPNETCORE_ENVIRONMENT=Development
 [Install]

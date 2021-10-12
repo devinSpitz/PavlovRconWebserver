@@ -23,7 +23,7 @@
     {
         <tr>
             <td>
-                <a class="btn btn-sm btn-danger" href="@Url.Action("DeleteUser", new {user.Id})" onclick="return confirm('Are you sure you want to Delete?')">
+                <a class="btn btn-sm btn-danger" href="@Url.Action("DeleteUser", new {id = user.Id})" onclick="return confirm('Are you sure you want to Delete?')">
                     <span class="fas fa-trash-alt"></span>
                 </a>
                 @user.Id
