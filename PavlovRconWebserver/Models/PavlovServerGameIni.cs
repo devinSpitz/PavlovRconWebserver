@@ -56,7 +56,7 @@ namespace PavlovRconWebserver.Models
                     continue;
                 }
 
-                tmpLine = tmpLine.Replace(Environment.NewLine, "").Replace("\r", "").Replace("\n", "");
+                tmpLine = tmpLine.Replace("\n", "").Replace("\r", "").Replace("\n", "");
                 //Bools
                 if (tmpLine.Contains("bEnabled="))
                 {
@@ -185,7 +185,7 @@ namespace PavlovRconWebserver.Models
                 else
                     lines.Add("MapRotation=(MapId=\"" + serverSelectedMap.Map.Id + "\", GameMode=\"" +
                               serverSelectedMap.GameMode + "\")");
-            var content = string.Join(Environment.NewLine, lines);
+            var content = string.Join("\n", lines);
 
             DataBaseLogger.LogToDatabaseAndResultPlusNotify("prepared game ini", LogEventLevel.Verbose, notyfService);
             var result = RconStatic.WriteFile(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.GameIni,

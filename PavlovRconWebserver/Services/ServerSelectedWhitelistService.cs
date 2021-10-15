@@ -43,7 +43,7 @@ namespace PavlovRconWebserver.Services
         private bool SaveToFile(PavlovServer pavlovServer, List<string> steamIds)
         {
             var lines = steamIds.Select(steamIdentity => steamIdentity + ";").ToArray();
-            var content = string.Join(Environment.NewLine, lines);
+            var content = string.Join("\n", lines);
             RconStatic.WriteFile(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.WhiteList, content,
                 _notifyService);
             return true;

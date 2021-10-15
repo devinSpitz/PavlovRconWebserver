@@ -164,6 +164,16 @@ namespace PavlovRconWebserver.Controllers
                                 "Field is not set: " + e.Message);
                         }
 
+                        if(server.SshKeyFileNameForm!=null)
+                        {
+                            await using var ms = new MemoryStream();
+                            await server.SshKeyFileNameForm.CopyToAsync(ms);
+                            var fileBytes = ms.ToArray();
+                            server.SshKeyFileNameRoot = fileBytes;
+                            // act on the Base64 data
+                        }
+                            
+                            
                         var result = await _pavlovServerService.CreatePavlovServer(server);
                         server = result.Key;
                         if (result.Value != null)

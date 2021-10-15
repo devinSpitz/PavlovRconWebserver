@@ -23,6 +23,11 @@
     }
     var keyFiles = Model.SshKeyFileNames.Prepend("");
 
+    var enctype = "";
+    @if (Model.create || Model.remove)
+    {
+        enctype = @"multipart/form-data";
+    }
     var action = "";
     
     var users = new List<LiteDbUser>();
@@ -69,7 +74,7 @@ else
     action = "SaveServer";
 }
 
-<form asp-controller="PavlovServer" asp-action="@action" method="post">
+<form asp-controller="PavlovServer" asp-action="@action" method="post" enctype="@enctype">
     <div asp-validation-summary="All" class="text-danger"></div>
 
     <input asp-for="Id" class="form-control" value="@Model.Id" type="hidden"/>
@@ -193,9 +198,9 @@ else
                     </div>
                     <div class="row">
                         <div class="form-group col-md-6">
-                            <label asp-for="SshKeyFileNameRoot"></label>
-                            @Html.DropDownListFor(m => m.SshKeyFileNameRoot, new SelectList(keyFiles, "", "", Model.SshKeyFileNameRoot), new {@class = "form-control form-select form-control-sm"})
-                            <span asp-validation-for="SshKeyFileNameRoot" class="text-danger"></span>
+                            <label asp-for="SshKeyFileNameForm"></label>
+                            <input asp-for="SshKeyFileNameForm" class="form-control-file" />
+                            <span asp-validation-for="SshKeyFileNameForm" class="text-danger"></span>
                         </div>
                         <div class="form-group col-md-6">
                             <label asp-for="SshPassphraseRoot"></label>

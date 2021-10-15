@@ -38,7 +38,6 @@ namespace PavlovRconWebserver.Services
             var steamIdentitiesToReturn = await SteamIdentitiesToReturn(userIds, server, steamIdentities);
 
             //Find all mods and add it to the list steamIdentitiesToReturn
-            //Todo onPremiseRentalStuff to be sure about
             var additionalUsers = new List<LiteDbUser>();
             if (server.Owner == null || server.SshServer.Owner == null)
             {
@@ -80,7 +79,7 @@ namespace PavlovRconWebserver.Services
         private async Task<bool> SaveToFile(PavlovServer pavlovServer, List<string> steamIds)
         {
             var lines = steamIds.Select(steamIdentity => steamIdentity + ";").ToList();
-            var content = string.Join(Environment.NewLine, lines);
+            var content = string.Join("\n", lines);
             RconStatic.WriteFile(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.ModList, content,
                 _notifyService);
             return true;

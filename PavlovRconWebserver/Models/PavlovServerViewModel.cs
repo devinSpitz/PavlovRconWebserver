@@ -2,7 +2,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Hangfire.Annotations;
 using LiteDB;
+using Microsoft.AspNetCore.Http;
 
 namespace PavlovRconWebserver.Models
 {
@@ -28,6 +30,12 @@ namespace PavlovRconWebserver.Models
 
         [NotMapped] [BsonIgnore] public List<string> SshKeyFileNames { get; set; } = new();
 
+        [BsonIgnore]
+        [NotMapped]
+        [CanBeNull]
+        [DisplayName("SSH key file")]
+        [Display(Description = "Select a file (only if you want to overwrite the possible existing one)")]
+        public IFormFile SshKeyFileNameForm { get; set; }
         public PavlovServerViewModel fromPavlovServer(PavlovServer pavlovServer, int sshServerId)
         {
             return new()

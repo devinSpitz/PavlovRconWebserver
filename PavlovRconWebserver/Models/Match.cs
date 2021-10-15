@@ -82,8 +82,7 @@ namespace PavlovRconWebserver.Models
 
         public bool isForceStopatable()
         {
-            return Status == Status.StartetWaitingForPlayer || Status != Status.Finshed &&
-                Status == Status.StartetWaitingForPlayer && Status == Status.Preparing;
+            return Status == Status.StartetWaitingForPlayer || Status == Status.OnGoing;
         }
     }
 }

@@ -139,7 +139,7 @@ namespace PavlovRconWebserver
                     var rconService = serviceScope.ServiceProvider.GetService<RconService>();
                     var pavlovServerService = serviceScope.ServiceProvider.GetService<PavlovServerService>();
                     var userService = serviceScope.ServiceProvider.GetService<UserService>();
-
+                    //Todo if match is still ongoing and PavlovRconWebserver has restarted restart the matchInspector for it.
                     userService?.CreateDefaultRoles().GetAwaiter().GetResult();
                     if (env.EnvironmentName != "Development")
                     {
