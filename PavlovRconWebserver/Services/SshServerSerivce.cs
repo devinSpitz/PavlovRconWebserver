@@ -123,6 +123,12 @@ namespace PavlovRconWebserver.Services
                     //ignore
                 }
 
+                
+                result += await RconStatic.RemovePath(server, server.ServerFolderPath, _pavlovServerService);
+                result += "\n *******************************delete folder Done*******************************";
+
+                
+                
                 server.SshServer = await FindOne(server.sshServerId);
                 if (server.SshServer == null) throw new CommandException("Could not get the sshServer!");
                 var oldSSHcrid = new SshServer
@@ -160,14 +166,6 @@ namespace PavlovRconWebserver.Services
                 }
 
 
-                server.SshServer.SshPassphrase = oldSSHcrid.SshPassphrase;
-                server.SshServer.SshUsername = oldSSHcrid.SshUsername;
-                server.SshServer.SshPassword = oldSSHcrid.SshPassword;
-                server.SshServer.SshKeyFileName = oldSSHcrid.SshKeyFileName;
-                result += "\n *******************************delete service Done*******************************";
-
-                result += await RconStatic.RemovePath(server, server.ServerFolderPath, _pavlovServerService);
-                result += "\n *******************************delete folder Done*******************************";
 
                 DataBaseLogger.LogToDatabaseAndResultPlusNotify(result, LogEventLevel.Verbose, _notifyService);
             }

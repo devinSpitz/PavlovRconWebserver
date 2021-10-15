@@ -550,7 +550,7 @@ WantedBy = multi-user.target";
                 var fileContentArray = outPutStream.ToArray();
                 var fileContent = Encoding.Default.GetString(fileContentArray);
 
-                if (fileContent.Replace(Environment.NewLine, "") != serviceTempalte.Replace(Environment.NewLine, ""))
+                if (fileContent.Replace("\n", "") != serviceTempalte.Replace("\n", ""))
                 {
                     DataBaseLogger.LogToDatabaseAndResultPlusNotify("Files are not the same!", LogEventLevel.Verbose,
                         notyfService);
@@ -665,16 +665,13 @@ WantedBy = multi-user.target";
                                 LogEventLevel.Verbose, notyfService);
                             sudoersFileContent[i] = "";
                         }
-
                     DataBaseLogger.LogToDatabaseAndResultPlusNotify("recreate the sudoers file", LogEventLevel.Verbose,
                         notyfService);
                     clientSftp.Create(sudoersPath);
 
                     DataBaseLogger.LogToDatabaseAndResultPlusNotify("refill the sudoers file", LogEventLevel.Verbose,
                         notyfService);
-                    clientSftp.AppendAllLines(sudoersPath, sudoersFileContent.Where(x => x != ""));
-
-
+                    clientSftp.WriteAllText(sudoersPath, string.Join("\n",sudoersFileContent.Where(x => x != "")),Encoding.UTF8);
                     var sudoersFileContentAfterRemove = clientSftp.ReadAllLines(sudoersPath);
                     if (sudoersFileContentAfterRemove.Contains(sudoersLine))
                         DataBaseLogger.LogToDatabaseAndResultPlusNotify(
@@ -712,15 +709,15 @@ WantedBy = multi-user.target";
             {
                 clientSftp.Connect();
                 clientSsh.Connect();
-
                 var sudoersLine = SudoersLine(server);
-                var sudoers = clientSftp.ReadAllText(sudoersPath);
+                var sudoers = clientSftp.ReadAllLines(sudoersPath);
                 DataBaseLogger.LogToDatabaseAndResultPlusNotify("sudoers content: " + sudoers, LogEventLevel.Verbose,
                     notyfService);
                 if (!sudoers.Contains(sudoersLine))
                 {
-                    clientSftp.AppendAllLines(sudoersPath, new[] {sudoersLine});
-
+                    var tmpList = sudoers.ToList();
+                    tmpList.Add(sudoersLine);
+                    clientSftp.WriteAllText(sudoersPath, string.Join("\n",tmpList),Encoding.UTF8);
                     var afterAdding = clientSftp.ReadAllText(sudoersPath);
                     DataBaseLogger.LogToDatabaseAndResultPlusNotify("sudoers content after adding line: " + afterAdding,
                         LogEventLevel.Verbose, notyfService);
@@ -1250,7 +1247,7 @@ WantedBy = multi-user.target";
                 var fileContentArray = outPutStream.ToArray();
                 var fileContent = Encoding.Default.GetString(fileContentArray);
 
-                if (fileContent.Replace(Environment.NewLine, "") == content.Replace(Environment.NewLine, ""))
+                if (fileContent.Replace("\n", "") == content.Replace("\n", ""))
                 {
                     DataBaseLogger.LogToDatabaseAndResultPlusNotify(
                         "Upload complet finished. also checked and its the same", LogEventLevel.Verbose, notyfService);

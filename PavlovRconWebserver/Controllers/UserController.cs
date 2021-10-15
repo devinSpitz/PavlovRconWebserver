@@ -9,7 +9,7 @@ namespace PavlovRconWebserver.Controllers
     public class UserController : Controller
     {
         private readonly UserService _service;
-
+        //Todo GDPR so user or admin can delete everything that is related to the user. If the user is get removed it should also also remove everything which is related to him(pavlovserver just reset on rent. OnPremise remove sshserver etc. Mod/admin just remove from Mod/whitelists). 
         public UserController(UserService service)
         {
             _service = service;

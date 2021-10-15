@@ -174,12 +174,12 @@ namespace PavlovRconWebserver.Services
                 {
                     result += await RconStatic.InstallPavlovServerService(server, _notifyService, this);
                 }
-                catch (CommandException)
+                catch (CommandException e)
                 {
                     //If crash inside here the user login is still root. If the root login is bad this will fail to remove the server afterwards
                     OverwrideTheNormalSSHLoginData(server, oldSSHcrid);
                     DataBaseLogger.LogToDatabaseAndResultPlusNotify(
-                        "catch after install override and remove afterwards", LogEventLevel.Verbose, _notifyService);
+                        "catch after install override and remove afterwards: "+e.Message, LogEventLevel.Verbose, _notifyService);
                     throw;
                 }
 

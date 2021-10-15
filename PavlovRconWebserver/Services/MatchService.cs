@@ -211,7 +211,7 @@ namespace PavlovRconWebserver.Services
                 
                 if (match.MatchSelectedSteamIdentities.Count > 0)
                     list = match.MatchSelectedSteamIdentities
-                        .Select(x => Strings.Trim(x.SteamIdentityId + ";" + Environment.NewLine)).ToList();
+                        .Select(x => Strings.Trim(x.SteamIdentityId + ";" + "\n")).ToList();
                 else if (listOfSteamIdentietiesWhichCanPlay.Count > 0)
                     list = listOfSteamIdentietiesWhichCanPlay.Select(x => Strings.Trim(x.SteamIdentityId)).ToList();
 

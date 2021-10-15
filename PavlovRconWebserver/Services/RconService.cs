@@ -106,7 +106,7 @@ namespace PavlovRconWebserver.Services
         public bool SaveBlackListEntry(PavlovServer server, List<ServerBans> NewBlackListContent)
         {
             var blacklistArray = NewBlackListContent.Select(x => x.SteamId).ToArray();
-            var content = string.Join(Environment.NewLine, blacklistArray);
+            var content = string.Join("\n", blacklistArray);
             RconStatic.WriteFile(server, server.ServerFolderPath + FilePaths.BanList, content, _notifyService);
             return true;
         }
