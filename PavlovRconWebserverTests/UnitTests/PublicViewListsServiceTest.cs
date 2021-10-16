@@ -45,7 +45,7 @@ namespace PavlovRconWebserverTests.UnitTests
             var result =
                 _publicViewListsService.PavlovServerPlayerListPublicViewModel(pavlovServerInfo,
                     new[] {pavlovServerPlayer});
-            var result2 = _publicViewListsService.GetPavlovServerPlayerListPublicViewModel(pavlovServers.First().Id)
+            var result2 = _publicViewListsService.GetPavlovServerPlayerListPublicViewModel(pavlovServers.First().Id,false)
                 .GetAwaiter().GetResult();
             // assert
             result.ServerInfo.ServerName.Should().Be("test");

@@ -76,7 +76,7 @@
                                     <b>by @map.Author</b>
                                 }
 
-                                @Html.DropDownList("TDM", new SelectList(gameModes, "TDM"), new {@class = "gameMode form-control form-control-sm form-select ", onchange = "ChangeMap($(this).parent().find('.mapId').val(),this,$(this).parent().find('.gameMode').val(),true)"})
+                                @Html.DropDownList("TDM", new SelectList(gameModes, "TDM"), new {@class = "gameMode form-control form-control-sm form-select ", onchange = "ChangeMap($(this).parent().find('.mapId').val(),this,$(this).parent().find('.gameMode').val(),true)", oldMode="TDM"})
 
                             </div>
                         </div>
@@ -139,7 +139,7 @@
                                     <br>
                                     <b>by @map.Map.Author</b>
                                 }
-                                @Html.DropDownList(map.GameMode, new SelectList(gameModes, map.GameMode), new {@class = "gameMode form-control form-control-sm form-select ", onchange = "ChangeMap($(this).parent().find('.mapId').val(),this,$(this).parent().find('.gameMode').val(),true)"})
+                                @Html.DropDownList(map.GameMode, new SelectList(gameModes, map.GameMode), new {@class = "gameMode form-control form-control-sm form-select ", onchange = "ChangeMap($(this).parent().find('.mapId').val(),this,$(this).parent().find('.gameMode').val(),true)", oldMode=map.GameMode})
 
                             </div>
                         </div>
