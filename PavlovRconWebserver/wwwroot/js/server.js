@@ -29,11 +29,11 @@ function ChangeMap(mapId,object,gameMode,onlyChange = false)
 }
 
 
-function SaveApiCall(method, serverId, mapId, gameMode, object,Move) {
+function SaveApiCall(method, serverId, mapId, gameMode, object,Move,oldMode) {
     $.ajax({
         type: 'GET',
         url: "/SshServer/" + method + "ServerSelectedMap",
-        data: {serverId: serverId, mapId: mapId, gameMode: gameMode},
+        data: {serverId: serverId, mapId: mapId, gameMode: gameMode, move: Move,oldMode: oldMode},
         success: function (data) {
             if(data===true)
             {
@@ -65,7 +65,8 @@ function callApi(method,serverId,mapId,object,gameMode,onlyGameMode)
         SaveApiCall(method, serverId, mapId, gameMode, object,true);
     }else if(method === "Delete"&&onlyGameMode)
     {
-        SaveApiCall("Save", serverId, mapId, gameMode, object,false);
+        SaveApiCall("Save", serverId, mapId, gameMode, object,false,oldGameMode = $(object).attr("oldMode"));
+        $(object).attr("oldMode",gameMode);
     }else if(method === "Delete"&&!onlyGameMode)
     {
         SaveApiCall(method, serverId, mapId, gameMode, object,true);

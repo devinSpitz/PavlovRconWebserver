@@ -43,12 +43,25 @@ namespace PavlovRconWebserver.Controllers
                 if (server.ServerServiceState != ServerServiceState.active &&
                     server.ServerType == ServerType.Community) continue;
                 if (server.ServerType == ServerType.Event) continue;
-                result.Add(await _publicViewListsService.GetPavlovServerPlayerListPublicViewModel(serverId));
+                result.Add(await _publicViewListsService.GetPavlovServerPlayerListPublicViewModel(serverId,false));
             }
 
             ViewBag.background = backgroundColorHex;
             ViewBag.textColor = fontColorHex;
             return PartialView(result);
+        }        
+        
+        
+        [HttpGet("[controller]/MapFromSerer/{serverId}")]
+        // GET
+        public async Task<IActionResult> MapFromSerer(int serverId)
+        {
+            var result = new PavlovServerPublicMapListViewModel();
+            var server = await _pavlovServerService.FindOne(serverId);
+            if (server == null) BadRequest();
+            result = await _publicViewListsService.GetPavlovServerPublicMapListViewModel(serverId);
+
+            return PartialView("MapFromServer",result);
         }
 
         [HttpGet("[controller]/PlayersFromMatches/")]

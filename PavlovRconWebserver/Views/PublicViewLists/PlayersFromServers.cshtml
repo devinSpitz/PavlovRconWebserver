@@ -28,6 +28,9 @@
     .Team1{
         background-color: #f98787;
     }
+ .modal-body{
+      display: inline-block;
+    }
     
 </style>
 @if (!Model.Any())
@@ -39,15 +42,22 @@
 @foreach (var viewModel in Model)
 {
     <div class="stylePavlovServers">
-        @await Html.PartialAsync("/Views/Rcon/PavlovServerInfoSinglePartialView.cshtml", new ServerInfoViewModel
-        {
-            Name = viewModel.ServerInfo.ServerName,
-            ServerInfo = viewModel.ServerInfo
-        })
         @{
+            var additionalHtml = "";
+            if (viewModel.serverId != null && viewModel.serverId != 0 && viewModel.withMaps)
+            {
+                additionalHtml = "<a class='btn btn-sm btn-primary'  onclick='GetMapsForServer(" + viewModel.serverId + ")'>Show <span class='fas fa-map'></span></a>";
+            }
+
             var hasTwoTeams = viewModel.PlayerList.GroupBy(x => x.TeamId).Count() == 2;
             var tableHeaer = "<thead><tr><th>Name</th><th>Score</th><th>Kills</th><th>Deaths</th><th>Assits</th><th>Cash</th></tr></thead>";
         }
+        @await Html.PartialAsync("/Views/Rcon/PavlovServerInfoSinglePartialView.cshtml", new ServerInfoViewModel
+        {
+            Name = viewModel.ServerInfo.ServerName,
+            ServerInfo = viewModel.ServerInfo,
+            AdditionalHtml = additionalHtml,
+        })
         @if (hasTwoTeams)
         {
             <div class="row  col-ms-6">
@@ -89,3 +99,27 @@
         }
     </div>
 }
+
+<script>
+function GetMapsForServer(serverId)
+{
+    
+    $(".overlay").show();
+    $.ajax({
+        type: 'GET',
+        url: "/PublicViewLists/MapFromSerer/"+serverId,
+        success:  function(data)
+        {
+            $('#modal-placeholder').html(data);
+            $('#modal-placeholder > .modal').modal('show');
+            $(".overlay").hide();
+        },
+        error: function()
+        {
+            alert("Something did go wrong!");
+            $(".overlay").hide();
+        }
+    });
+}
+
+</script>

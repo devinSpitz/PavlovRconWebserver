@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Hangfire.Annotations;
 
 namespace PavlovRconWebserver.Models
 {
@@ -9,5 +10,9 @@ namespace PavlovRconWebserver.Models
         public List<PlayerModelExtended> PlayerList { get; set; }
         public string team0Score { get; set; }
         public string team1Score { get; set; }
+        [CanBeNull]
+        public int serverId { get; set; }
+        [CanBeNull]
+        public bool withMaps { get; set; }
     }
 }

@@ -1,0 +1,65 @@
+@model PavlovServerPublicMapListViewModel
+@{
+    var counter = 0;
+}
+<div class="modal" id="add-contact" tabindex="-1" role="dialog" aria-labelledby="addContactLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content cssModalSizeAsChildren">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addContactLabel">Serverinfos</h5>
+                <button type="button" class="close  btn btn-danger" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+
+                <style>
+                    .pavlovServerInfoStyle{
+                        margin-left: auto;
+                        margin-right: auto;
+                        text-align: center;
+                        }
+                </style>
+                <div class="card m-1  pavlovServerInfoStyle">
+                    <div class="card-header">
+                        <b>@Model.ServerInfo.ServerName</b>
+                    </div>
+                    <div class="card-body">
+                        <img src="@Model.ServerInfo.MapPictureLink" height="150px" width="150px"/>
+                        <li>Round state: @Model.ServerInfo.RoundState</li>
+                        <li>Game mode: @Model.ServerInfo.GameMode</li>
+                        <li>Player count: @Model.ServerInfo.PlayerCount</li>
+                        <li>Map id: @Model.ServerInfo.MapLabel</li>
+                        <li>Teams: @Model.ServerInfo.Teams</li>
+                        <li>Team score 0: @Model.ServerInfo.Team0Score</li>
+                        <li>Team score 1: @Model.ServerInfo.Team1Score</li>
+                        <br>
+                        <div class="card-header">
+                            <b>Maps cycle</b>
+                        </div>
+                        <li class="bg-info">Please note that the GameMode can be overridden by the Map (CUSTOM), which means that the GameMode may be wrong down here.</li>
+                        <hr>
+                    @foreach(var map in Model.MapList)
+                        {
+                            {
+                                counter +=  1;
+                                
+                            }
+                            <div>
+                                <b>Map: @counter</b>
+                                <li>Author: @map.Map.Author</li>
+                                <li>GameMode: @map.GameMode</li>
+                                <li>Id: @map.Map.Id</li>
+                                <img height="150px" width="150px" src="@map.Map.ImageUrl">
+                            </div> 
+                            <hr>
+                        }
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Hangfire.Annotations;
 using LiteDB;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -133,7 +134,7 @@ namespace PavlovRconWebserver.Controllers
         }
 
         [HttpGet("[controller]/SaveServerSelectedMap")]
-        public async Task<bool> SaveServerSelectedMap(int serverId, string mapId, string gameMode)
+        public async Task<bool> SaveServerSelectedMap(int serverId, string mapId, string gameMode, bool move = true, [CanBeNull]string oldMode ="")
         {
             if (!await RightsHandler.HasRightsToThisPavlovServer(HttpContext.User,
                 await _userservice.getUserFromCp(HttpContext.User), serverId, _service, _pavlovServerService))
@@ -153,9 +154,20 @@ namespace PavlovRconWebserver.Controllers
                         GameMode = gameMode
                     };
                     await _serverSelectedMapService.Insert(newMap);
+                    if (!move) // means that it just changed GameMode
+                    {
+                        //i need to know to old Game Mode
+                        var oldMap = mapsSelected.FirstOrDefault(x => x.Map.Id == realMap.Id && x.GameMode == oldMode);
+                        if (oldMap != null)
+                        {
+                            await _serverSelectedMapService.Delete(oldMap.Id);
+                        }
+                    }
+                    
                 }
                 else
                 {
+                    //Can never go here?
                     toUpdate.GameMode = gameMode;
                     await _serverSelectedMapService.Update(toUpdate);
                 }

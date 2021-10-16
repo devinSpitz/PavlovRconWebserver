@@ -9,6 +9,7 @@
 <div class="card m-1  pavlovServerInfoStyle">
     <div class="card-header">
         <b>@Model.ServerInfo.ServerName</b>
+        @Html.Raw(Model.AdditionalHtml)
     </div>
     <div class="card-body">
         <img src="@Model.ServerInfo.MapPictureLink" height="150px" width="150px"/>

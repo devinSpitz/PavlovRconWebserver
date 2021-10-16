@@ -14,6 +14,7 @@ Pictures:
 ![Rcon](./PavlovRconWebserver/Pictures/rcon.png?raw=true)
 ![Commands](./PavlovRconWebserver/Pictures/Commands.png?raw=true)
 ![ChooseItem.png](./PavlovRconWebserver/Pictures/chooseItem.png?raw=true)
+![IndexMapCycleView.png](./PavlovRconWebserver/Pictures/IndexMapCycleView.png?raw=true)
 
 
 Attention:
@@ -26,6 +27,7 @@ https://github.com/devinSpitz/PavlovRconWebserver/discussions
 Features:
 =======
 newly added:  
+* Map view on index page so visitors can see the map cycle
 * Premium Role:  The costume clown is now only available for premium members or higher roles.(Global roles with access to Clown: Premium,OnPremise,ServerRent,Mod,Captain,Admin)
 * OnPremise Role which administers an ssh server itself and can therefore also administer its own servers etc. via the platform.
 * ServerRent Role which can administer a separate pavlov server in a limited way.
