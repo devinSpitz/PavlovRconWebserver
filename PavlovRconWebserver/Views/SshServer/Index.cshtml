@@ -84,6 +84,7 @@
                             <th class="toHide">Maps</th>
                             <th class="toHide col-sm-2">ServerSettings</th>
                             <th class="toHide">Stop/Start</th>
+                            <th class="toHide">logs</th>
                             <th class="toHide">Stats</th>
                             <th class="toHide">Steam</th>
                         </tr>
@@ -158,6 +159,11 @@
                                         <span class="fas fa-play"></span>
                                     </a>
                                 </td>
+                                
+                                <td class="toHide">
+                                    <a class="btn btn-sm btn-primary" href="@Url.Action("GetServerLog", "PavlovServer", new {serverId = pavlovServer.Id})"><span class="fas fa-eye"></span> Logs</a>
+                                </td>
+                                
                                 <td class="toHide">
                                     <a class="btn btn-sm btn-primary" href="@Url.Action("PlayersFromServers", "PublicViewLists", new {servers = new int[1] {pavlovServer.Id}, backgroundColorHex = "#222", fontColorHex = "#ffffff"})"><span class="fas fa-eye"></span> Stats</a>
                                     <a class="btn btn-sm btn-primary" href="@Url.Action("GetHistoryOfServer", "PublicViewLists", new {serverId = pavlovServer.Id})"><span class="fas fa-eye"></span> History</a>

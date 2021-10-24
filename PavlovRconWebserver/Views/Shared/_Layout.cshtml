@@ -1,4 +1,5 @@
 ﻿@using LiteDB.Identity.Models
+@using Microsoft.AspNetCore.Http
 @using Microsoft.AspNetCore.Identity
 @using PavlovRconWebserver.Services
 @inject SignInManager<LiteDbUser> SignInManager
@@ -10,12 +11,21 @@
 @inject UserService _userService;
 @inject TeamSelectedSteamIdentityService _teamSelectedSteamIdentityService;
 @{
+    
+    Uri url = new Uri(String.Format("{0}://{1}", Context.Request.Scheme, Context.Request.Host));
     var user = await UserManager.GetUserAsync(User);
     _userService.UserInRole(user, _serverSelectedModsService, _pavlovServerService, out var isAdmin, out var isCaptain, out var isMod, out var isOnPremise, out var isServerRent, out var isModSomeWhere, out _);
 }
 <!DOCTYPE html>
 <html>
 <head>
+    <meta property="og:title" content="Pavlov Rcon Webserver" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="@url" />
+    <meta property="og:image" content="favicon.ico" />
+    <meta property="og:description" content="Take a look at online players, maps and manage Pavlvov servers" />
+    <meta name="theme-color" content="#050000">
+    <!-- Include this to make the og:image larger -->
 
     <meta name="description" content="PavlovRconWebserver" />
     <meta name="keywords" content="ssh,mobile, database, administration, server, webserver, rcon, vr, telnet, priority, game-server-content, roles-management, pavlov" />
@@ -144,9 +154,17 @@
 
     <div id="modal-placeholder"></div>
     @RenderBody()
-    <footer class="col-md-12">
+    <footer class="col-md-12 row">
         <hr/>
-        <p>Pavlov Rcon Webserver</p>
+
+        <div class="col-5">  The programmer has no influence on the content of this site<br> outside of <a href="https://pavlov.spitzen.solutions/">https://pavlov.spitzen.solutions/</a>.<br>
+            Programmer contact info:<br>
+                Programmed by <a href="http://spitzen.solutions/">Devin Spitz</a><br>Discord from the programmer: <br>
+                <a href="http://dc.spitzen.solutions"><img src="https://badgen.net/discord/members/G5VpbgdYey" alt="Discord" /></a><br>
+            <a href="https://github.com/devinSpitz/PavlovRconWebserver">Pavlov Rcon Webserver source</a><br>
+            </div>
+        <div class="col-2"></div>
+        <div class="col-5"><a href="http://creativecommons.org/licenses/by-nc-sa/4.0/" rel="nofollow">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a><br><a href="http://creativecommons.org/licenses/by-nc-sa/4.0/" rel="nofollow"><img alt="Creative Commons License" src="https://camo.githubusercontent.com/f05d4039b67688cfdf339d2a445ad686a60551f9891734c418f7096184de5fac/68747470733a2f2f692e6372656174697665636f6d6d6f6e732e6f72672f6c2f62792d6e632d73612f342e302f38387833312e706e67" data-canonical-src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" style="max-width: 100%;"></a></div>
     </footer>
 </div>
 

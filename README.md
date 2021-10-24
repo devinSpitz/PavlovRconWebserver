@@ -3,8 +3,9 @@
 ![GitHub All Releases](https://img.shields.io/github/downloads/devinspitz/PavlovRconWebserver/total)
 ![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/devinspitz/PavlovRconWebserver?label=release)
 ![Platforms](https://img.shields.io/static/v1?label=platform:&message=windows10%20|%20linux&color=green)
-[![CodeFactor](https://www.codefactor.io/repository/github/devinspitz/pavlovrconwebserver/badge)](https://www.codefactor.io/repository/github/devinspitz/pavlovrconwebserver)  
-[![CircleCI](https://circleci.com/gh/devinSpitz/PavlovRconWebserver/tree/master.svg?style=shield)](https://circleci.com/gh/devinSpitz/PavlovRconWebserver/tree/circleci-project-setup)  
+[![CodeFactor](https://codefactor.io/repository/github/devinspitz/pavlovrconwebserver/badge)](https://www.codefactor.io/repository/github/devinspitz/pavlovrconwebserver)
+[![CircleCI](https://circleci.com/gh/devinSpitz/PavlovRconWebserver/tree/master.svg?style=shield)](https://circleci.com/gh/devinSpitz/PavlovRconWebserver/tree/circleci-project-setup)
+[![Discord](https://badgen.net/discord/members/G5VpbgdYey)](http://dc.spitzen.solutions)  
 Pictures:  
 ![Index](./PavlovRconWebserver/Pictures/Index.png?raw=true)
 ![Servers](./PavlovRconWebserver/Pictures/Servers.png?raw=true)

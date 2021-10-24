@@ -1,5 +1,4 @@
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -88,6 +87,8 @@ namespace PavlovRconWebserver.Controllers
             server.LiteDbUsers = (await _userservice.FindAll()).ToList();
             return View("Server", server);
         }
+        
+        
 
         [HttpGet("[controller]/EditServerSelectedMaps/{serverId}")]
         public async Task<IActionResult> EditServerSelectedMaps(int serverId)
@@ -343,6 +344,34 @@ namespace PavlovRconWebserver.Controllers
             }
 
             return RedirectToAction("Index", "SshServer");
+        }        
+        
+        [Authorize(Roles = CustomRoles.OnPremise)]
+        [HttpGet("[controller]/GetServerLog/{serverId}")]
+        public async Task<IActionResult> GetServerLog(int serverId)
+        {
+            if (!await RightsHandler.HasRightsToThisPavlovServer(HttpContext.User,
+                await _userservice.getUserFromCp(HttpContext.User), serverId, _service, _pavlovServerService))
+                return Forbid();
+            var server = await _pavlovServerService.FindOne(serverId);
+            try
+            {
+                var connectionResult = await RconStatic.GetServerLog(server, _pavlovServerService);
+                if (connectionResult.Success)
+                {
+                    var replace = connectionResult.answer.Replace(Environment.NewLine, "<br/>");
+                    return View("ServerLogs",replace);
+                }
+                else
+                {
+                    return BadRequest("Coud not get data:"+connectionResult.errors);
+                }
+            }
+            catch (CommandException e)
+            {
+                return BadRequest(e.Message);
+            }
+
         }
 
         [HttpGet("[controller]/UpdatePavlovServer/{serverId}")]

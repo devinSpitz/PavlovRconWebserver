@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AspNetCoreHero.ToastNotification.Abstractions;
+using Hangfire;
 using Newtonsoft.Json;
 using PavlovRconWebserver.Exceptions;
 using PavlovRconWebserver.Extensions;
@@ -31,24 +32,30 @@ namespace PavlovRconWebserver.Services
         private readonly ServerBansService _serverBansService;
 
         private readonly SshServerSerivce _sshServerSerivce;
+        private readonly PavlovServerService _pavlovServerService;
         private readonly SteamIdentityService _steamIdentityService;
+        private readonly ServerSelectedMapService _serverSelectedMapService;
 
         public RconService(SteamIdentityService steamIdentityService,
             MapsService mapsService, PavlovServerInfoService pavlovServerInfoService,
             PavlovServerPlayerService pavlovServerPlayerService,
             SshServerSerivce sshServerSerivce,
+            PavlovServerService pavlovServerService,
             PavlovServerPlayerHistoryService pavlovServerPlayerHistoryService,
             ServerBansService serverBansService,
+            ServerSelectedMapService serverSelectedMapService,
             IToastifyService notyfService)
         {
             _notifyService = notyfService;
             _mapsService = mapsService;
             _pavlovServerInfoService = pavlovServerInfoService;
+            _pavlovServerService = pavlovServerService;
             _pavlovServerPlayerService = pavlovServerPlayerService;
             _pavlovServerPlayerHistoryService = pavlovServerPlayerHistoryService;
             _steamIdentityService = steamIdentityService;
             _sshServerSerivce = sshServerSerivce;
             _serverBansService = serverBansService;
+            _serverSelectedMapService = serverSelectedMapService;
         }
 
 
@@ -224,6 +231,53 @@ namespace PavlovRconWebserver.Services
                                         DataBaseLogger.LogToDatabaseAndResultPlusNotify(
                                             "Got the server info for the server: " + server.Name + "\n " +
                                             singleCommandResultTwo, LogEventLevel.Verbose, _notifyService);
+                                    
+                                    // if stuck on datacenter while its not in selected maps restart the serve etc.
+                                    if (tmp.ServerInfo.MapLabel == "datacenter")
+                                    {
+                                        var maps = await _serverSelectedMapService.FindAllFrom(server);
+                                        if (maps.FirstOrDefault(x => x.Map.Name == "datacenter") == null)
+                                        {
+                                            BackgroundJob.Enqueue(() => RconStatic.SystemDStart(server, _pavlovServerService));
+                                            DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                                                "The Server is stuck.(symptom switched to datacenter) Check the server log! This can be cause you have to less ram or space on your linux server. But can also just be a map issue.", LogEventLevel.Fatal, _notifyService);
+                                            
+                                        }
+                                    }  
+                                    //ToDo
+                                    // Autobalanced only when teams are there and there is no match
+                                    //if (tmp.ServerInfo.Teams=="true" && int.Parse(tmp.ServerInfo.PlayerCount.Split("/").First()) > 0 && server.ServerType == ServerType.Community)
+                                    //{
+                                    //    // Get Team members
+                                    //    var team0 = pavlovServerPlayerList.Where(x => x.TeamId == 0).ToArray();
+                                    //    var team1 = pavlovServerPlayerList.Where(x => x.TeamId == 1).ToArray();
+                                    //
+                                    //    var team0Score = team0.Sum(x => x.Score);
+                                    //    var team1Score = team1.Sum(x => x.Score);
+                                    //    //Better calc?
+                                    //    var magicAsHighRankCountPlayerNumber = (pavlovServerPlayerList.Sum(x=>x.Score)/pavlovServerPlayerList.Count())*2;
+                                    //
+                                    //    var veryGoodPlayers = pavlovServerPlayerList.Where(x => x.Score > magicAsHighRankCountPlayerNumber).ToArray();
+                                    //    
+                                    //    // are the ver good plaer good balanced?
+                                    //    var team0GoodPlayers = veryGoodPlayers.Where(x => x.TeamId == 0);
+                                    //    var team1GoodPlayers = veryGoodPlayers.Where(x => x.TeamId == 1);
+                                    //
+                                    //    if (team0GoodPlayers.Count() != team1GoodPlayers.Count())
+                                    //    {
+                                    //        
+                                    //    }
+                                    //    
+                                    //    // Team 0 bigger
+                                    //    if (team0.Length> team1.Length)
+                                    //    {
+                                    //    }
+                                    //    // Team 1 bigger
+                                    //    else if(team1.Length>team0.Length)
+                                    //    {
+                                    //    }
+                                    //}
+                                    
                                     var map = await _mapsService.FindOne(tmp.ServerInfo.MapLabel.Replace("UGC", ""));
                                     if (map != null)
                                         tmp.ServerInfo.MapPictureLink = map.ImageUrl;
