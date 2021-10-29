@@ -30,12 +30,15 @@ namespace PavlovRconWebserver.Models
         public bool bSecured { get; set; } = true;
         public bool bCustomServer { get; set; } = true;
         public bool bWhitelist { get; set; } = true;
+        public bool bVerboseLogging { get; set; } = false;
+        public bool bCompetitive { get; set; } = false;
         public int RefreshListTime { get; set; } = 120;
         public LimitedAmmoTypeEnum LimitedAmmoType { get; set; } = 0;
         public int TickRate { get; set; } = 90;
         public int TimeLimit { get; set; } = 60;
         public string Password { get; set; } = "";
         public string BalanceTableURL { get; set; } = "";
+        public string ApiKey { get; set; } = "";
 
         public List<PavlovServerGameIniMap> MapRotation { get; set; } =
             new(); // example string = (MapId="UGC1758245796", GameMode="GUN")
@@ -58,7 +61,27 @@ namespace PavlovRconWebserver.Models
 
                 tmpLine = tmpLine.Replace("\n", "").Replace("\r", "").Replace("\n", "");
                 //Bools
-                if (tmpLine.Contains("bEnabled="))
+                if (tmpLine.Contains("bVerboseLogging="))
+                {
+                    var tmp = tmpLine.Replace("bVerboseLogging=", "");
+                    bVerboseLogging = tmp switch
+                    {
+                        "true" => true,
+                        "false" => false,
+                        _ => bVerboseLogging
+                    };
+                }
+                else if (tmpLine.Contains("bCompetitive="))
+                {
+                    var tmp = tmpLine.Replace("bCompetitive=", "");
+                    bCompetitive = tmp switch
+                    {
+                        "true" => true,
+                        "false" => false,
+                        _ => bCompetitive
+                    };
+                }               
+                else if (tmpLine.Contains("bEnabled="))
                 {
                     var tmp = tmpLine.Replace("bEnabled=", "");
                     bEnabled = tmp switch
@@ -147,6 +170,10 @@ namespace PavlovRconWebserver.Models
                     var tmp = tmpLine.Replace("TimeLimit=", "");
                     TimeLimit = int.Parse(tmp);
                 }
+                else if (tmpLine.Contains("ApiKey="))
+                {
+                    ApiKey = tmpLine.Replace("ApiKey=", "");
+                }
             }
 
             return true;
@@ -163,6 +190,8 @@ namespace PavlovRconWebserver.Models
             lines.Add("MaxPlayers=" + MaxPlayers);
             lines.Add("bSecured=" + bSecured.ToString().ToLower());
             lines.Add("bCustomServer=" + bCustomServer.ToString().ToLower());
+            lines.Add("bVerboseLogging=" + bVerboseLogging.ToString().ToLower());
+            lines.Add("bCompetitive=" + bCompetitive.ToString().ToLower());
             lines.Add("bWhitelist=" + bWhitelist.ToString().ToLower());
             lines.Add("RefreshListTime=" + RefreshListTime);
             lines.Add("LimitedAmmoType=" + (int) LimitedAmmoType);
@@ -178,6 +207,12 @@ namespace PavlovRconWebserver.Models
             else
                 lines.Add("BalanceTableURL=");
 
+            if (!string.IsNullOrEmpty(ApiKey))
+                lines.Add("ApiKey=" + ApiKey);
+            else
+                lines.Add("ApiKey=");
+
+            
             foreach (var serverSelectedMap in serverSelectedMaps)
                 if (Regex.IsMatch(serverSelectedMap.Map.Id, @"^\d+$"))
                     lines.Add("MapRotation=(MapId=\"UGC" + serverSelectedMap.Map.Id + "\", GameMode=\"" +

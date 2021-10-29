@@ -35,6 +35,8 @@ namespace PavlovRconWebserver.Services
         private readonly PavlovServerService _pavlovServerService;
         private readonly SteamIdentityService _steamIdentityService;
         private readonly ServerSelectedMapService _serverSelectedMapService;
+        private readonly SteamIdentityStatsServerService _steamIdentityStatsServerService;
+        
 
         public RconService(SteamIdentityService steamIdentityService,
             MapsService mapsService, PavlovServerInfoService pavlovServerInfoService,
@@ -44,6 +46,7 @@ namespace PavlovRconWebserver.Services
             PavlovServerPlayerHistoryService pavlovServerPlayerHistoryService,
             ServerBansService serverBansService,
             ServerSelectedMapService serverSelectedMapService,
+            SteamIdentityStatsServerService steamIdentityStatsServerService,
             IToastifyService notyfService)
         {
             _notifyService = notyfService;
@@ -56,6 +59,7 @@ namespace PavlovRconWebserver.Services
             _sshServerSerivce = sshServerSerivce;
             _serverBansService = serverBansService;
             _serverSelectedMapService = serverSelectedMapService;
+            _steamIdentityStatsServerService = steamIdentityStatsServerService;
         }
 
 
@@ -208,6 +212,8 @@ namespace PavlovRconWebserver.Services
                                         Score = x.Score,
                                         ServerId = server.Id
                                     }).ToList();
+                                    var oldPavlovServerPlayerList =
+                                        await _pavlovServerPlayerService.FindAllFromServer(server.Id);
                                     await _pavlovServerPlayerService.Upsert(pavlovServerPlayerList, server.Id);
                                     await _pavlovServerPlayerHistoryService.Upsert(pavlovServerPlayerList.Select(x =>
                                         new PavlovServerPlayerHistory
@@ -231,52 +237,104 @@ namespace PavlovRconWebserver.Services
                                         DataBaseLogger.LogToDatabaseAndResultPlusNotify(
                                             "Got the server info for the server: " + server.Name + "\n " +
                                             singleCommandResultTwo, LogEventLevel.Verbose, _notifyService);
-                                    
-                                    // if stuck on datacenter while its not in selected maps restart the serve etc.
+                                   
+                                    // if stuck on datacenter while its not in selected maps rotate to the next map and hope the server works forward as expected
                                     if (tmp.ServerInfo.MapLabel == "datacenter")
                                     {
                                         var maps = await _serverSelectedMapService.FindAllFrom(server);
                                         if (maps.FirstOrDefault(x => x.Map.Name == "datacenter") == null)
                                         {
-                                            BackgroundJob.Enqueue(() => RconStatic.SystemDStart(server, _pavlovServerService));
-                                            DataBaseLogger.LogToDatabaseAndResultPlusNotify(
-                                                "The Server is stuck.(symptom switched to datacenter) Check the server log! This can be cause you have to less ram or space on your linux server. But can also just be a map issue.", LogEventLevel.Fatal, _notifyService);
-                                            
+                                            await RconStatic.SingleCommandResult(client2, "RotateMap");
                                         }
                                     }  
-                                    //ToDo
+                                    //Todo how many score per level or should it be exponential?
+                                    if (server.SaveStats)
+                                    {
+                                        var allStats = await _steamIdentityStatsServerService.FindAllFromServer(server.Id);
+                                        foreach (var player in pavlovServerPlayerList)
+                                        {
+                                            var tmpStats = allStats.FirstOrDefault(x => x.SteamId == player.UniqueId);
+                                            if(tmpStats!=null)
+                                            {
+                                                if (tmpStats.LastAddedScore < player.Score)
+                                                {
+                                                    tmpStats.Exp -= tmpStats.LastAddedScore;
+                                                }
+                                                tmpStats.Exp += player.Score;
+                                                tmpStats.LastAddedScore = player.Score;
+                                                await _steamIdentityStatsServerService.Update(tmpStats);
+                                                //update
+                                            }else
+                                            {
+                                                await _steamIdentityStatsServerService.Insert(new SteamIdentityStatsServer
+                                                {
+                                                    SteamId = player.UniqueId,
+                                                    SteamName = player.Username,
+                                                    SteamPicture = "",
+                                                    Kills = player.Kills,
+                                                    Deaths = player.Deaths,
+                                                    Assists = player.Assists,
+                                                    Level = 1,
+                                                    Exp = player.Score,
+                                                    serverId = server.Id,
+                                                    LastAddedScore = 0
+                                                });
+                                                //insert
+                                            }
+                                        }
+                                    }
+                                    
                                     // Autobalanced only when teams are there and there is no match
-                                    //if (tmp.ServerInfo.Teams=="true" && int.Parse(tmp.ServerInfo.PlayerCount.Split("/").First()) > 0 && server.ServerType == ServerType.Community)
-                                    //{
-                                    //    // Get Team members
-                                    //    var team0 = pavlovServerPlayerList.Where(x => x.TeamId == 0).ToArray();
-                                    //    var team1 = pavlovServerPlayerList.Where(x => x.TeamId == 1).ToArray();
-                                    //
-                                    //    var team0Score = team0.Sum(x => x.Score);
-                                    //    var team1Score = team1.Sum(x => x.Score);
-                                    //    //Better calc?
-                                    //    var magicAsHighRankCountPlayerNumber = (pavlovServerPlayerList.Sum(x=>x.Score)/pavlovServerPlayerList.Count())*2;
-                                    //
-                                    //    var veryGoodPlayers = pavlovServerPlayerList.Where(x => x.Score > magicAsHighRankCountPlayerNumber).ToArray();
-                                    //    
-                                    //    // are the ver good plaer good balanced?
-                                    //    var team0GoodPlayers = veryGoodPlayers.Where(x => x.TeamId == 0);
-                                    //    var team1GoodPlayers = veryGoodPlayers.Where(x => x.TeamId == 1);
-                                    //
-                                    //    if (team0GoodPlayers.Count() != team1GoodPlayers.Count())
-                                    //    {
-                                    //        
-                                    //    }
-                                    //    
-                                    //    // Team 0 bigger
-                                    //    if (team0.Length> team1.Length)
-                                    //    {
-                                    //    }
-                                    //    // Team 1 bigger
-                                    //    else if(team1.Length>team0.Length)
-                                    //    {
-                                    //    }
-                                    //}
+                                    if (server.AutoBalance && tmp.ServerInfo.Teams=="true" && server.ServerType == ServerType.Community)
+                                    {
+                                        // Get Team members
+                                        var team0 = pavlovServerPlayerList.Where(x => x.TeamId == 0).ToArray();
+                                        var team1 = pavlovServerPlayerList.Where(x => x.TeamId == 1).ToArray();
+                                        var fullCount = team0.Length + team1.Length;
+                                        var oldTeam0 = oldPavlovServerPlayerList.Where(x => x.TeamId == 0);
+                                        var oldTeam1 = oldPavlovServerPlayerList.Where(x => x.TeamId == 1);
+                                        var lastFullCount = oldTeam0.Count() + oldTeam1.Count();
+                                        bool connect = fullCount > lastFullCount;
+                                        var team0Score = team0.Sum(x => x.Score);
+                                        var team1Score = team1.Sum(x => x.Score);
+                                        var higherTeamScore = team0Score > team1Score ? team0Score : team1Score;
+                                        var teamCountDifference = Math.Abs(team0.Length - team1.Length);
+                                        var teamScoreDifference = Math.Abs(team0Score - team1Score);
+                                        var teamWithLess = team0.Length > team1.Length ? team0 : team1;
+                                        if (teamCountDifference > 2 || (teamScoreDifference > (higherTeamScore/4)))
+                                        {
+                                            if(connect) // if there are more than one?
+                                            {
+                                                
+                                                var usersThatAreNew = pavlovServerPlayerList.Where(x =>
+                                                    !oldPavlovServerPlayerList.Select(y => y.UniqueId)
+                                                        .Contains(x.UniqueId) && x.TeamId == teamWithLess.First().TeamId );
+                                                
+                                                var usersToSwitch = teamCountDifference/2;
+                                                var pavlovServerPlayersNew = usersThatAreNew as PavlovServerPlayer[] ?? usersThatAreNew.ToArray();
+                                                var userToSwitchNew = usersToSwitch;
+                                                if (usersToSwitch > pavlovServerPlayersNew.Count())
+                                                {
+                                                    userToSwitchNew = pavlovServerPlayersNew.Count();
+                                                }
+
+                                                var random = new Random();
+                                                for (var i = 0; i < userToSwitchNew; i++)
+                                                {
+                                                    var index = random.Next(pavlovServerPlayersNew.Count());
+                                                    await RconStatic.SingleCommandResult(client2, "SwitchTeam "+pavlovServerPlayersNew[index].UniqueId+" "+teamWithLess);  
+                                                }
+                                            }
+                                            else
+                                            {
+                                                var playerNearest = teamWithLess.OrderBy(x => Math.Abs((int) x.Score - teamScoreDifference)).First();
+                                                await RconStatic.SingleCommandResult(client2, "SwitchTeam "+playerNearest.UniqueId+" "+teamWithLess);
+                                                await RconStatic.SingleCommandResult(client2, "GiveCash  "+playerNearest.UniqueId+" 500");  
+                                            }
+	
+                                        }
+                                    }
+                                    
                                     
                                     var map = await _mapsService.FindOne(tmp.ServerInfo.MapLabel.Replace("UGC", ""));
                                     if (map != null)

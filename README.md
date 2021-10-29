@@ -17,6 +17,10 @@ Pictures:
 ![ChooseItem.png](./PavlovRconWebserver/Pictures/chooseItem.png?raw=true)
 ![IndexMapCycleView.png](./PavlovRconWebserver/Pictures/IndexMapCycleView.png?raw=true)
 
+Running Instances:
+=======
+* [https://pavlov.spitzen.solutions](https://pavlov.spitzen.solutions/)
+* [https://pavlovadmin.myinside.net](https://pavlovadmin.myinside.net/)
 
 Attention:
 =======
@@ -28,6 +32,12 @@ https://github.com/devinSpitz/PavlovRconWebserver/discussions
 Features:
 =======
 newly added:  
+* ApiKey support
+* Auto Balance (default disabled - will not work in TTT and modes that does not support stats or not having teams)
+* Save Stats
+* new Game ini settings
+* Auto balance (default disabled)
+* Save stats (default disabled) - level system WIP
 * Map view on index page so visitors can see the map cycle
 * Premium Role:  The costume clown is now only available for premium members or higher roles.(Global roles with access to Clown: Premium,OnPremise,ServerRent,Mod,Captain,Admin)
 * OnPremise Role which administers an ssh server itself and can therefore also administer its own servers etc. via the platform.
