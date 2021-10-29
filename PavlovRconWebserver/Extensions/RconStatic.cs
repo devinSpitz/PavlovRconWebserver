@@ -197,6 +197,41 @@ namespace PavlovRconWebserver.Extensions
             return EndConnection(result);
         }
 
+        public static async Task<ConnectionResult> GetServerLog(PavlovServer server,
+            PavlovServerService pavlovServerService)
+        {
+            var type = GetAuthType(server);
+            var connectionInfo = ConnectionInfoInternal(server, type, out var result);
+            using var client = new SshClient(connectionInfo);
+            try
+            {
+                //Todo make verbose logs
+                client.Connect();
+                var command = "journalctl -eu " + server.ServerSystemdServiceName + " -n 500 -o cat --no-hostname --no-full -q";
+                var stream =
+                    client.CreateShellStream("pavlovRconWebserverSShTunnelSystemdCheck", 5000, 500, 1920, 1080, 5000);
+                var content = await SendCommandForShell(command, stream, null);
+                if (content != null)
+                {
+
+                    result.answer = content;
+                    result.Success = true;
+                    return result;
+                }
+            }
+            catch (Exception e)
+            {
+                ExcpetionHandlingSshSftp(server, pavlovServerService._notifyService, e, result, client);
+            }
+            finally
+            {
+                client.Disconnect();
+            }
+
+            return result;
+        }
+
+        
 
         public static async Task<ConnectionResult> SystemDStart(PavlovServer server,
             PavlovServerService pavlovServerService)

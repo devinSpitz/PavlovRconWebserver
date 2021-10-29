@@ -69,6 +69,7 @@ namespace PavlovRconWebserver
             services.AddScoped<PublicViewListsService>();
             services.AddScoped<SteamService>();
             services.AddScoped<LogService>();
+            services.AddScoped<SteamIdentityStatsServerService>();
             services.AddSingleton(Configuration);
             services.AddScoped<IEmailSender, EmailSender>();
 

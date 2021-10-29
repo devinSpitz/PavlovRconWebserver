@@ -45,6 +45,34 @@
             <input asp-for="bEnabled" class="form-control form-check-input" value="@Model.bEnabled"/>
             <span asp-validation-for="bEnabled" class="text-danger"></span>
         </div>
+
+        <div class="form-group col-md-2">
+            <label asp-for="bSecured"></label>
+            <input asp-for="bSecured" class="form-control form-check-input" value="@Model.bSecured"/>
+            <span asp-validation-for="bSecured" class="text-danger"></span>
+        </div>
+        <div class="form-group col-md-2">
+            <label asp-for="bCustomServer"></label>
+            <input asp-for="bCustomServer" class="form-control form-check-input" value="@Model.bCustomServer"/>
+            <span asp-validation-for="bCustomServer" class="text-danger"></span>
+        </div>
+        <div class="form-group col-md-2">
+            <label asp-for="bVerboseLogging"></label>
+            <input asp-for="bVerboseLogging" class="form-control form-check-input" value="@Model.bVerboseLogging"/>
+            <span asp-validation-for="bVerboseLogging" class="text-danger"></span>
+        </div>
+        <div class="form-group col-md-2">
+            <label asp-for="bCompetitive"></label>
+            <input asp-for="bCompetitive" class="form-control form-check-input" value="@Model.bCompetitive"/>
+            <span asp-validation-for="bCompetitive" class="text-danger"></span>
+        </div>
+        <div class="form-group col-md-2">
+            <label asp-for="bWhitelist"></label>
+            <input asp-for="bWhitelist" class="form-control form-check-input" value="@Model.bWhitelist"/>
+            <span asp-validation-for="bWhitelist" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="row">
         @if (owner)
         {
             <div class="form-group col-md-2">
@@ -62,27 +90,10 @@
             </div>
         }
         <div class="form-group col-md-2">
-            <label asp-for="bSecured"></label>
-            <input asp-for="bSecured" class="form-control form-check-input" value="@Model.bSecured"/>
-            <span asp-validation-for="bSecured" class="text-danger"></span>
-        </div>
-        <div class="form-group col-md-2">
-            <label asp-for="bCustomServer"></label>
-            <input asp-for="bCustomServer" class="form-control form-check-input" value="@Model.bCustomServer"/>
-            <span asp-validation-for="bCustomServer" class="text-danger"></span>
-        </div>
-        <div class="form-group col-md-2">
-            <label asp-for="bWhitelist"></label>
-            <input asp-for="bWhitelist" class="form-control form-check-input" value="@Model.bWhitelist"/>
-            <span asp-validation-for="bWhitelist" class="text-danger"></span>
-        </div>
-        <div class="form-group col-md-2">
             <label asp-for="RefreshListTime"></label>
             <input asp-for="RefreshListTime" class="form-control" value="@Model.RefreshListTime"/>
             <span asp-validation-for="RefreshListTime" class="text-danger"></span>
         </div>
-    </div>
-    <div class="row">
         <div class="form-group col-md-2">
             <label asp-for="LimitedAmmoType"></label>
             <select asp-for="LimitedAmmoType" asp-items="Html.GetEnumSelectList<LimitedAmmoTypeEnum>()" class="form-control form-control-sm"></select>
@@ -109,6 +120,13 @@
             <label asp-for="BalanceTableURL"></label>
             <input asp-for="BalanceTableURL" class="form-control" value="@Model.BalanceTableURL"/>
             <span asp-validation-for="BalanceTableURL" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group col-md-12">
+            <label asp-for="ApiKey"></label>
+            <input asp-for="ApiKey" class="form-control" value="@Model.ApiKey"/>
+            <span asp-validation-for="ApiKey" class="text-danger"></span>
         </div>
     </div>
     <div class="row">

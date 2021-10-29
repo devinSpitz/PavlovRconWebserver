@@ -59,6 +59,14 @@ namespace PavlovRconWebserver.Models
         [DisplayName("Owner (ServerRent)")]
         [CanBeNull]
         public LiteDbUser Owner { get; set; }
+
+
+        [DisplayName("Allow Autobalance")]
+        [CanBeNull]
+        public bool AutoBalance { get; set; } = false;
+        [DisplayName("Save Stats")]
+        [CanBeNull]
+        public bool SaveStats { get; set; } = false;
         
         
         [NotMapped] [BsonIgnore] public List<LiteDbUser> LiteDbUsers { get; set; }
