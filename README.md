@@ -33,7 +33,7 @@ Features:
 =======
 newly added:  
 * ApiKey support
-* Auto Balance (default disabled - will not work in TTT and modes that does not support stats or not having teams)
+* Auto Balance (default disabled - will not work in TTT and some custom game modes which has no k/d or Stats and modes that does not support stats or not having teams it will screw up the already saved stats for this server.)
 * Save Stats
 * new Game ini settings
 * Auto balance (default disabled)

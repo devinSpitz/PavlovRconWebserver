@@ -7,7 +7,7 @@ namespace PavlovRconWebserver.Extensions
     {
         public static string[] Models =
         {
-            "none", "clown", "prisoner", "naked", "farmer", "russian", "nato", "us", "soviet", "german", "cop"
+            "none", "clown", "prisoner", "naked", "farmer", "russian", "nato", "us", "soviet", "german", "cop","infinitum","hidden"
         };
 
         public static IDictionary<string, TimeSpan> BanList { get; } = new Dictionary<string, TimeSpan>

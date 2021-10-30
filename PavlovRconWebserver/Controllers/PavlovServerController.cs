@@ -28,6 +28,7 @@ namespace PavlovRconWebserver.Controllers
         private readonly SteamIdentityService _steamIdentityService;
         private readonly UserService _userservice;
         private readonly ServerSelectedWhitelistService _whitelistService;
+        private readonly SteamIdentityStatsServerService _steamIdentityStatsServerService;
         private readonly UserManager<LiteDbUser> UserManager;
 
 
@@ -37,6 +38,7 @@ namespace PavlovRconWebserver.Controllers
             ServerSelectedMapService serverSelectedMapService,
             MapsService mapsService,
             ServerSelectedWhitelistService whitelistService,
+            SteamIdentityStatsServerService steamIdentityStatsServerService,
             ServerSelectedModsService serverSelectedModsService,
             SteamIdentityService steamIdentityService,
             UserManager<LiteDbUser> userManager,
@@ -47,6 +49,7 @@ namespace PavlovRconWebserver.Controllers
             _userservice = userService;
             _pavlovServerService = pavlovServerService;
             _serverSelectedMapService = serverSelectedMapService;
+            _steamIdentityStatsServerService = steamIdentityStatsServerService;
             _mapsService = mapsService;
             _whitelistService = whitelistService;
             _steamIdentityService = steamIdentityService;
@@ -243,6 +246,24 @@ namespace PavlovRconWebserver.Controllers
             try
             {
                 await _pavlovServerService.Delete(id);
+            }
+            catch (CommandException e)
+            {
+                return BadRequest(e.Message);
+            }
+
+            return RedirectToAction("Index", "SshServer");
+        }
+        
+        [HttpGet("[controller]/DeleteServerStats/{id}")]
+        public async Task<IActionResult> DeleteServerStats(int id)
+        {
+            if (!await RightsHandler.HasRightsToThisPavlovServer(HttpContext.User,
+                await _userservice.getUserFromCp(HttpContext.User), id, _service, _pavlovServerService))
+                return Forbid();
+            try
+            {
+                await _steamIdentityStatsServerService.DeleteForServer(id);
             }
             catch (CommandException e)
             {

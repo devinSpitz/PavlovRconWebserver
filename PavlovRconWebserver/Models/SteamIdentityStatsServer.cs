@@ -1,3 +1,4 @@
+using System;
 using LiteDB;
 
 namespace PavlovRconWebserver.Models
@@ -9,11 +10,16 @@ namespace PavlovRconWebserver.Models
         public string SteamName { get; set; } = "";
         public string SteamPicture { get; set; } = "";
         public int Kills { get; set; } = 0;
+        public int LastAddedKills { get; set; } = 0;
         public int Deaths { get; set; } = 0;
+        public int LastAddedDeaths { get; set; } = 0;
         public int Assists { get; set; } = 0;
-        public int Level { get; set; } = 0;
+        public int LastAddedAssists { get; set; } = 0;
         public int LastAddedScore { get; set; } = 0;
         public int Exp { get; set; } = 0;
-        public int serverId { get; set; } = 0;
+        public int ServerId { get; set; } = 0;
+        public int ForRound { get; set; } = 0;
+        public TimeSpan UpTime { get; set; } = new TimeSpan(0, 0, 0, 0);
+        public DateTime logDateTime { get; set; } = DateTime.Now;
     }
 }
