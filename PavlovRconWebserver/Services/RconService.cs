@@ -214,6 +214,7 @@ namespace PavlovRconWebserver.Services
                                     }).ToList();
                                     var oldPavlovServerPlayerList =
                                         await _pavlovServerPlayerService.FindAllFromServer(server.Id);
+                                    var oldServerInfo = await _pavlovServerInfoService.FindServer(server.Id);
                                     await _pavlovServerPlayerService.Upsert(pavlovServerPlayerList, server.Id);
                                     await _pavlovServerPlayerHistoryService.Upsert(pavlovServerPlayerList.Select(x =>
                                         new PavlovServerPlayerHistory
@@ -238,6 +239,41 @@ namespace PavlovRconWebserver.Services
                                             "Got the server info for the server: " + server.Name + "\n " +
                                             singleCommandResultTwo, LogEventLevel.Verbose, _notifyService);
                                    
+                                    var map = await _mapsService.FindOne(tmp.ServerInfo.MapLabel.Replace("UGC", ""));
+                                    if (map != null)
+                                        tmp.ServerInfo.MapPictureLink = map.ImageUrl;
+                                    
+                                    //Check of next round
+                                    bool nextRound = oldServerInfo.MapLabel != tmp.ServerInfo.MapLabel;
+                                    var round = oldServerInfo.Round;
+                                    if (nextRound)
+                                    {
+                                        if (round == 999)
+                                        {
+                                            round = 0; // reset value that's why you have to use the nextRound bool down from here to know if its the next round
+                                        }
+                                        
+                                        //Todo get the stats from verbose log if available
+                                        
+                                        round++;
+                                    }
+                                    var tmpinfo = new PavlovServerInfo
+                                    {
+                                        MapLabel = tmp.ServerInfo.MapLabel,
+                                        MapPictureLink = tmp.ServerInfo.MapPictureLink,
+                                        GameMode = tmp.ServerInfo.GameMode,
+                                        ServerName = tmp.ServerInfo.ServerName,
+                                        RoundState = tmp.ServerInfo.RoundState,
+                                        PlayerCount = tmp.ServerInfo.PlayerCount,
+                                        Teams = tmp.ServerInfo.Teams,
+                                        Team0Score = tmp.ServerInfo.Team0Score,
+                                        Team1Score = tmp.ServerInfo.Team1Score,
+                                        ServerId = server.Id,
+                                        Round = round
+                                    };
+
+                                    await _pavlovServerInfoService.Upsert(tmpinfo);
+                                    
                                     // if stuck on datacenter while its not in selected maps rotate to the next map and hope the server works forward as expected
                                     if (tmp.ServerInfo.MapLabel == "datacenter")
                                     {
@@ -247,6 +283,8 @@ namespace PavlovRconWebserver.Services
                                             await RconStatic.SingleCommandResult(client2, "RotateMap");
                                         }
                                     }  
+                                    
+                                    
                                     //Todo how many score per level or should it be exponential?
                                     if (server.SaveStats)
                                     {
@@ -256,14 +294,32 @@ namespace PavlovRconWebserver.Services
                                             var tmpStats = allStats.FirstOrDefault(x => x.SteamId == player.UniqueId);
                                             if(tmpStats!=null)
                                             {
-                                                if (tmpStats.LastAddedScore < player.Score)
+                                                // use case 1: User disconnect in round 99 and reconects in round 100
+                                                // use case 2: User disconnect in round 99 and reconnect in round 99
+                                                if (!nextRound&&tmpStats.ForRound==round&& !((DateTime.Now-tmpStats.logDateTime).Minutes>2|| (tmpStats.Assists==0&&tmpStats.Deaths==0&&tmpStats.Kills==0)) || // use case 2 if log is longer away than or all stats suddenly 0 / no score cause of single mods that does not support score
+                                                    !(nextRound || tmpStats.ForRound!=round) ) // use case 1
                                                 {
                                                     tmpStats.Exp -= tmpStats.LastAddedScore;
+                                                    tmpStats.Assists -= tmpStats.LastAddedAssists;
+                                                    tmpStats.Deaths -= tmpStats.LastAddedDeaths;
+                                                    tmpStats.Kills -= tmpStats.LastAddedKills;
                                                 }
+                                                
+                                             
                                                 tmpStats.Exp += player.Score;
+                                                tmpStats.Kills += player.Kills;
+                                                tmpStats.Deaths += player.Deaths;
+                                                tmpStats.Assists += player.Assists;
+                                                tmpStats.UpTime += new TimeSpan(0,0,1,0); // will get checked every !!Attention!! needs to be the same than the cron in startup
                                                 tmpStats.LastAddedScore = player.Score;
+                                                tmpStats.LastAddedAssists = player.Assists;
+                                                tmpStats.LastAddedDeaths = player.Deaths;
+                                                tmpStats.LastAddedKills = player.Kills;
+                                                tmpStats.LastAddedKills = player.Kills;
+                                                tmpStats.ForRound = round;
+                                                tmpStats.logDateTime = DateTime.Now;
+                                                
                                                 await _steamIdentityStatsServerService.Update(tmpStats);
-                                                //update
                                             }else
                                             {
                                                 await _steamIdentityStatsServerService.Insert(new SteamIdentityStatsServer
@@ -272,21 +328,24 @@ namespace PavlovRconWebserver.Services
                                                     SteamName = player.Username,
                                                     SteamPicture = "",
                                                     Kills = player.Kills,
+                                                    LastAddedKills = player.Kills,
                                                     Deaths = player.Deaths,
+                                                    LastAddedDeaths = player.Deaths,
                                                     Assists = player.Assists,
-                                                    Level = 1,
+                                                    LastAddedAssists = player.Assists,
                                                     Exp = player.Score,
-                                                    serverId = server.Id,
-                                                    LastAddedScore = 0
+                                                    LastAddedScore = player.Score,
+                                                    ServerId = server.Id,
+                                                    ForRound = round
                                                 });
-                                                //insert
                                             }
                                         }
                                     }
                                     
                                     // Autobalanced only when teams are there and there is no match
-                                    if (server.AutoBalance && tmp.ServerInfo.Teams=="true" && server.ServerType == ServerType.Community)
+                                    if (server.AutoBalance&& (server.AutoBalanceLast ==null ||(server.AutoBalanceLast+new TimeSpan(0,0,server.AutoBalanceCooldown,0)<=DateTime.Now) ) && tmp.ServerInfo.Teams=="true" && server.ServerType == ServerType.Community)
                                     {
+                                        var balanced = false;
                                         // Get Team members
                                         var team0 = pavlovServerPlayerList.Where(x => x.TeamId == 0).ToArray();
                                         var team1 = pavlovServerPlayerList.Where(x => x.TeamId == 1).ToArray();
@@ -322,40 +381,33 @@ namespace PavlovRconWebserver.Services
                                                 for (var i = 0; i < userToSwitchNew; i++)
                                                 {
                                                     var index = random.Next(pavlovServerPlayersNew.Count());
-                                                    await RconStatic.SingleCommandResult(client2, "SwitchTeam "+pavlovServerPlayersNew[index].UniqueId+" "+teamWithLess);  
+                                                    await RconStatic.SingleCommandResult(client2, "SwitchTeam "+pavlovServerPlayersNew[index].UniqueId+" "+teamWithLess);
+                                                    balanced = true;
                                                 }
                                             }
                                             else
                                             {
                                                 var playerNearest = teamWithLess.OrderBy(x => Math.Abs((int) x.Score - teamScoreDifference)).First();
                                                 await RconStatic.SingleCommandResult(client2, "SwitchTeam "+playerNearest.UniqueId+" "+teamWithLess);
-                                                await RconStatic.SingleCommandResult(client2, "GiveCash  "+playerNearest.UniqueId+" 500");  
+                                                await RconStatic.SingleCommandResult(client2, "GiveCash  "+playerNearest.UniqueId+" 500");
+                                                balanced = true;
                                             }
 	
+                                        }
+
+                                        if (balanced)
+                                        {
+                                            server.AutoBalanceLast = DateTime.Now;
+                                            await _pavlovServerService.Upsert(server, false);
                                         }
                                     }
                                     
                                     
-                                    var map = await _mapsService.FindOne(tmp.ServerInfo.MapLabel.Replace("UGC", ""));
-                                    if (map != null)
-                                        tmp.ServerInfo.MapPictureLink = map.ImageUrl;
+     
 
 
-                                    var tmpinfo = new PavlovServerInfo
-                                    {
-                                        MapLabel = tmp.ServerInfo.MapLabel,
-                                        MapPictureLink = tmp.ServerInfo.MapPictureLink,
-                                        GameMode = tmp.ServerInfo.GameMode,
-                                        ServerName = tmp.ServerInfo.ServerName,
-                                        RoundState = tmp.ServerInfo.RoundState,
-                                        PlayerCount = tmp.ServerInfo.PlayerCount,
-                                        Teams = tmp.ServerInfo.Teams,
-                                        Team0Score = tmp.ServerInfo.Team0Score,
-                                        Team1Score = tmp.ServerInfo.Team1Score,
-                                        ServerId = server.Id
-                                    };
 
-                                    await _pavlovServerInfoService.Upsert(tmpinfo);
+
 
                                     result.Success = true;
 

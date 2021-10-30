@@ -62,6 +62,8 @@
                 <li class="bg-warning">This is only to add server which is made manualy!</li>
             }
 
+            <li class="bg-warning">* Autobalance will not work in TTT, some custom game modes that don't have K/D, scores or teams.</li>
+            <li class="bg-warning">** SaveStats will not work in TTT, some custom game modes that don't have K/D or scores. It will screw up the stats already saved for that server.</li>
         </ul>
     </div>
 }
@@ -159,6 +161,12 @@ else
                 <input asp-for="AutoBalance" class="form-control form-check-input" value="@Model.AutoBalance"/>
                 <span asp-validation-for="AutoBalance" class="text-danger"></span>
             </div>
+            
+            <div class="form-group col-md-2">
+                <label asp-for="AutoBalanceCooldown"></label>
+                <input asp-for="AutoBalanceCooldown" class="form-control" value="@Model.AutoBalanceCooldown"/>
+                <span asp-validation-for="AutoBalanceCooldown" class="text-danger"></span>
+            </div>
             <div class="form-group col-md-2">
                 <label asp-for="SaveStats"></label>
                 <input asp-for="SaveStats" class="form-control form-check-input" value="@Model.SaveStats"/>
@@ -224,6 +232,7 @@ else
             </div>
         </div>
     }
+    
         <div class="card m-1">
             <div class="card-header">Rented by</div>
             <div class="card-body">

@@ -80,6 +80,7 @@
                                 <th class="toHide">Delete<br>from list</th>
                                 <th class="toHide">Delete<br>incl. files</th>
                                 <th class="toHide">System</th>
+                                <th class="toHide">Reset Stats</th>
                             }
                             <th class="toHide">Maps</th>
                             <th class="toHide col-sm-2">ServerSettings</th>
@@ -131,6 +132,11 @@
                                     <td class="toHide">
                                         <a class="btn btn-sm btn-primary" href="@Url.Action("EditServer", "PavlovServer", new {serverId = pavlovServer.Id, sshServerId = sshServer.Id})">
                                             <span class="fas fa-edit"></span>
+                                        </a>
+                                    </td>
+                                    <td class="toHide">
+                                        <a class="btn btn-sm btn-danger" alt="Delete stats" href="@Url.Action("DeleteServerStats", "PavlovServer", new {id = pavlovServer.Id})" onclick="return confirm('Are you sure you want to Delete the hole stats of the Pavlov Server?')">
+                                            <span class="fas fa-trash-alt"></span>
                                         </a>
                                     </td>
                                 }

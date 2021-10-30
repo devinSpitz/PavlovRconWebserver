@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -61,12 +62,19 @@ namespace PavlovRconWebserver.Models
         public LiteDbUser Owner { get; set; }
 
 
-        [DisplayName("Allow Autobalance")]
+        [DisplayName("Autobalance(WIP)*")]
         [CanBeNull]
         public bool AutoBalance { get; set; } = false;
-        [DisplayName("Save Stats")]
+        [CanBeNull]
+        public DateTime? AutoBalanceLast { get; set; } = null;
+        [DisplayName("AB cooldown (min)")]
+        public int AutoBalanceCooldown { get; set; } = 15;
+        [DisplayName("Save Stats(WIP)**")]
         [CanBeNull]
         public bool SaveStats { get; set; } = false;
+        
+        
+        
         
         
         [NotMapped] [BsonIgnore] public List<LiteDbUser> LiteDbUsers { get; set; }

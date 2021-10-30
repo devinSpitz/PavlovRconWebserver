@@ -110,7 +110,26 @@ namespace PavlovRconWebserver.Models
                 },
                 new()
                 {
+                    Name = "Slap",
+                    InputValue = true,
+                    valuesOptions = new List<string>
+                    {
+                        "0", "20","40","60","80","100"
+                    },
+                    MinRole = "Captain",
+                    Group = "Player commands"
+                },
+                new()
+                {
                     Name = "GiveItem",
+                    InputValue = true,
+                    PartialViewName = "ItemView",
+                    MinRole = "Admin",
+                    Group = "Player commands"
+                },
+                new()
+                {
+                    Name = "GiveVehicle",
                     InputValue = true,
                     PartialViewName = "ItemView",
                     MinRole = "Admin",
@@ -143,6 +162,13 @@ namespace PavlovRconWebserver.Models
                     {
                         "0", "1", "2", "3", "4", "5"
                     },
+                    MinRole = "Admin",
+                    Group = "Server commands"
+                },
+                new()
+                {
+                    Name = "SetPin",
+                    InputValue = true,
                     MinRole = "Admin",
                     Group = "Server commands"
                 },
@@ -261,6 +287,7 @@ namespace PavlovRconWebserver.Models
 
         [DisplayName("Amoint/ItemId/etc.")] public bool InputValue { get; set; }
 
+        //Todo: value options to roles / captain only 1 hour ban
         public List<string> valuesOptions { get; set; } = new();
         public string PartialViewName { get; set; }
 

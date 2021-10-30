@@ -50,7 +50,10 @@ namespace PavlovRconWebserver.Models
                 TelnetPort = pavlovServer.TelnetPort,
                 DeletAfter = pavlovServer.DeletAfter,
                 sshServerId = sshServerId,
-                Owner = pavlovServer.Owner
+                Owner = pavlovServer.Owner,
+                AutoBalance = pavlovServer.AutoBalance,
+                AutoBalanceCooldown = pavlovServer.AutoBalanceCooldown,
+                SaveStats = pavlovServer.SaveStats
             };
         }
 
@@ -68,7 +71,10 @@ namespace PavlovRconWebserver.Models
                 TelnetPassword = viewModel.TelnetPassword,
                 TelnetPort = viewModel.TelnetPort,
                 DeletAfter = viewModel.DeletAfter,
-                Owner = viewModel.Owner
+                Owner = viewModel.Owner,
+                AutoBalance = viewModel.AutoBalance,
+                AutoBalanceCooldown = viewModel.AutoBalanceCooldown,
+                SaveStats = viewModel.SaveStats
             };
         }
     }
