@@ -302,6 +302,10 @@ Boostrap:
 The most popular front-end framework for developing responsive, mobile first projects on the web.  
 https://getbootstrap.com
 
+Datatables:   
+Add advanced interaction controls to your HTML tables the free & easy way  
+https://github.com/DataTables/Dist-DataTables  
+
 Html Agility Pack (HAP)  
 Html Agility Pack (HAP) is a free and open-source HTML parser written in C# to read/write DOM and supports plain XPATH or XSLT. It is a .NET code library that allows you to parse "out of the web" HTML files.
 https://github.com/zzzprojects/html-agility-pack
