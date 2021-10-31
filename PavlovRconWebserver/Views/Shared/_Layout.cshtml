@@ -37,7 +37,11 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap-theme.css" asp-append-version="true"/>
     <link rel="stylesheet" href="~/lib/fontawesome-free/dist/css/all.min.css" asp-append-version="true"/>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
-
+    <script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.js" asp-append-version="true"></script>
+    <script src="~/lib/fontawesome-free/dist/js/all.min.js" asp-append-version="true"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/Init.js" asp-append-version="true"></script>
 </head>
 <body>
 <nav class="navbar navbar-inverse fixed-top navbar-expand-sm navbar-dark bg-dark">
@@ -133,7 +137,9 @@
                         </li>
                     }
                 }
-
+                <li>
+                    <a class="btn navbar-btn navbar-link" asp-controller="LeaderBoard" asp-action="Index">LeaderBoard</a>
+                </li>
 
 
 
@@ -198,11 +204,6 @@
 
  
 </style>
-<script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
-<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.js" asp-append-version="true"></script>
-<script src="~/lib/fontawesome-free/dist/js/all.min.js" asp-append-version="true"></script>
-<script src="~/js/site.js" asp-append-version="true"></script>
-<script src="~/js/Init.js" asp-append-version="true"></script>
 
 @await Component.InvokeAsync("Toastify")
 @await RenderSectionAsync("Scripts", false)

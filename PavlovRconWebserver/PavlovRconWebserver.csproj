@@ -6,12 +6,13 @@
     <PackageVersion>0.0.3</PackageVersion>
     <Title>PavlovRconWebserver</Title>
     <Authors>Devin Spitz</Authors>
-    <AssemblyVersion>0.0.3.5</AssemblyVersion>
+    <AssemblyVersion>0.0.3.6</AssemblyVersion>
     <LangVersion>9</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="Pictures" />
     <Folder Include="wwwroot\App_Data\" />
+    <Folder Include="wwwroot\lib\dataTables" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AspNetCoreHero.ToastNotification" Version="1.1.0" />

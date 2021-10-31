@@ -1,0 +1,55 @@
+﻿@model IEnumerable<SteamIdentityStatsServerViewModel>
+
+<div class="container-fluid col-12 ">
+
+    <table id="leaderBoard" class="table table-responsive-sm  col-12 ">
+        <thead>
+        <tr>
+            <th>ServerName</th>
+            <th>SteamId</th>
+            <th>SteamName</th>
+            <th>SteamPicture</th>
+            <th>Kills</th>
+            <th>Deaths</th>
+            <th>Assists</th>
+            <th>Expirence</th>
+            <th>UpTime</th>
+        </tr>
+        </thead>
+        <tbody>
+        @if (Model != null)
+        {
+            foreach (var steamIdentity in Model)
+            {
+                <tr>
+                    <td>@steamIdentity.serverName</td>
+                    <td>@steamIdentity.SteamId</td>
+                    <td>@steamIdentity.SteamName</td>
+                    <td><img src="@steamIdentity.SteamPicture" height="150px" width="150px"/></td>
+                    <td>@steamIdentity.Kills</td>
+                    <td>@steamIdentity.Deaths</td>
+                    <td>@steamIdentity.Assists</td>
+                    <td>@steamIdentity.Exp</td>
+                    <td>@steamIdentity.UpTime</td>
+                </tr>
+            }
+        }
+        </tbody>
+    </table>
+
+</div>
+
+<link rel="stylesheet" type="text/css" href="lib/dataTables/datatables.min.css"/>
+<script src="~/lib/dataTables/datatables.min.js" asp-append-version="true"></script>
+<script>
+
+//Will be called on document ready
+function init(){
+    $('#leaderBoard').DataTable({
+    "lengthMenu": [[10, 25, 50,100, -1], [10, 25, 50,100, "All"]],
+    "order": [[ 7, "desc" ]],
+     "pageLength": 50
+    });
+}
+
+</script>

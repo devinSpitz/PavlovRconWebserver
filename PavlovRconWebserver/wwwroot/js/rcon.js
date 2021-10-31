@@ -411,6 +411,7 @@ function RemoveBannedPlayer(steamId)
 
 function AddBanPlayer(steamId,timespan)
 {
+    let servers = [];
     $("#SingleServer :selected").each(function(){
         servers.push($(this).val())
     });
