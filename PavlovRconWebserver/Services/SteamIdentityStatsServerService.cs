@@ -19,6 +19,13 @@ namespace PavlovRconWebserver.Services
             _notifyService = notyfService;
             _liteDb = liteDbContext;
         }
+        
+        
+        public async Task<SteamIdentityStatsServer[]> FindAll()
+        {
+            return (await _liteDb.LiteDatabaseAsync.GetCollection<SteamIdentityStatsServer>("SteamIdentityStatsServer")
+                .FindAllAsync()).ToArray();
+        }
         public async Task<SteamIdentityStatsServer[]> FindAllFromServer(int id)
         {
             return (await _liteDb.LiteDatabaseAsync.GetCollection<SteamIdentityStatsServer>("SteamIdentityStatsServer")

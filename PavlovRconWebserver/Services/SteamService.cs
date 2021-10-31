@@ -18,16 +18,19 @@ namespace PavlovRconWebserver.Services
         private readonly IToastifyService _notifyService;
         private readonly ServerSelectedMapService _serverSelectedMapService;
         private readonly SshServerSerivce _sshServerSerivce;
+        private readonly SteamIdentityStatsServerService _steamIdentityStatsServerService;
 
         public SteamService(SshServerSerivce sshServerSerivce,
             MapsService mapsService,
             ServerSelectedMapService serverSelectedMapService,
-            IToastifyService notyfService)
+            IToastifyService notyfService,
+            SteamIdentityStatsServerService steamIdentityStatsServerService)
         {
             _notifyService = notyfService;
             _mapsService = mapsService;
             _sshServerSerivce = sshServerSerivce;
             _serverSelectedMapService = serverSelectedMapService;
+            _steamIdentityStatsServerService = steamIdentityStatsServerService;
         }
 
         public async Task DeleteAllUnsedMapsFromAllServers()
@@ -175,6 +178,49 @@ namespace PavlovRconWebserver.Services
                 if (tmp == null && isNumeric)
                     await _mapsService.Delete(map.Id);
                 // i should my here delete them from the serverSelectedMaps as well
+            }
+
+            return true;
+        }
+
+        
+        public async Task<bool> CrawlSteamProfile()
+        {
+            
+            
+            var client = new HttpClient();
+            var allSteamIdentityStats = await _steamIdentityStatsServerService.FindAll();
+
+            var steamIdentities = allSteamIdentityStats.GroupBy(x => x.SteamId).Select(x => x.Key);
+            foreach (var single in steamIdentities)
+            {
+                if(string.IsNullOrEmpty(single)) continue;   
+                var response =
+                    await client.GetAsync(
+                        "https://steamcommunity.com/profiles/"+single);
+                var pageContents = await response.Content.ReadAsStringAsync();
+
+                var pageDocument = new HtmlDocument();
+                pageDocument.LoadHtml(pageContents);
+
+                // get highest site number
+                var pageDiv = pageDocument.DocumentNode.SelectSingleNode("//div[@class='playerAvatarAutoSizeInner']")
+                    .OuterHtml;
+                var regex = new Regex("src=\"(.*)\">");
+                if(string.IsNullOrEmpty(pageDiv)) 
+                    continue;
+                var matches = regex.Matches(pageDiv);
+                if (matches.Count < 1) 
+                    throw new Exception("There where no steamprofile picture found on steam? some bigger problem maybe");
+                var singleElement = allSteamIdentityStats.Where(x => !string.IsNullOrEmpty(x.SteamId) && x.SteamId == single).ToArray();
+                if (!singleElement.Any()) 
+                    continue;
+                foreach (var singleOne in singleElement)
+                {
+                    singleOne.SteamPicture = matches.Last().Value.Replace("src=\"","").Replace("\">","");
+                    await _steamIdentityStatsServerService.Update(singleOne);
+                }
+
             }
 
             return true;

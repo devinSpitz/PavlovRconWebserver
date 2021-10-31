@@ -161,7 +161,11 @@ namespace PavlovRconWebserver
                         () => steamService.CrawlSteamMaps(),
                         Cron.Daily(3)); // Check server states
 
+                    RecurringJob.AddOrUpdate(
+                        () => steamService.CrawlSteamProfile(),
+                        Cron.Daily(4)); // Check server states
 
+                    
                     RecurringJob.AddOrUpdate(
                         () => rconService.ReloadPlayerListFromServerAndTheServerInfo(true),
                         Cron.Minutely()); // Check server states
