@@ -305,15 +305,14 @@ namespace PavlovRconWebserver.Services
                                                 
                                              
                                                 tmpStats.Exp += player.Score;
-                                                tmpStats.Kills += player.Kills;
-                                                tmpStats.Deaths += player.Deaths;
-                                                tmpStats.Assists += player.Assists;
+                                                tmpStats.Kills += int.Parse(player.getKills());
+                                                tmpStats.Deaths += int.Parse(player.getDeaths());
+                                                tmpStats.Assists += int.Parse(player.getAssists());
                                                 tmpStats.UpTime += new TimeSpan(0,0,1,0); // will get checked every !!Attention!! needs to be the same than the cron in startup
                                                 tmpStats.LastAddedScore = player.Score;
-                                                tmpStats.LastAddedAssists = player.Assists;
-                                                tmpStats.LastAddedDeaths = player.Deaths;
-                                                tmpStats.LastAddedKills = player.Kills;
-                                                tmpStats.LastAddedKills = player.Kills;
+                                                tmpStats.LastAddedAssists = int.Parse(player.getAssists());
+                                                tmpStats.LastAddedDeaths = int.Parse(player.getDeaths());
+                                                tmpStats.LastAddedKills = int.Parse(player.getKills());
                                                 tmpStats.ForRound = round;
                                                 tmpStats.logDateTime = DateTime.Now;
                                                 
