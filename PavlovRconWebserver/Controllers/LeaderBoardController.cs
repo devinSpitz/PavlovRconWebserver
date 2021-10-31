@@ -7,6 +7,7 @@ using PavlovRconWebserver.Services;
 
 namespace PavlovRconWebserver.Controllers
 {
+    [AllowAnonymous]
     public class LeaderBoardController : Controller
     {
         private readonly SteamIdentityStatsServerService _steamIdentityStatsServerService;
