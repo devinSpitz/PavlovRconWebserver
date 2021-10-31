@@ -16,6 +16,7 @@ Pictures:
 ![Commands](./PavlovRconWebserver/Pictures/Commands.png?raw=true)
 ![ChooseItem.png](./PavlovRconWebserver/Pictures/chooseItem.png?raw=true)
 ![IndexMapCycleView.png](./PavlovRconWebserver/Pictures/IndexMapCycleView.png?raw=true)
+![LeaderBoard.png](./PavlovRconWebserver/Pictures/LeaderBoard.png?raw=true)
 
 Running Instances:
 =======
@@ -32,6 +33,7 @@ https://github.com/devinSpitz/PavlovRconWebserver/discussions
 Features:
 =======
 newly added:  
+* Added leaderboard per server
 * ApiKey support
 * Auto Balance (default disabled)
 * Save Stats (default disabled)

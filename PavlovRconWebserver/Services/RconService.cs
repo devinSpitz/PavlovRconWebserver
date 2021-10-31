@@ -297,23 +297,22 @@ namespace PavlovRconWebserver.Services
                                                 if (!nextRound&&tmpStats.ForRound==round&& !((DateTime.Now-tmpStats.logDateTime).Minutes>2|| (tmpStats.Assists==0&&tmpStats.Deaths==0&&tmpStats.Kills==0)) || // use case 2 if log is longer away than or all stats suddenly 0 / no score cause of single mods that does not support score
                                                     !(nextRound || tmpStats.ForRound!=round) ) // use case 1
                                                 {
-                                                    player.Score -= tmpStats.LastAddedScore;
-                                                    player.Assists -= tmpStats.LastAddedAssists;
-                                                    player.Deaths -= tmpStats.LastAddedDeaths;
-                                                    player.Kills -= tmpStats.LastAddedKills;
+                                                    tmpStats.Exp -= tmpStats.LastAddedScore;
+                                                    tmpStats.Assists -= tmpStats.LastAddedAssists;
+                                                    tmpStats.Deaths -= tmpStats.LastAddedDeaths;
+                                                    tmpStats.Kills -= tmpStats.LastAddedKills;
                                                 }
                                                 
                                              
                                                 tmpStats.Exp += player.Score;
-                                                tmpStats.Kills += player.Kills;
-                                                tmpStats.Deaths += player.Deaths;
-                                                tmpStats.Assists += player.Assists;
+                                                tmpStats.Kills += int.Parse(player.getKills());
+                                                tmpStats.Deaths += int.Parse(player.getDeaths());
+                                                tmpStats.Assists += int.Parse(player.getAssists());
                                                 tmpStats.UpTime += new TimeSpan(0,0,1,0); // will get checked every !!Attention!! needs to be the same than the cron in startup
                                                 tmpStats.LastAddedScore = player.Score;
-                                                tmpStats.LastAddedAssists = player.Assists;
-                                                tmpStats.LastAddedDeaths = player.Deaths;
-                                                tmpStats.LastAddedKills = player.Kills;
-                                                tmpStats.LastAddedKills = player.Kills;
+                                                tmpStats.LastAddedAssists = int.Parse(player.getAssists());
+                                                tmpStats.LastAddedDeaths = int.Parse(player.getDeaths());
+                                                tmpStats.LastAddedKills = int.Parse(player.getKills());
                                                 tmpStats.ForRound = round;
                                                 tmpStats.logDateTime = DateTime.Now;
                                                 

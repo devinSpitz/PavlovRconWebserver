@@ -207,9 +207,9 @@ namespace PavlovRconWebserver.Extensions
             {
                 //Todo make verbose logs
                 client.Connect();
-                var command = "journalctl -eu " + server.ServerSystemdServiceName + " -n 500 -o cat --no-hostname --no-full -q";
+                var command = "journalctl -eu " + server.ServerSystemdServiceName + " -n 4000 -o cat --no-hostname --no-full -q";
                 var stream =
-                    client.CreateShellStream("pavlovRconWebserverSShTunnelSystemdCheck", 5000, 500, 1920, 1080, 5000);
+                    client.CreateShellStream("pavlovRconWebserverSShTunnelSystemdCheck", 5000, 4000, 1920, 1080, 5000);
                 var content = await SendCommandForShell(command, stream, null);
                 if (content != null)
                 {
