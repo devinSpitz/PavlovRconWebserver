@@ -20,7 +20,8 @@ namespace PavlovRconWebserver.Controllers
             _pavlovServerService = pavlovServerService;
         }
 
-        public async Task<IActionResult> Index()
+        [HttpGet("[controller]/Index/{filter?}")]
+        public async Task<IActionResult> Index(string filter = "")
         {
             var servers = await _pavlovServerService.FindAll();
             var steamIdentityStats = await _steamIdentityStatsServerService.FindAll();
@@ -36,6 +37,7 @@ namespace PavlovRconWebserver.Controllers
                 Exp = x.Exp,
                 UpTime = x.UpTime,
             });
+            ViewBag.filter = filter;
             return View("Index", viewModels);
         }
     }

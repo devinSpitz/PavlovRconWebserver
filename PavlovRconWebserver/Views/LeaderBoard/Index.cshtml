@@ -48,7 +48,8 @@ function init(){
     $('#leaderBoard').DataTable({
     "lengthMenu": [[10, 25, 50,100, -1], [10, 25, 50,100, "All"]],
     "order": [[ 7, "desc" ]],
-     "pageLength": 50
+     "pageLength": 50,
+     "oSearch": {"sSearch": "@ViewBag.filter"}
     });
 }
 
