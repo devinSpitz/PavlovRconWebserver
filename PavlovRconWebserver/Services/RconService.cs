@@ -454,14 +454,14 @@ namespace PavlovRconWebserver.Services
                 {
                     var index = random.Next(pavlovServerPlayersNew.Count());
                     await RconStatic.SingleCommandResult(client2,
-                        "SwitchTeam " + pavlovServerPlayersNew[index].UniqueId + " " + teamWithLessMembers);
+                        "SwitchTeam " + pavlovServerPlayersNew[index].UniqueId + " " + teamWithLessMembers.First().TeamId);
                     balanced = true;
                 }
             }
             else
             {
                 var playerNearest = teamWithLessMembers.OrderBy(x => Math.Abs((int)x.Score - teamScoreDifference)).First();
-                await RconStatic.SingleCommandResult(client2, "SwitchTeam " + playerNearest.UniqueId + " " + teamWithLessScore);
+                await RconStatic.SingleCommandResult(client2, "SwitchTeam " + playerNearest.UniqueId + " " + teamWithLessScore.First().TeamId);
                 await RconStatic.SingleCommandResult(client2, "GiveCash  " + playerNearest.UniqueId + " 500");
                 balanced = true;
             }
