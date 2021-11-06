@@ -99,6 +99,27 @@ namespace PavlovRconWebserver.Services
             }).ToList();
             rconMapsViewModels = rconMapsViewModels.Prepend(new Map
             {
+                Id = "santorini_night",
+                Name = "santorini_night",
+                ImageUrl = "",
+                Author = "Vankrupt Games"
+            }).ToList();
+            rconMapsViewModels = rconMapsViewModels.Prepend(new Map
+            {
+                Id = "sand_night",
+                Name = "sand_night",
+                ImageUrl = "",
+                Author = "Vankrupt Games"
+            }).ToList();
+            rconMapsViewModels = rconMapsViewModels.Prepend(new Map
+            {
+                Id = "stalingrad_night",
+                Name = "stalingrad_night",
+                ImageUrl = "",
+                Author = "Vankrupt Games"
+            }).ToList();
+            rconMapsViewModels = rconMapsViewModels.Prepend(new Map
+            {
                 Id = "bridge",
                 Name = "bridge",
                 ImageUrl = "",
@@ -106,15 +127,15 @@ namespace PavlovRconWebserver.Services
             }).ToList();
             rconMapsViewModels = rconMapsViewModels.Prepend(new Map
             {
-                Id = "containeryard",
-                Name = "containeryard",
+                Id = "bunker",
+                Name = "bunker",
                 ImageUrl = "",
                 Author = "Vankrupt Games"
             }).ToList();
             rconMapsViewModels = rconMapsViewModels.Prepend(new Map
             {
-                Id = "prisonbreak",
-                Name = "prisonbreak",
+                Id = "containeryard",
+                Name = "containeryard",
                 ImageUrl = "",
                 Author = "Vankrupt Games"
             }).ToList();
@@ -150,13 +171,6 @@ namespace PavlovRconWebserver.Services
             {
                 Id = "industry",
                 Name = "industry",
-                ImageUrl = "",
-                Author = "Vankrupt Games"
-            }).ToList();
-            rconMapsViewModels = rconMapsViewModels.Prepend(new Map
-            {
-                Id = "ogcontainers",
-                Name = "ogcontainers",
                 ImageUrl = "",
                 Author = "Vankrupt Games"
             }).ToList();

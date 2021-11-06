@@ -342,30 +342,8 @@ namespace PavlovRconWebserver.Services
                                     // Autobalanced only when teams are there and there is no match
                                     if (server.AutoBalance&& (server.AutoBalanceLast ==null ||(server.AutoBalanceLast+new TimeSpan(0,0,server.AutoBalanceCooldown,0)<=DateTime.Now) ) && tmp.ServerInfo.Teams=="true" && server.ServerType == ServerType.Community)
                                     {
-                                        var balanced = false;
-                                        // Get Team members
-                                        var team0 = pavlovServerPlayerList.Where(x => x.TeamId == 0).ToArray();
-                                        var team1 = pavlovServerPlayerList.Where(x => x.TeamId == 1).ToArray();
-                                        var fullCount = team0.Length + team1.Length;
-                                        var oldTeam0 = oldPavlovServerPlayerList.Where(x => x.TeamId == 0);
-                                        var oldTeam1 = oldPavlovServerPlayerList.Where(x => x.TeamId == 1);
-                                        var lastFullCount = oldTeam0.Count() + oldTeam1.Count();
-                                        bool connect = fullCount > lastFullCount;
-                                        var team0Score = team0.Sum(x => x.Score);
-                                        var team1Score = team1.Sum(x => x.Score);
-                                        var higherTeamScore = team0Score > team1Score ? team0Score : team1Score;
-                                        var teamCountDifference = Math.Abs(team0.Length - team1.Length);
-                                        var teamScoreDifference = Math.Abs(team0Score - team1Score);
-                                        var teamWithLessMembers = team0.Length > team1.Length ? team0 : team1;
-                                        var teamWithLessScore = team0.Sum(x=>x.Score) > team1.Sum(x=>x.Score) ? team0 : team1;
-                                        if ((teamCountDifference > 2 || (teamScoreDifference > (higherTeamScore/4)))&&pavlovServerPlayerList.Count>4)
-                                        {
-                                            balanced = await switchLogic(connect, pavlovServerPlayerList, oldPavlovServerPlayerList, teamWithLessMembers, teamCountDifference, client2, teamScoreDifference, teamWithLessScore);
-                                        }else if (teamCountDifference > 2 && (teamScoreDifference > (higherTeamScore/4)))
-                                        {
-                                            balanced = await switchLogic(connect, pavlovServerPlayerList, oldPavlovServerPlayerList, teamWithLessMembers, teamCountDifference, client2, teamScoreDifference, teamWithLessScore);
-                                        }
-
+                                        // balance players if needed
+                                        var balanced = await switchLogic(client2,pavlovServerPlayerList);
                                         if (balanced)
                                         {
                                             server.AutoBalanceLast = DateTime.Now;
@@ -430,42 +408,68 @@ namespace PavlovRconWebserver.Services
             return RconStatic.EndConnection(result);
         }
 
-        private async Task<bool> switchLogic(bool connect, List<PavlovServerPlayer> pavlovServerPlayerList,
-            PavlovServerPlayer[] oldPavlovServerPlayerList, PavlovServerPlayer[] teamWithLessMembers, int teamCountDifference,
-            Client client2, int teamScoreDifference, PavlovServerPlayer[] teamWithLessScore)
+        private async Task<bool> switchLogic(
+            Client client2,List<PavlovServerPlayer> pavlovServerPlayerList )
         {
-            bool balanced = false;
-            if (connect) // if there are more than one?
+            PavlovServerPlayer[] teamWithMoreScore;
+            PavlovServerPlayer[] teamWithLessScore;
+            var team0 = pavlovServerPlayerList.Where(x => x.TeamId == 0).ToArray();
+            var team1 = pavlovServerPlayerList.Where(x => x.TeamId == 1).ToArray();
+            var team0Score = team0.Sum(x => x.Score);
+            var team1Score = team1.Sum(x => x.Score);
+            var teamScoreDifference = team0Score - team1Score;
+            if (teamScoreDifference >= 0)
             {
-                var usersThatAreNew = pavlovServerPlayerList.Where(x =>
-                    !oldPavlovServerPlayerList.Select(y => y.UniqueId)
-                        .Contains(x.UniqueId) && x.TeamId == teamWithLessMembers.First().TeamId);
-
-                var usersToSwitch = teamCountDifference / 2;
-                var pavlovServerPlayersNew = usersThatAreNew as PavlovServerPlayer[] ?? usersThatAreNew.ToArray();
-                var userToSwitchNew = usersToSwitch;
-                if (usersToSwitch > pavlovServerPlayersNew.Count())
-                {
-                    userToSwitchNew = pavlovServerPlayersNew.Count();
-                }
-
-                var random = new Random();
-                for (var i = 0; i < userToSwitchNew; i++)
-                {
-                    var index = random.Next(pavlovServerPlayersNew.Count());
-                    await RconStatic.SingleCommandResult(client2,
-                        "SwitchTeam " + pavlovServerPlayersNew[index].UniqueId + " " + teamWithLessMembers.First().TeamId);
-                    balanced = true;
-                }
+                teamWithMoreScore = team0;
+                teamWithLessScore = team1;
             }
             else
             {
-                var playerNearest = teamWithLessMembers.OrderBy(x => Math.Abs((int)x.Score - teamScoreDifference)).First();
-                await RconStatic.SingleCommandResult(client2, "SwitchTeam " + playerNearest.UniqueId + " " + teamWithLessScore.First().TeamId);
-                await RconStatic.SingleCommandResult(client2, "GiveCash  " + playerNearest.UniqueId + " 500");
+                teamWithMoreScore = team1;
+                teamWithLessScore = team0;
+                teamScoreDifference = Math.Abs(teamScoreDifference);
+            }
+            var balanceCounter = 0;
+            var balanced = false;
+            var userScoreToSwitch = teamScoreDifference / 2;
+            var switchThreshold = Math.Sqrt(userScoreToSwitch); // dynamic limit for score based balancing
+            
+            //Score based balancing: teamWithMoreScores -> teamWithLessScore 
+            foreach (var pavlovServerPlayer in teamWithMoreScore.OrderByDescending(x=>x.Score))
+            {
+                if (userScoreToSwitch <= switchThreshold)
+                {
+                    break;
+                }
+                //user would overcompensate, skip
+                if (pavlovServerPlayer.Score > userScoreToSwitch)
+                {
+                    continue;
+                }
+                await RconStatic.SingleCommandResult(client2, "SwitchTeam " + pavlovServerPlayer.UniqueId + " " + teamWithLessScore.First().TeamId);
+                await RconStatic.SingleCommandResult(client2, "GiveCash  " + pavlovServerPlayer.UniqueId + " 500");
+                //remaining score to balance
+                userScoreToSwitch -= pavlovServerPlayer.Score;
+                balanceCounter ++;
                 balanced = true;
             }
+            // Player count based balancing: teamWithLessScore -> teamWithMoreScores
+            // assumption teamWithLessScore has more players (Also consider previous balancing)
+            var userCountToSwitch = ((teamWithLessScore.Length-teamWithMoreScore.Length) / 2) + balanceCounter;
+            // users eligible for switching ( same dynamic threshold ) 
+            var lowBobs = teamWithLessScore.Where(x => x.Score < switchThreshold).ToArray();
 
+            Random rnd = new Random();
+            // pick userCountToSwitch random player from lowBobs
+            for (; userCountToSwitch > 0 && lowBobs.Length > 0 ; userCountToSwitch--)
+            {
+                int index = rnd.Next(lowBobs.Length);
+                await RconStatic.SingleCommandResult(client2, "SwitchTeam " + lowBobs[index].UniqueId + " " + teamWithMoreScore.First().TeamId);
+                await RconStatic.SingleCommandResult(client2, "GiveCash  " + lowBobs[index].UniqueId + " 500");
+                lowBobs = lowBobs.Where(x => x.UniqueId != lowBobs[index].UniqueId).ToArray();
+                balanced = true;
+            }
+            
             return balanced;
         }
 

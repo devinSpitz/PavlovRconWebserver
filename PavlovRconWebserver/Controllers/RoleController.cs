@@ -33,6 +33,22 @@ namespace PavlovRconWebserver.Controllers
                 {
                     Name = "Captain"
                 });
+            
+            if (roleManager.Roles?.FirstOrDefault(x => x.Name == "OnPremise") == null)
+                roleManager.CreateAsync(new LiteDbRole
+                {
+                    Name = "OnPremise"
+                });
+            if (roleManager.Roles?.FirstOrDefault(x => x.Name == "ServerRent") == null)
+                roleManager.CreateAsync(new LiteDbRole
+                {
+                    Name = "ServerRent"
+                });
+            if (roleManager.Roles?.FirstOrDefault(x => x.Name == "Premium") == null)
+                roleManager.CreateAsync(new LiteDbRole
+                {
+                    Name = "Premium"
+                });
         }
 
 

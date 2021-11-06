@@ -6,7 +6,7 @@
     <PackageVersion>0.0.3</PackageVersion>
     <Title>PavlovRconWebserver</Title>
     <Authors>Devin Spitz</Authors>
-    <AssemblyVersion>0.0.3.7</AssemblyVersion>
+    <AssemblyVersion>0.0.3.8</AssemblyVersion>
     <LangVersion>9</LangVersion>
   </PropertyGroup>
   <ItemGroup>
