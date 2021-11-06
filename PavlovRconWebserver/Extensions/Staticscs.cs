@@ -41,6 +41,7 @@ namespace PavlovRconWebserver.Extensions
             {"OITC", false},
             {"PUSH", true},
             {"HIDDEN", true},
+            {"INFECTION", true},
             {"PH", true}
         };
 
@@ -58,12 +59,13 @@ namespace PavlovRconWebserver.Extensions
             {"OITC", true},
             {"PUSH", false},
             {"HIDDEN", false},
+            {"INFECTION", false},
             {"PH", false}
         };
 
         public static string[] ModesString =
         {
-            "SND", "TDM", "DM", "GUN", "ZWV", "WW2GUN", "TANKTDM", "KOTH", "TTT", "OITC", "PUSH", "HIDDEN", "PH"
+            "SND", "TDM", "DM", "GUN", "ZWV", "WW2GUN", "TANKTDM", "KOTH", "TTT", "OITC", "PUSH", "HIDDEN", "PH", "INFECTION"
         };
     }
 }
