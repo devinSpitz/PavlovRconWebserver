@@ -230,7 +230,11 @@ namespace PavlovRconWebserver.Controllers
                 await _userservice.getUserFromCp(HttpContext.User), server.Id, _service, _pavlovServerService))
                 return Forbid();
             if (remove)
-                await _service.RemovePavlovServerFromDisk(server);
+            {
+                var isDevelopment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+                if(isDevelopment)
+                    await _service.RemovePavlovServerFromDisk(server);
+            }
             ModelState.AddModelError("Id", error
             );
             return await EditServer(server);
