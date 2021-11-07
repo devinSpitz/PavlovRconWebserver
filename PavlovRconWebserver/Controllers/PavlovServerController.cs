@@ -232,7 +232,7 @@ namespace PavlovRconWebserver.Controllers
             if (remove)
             {
                 var isDevelopment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
-                if(isDevelopment)
+                if(!isDevelopment)
                     await _service.RemovePavlovServerFromDisk(server);
             }
             ModelState.AddModelError("Id", error
