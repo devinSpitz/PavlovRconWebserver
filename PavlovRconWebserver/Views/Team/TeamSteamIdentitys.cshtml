@@ -1,3 +1,6 @@
+@using LiteDB.Identity.Models
+@using Microsoft.AspNetCore.Identity
+@using PavlovRconWebserver.Services
 @model TeamSelectedSteamIdentitiesViewModel
 
 @{
@@ -9,13 +12,29 @@
     font-size: 30px;
     }
 </style>
-
+@inject UserManager<LiteDbUser> UserManager
+@inject PavlovServerService _pavlovServerService;
+@inject ServerSelectedModsService _serverSelectedModsService;
+@inject UserService _userService;
+@{
+    
+    var user = await UserManager.GetUserAsync(User);
+    _userService.UserInRole(user, _serverSelectedModsService, _pavlovServerService, out var isAdmin, out _, out var isMod, out _, out _, out _, out _);
+}
 <h2>@ViewBag.Title</h2>
 <div class="row">
     <div class="col-sm-6" id="Save">
         <div class="card m-1  mapcard">
             <div class="card-header">
-                Select the members of your Team <a class="btn btn-sm btn-primary" asp-area="" asp-controller="Team" asp-action="EditSteamIdentity"><span class="fas fa-plus"></span> Add SteamIdentity</a>
+                Select the members of your Team 
+                @if (isAdmin || isMod)
+                {
+                    <a class="btn btn-sm btn-primary" asp-area="" asp-controller="Team" asp-action="EditSteamIdentity"><span class="fas fa-plus"></span> Add SteamIdentity</a> 
+                }
+                else
+                {
+                    <a class="btn btn-sm btn-primary" asp-area="" asp-controller="Team" asp-action="AddSteamIdentityView"><span class="fas fa-plus"></span> Add SteamIdentity</a> 
+                }
             </div>
             <div class="card-body" id="SavecardBody">
                 <div class="col-sm-12">
