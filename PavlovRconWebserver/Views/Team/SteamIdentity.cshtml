@@ -13,7 +13,7 @@
     ViewBag.Title = "Add/Update SteamIdentity";
     Layout = "_Layout";
     var users = new List<LiteDbUser>();
-    @if ((ViewBag.IsOwnSteamIdentity == null || !ViewBag.IsOwnSteamIdentity)&&!ViewBag.IsAddSteamIdentity)
+    @if ((ViewBag.IsOwnSteamIdentity == null || !ViewBag.IsOwnSteamIdentity)&&(ViewBag.IsAddSteamIdentity==null||!ViewBag.IsAddSteamIdentity))
     {
         users = Model.LiteDbUsers;
         users = users.Prepend(new LiteDbUser
