@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -914,6 +915,38 @@ WantedBy = multi-user.target";
 
             return EndConnection(result);
         }
+        public static int GetAvailablePort(int startingPort)
+        {
+            var portArray = new List<int>();
+
+            var properties = IPGlobalProperties.GetIPGlobalProperties();
+
+            // Ignore active connections
+            var connections = properties.GetActiveTcpConnections();
+            portArray.AddRange(from n in connections
+                where n.LocalEndPoint.Port >= startingPort
+                select n.LocalEndPoint.Port);
+
+            // Ignore active tcp listners
+            var endPoints = properties.GetActiveTcpListeners();
+            portArray.AddRange(from n in endPoints
+                where n.Port >= startingPort
+                select n.Port);
+
+            // Ignore active UDP listeners
+            endPoints = properties.GetActiveUdpListeners();
+            portArray.AddRange(from n in endPoints
+                where n.Port >= startingPort
+                select n.Port);
+
+            portArray.Sort();
+
+            for (var i = startingPort; i < UInt16.MaxValue; i++)
+                if (!portArray.Contains(i))
+                    return i;
+
+            return 0;
+        }
 
         public static async Task<ConnectionResult> SShTunnelMultipleCommands(PavlovServer server,
             string[] commands, IToastifyService notyfService)
@@ -925,7 +958,8 @@ WantedBy = multi-user.target";
 
                 if (client.IsConnected)
                 {
-                    var portToForward = server.TelnetPort + 50;
+                    var nextFreePort = GetAvailablePort(server.TelnetPort + 50);
+                    var portToForward = nextFreePort;
                     var portForwarded = new ForwardedPortLocal("127.0.0.1", (uint) portToForward, "127.0.0.1",
                         (uint) server.TelnetPort);
                     client.AddForwardedPort(portForwarded);
@@ -1182,7 +1216,7 @@ WantedBy = multi-user.target";
             return connectionResult.answer;
         }
 
-        public static string WriteFile(PavlovServer server, string path, string content, IToastifyService notyfService)
+        public static string WriteFile(PavlovServer server, string path, string[] content, IToastifyService notyfService)
         {
             var connectionResult = new ConnectionResult();
             var type = GetAuthType(server);
@@ -1226,10 +1260,8 @@ WantedBy = multi-user.target";
 
                     DataBaseLogger.LogToDatabaseAndResultPlusNotify("fill the file", LogEventLevel.Verbose,
                         notyfService);
-                    using (var fileStream = new MemoryStream(Encoding.ASCII.GetBytes(content)))
-                    {
-                        sftp.UploadFile(fileStream, path);
-                    }
+                    
+                    sftp.WriteAllLines(path, content);
 
 
                     DataBaseLogger.LogToDatabaseAndResultPlusNotify("Uploaded finish now download file",
@@ -1282,7 +1314,7 @@ WantedBy = multi-user.target";
                 var fileContentArray = outPutStream.ToArray();
                 var fileContent = Encoding.Default.GetString(fileContentArray);
 
-                if (fileContent.Replace("\n", "") == content.Replace("\n", ""))
+                if (fileContent.Replace("\n", "").Replace("\r", "").Trim() == string.Join("",content).Replace("\n", "").Replace("\r", "").Trim())
                 {
                     DataBaseLogger.LogToDatabaseAndResultPlusNotify(
                         "Upload complet finished. also checked and its the same", LogEventLevel.Verbose, notyfService);

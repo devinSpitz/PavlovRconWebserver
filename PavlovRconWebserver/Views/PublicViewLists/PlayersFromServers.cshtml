@@ -43,6 +43,7 @@
 {
     <div class="stylePavlovServers">
         @{
+            if (viewModel == null) continue;
             var additionalHtml = "";
             if (viewModel.serverId != null && viewModel.serverId != 0 && viewModel.withMaps)
             {

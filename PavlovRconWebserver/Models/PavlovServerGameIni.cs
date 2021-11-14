@@ -220,11 +220,10 @@ namespace PavlovRconWebserver.Models
                 else
                     lines.Add("MapRotation=(MapId=\"" + serverSelectedMap.Map.Id + "\", GameMode=\"" +
                               serverSelectedMap.GameMode + "\")");
-            var content = string.Join("\n", lines);
 
             DataBaseLogger.LogToDatabaseAndResultPlusNotify("prepared game ini", LogEventLevel.Verbose, notyfService);
             var result = RconStatic.WriteFile(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.GameIni,
-                content, notyfService);
+                lines.ToArray(), notyfService);
 
             DataBaseLogger.LogToDatabaseAndResultPlusNotify("saved game ini", LogEventLevel.Verbose, notyfService);
             return result;

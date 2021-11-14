@@ -35,6 +35,7 @@ namespace PavlovRconWebserver.Services
             var players = await _pavlovServerPlayerService.FindAllFromServer(serverId);
             var serverInfo = await _pavlovServerInfoService.FindServer(serverId);
             var model = PavlovServerPlayerListPublicViewModel(serverInfo, players);
+            if (model == null) return null;
             model.serverId = serverId;
             model.withMaps = withMaps;
             return model;
@@ -86,6 +87,7 @@ namespace PavlovRconWebserver.Services
         public PavlovServerPlayerListPublicViewModel PavlovServerPlayerListPublicViewModel(PavlovServerInfo serverInfo,
             IEnumerable<PavlovServerPlayer> players)
         {
+            if (serverInfo == null) return null;
             var model = new PavlovServerPlayerListPublicViewModel
             {
                 ServerInfo = serverInfo,

@@ -117,12 +117,11 @@ namespace PavlovRconWebserver.Services
         public bool SaveBlackListEntry(PavlovServer server, List<ServerBans> NewBlackListContent)
         {
             var blacklistArray = NewBlackListContent.Select(x => x.SteamId).ToArray();
-            var content = string.Join("\n", blacklistArray);
-            RconStatic.WriteFile(server, server.ServerFolderPath + FilePaths.BanList, content, _notifyService);
+            RconStatic.WriteFile(server, server.ServerFolderPath + FilePaths.BanList, blacklistArray, _notifyService);
             return true;
         }
 
-        public async Task<string> SShTunnelGetAllInfoFromPavlovServer(PavlovServer server)
+        public async Task<string> SShTunnelGetAllInfoFromPavlovServer(PavlovServer server,bool match = false)
         {
             var result = RconStatic.StartClient(server, out var client);
             var costumesToSet = new Dictionary<string, string>();
@@ -132,7 +131,8 @@ namespace PavlovRconWebserver.Services
 
                 if (client.IsConnected)
                 {
-                    var portToForward = server.TelnetPort + 50;
+                    var nextFreePort = RconStatic.GetAvailablePort(server.TelnetPort + 50);
+                    var portToForward = nextFreePort;
                     var portForwarded = new ForwardedPortLocal("127.0.0.1", (uint) portToForward, "127.0.0.1",
                         (uint) server.TelnetPort);
                     client.AddForwardedPort(portForwarded);
@@ -282,84 +282,102 @@ namespace PavlovRconWebserver.Services
                                         {
                                             await RconStatic.SingleCommandResult(client2, "RotateMap");
                                         }
-                                    }  
-                                    
-                                    if (server.SaveStats)
+                                    }
+
+                                    if (!match)
                                     {
-                                        var allStats = await _steamIdentityStatsServerService.FindAllFromServer(server.Id);
-                                        foreach (var player in pavlovServerPlayerList)
+                                        if (server.SaveStats)
                                         {
-                                            var tmpStats = allStats.FirstOrDefault(x => x.SteamId == player.UniqueId);
-                                            if(tmpStats!=null)
+                                            var allStats =
+                                                await _steamIdentityStatsServerService.FindAllFromServer(server.Id);
+                                            foreach (var player in pavlovServerPlayerList)
                                             {
-                                                // use case 1: User disconnect in round 99 and reconects in round 100
-                                                // use case 2: User disconnect in round 99 and reconnect in round 99
-                                                if (!nextRound&&tmpStats.ForRound==round&& !((DateTime.Now-tmpStats.logDateTime).Minutes>2|| (tmpStats.Assists==0&&tmpStats.Deaths==0&&tmpStats.Kills==0)) || // use case 2 if log is longer away than or all stats suddenly 0 / no score cause of single mods that does not support score
-                                                    !(nextRound || tmpStats.ForRound!=round) ) // use case 1
+                                                var tmpStats =
+                                                    allStats.FirstOrDefault(x => x.SteamId == player.UniqueId);
+                                                if (tmpStats != null)
                                                 {
-                                                    tmpStats.Exp -= tmpStats.LastAddedScore;
-                                                    tmpStats.Assists -= tmpStats.LastAddedAssists;
-                                                    tmpStats.Deaths -= tmpStats.LastAddedDeaths;
-                                                    tmpStats.Kills -= tmpStats.LastAddedKills;
+                                                    // use case 1: User disconnect in round 99 and reconects in round 100
+                                                    // use case 2: User disconnect in round 99 and reconnect in round 99
+                                                    if (!nextRound && tmpStats.ForRound == round &&
+                                                        !((DateTime.Now - tmpStats.logDateTime).Minutes > 2 ||
+                                                          (tmpStats.Assists == 0 && tmpStats.Deaths == 0 &&
+                                                           tmpStats.Kills ==
+                                                           0)) || // use case 2 if log is longer away than or all stats suddenly 0 / no score cause of single mods that does not support score
+                                                        !(nextRound || tmpStats.ForRound != round)) // use case 1
+                                                    {
+                                                        tmpStats.Exp -= tmpStats.LastAddedScore;
+                                                        tmpStats.Assists -= tmpStats.LastAddedAssists;
+                                                        tmpStats.Deaths -= tmpStats.LastAddedDeaths;
+                                                        tmpStats.Kills -= tmpStats.LastAddedKills;
+                                                    }
+
+
+                                                    tmpStats.Exp += player.Score;
+                                                    tmpStats.Kills += int.Parse(player.getKills());
+                                                    tmpStats.Deaths += int.Parse(player.getDeaths());
+                                                    tmpStats.Assists += int.Parse(player.getAssists());
+                                                    tmpStats.UpTime +=
+                                                        new TimeSpan(0, 0, 1,
+                                                            0); // will get checked every !!Attention!! needs to be the same than the cron in startup
+                                                    tmpStats.LastAddedScore = player.Score;
+                                                    tmpStats.LastAddedAssists = int.Parse(player.getAssists());
+                                                    tmpStats.LastAddedDeaths = int.Parse(player.getDeaths());
+                                                    tmpStats.LastAddedKills = int.Parse(player.getKills());
+                                                    tmpStats.ForRound = round;
+                                                    tmpStats.logDateTime = DateTime.Now;
+
+                                                    await _steamIdentityStatsServerService.Update(tmpStats);
                                                 }
-                                                
-                                             
-                                                tmpStats.Exp += player.Score;
-                                                tmpStats.Kills += int.Parse(player.getKills());
-                                                tmpStats.Deaths += int.Parse(player.getDeaths());
-                                                tmpStats.Assists += int.Parse(player.getAssists());
-                                                tmpStats.UpTime += new TimeSpan(0,0,1,0); // will get checked every !!Attention!! needs to be the same than the cron in startup
-                                                tmpStats.LastAddedScore = player.Score;
-                                                tmpStats.LastAddedAssists = int.Parse(player.getAssists());
-                                                tmpStats.LastAddedDeaths = int.Parse(player.getDeaths());
-                                                tmpStats.LastAddedKills = int.Parse(player.getKills());
-                                                tmpStats.ForRound = round;
-                                                tmpStats.logDateTime = DateTime.Now;
-                                                
-                                                await _steamIdentityStatsServerService.Update(tmpStats);
-                                            }else
-                                            {
-                                                await _steamIdentityStatsServerService.Insert(new SteamIdentityStatsServer
+                                                else
                                                 {
-                                                    SteamId = player.UniqueId,
-                                                    SteamName = player.Username,
-                                                    SteamPicture = "",
-                                                    Kills = player.Kills,
-                                                    LastAddedKills = player.Kills,
-                                                    Deaths = player.Deaths,
-                                                    LastAddedDeaths = player.Deaths,
-                                                    Assists = player.Assists,
-                                                    LastAddedAssists = player.Assists,
-                                                    Exp = player.Score,
-                                                    LastAddedScore = player.Score,
-                                                    ServerId = server.Id,
-                                                    ForRound = round
-                                                });
+                                                    await _steamIdentityStatsServerService.Insert(
+                                                        new SteamIdentityStatsServer
+                                                        {
+                                                            SteamId = player.UniqueId,
+                                                            SteamName = player.Username,
+                                                            SteamPicture = "",
+                                                            Kills = player.Kills,
+                                                            LastAddedKills = player.Kills,
+                                                            Deaths = player.Deaths,
+                                                            LastAddedDeaths = player.Deaths,
+                                                            Assists = player.Assists,
+                                                            LastAddedAssists = player.Assists,
+                                                            Exp = player.Score,
+                                                            LastAddedScore = player.Score,
+                                                            ServerId = server.Id,
+                                                            ForRound = round
+                                                        });
+                                                }
                                             }
                                         }
+
+                                        // Autobalanced only when teams are there and there is no match
+                                        if (server.AutoBalance &&
+                                            (server.AutoBalanceLast == null ||
+                                             (server.AutoBalanceLast +
+                                                 new TimeSpan(0, 0, server.AutoBalanceCooldown, 0) <= DateTime.Now)) &&
+                                            tmp.ServerInfo.Teams == "true" && server.ServerType == ServerType.Community)
+                                        {
+                                            // balance players if needed
+                                            var balanced = await switchLogic(client2, pavlovServerPlayerList);
+                                            if (balanced)
+                                            {
+                                                server.AutoBalanceLast = DateTime.Now;
+                                                await _pavlovServerService.Upsert(server, false);
+                                            }
+                                        }
+
+                                        DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                                            "Set skins for " + costumesToSet.Count + " players of the server:" +
+                                            server.Name, LogEventLevel.Verbose, _notifyService);
+
+                                        foreach (var customToSet in costumesToSet)
+                                            await RconStatic.SendCommandSShTunnel(server,
+                                                "SetPlayerSkin " + customToSet.Key + " " + customToSet.Value,
+                                                _notifyService);
                                     }
                                     
-                                    // Autobalanced only when teams are there and there is no match
-                                    if (server.AutoBalance&& (server.AutoBalanceLast ==null ||(server.AutoBalanceLast+new TimeSpan(0,0,server.AutoBalanceCooldown,0)<=DateTime.Now) ) && tmp.ServerInfo.Teams=="true" && server.ServerType == ServerType.Community)
-                                    {
-                                        // balance players if needed
-                                        var balanced = await switchLogic(client2,pavlovServerPlayerList);
-                                        if (balanced)
-                                        {
-                                            server.AutoBalanceLast = DateTime.Now;
-                                            await _pavlovServerService.Upsert(server, false);
-                                        }
-                                    }
                                     result.Success = true;
-
-                                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(
-                                        "Set skins for " + costumesToSet.Count + " players of the server:" +
-                                        server.Name, LogEventLevel.Verbose, _notifyService);
-
-                                    foreach (var customToSet in costumesToSet)
-                                        await RconStatic.SendCommandSShTunnel(server,
-                                            "SetPlayerSkin " + customToSet.Key + " " + customToSet.Value,
-                                            _notifyService);
                                 }
                                 else
                                 {

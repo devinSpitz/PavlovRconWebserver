@@ -15,4 +15,13 @@ namespace PavlovRconWebserver.Models
         [CanBeNull]
         public bool withMaps { get; set; }
     }
+    
+    public class PavlovServerPlayerListPublicViewModelEntry : PavlovServerPlayerListPublicViewModel
+    {
+        
+        public string UniqueId { get; set; }
+        public int TeamId { get; set; } = 0;
+        public bool Team { get; set; } = false;
+
+    }
 }

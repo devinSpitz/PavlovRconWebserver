@@ -58,7 +58,7 @@ namespace PavlovRconWebserver.Services
             var steamIdentitiesToReturn = new List<string>();
             foreach (var newId in userdIds)
             {
-                var steamIdentity = steamIdentities.FirstOrDefault(x => x.LiteDbUser.Id == new ObjectId(newId));
+                var steamIdentity = steamIdentities.FirstOrDefault(x => x.LiteDbUser?.Id == new ObjectId(newId));
                 if (steamIdentity != null)
                 {
                     var entry = new ServerSelectedMods
@@ -78,9 +78,8 @@ namespace PavlovRconWebserver.Services
 
         private async Task<bool> SaveToFile(PavlovServer pavlovServer, List<string> steamIds)
         {
-            var lines = steamIds.Select(steamIdentity => steamIdentity + ";").ToList();
-            var content = string.Join("\n", lines);
-            RconStatic.WriteFile(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.ModList, content,
+            var lines = steamIds.Select(steamIdentity => steamIdentity).ToList();
+            RconStatic.WriteFile(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.ModList, lines.ToArray(),
                 _notifyService);
             return true;
         }

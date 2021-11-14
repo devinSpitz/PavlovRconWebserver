@@ -106,7 +106,7 @@ namespace PavlovRconWebserver.Services
                         var tmp = realmatch.Team1.TeamSelectedSteamIdentities.FirstOrDefault(x =>
                             x.SteamIdentity.Id.ToString() == team1SelectedSteamIdentity);
                         if (tmp != null)
-                            realmatch.MatchTeam0SelectedSteamIdentities.Add(new MatchTeamSelectedSteamIdentity
+                            realmatch.MatchTeam1SelectedSteamIdentities.Add(new MatchTeamSelectedSteamIdentity
                             {
                                 matchId = realmatch.Id,
                                 SteamIdentityId = team1SelectedSteamIdentity,
@@ -152,35 +152,22 @@ namespace PavlovRconWebserver.Services
 
             if (bla)
             {
-                // First remove Old TeamSelected and Match selected stuff
 
                 if (realmatch.MatchSelectedSteamIdentities.Count > 0)
                 {
-                    foreach (var realmatchMatchSelectedSteamIdentity in realmatch.MatchSelectedSteamIdentities)
-                        realmatchMatchSelectedSteamIdentity.matchId = realmatch.Id;
-
-                    await _matchSelectedSteamIdentitiesService.Upsert(realmatch.MatchSelectedSteamIdentities,
-                        realmatch.Id);
+                    // First remove Old TeamSelected and Match selected stuff
+                    // Then write the new ones
+                    await _matchSelectedSteamIdentitiesService.RemoveFromMatch(realmatch.Id);
+                    await _matchSelectedSteamIdentitiesService.Upsert(realmatch.MatchSelectedSteamIdentities,match.Id);
                 }
 
-                // Then write the new ones
-
-                if (realmatch.MatchTeam0SelectedSteamIdentities.Count > 0)
+                if(realmatch.MatchTeam0SelectedSteamIdentities.Count > 0||realmatch.MatchTeam1SelectedSteamIdentities.Count > 0)
                 {
-                    foreach (var matchTeam0SelectedSteamIdentities in realmatch.MatchTeam0SelectedSteamIdentities)
-                        matchTeam0SelectedSteamIdentities.matchId = realmatch.Id;
-
-                    await _matchSelectedTeamSteamIdentitiesService.Upsert(realmatch.MatchTeam0SelectedSteamIdentities,
-                        realmatch.Id, (int) match.Team0Id);
-                }
-
-                if (realmatch.MatchTeam1SelectedSteamIdentities.Count > 0)
-                {
-                    foreach (var matchTeam1SelectedSteamIdentities in realmatch.MatchTeam1SelectedSteamIdentities)
-                        matchTeam1SelectedSteamIdentities.matchId = realmatch.Id;
-
-                    await _matchSelectedTeamSteamIdentitiesService.Upsert(realmatch.MatchTeam1SelectedSteamIdentities,
-                        realmatch.Id, (int) match.Team1Id);
+                    await _matchSelectedTeamSteamIdentitiesService.RemoveFromMatch(realmatch.Id);
+                    if(realmatch.MatchTeam0SelectedSteamIdentities.Any())
+                        await _matchSelectedTeamSteamIdentitiesService.Upsert(realmatch.MatchTeam0SelectedSteamIdentities,match.Id,0);
+                    if(realmatch.MatchTeam1SelectedSteamIdentities.Any())
+                        await _matchSelectedTeamSteamIdentitiesService.Upsert(realmatch.MatchTeam1SelectedSteamIdentities,match.Id,1);
                 }
 
                 return true;
@@ -211,23 +198,16 @@ namespace PavlovRconWebserver.Services
                 
                 if (match.MatchSelectedSteamIdentities.Count > 0)
                     list = match.MatchSelectedSteamIdentities
-                        .Select(x => Strings.Trim(x.SteamIdentityId + ";" + "\n")).ToList();
+                        .Select(x => Strings.Trim(x.SteamIdentityId)).ToList();
                 else if (listOfSteamIdentietiesWhichCanPlay.Count > 0)
                     list = listOfSteamIdentietiesWhichCanPlay.Select(x => Strings.Trim(x.SteamIdentityId)).ToList();
 
+                list = list.Distinct().ToList();
                 //GetAllAdminsForTheMatch
                 var mods = new List<string>();
                 //Todo what if the match is not team based? there are no mods or admins?
                 mods = listOfSteamIdentietiesWhichCanPlay.Where(x => x.OverWriteRole == "Mod" || x.OverWriteRole == "Admin").Select(x=>x.SteamIdentityId).ToList();
-                foreach (var mod in mods)
-                {
-                    await _serverSelectedModsService.Insert(new ServerSelectedMods()
-                    {
-                        LiteDbUser = listOfSteamIdentietiesWhichCanPlay.FirstOrDefault(x=>x.SteamIdentityId==mod)?.SteamIdentity.LiteDbUser,
-                        PavlovServer = server
-                        
-                    });
-                }
+
                 
                 //Write whitelist and set server settings
 
@@ -235,7 +215,7 @@ namespace PavlovRconWebserver.Services
                 {
                     RconStatic.WriteFile(server,
                         server.ServerFolderPath + FilePaths.WhiteList,
-                        Strings.Join(list.ToArray()), _notifyService);
+                        list.ToArray(), _notifyService);
                 }
                 catch (Exception e)
                 {
@@ -248,7 +228,7 @@ namespace PavlovRconWebserver.Services
                 {
                     RconStatic.WriteFile(server,
                         server.ServerFolderPath + FilePaths.ModList,
-                        Strings.Join(mods.ToArray()), _notifyService);
+                        mods.ToArray(), _notifyService);
                 }
                 catch (Exception e)
                 {
@@ -256,7 +236,14 @@ namespace PavlovRconWebserver.Services
                                                                     e.Message, LogEventLevel.Fatal, _notifyService,
                         result);
                 }
+                RconStatic.WriteFile(server,
+                    server.ServerFolderPath + FilePaths.BanList,
+                    Array.Empty<string>(), _notifyService);
 
+
+                var oldSettings = new PavlovServerGameIni();
+                oldSettings.ReadFromFile(server, _notifyService);
+                
                 var serverSettings = new PavlovServerGameIni
                 {
                     bEnabled = true,
@@ -269,8 +256,10 @@ namespace PavlovRconWebserver.Services
                     LimitedAmmoType = 0,
                     TickRate = 90,
                     TimeLimit = match.TimeLimit,
-                    Password = null,
-                    BalanceTableURL = null,
+                    Password = "",
+                    BalanceTableURL = "",
+                    bVerboseLogging = true,
+                    bCompetitive = true,
                     MapRotation = new List<PavlovServerGameIniMap>
                     {
                         new()
@@ -278,7 +267,8 @@ namespace PavlovRconWebserver.Services
                             MapLabel = match.MapId,
                             GameMode = match.GameMode
                         }
-                    }
+                    },
+                    ApiKey = oldSettings.ApiKey
                 };
                 var map = await _mapsService.FindOne(match.MapId.Replace("UGC", ""));
                 serverSettings.SaveToFile(server, new[]
@@ -297,7 +287,7 @@ namespace PavlovRconWebserver.Services
                 DataBaseLogger.LogToDatabaseAndResultPlusNotify("Start backgroundjob", LogEventLevel.Verbose,
                     _notifyService);
                 BackgroundJob.Schedule(
-                    () => MatchInspector(authType, match.Id),
+                    () => MatchInspector(match.Id),
                     new TimeSpan(0, 0, 5)); // ChecjServerState
             }
             catch (Exception e)
@@ -313,8 +303,7 @@ namespace PavlovRconWebserver.Services
             return result;
         }
         
-        public async Task MatchInspector(RconService.AuthType authType,
-            int matchId)
+        public async Task MatchInspector(int matchId)
         {
             DataBaseLogger.LogToDatabaseAndResultPlusNotify("MatchInspector started!", LogEventLevel.Verbose,
                 _notifyService);
@@ -329,7 +318,7 @@ namespace PavlovRconWebserver.Services
                     return;
                 }
 
-                await _rconService.SShTunnelGetAllInfoFromPavlovServer(match.PavlovServer);
+                await _rconService.SShTunnelGetAllInfoFromPavlovServer(match.PavlovServer,true);
                 switch (match.Status)
                 {
                     case Status.StartetWaitingForPlayer:
@@ -348,13 +337,14 @@ namespace PavlovRconWebserver.Services
                         match.EndInfo = serverInfo;
                         await Upsert(match);
 
-                        if (serverInfo.RoundState == "Ended")
+                        if (serverInfo.Team0Score == "10"||serverInfo.Team1Score == "10")
                         {
                             DataBaseLogger.LogToDatabaseAndResultPlusNotify("Round ended!", LogEventLevel.Verbose,
                                 _notifyService);
                             match.PlayerResults =
                                 (await _pavlovServerPlayerService.FindAllFromServer(match.PavlovServer.Id)).ToList();
                             match.EndInfo = serverInfo;
+                            //Todo get the stats from the log.
                             await EndMatch(match.PavlovServer, match);
                             return;
                         }
@@ -369,8 +359,8 @@ namespace PavlovRconWebserver.Services
 
             if (match.Status != Status.Finshed)
                 BackgroundJob.Schedule(
-                    () => MatchInspector(authType, match.Id),
-                    new TimeSpan(0, 0, 5)); // ChecjServerState
+                    () => MatchInspector(match.Id),
+                    new TimeSpan(0, 0, 1)); // ChecjServerState
         }
 
         private async Task EndMatch(PavlovServer server, Match match)
@@ -529,7 +519,18 @@ namespace PavlovRconWebserver.Services
             return tmpMatches.ToArray();
 
         }
+        public async Task RestartAllTheInspectorsForTheMatchesThatAreOnGoing()
+        {
+            var matches = (await FindAll()).Where(x =>
+                x.Status == Status.OnGoing || x.Status == Status.StartetWaitingForPlayer);
 
+            foreach (var match in matches)
+            {
+                BackgroundJob.Schedule(
+                    () => MatchInspector(match.Id),
+                    new TimeSpan(0, 0, 5)); 
+            }
+        }
 
         public async Task<Match[]> FindAll()
         {

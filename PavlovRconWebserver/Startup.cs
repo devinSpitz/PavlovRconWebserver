@@ -140,7 +140,7 @@ namespace PavlovRconWebserver
                     var rconService = serviceScope.ServiceProvider.GetService<RconService>();
                     var pavlovServerService = serviceScope.ServiceProvider.GetService<PavlovServerService>();
                     var userService = serviceScope.ServiceProvider.GetService<UserService>();
-                    //Todo if match is still ongoing and PavlovRconWebserver has restarted restart the matchInspector for it.
+                    var matchService = serviceScope.ServiceProvider.GetService<MatchService>();
                     userService?.CreateDefaultRoles().GetAwaiter().GetResult();
                     if (env.EnvironmentName != "Development")
                     {
@@ -165,6 +165,7 @@ namespace PavlovRconWebserver
                         () => steamService.CrawlSteamProfile(),
                         Cron.Daily(4)); // Check server states
 
+                    BackgroundJob.Enqueue(() => matchService.RestartAllTheInspectorsForTheMatchesThatAreOnGoing());
                     
                     RecurringJob.AddOrUpdate(
                         () => rconService.ReloadPlayerListFromServerAndTheServerInfo(true),

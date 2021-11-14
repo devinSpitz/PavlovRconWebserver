@@ -231,7 +231,7 @@ namespace PavlovRconWebserver.Services
                     _notifyService);
                 var rconSettingsTempalte = "Password=" + server.TelnetPassword + "\nPort=" + server.TelnetPort;
                 result += RconStatic.WriteFile(server, server.ServerFolderPath + FilePaths.RconSettings,
-                    rconSettingsTempalte, _notifyService);
+                    new string[]{ rconSettingsTempalte }, _notifyService);
 
 
                 result += "\n *******************************create rconSettings Done*******************************";
