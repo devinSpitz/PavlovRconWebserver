@@ -421,10 +421,11 @@ namespace PavlovRconWebserver.Services
                         {
                             Username = (await _steamIdentityService.FindOne(playerModelEndStatsFromLogs.uniqueId)).Name,
                             UniqueId = oldLog!=null ? oldLog.UniqueId : "",
-                            Kills = playerModelEndStatsFromLogs.stats.First(x=>x.statType=="Kill").amount,
-                            Deaths = playerModelEndStatsFromLogs.stats.First(x=>x.statType=="Death").amount,
-                            Headshot = playerModelEndStatsFromLogs.stats.First(x=>x.statType=="Headshot").amount,
-                            Score = playerModelEndStatsFromLogs.stats.First(x=>x.statType=="Experience").amount,
+                            //Todo there some thines not there
+                            Kills = playerModelEndStatsFromLogs.stats.FirstOrDefault(x=>x.statType=="Kill") !=null? (int)playerModelEndStatsFromLogs.stats.FirstOrDefault(x=>x.statType=="Kill")?.amount: 0,
+                            Deaths = playerModelEndStatsFromLogs.stats.FirstOrDefault(x=>x.statType=="Death") !=null? (int)playerModelEndStatsFromLogs.stats.FirstOrDefault(x=>x.statType=="Death")?.amount : 0,
+                            Headshot = playerModelEndStatsFromLogs.stats.FirstOrDefault(x=>x.statType=="Headshot") !=null? (int)playerModelEndStatsFromLogs.stats.FirstOrDefault(x=>x.statType=="Headshot")?.amount : 0,
+                            Score = playerModelEndStatsFromLogs.stats.FirstOrDefault(x=>x.statType=="Experience")!=null ? (int)playerModelEndStatsFromLogs.stats.FirstOrDefault(x=>x.statType=="Experience")?.amount : 0,
                             TeamId = realTeamId,
                             Cash = oldLog!=null ? oldLog.Cash : "0"
                         });
