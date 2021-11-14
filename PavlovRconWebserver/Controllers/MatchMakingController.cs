@@ -57,6 +57,15 @@ namespace PavlovRconWebserver.Controllers
             return showFinished
                 ? View(servers)
                 : View(servers.Where(x => x.Status != Status.Finshed));
+        }        
+        
+        [HttpGet("[controller]/SaveStatsFromLogs")]
+        public async Task<IActionResult> SaveStatsFromLogs(int id)
+        {
+            
+            var user = await _userservice.getUserFromCp(HttpContext.User);
+            var servers = await _matchService.SaveStatsFromLogs(id);
+            return RedirectToAction("Index", "MatchMaking");
         }
 
         [HttpGet]

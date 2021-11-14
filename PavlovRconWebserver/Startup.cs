@@ -168,7 +168,7 @@ namespace PavlovRconWebserver
                     BackgroundJob.Enqueue(() => matchService.RestartAllTheInspectorsForTheMatchesThatAreOnGoing());
                     
                     RecurringJob.AddOrUpdate(
-                        () => rconService.ReloadPlayerListFromServerAndTheServerInfo(true),
+                        () => rconService.ReloadPlayerListFromServerAndTheServerInfo(),
                         Cron.Minutely()); // Check server states
                 }
         }

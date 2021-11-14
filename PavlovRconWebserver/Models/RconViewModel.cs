@@ -228,6 +228,24 @@ namespace PavlovRconWebserver.Models
         [DisplayName("SecondValue")] public string PlayerValueTwo { get; set; }
     }
 
+    public class EndStatsFromLogs
+    {
+        public List<PlayerModelEndStatsFromLogs> allStats { get; set; }
+    }
+    
+    public class PlayerModelEndStatsFromLogs
+    {
+        public string uniqueId { get; set; }
+        public List<StatsObjectEndStatsFromLogs>  stats { get; set; }
+    }
+    
+    public class StatsObjectEndStatsFromLogs
+    {
+        public string statType { get; set; }
+        public int amount { get; set; }
+        
+    }
+    
     public class PlayerListClass
     {
         public List<PlayerModel> PlayerList { get; set; }

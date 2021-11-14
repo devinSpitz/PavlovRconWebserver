@@ -51,7 +51,7 @@
             }
 
             var hasTwoTeams = viewModel.PlayerList.GroupBy(x => x.TeamId).Count() == 2;
-            var tableHeaer = "<thead><tr><th>Name</th><th>Score</th><th>Kills</th><th>Deaths</th><th>Assits</th><th>Cash</th></tr></thead>";
+            var tableHeaer = "<thead><tr><th>Name</th><th>Score</th><th>Kills</th><th>Deaths</th><th>Assits</th><th>Headshots</th><th>Cash</th></tr></thead>";
         }
         @await Html.PartialAsync("/Views/Rcon/PavlovServerInfoSinglePartialView.cshtml", new ServerInfoViewModel
         {
@@ -65,7 +65,7 @@
                 <table class="table pavlovTable table-responsive table-bordered bg-primary Team0">
                     @Html.Raw(tableHeaer)
                     <tr>
-                        <th colspan="7">Team score: @viewModel.team0Score</th>
+                        <th colspan="8">Team score: @viewModel.team0Score</th>
                     </tr>
                     @foreach (var player in viewModel.PlayerList.Where(x => x.TeamId == 0).OrderByDescending(x => x.Score))
                     {
@@ -78,7 +78,7 @@
                 <table class="table pavlovTable table-responsive table-bordered Team1  ">
                     @Html.Raw(tableHeaer)
                     <tr>
-                        <th colspan="7">Team score: @viewModel.team1Score</th>
+                        <th colspan="8">Team score: @viewModel.team1Score</th>
                     </tr>
                     @foreach (var player in viewModel.PlayerList.Where(x => x.TeamId == 1).OrderByDescending(x => x.Score))
                     {

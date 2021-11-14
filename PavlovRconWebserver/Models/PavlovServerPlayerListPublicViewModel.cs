@@ -7,7 +7,7 @@ namespace PavlovRconWebserver.Models
     {
         public int MatchId { get; set; }
         public ServerInfo ServerInfo { get; set; }
-        public List<PlayerModelExtended> PlayerList { get; set; }
+        public List<PavlovServerPlayer> PlayerList { get; set; }
         public string team0Score { get; set; }
         public string team1Score { get; set; }
         [CanBeNull]

@@ -91,14 +91,19 @@ namespace PavlovRconWebserver.Services
             var model = new PavlovServerPlayerListPublicViewModel
             {
                 ServerInfo = serverInfo,
-                PlayerList = players.Select(x => new PlayerModelExtended
+                PlayerList = players.Select(x => new PavlovServerPlayer
                 {
                     Cash = x.Cash,
                     KDA = x.KDA,
                     Score = x.Score,
                     TeamId = x.TeamId,
                     UniqueId = x.UniqueId,
-                    Username = x.Username
+                    Username = x.Username,
+                    Headshot = x.Headshot,
+                    Kills = x.Kills,
+                    Deaths = x.Deaths,
+                    Assists = x.Assists
+                    
                 }).ToList(),
                 team0Score = serverInfo.Team0Score,
                 team1Score = serverInfo.Team1Score

@@ -77,6 +77,7 @@
                 @if (match.isFinished())
                 {
                     <a class="btn btn-sm btn-primary" href="@Url.Action("EditMatchResult", new {match.Id})"><span class="fas fa-edit"></span> Stats</a>
+                    <a class="btn btn-sm btn-warning" href="@Url.Action("SaveStatsFromLogs", new {match.Id})" onclick="return confirm('Are you sure you want to overrite the saved stats with the last from the log?')"><span class="fas fa-save"></span> Crawl the last stats from the server log</a>
                 }
             </td>
         </tr>

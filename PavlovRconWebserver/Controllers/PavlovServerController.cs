@@ -384,7 +384,7 @@ namespace PavlovRconWebserver.Controllers
                 var connectionResult = await RconStatic.GetServerLog(server, _pavlovServerService);
                 if (connectionResult.Success)
                 {
-                    var replace = connectionResult.answer.Replace(Environment.NewLine, "<br/>");
+                    var replace = connectionResult.answer.Replace("\n", "<br/>");
                     return View("ServerLogs",replace);
                 }
                 else

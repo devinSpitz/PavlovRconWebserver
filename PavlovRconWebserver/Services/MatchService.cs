@@ -3,17 +3,20 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Claims;
+using System.Threading;
 using System.Threading.Tasks;
 using AspNetCoreHero.ToastNotification.Abstractions;
 using Hangfire;
 using LiteDB.Identity.Async.Database;
 using LiteDB.Identity.Models;
 using Microsoft.VisualBasic;
+using Newtonsoft.Json;
 using PavlovRconWebserver.Exceptions;
 using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
 using Renci.SshNet;
 using Serilog.Events;
+using Match = PavlovRconWebserver.Models.Match;
 
 namespace PavlovRconWebserver.Services
 {
@@ -286,9 +289,9 @@ namespace PavlovRconWebserver.Services
                 await Upsert(match);
                 DataBaseLogger.LogToDatabaseAndResultPlusNotify("Start backgroundjob", LogEventLevel.Verbose,
                     _notifyService);
-                BackgroundJob.Schedule(
-                    () => MatchInspector(match.Id),
-                    new TimeSpan(0, 0, 5)); // ChecjServerState
+                
+                BackgroundJob.Enqueue(
+                    () => MatchInspector(match.Id)); // ChecjServerState
             }
             catch (Exception e)
             {
@@ -310,15 +313,16 @@ namespace PavlovRconWebserver.Services
             var match = await FindOne(matchId);
 
             try
-            {
-                if (match.ForceSop)
+            {      
+                var forceStopMaybe = await _rconService.SShTunnelGetAllInfoFromPavlovServer(match.PavlovServer,true);
+                if (match.ForceSop||forceStopMaybe=="ForceStopNowUrgent") // ForceStopNowUrgent very bad practice
                 {
                     DataBaseLogger.LogToDatabaseAndResultPlusNotify("Endmatch!", LogEventLevel.Verbose, _notifyService);
                     await EndMatch(match.PavlovServer, match);
                     return;
                 }
 
-                await _rconService.SShTunnelGetAllInfoFromPavlovServer(match.PavlovServer,true);
+          
                 switch (match.Status)
                 {
                     case Status.StartetWaitingForPlayer:
@@ -344,7 +348,6 @@ namespace PavlovRconWebserver.Services
                             match.PlayerResults =
                                 (await _pavlovServerPlayerService.FindAllFromServer(match.PavlovServer.Id)).ToList();
                             match.EndInfo = serverInfo;
-                            //Todo get the stats from the log.
                             await EndMatch(match.PavlovServer, match);
                             return;
                         }
@@ -363,14 +366,71 @@ namespace PavlovRconWebserver.Services
                     new TimeSpan(0, 0, 1)); // ChecjServerState
         }
 
+        
+        public async Task<bool> SaveStatsFromLogs(int matchId)
+        {
+            var match = await FindOne(matchId);
+            match.MatchTeam0SelectedSteamIdentities =
+                (await _matchSelectedTeamSteamIdentitiesService.FindAllSelectedForMatchAndTeam(matchId, 0))
+                .ToList();
+            match.MatchTeam1SelectedSteamIdentities =
+                (await _matchSelectedTeamSteamIdentitiesService.FindAllSelectedForMatchAndTeam(matchId, 1))
+                .ToList();
+            match.MatchSelectedSteamIdentities =
+                (await _matchSelectedSteamIdentitiesService.FindAllSelectedForMatch(matchId))
+                .ToList();
+            var logs = await RconStatic.GetServerLog(match.PavlovServer, _pavlovServerService);
+            //Todo if that works on other servers? maybe not?
+            var realLogs = logs.answer;
+            int idx = realLogs.LastIndexOf("StatManagerLog: {", StringComparison.Ordinal);
+
+            if (idx != -1)
+            {
+                var idx2 = realLogs.LastIndexOf("StatManagerLog: End Stat Dump", StringComparison.Ordinal);
+                int length = idx2 - idx;
+                var tmp = realLogs.Substring(idx, length);
+                var fisrt = tmp.IndexOf("{", StringComparison.Ordinal);
+                var last = tmp.LastIndexOf("}", StringComparison.Ordinal);
+                int length2 = last - fisrt;
+                var jsonString = tmp.Substring((fisrt), length2+1);
+                var stats = JsonConvert.DeserializeObject<EndStatsFromLogs>(
+                    jsonString.Trim());
+                var finsihedPlayerList = new List<PavlovServerPlayer>();
+                if (stats != null)
+                    foreach (var playerModelEndStatsFromLogs in stats.allStats)
+                    {
+                        var tmpMatchTeamSelectedSteamIdentity = match.MatchTeam0SelectedSteamIdentities?.FirstOrDefault(x =>
+                            x.SteamIdentityId == playerModelEndStatsFromLogs.uniqueId);
+                        if(tmpMatchTeamSelectedSteamIdentity==null)
+                            tmpMatchTeamSelectedSteamIdentity = match.MatchTeam1SelectedSteamIdentities?.FirstOrDefault(x =>
+                            x.SteamIdentityId == playerModelEndStatsFromLogs.uniqueId);
+
+                        var teamId = tmpMatchTeamSelectedSteamIdentity?.TeamId;
+                        var realTeamId = 0;
+                        if (teamId != null) realTeamId = (int)teamId;
+                        var oldLog = match.PlayerResults.FirstOrDefault(x => x.UniqueId == playerModelEndStatsFromLogs.uniqueId);
+                        finsihedPlayerList.Add(new PavlovServerPlayer()
+                        {
+                            Username = (await _steamIdentityService.FindOne(playerModelEndStatsFromLogs.uniqueId)).Name,
+                            UniqueId = oldLog!=null ? oldLog.UniqueId : "",
+                            Kills = playerModelEndStatsFromLogs.stats.First(x=>x.statType=="Kill").amount,
+                            Deaths = playerModelEndStatsFromLogs.stats.First(x=>x.statType=="Death").amount,
+                            Headshot = playerModelEndStatsFromLogs.stats.First(x=>x.statType=="Headshot").amount,
+                            Score = playerModelEndStatsFromLogs.stats.First(x=>x.statType=="Experience").amount,
+                            TeamId = realTeamId,
+                            Cash = oldLog!=null ? oldLog.Cash : "0"
+                        });
+                    }
+                match.PlayerResults = finsihedPlayerList;
+                await Upsert(match);
+                return true;
+            }
+            return false;
+        }
         private async Task EndMatch(PavlovServer server, Match match)
         {
+            await SaveStatsFromLogs(match.Id);
             match.Status = Status.Finshed;
-            var mods = await _serverSelectedModsService.FindAllFrom(server);
-            foreach (var mod in mods)
-            {
-                await _serverSelectedModsService.Delete(mod.Id);
-            }
             await Upsert(match);
             await RconStatic.SystemDStop(server, _pavlovServerService);
             DataBaseLogger.LogToDatabaseAndResultPlusNotify("Stopped server!", LogEventLevel.Verbose, _notifyService);
@@ -387,33 +447,56 @@ namespace PavlovRconWebserver.Services
             if (playerList.Count() == match.PlayerSlots || match.ForceStart) //All Player are here
             {
                 //Do Players in the right team
-                foreach (var pavlovServerPlayer in playerList)
-                {
-                    var team0 = match.MatchTeam0SelectedSteamIdentities.FirstOrDefault(x =>
-                        x.SteamIdentityId == pavlovServerPlayer.UniqueId);
-                    var team1 = match.MatchTeam1SelectedSteamIdentities.FirstOrDefault(x =>
-                        x.SteamIdentityId == pavlovServerPlayer.UniqueId);
-                    if (team0 != null)
-                    {
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("SwitchTeam 0 " + pavlovServerPlayer.UniqueId,
-                            LogEventLevel.Verbose, _notifyService);
-                        SendCommandTillDone(server, "SwitchTeam 0 " + pavlovServerPlayer.UniqueId);
-                    }
-                    else if (team1 != null)
-                    {
-                        DataBaseLogger.LogToDatabaseAndResultPlusNotify("SwitchTeam 1 " + pavlovServerPlayer.UniqueId,
-                            LogEventLevel.Verbose, _notifyService);
-                        SendCommandTillDone(server, "SwitchTeam 1 " + pavlovServerPlayer.UniqueId);
-                    }
-                }
+                if(match.GameMode=="SND")
+                    FoceTeamsToTheRightPlace(server, match, playerList);
                 //All Players are on the right team now
                 //ResetSND
 
                 DataBaseLogger.LogToDatabaseAndResultPlusNotify("start ResetSND!", LogEventLevel.Verbose,
                     _notifyService);
-                SendCommandTillDone(server, "ResetSND");
+                //Todo for every thing else than SND
+
+                if (match.GameMode == "SND")
+                {
+                    SendCommandTillDone(server, "ResetSND");
+                }
+                else
+                {
+                    SendCommandTillDone(server, "RotateMap");
+                    var gotAnswer = GameModes.HasTeams.TryGetValue(match.GameMode, out var hasTeams);
+                    if (gotAnswer && hasTeams)
+                    {
+                        //The players shoud just not win the round befor it forced all the team changes
+                        Thread.Sleep(30000);
+                        FoceTeamsToTheRightPlace(server, match, playerList);
+                        //After forcing all stats are back byside the teamscore stats so until they have not done team score already it should be fine 
+                    }
+                }
                 match.Status = Status.OnGoing;
                 await Upsert(match);
+            }
+        }
+
+        private void FoceTeamsToTheRightPlace(PavlovServer server, Match match, List<PavlovServerPlayer> playerList)
+        {
+            foreach (var pavlovServerPlayer in playerList)
+            {
+                var team0 = match.MatchTeam0SelectedSteamIdentities.FirstOrDefault(x =>
+                    x.SteamIdentityId == pavlovServerPlayer.UniqueId);
+                var team1 = match.MatchTeam1SelectedSteamIdentities.FirstOrDefault(x =>
+                    x.SteamIdentityId == pavlovServerPlayer.UniqueId);
+                if (team0 != null)
+                {
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("SwitchTeam 0 " + pavlovServerPlayer.UniqueId,
+                        LogEventLevel.Verbose, _notifyService);
+                    SendCommandTillDone(server, "SwitchTeam 0 " + pavlovServerPlayer.UniqueId);
+                }
+                else if (team1 != null)
+                {
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("SwitchTeam 1 " + pavlovServerPlayer.UniqueId,
+                        LogEventLevel.Verbose, _notifyService);
+                    SendCommandTillDone(server, "SwitchTeam 1 " + pavlovServerPlayer.UniqueId);
+                }
             }
         }
 
