@@ -438,7 +438,15 @@ namespace PavlovRconWebserver.Services
         }
         private async Task EndMatch(PavlovServer server, Match match)
         {
-            await SaveStatsFromLogs(match.Id);
+            try
+            {
+                await SaveStatsFromLogs(match.Id);
+            }
+            catch (Exception)
+            {
+                //can be done later manualy
+            }
+
             match.Status = Status.Finshed;
             await Upsert(match);
             await RconStatic.SystemDStop(server, _pavlovServerService);
