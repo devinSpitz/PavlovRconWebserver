@@ -313,8 +313,15 @@ namespace PavlovRconWebserver.Services
             var match = await FindOne(matchId);
 
             try
-            {      
-                var forceStopMaybe = await _rconService.SShTunnelGetAllInfoFromPavlovServer(match.PavlovServer,true);
+            {
+                var forceStopMaybe = "";
+                try
+                {
+                    forceStopMaybe = await _rconService.SShTunnelGetAllInfoFromPavlovServer(match.PavlovServer,true);
+                }
+                catch (Exception)
+                {
+                }
                 if (match.ForceSop||forceStopMaybe=="ForceStopNowUrgent") // ForceStopNowUrgent very bad practice
                 {
                     DataBaseLogger.LogToDatabaseAndResultPlusNotify("Endmatch!", LogEventLevel.Verbose, _notifyService);
