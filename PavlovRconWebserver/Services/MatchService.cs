@@ -382,6 +382,7 @@ namespace PavlovRconWebserver.Services
             var logs = await RconStatic.GetServerLog(match.PavlovServer, _pavlovServerService);
             //Todo if that works on other servers? maybe not?
             var realLogs = logs.answer;
+            realLogs = realLogs.Substring(0,realLogs.LastIndexOf("StatManagerLog: End Stat Dump", StringComparison.Ordinal))+"StatManagerLog: End Stat Dump";
             int idx = realLogs.LastIndexOf("StatManagerLog: {", StringComparison.Ordinal);
 
             if (idx != -1)
