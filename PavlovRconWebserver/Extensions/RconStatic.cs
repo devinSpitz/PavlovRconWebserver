@@ -20,6 +20,7 @@ using Renci.SshNet;
 using Renci.SshNet.Common;
 using Renci.SshNet.Sftp;
 using Serilog.Events;
+using TcpClient = System.Net.Sockets.TcpClient;
 
 namespace PavlovRconWebserver.Extensions
 {
@@ -916,8 +917,10 @@ WantedBy = multi-user.target";
         }
         public static int GetAvailablePort()
         {
-            var udp = new UdpClient(0, AddressFamily.InterNetwork);
-            int port = ((IPEndPoint)udp.Client.LocalEndPoint).Port;
+            TcpListener l = new TcpListener(IPAddress.Loopback, 0);
+            l.Start();
+            int port = ((IPEndPoint)l.LocalEndpoint).Port;
+            l.Stop();
             return port;
         }
 
