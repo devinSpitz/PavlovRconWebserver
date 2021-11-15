@@ -243,8 +243,8 @@ namespace PavlovRconWebserver.Services
                                         tmp.ServerInfo.MapPictureLink = map.ImageUrl;
                                     
                                     //Check of next round
-                                    bool nextRound = oldServerInfo.MapLabel != tmp.ServerInfo.MapLabel;
-                                    var round = oldServerInfo.Round;
+                                    bool nextRound = oldServerInfo != null && oldServerInfo.MapLabel != tmp.ServerInfo.MapLabel;
+                                    var round = oldServerInfo?.Round ?? 0;
                                     if (nextRound)
                                     {
                                         if (round == 999)
@@ -252,14 +252,11 @@ namespace PavlovRconWebserver.Services
                                             round = 0; // reset value that's why you have to use the nextRound bool down from here to know if its the next round
                                         }
                                         
-                                        //Todo get the stats from verbose log if available
-                                        
                                         round++;
                                     }
 
                                     if (match && nextRound)
                                     {
-                                        //Todo Force Stop match
                                         result.Success = true;
                                         return "ForceStopNowUrgent"; // very bad practice i have to change that to a nice thing
                                     }
@@ -294,6 +291,7 @@ namespace PavlovRconWebserver.Services
 
                                         if (!match)
                                         {
+                                            //Todo read logs to add killfeed
                                             if (server.SaveStats)
                                             {
                                                 var allStats =
