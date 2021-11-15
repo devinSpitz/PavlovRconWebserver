@@ -13,7 +13,7 @@ namespace PavlovRconWebserver.Models
         {
             if (string.IsNullOrEmpty(ImageUrl))
             {
-                return "/images/NoImg.png";
+                return "/images/noImg.png";
             }
             else
             {

@@ -15,7 +15,7 @@ namespace PavlovRconWebserver.Models
         {
             if (string.IsNullOrEmpty(MapPictureLink))
             {
-                return "/images/NoImg.png";
+                return "/images/noImg.png";
             }
             else
             {
