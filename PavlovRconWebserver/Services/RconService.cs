@@ -129,7 +129,7 @@ namespace PavlovRconWebserver.Services
 
                 if (client.IsConnected)
                 {
-                    var nextFreePort = RconStatic.GetAvailablePort(server.TelnetPort + 50);
+                    var nextFreePort = RconStatic.GetAvailablePort();
                     var portToForward = nextFreePort;
                     var portForwarded = new ForwardedPortLocal("127.0.0.1", (uint) portToForward, "127.0.0.1",
                         (uint) server.TelnetPort);

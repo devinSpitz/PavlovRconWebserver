@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
@@ -913,37 +914,11 @@ WantedBy = multi-user.target";
 
             return EndConnection(result);
         }
-        public static int GetAvailablePort(int startingPort)
+        public static int GetAvailablePort()
         {
-            var portArray = new List<int>();
-
-            var properties = IPGlobalProperties.GetIPGlobalProperties();
-
-            // Ignore active connections
-            var connections = properties.GetActiveTcpConnections();
-            portArray.AddRange(from n in connections
-                where n.LocalEndPoint.Port >= startingPort
-                select n.LocalEndPoint.Port);
-
-            // Ignore active tcp listners
-            var endPoints = properties.GetActiveTcpListeners();
-            portArray.AddRange(from n in endPoints
-                where n.Port >= startingPort
-                select n.Port);
-
-            // Ignore active UDP listeners
-            endPoints = properties.GetActiveUdpListeners();
-            portArray.AddRange(from n in endPoints
-                where n.Port >= startingPort
-                select n.Port);
-
-            portArray.Sort();
-
-            for (var i = startingPort; i < UInt16.MaxValue; i++)
-                if (!portArray.Contains(i))
-                    return i;
-
-            return 0;
+            var udp = new UdpClient(0, AddressFamily.InterNetwork);
+            int port = ((IPEndPoint)udp.Client.LocalEndPoint).Port;
+            return port;
         }
 
         public static async Task<ConnectionResult> SShTunnelMultipleCommands(PavlovServer server,
@@ -956,7 +931,7 @@ WantedBy = multi-user.target";
 
                 if (client.IsConnected)
                 {
-                    var nextFreePort = GetAvailablePort(server.TelnetPort + 50);
+                    var nextFreePort = GetAvailablePort();
                     var portToForward = nextFreePort;
                     var portForwarded = new ForwardedPortLocal("127.0.0.1", (uint) portToForward, "127.0.0.1",
                         (uint) server.TelnetPort);
