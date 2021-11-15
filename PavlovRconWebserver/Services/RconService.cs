@@ -476,6 +476,7 @@ namespace PavlovRconWebserver.Services
                 }
                 await RconStatic.SingleCommandResult(client2, "SwitchTeam " + pavlovServerPlayer.UniqueId + " " + teamWithLessScore.First().TeamId);
                 await RconStatic.SingleCommandResult(client2, "GiveCash  " + pavlovServerPlayer.UniqueId + " 500");
+                //Todo: tell the player what happen waiting for: https://pavlovvr.featureupvote.com/suggestions/229367/motd-and-the-possibility-to-give-the-player-a-message-over-rcon
                 //remaining score to balance
                 userScoreToSwitch -= pavlovServerPlayer.Score;
                 balanceCounter ++;
@@ -494,6 +495,7 @@ namespace PavlovRconWebserver.Services
                 int index = rnd.Next(lowBobs.Length);
                 await RconStatic.SingleCommandResult(client2, "SwitchTeam " + lowBobs[index].UniqueId + " " + teamWithMoreScore.First().TeamId);
                 await RconStatic.SingleCommandResult(client2, "GiveCash  " + lowBobs[index].UniqueId + " 500");
+                //Todo: tell the player what happen waiting for: https://pavlovvr.featureupvote.com/suggestions/229367/motd-and-the-possibility-to-give-the-player-a-message-over-rcon
                 lowBobs = lowBobs.Where(x => x.UniqueId != lowBobs[index].UniqueId).ToArray();
                 balanced = true;
             }

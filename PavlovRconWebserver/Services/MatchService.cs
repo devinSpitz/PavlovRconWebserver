@@ -421,7 +421,6 @@ namespace PavlovRconWebserver.Services
                         {
                             Username = (await _steamIdentityService.FindOne(playerModelEndStatsFromLogs.uniqueId)).Name,
                             UniqueId = oldLog!=null ? oldLog.UniqueId : "",
-                            //Todo there some thines not there
                             Kills = playerModelEndStatsFromLogs.stats.FirstOrDefault(x=>x.statType=="Kill") !=null? (int)playerModelEndStatsFromLogs.stats.FirstOrDefault(x=>x.statType=="Kill")?.amount: 0,
                             Deaths = playerModelEndStatsFromLogs.stats.FirstOrDefault(x=>x.statType=="Death") !=null? (int)playerModelEndStatsFromLogs.stats.FirstOrDefault(x=>x.statType=="Death")?.amount : 0,
                             Headshot = playerModelEndStatsFromLogs.stats.FirstOrDefault(x=>x.statType=="Headshot") !=null? (int)playerModelEndStatsFromLogs.stats.FirstOrDefault(x=>x.statType=="Headshot")?.amount : 0,
@@ -444,7 +443,7 @@ namespace PavlovRconWebserver.Services
             }
             catch (Exception)
             {
-                //can be done later manualy
+                //can be done later manualy but should not be breaking otherwise the server runs more and we may lose tha stats in the logs
             }
 
             match.Status = Status.Finshed;
@@ -464,17 +463,20 @@ namespace PavlovRconWebserver.Services
             if (playerList.Count() == match.PlayerSlots || match.ForceStart) //All Player are here
             {
                 //Do Players in the right team
-                if(match.GameMode=="SND")
-                    FoceTeamsToTheRightPlace(server, match, playerList);
+                if (match.GameMode == "SND")
+                {
+                    ForceTeamsToTheRightPlace(server, match, playerList);
+                }
                 //All Players are on the right team now
                 //ResetSND
-
+                    
                 DataBaseLogger.LogToDatabaseAndResultPlusNotify("start ResetSND!", LogEventLevel.Verbose,
                     _notifyService);
                 //Todo for every thing else than SND
 
                 if (match.GameMode == "SND")
                 {
+                    Thread.Sleep(5000); // so game has time do the team switch
                     SendCommandTillDone(server, "ResetSND");
                 }
                 else
@@ -485,16 +487,24 @@ namespace PavlovRconWebserver.Services
                     {
                         //The players shoud just not win the round befor it forced all the team changes
                         Thread.Sleep(30000);
-                        FoceTeamsToTheRightPlace(server, match, playerList);
+                        ForceTeamsToTheRightPlace(server, match, playerList,true);
                         //After forcing all stats are back byside the teamscore stats so until they have not done team score already it should be fine 
                     }
                 }
+                //Todo: Give start sign waiting for: https://pavlovvr.featureupvote.com/suggestions/229367/motd-and-the-possibility-to-give-the-player-a-message-over-rcon
                 match.Status = Status.OnGoing;
                 await Upsert(match);
             }
         }
 
-        private void FoceTeamsToTheRightPlace(PavlovServer server, Match match, List<PavlovServerPlayer> playerList)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="server"></param>
+        /// <param name="match"></param>
+        /// <param name="playerList"></param>
+        /// <param name="twoTimes">If its not SND we should team changes 2 times cause than we reset the stats</param>
+        private void ForceTeamsToTheRightPlace(PavlovServer server, Match match, List<PavlovServerPlayer> playerList,bool twoTimes = false)
         {
             foreach (var pavlovServerPlayer in playerList)
             {
@@ -506,12 +516,22 @@ namespace PavlovRconWebserver.Services
                 {
                     DataBaseLogger.LogToDatabaseAndResultPlusNotify("SwitchTeam 0 " + pavlovServerPlayer.UniqueId,
                         LogEventLevel.Verbose, _notifyService);
+                    if (twoTimes)
+                    {
+                        SendCommandTillDone(server, "SwitchTeam 1 " + pavlovServerPlayer.UniqueId);
+                        Thread.Sleep(1000);
+                    }
                     SendCommandTillDone(server, "SwitchTeam 0 " + pavlovServerPlayer.UniqueId);
                 }
                 else if (team1 != null)
                 {
                     DataBaseLogger.LogToDatabaseAndResultPlusNotify("SwitchTeam 1 " + pavlovServerPlayer.UniqueId,
-                        LogEventLevel.Verbose, _notifyService);
+                        LogEventLevel.Verbose, _notifyService);                    
+                    if (twoTimes)
+                    {
+                        SendCommandTillDone(server, "SwitchTeam 0 " + pavlovServerPlayer.UniqueId);
+                        Thread.Sleep(1000);
+                    }
                     SendCommandTillDone(server, "SwitchTeam 1 " + pavlovServerPlayer.UniqueId);
                 }
             }
