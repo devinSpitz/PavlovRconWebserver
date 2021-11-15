@@ -12,7 +12,7 @@
         @Html.Raw(Model.AdditionalHtml)
     </div>
     <div class="card-body">
-        <img src="@Model.ServerInfo.MapPictureLink" height="150px" width="150px"/>
+        <img src="@Model.ServerInfo.ShowImage()" height="150px" width="150px"/>
         <li>Round state: @Model.ServerInfo.RoundState</li>
         <li>Game mode: @Model.ServerInfo.GameMode</li>
         <li>Player count: @Model.ServerInfo.PlayerCount</li>

@@ -9,6 +9,18 @@ namespace PavlovRconWebserver.Models
         public string Author { get; set; } = "";
         public string ImageUrl { get; set; } = "";
 
+        public string showImage()
+        {
+            if (string.IsNullOrEmpty(ImageUrl))
+            {
+                return "/images/NoImg.png";
+            }
+            else
+            {
+                return ImageUrl;
+            }
+        }
+
         [NotMapped] public int sort { get; set; } = 0;
     }
 }

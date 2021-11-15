@@ -63,7 +63,7 @@
                                 }
                                 <br>
                                 <button onclick="ChangeMap('@map.Id',this,$(this).parent().find('.gameMode').val())">
-                                    <img class="card-img-top" src="@map.ImageUrl">
+                                    <img class="card-img-top"  height="150px" width="150px" src="@map.showImage()">
                                 </button>
                                 @if (map.Author?.Length > maxLength)
                                 {
@@ -127,7 +127,7 @@
                                 }
                                 <br>
                                 <button onclick="ChangeMap('@map.Map.Id',this,$(this).parent().find('.gameMode').val())">
-                                    <img class="card-img-top" src="@map.Map.ImageUrl">
+                                    <img class="card-img-top"  height="150px" width="150px" src="@map.Map.showImage()">
                                 </button>
                                 @if (map.Map.Author?.Length > maxLength)
                                 {

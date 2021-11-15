@@ -76,6 +76,9 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
     <Content Remove="Views\Account\ForgotPassword.cshtml" />
+    <Content Update="wwwroot\images\noImg.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Update="Temp\CopyOnPublish.txt">

@@ -26,7 +26,7 @@
                         <b>@Model.ServerInfo.ServerName</b>
                     </div>
                     <div class="card-body">
-                        <img src="@Model.ServerInfo.MapPictureLink" height="150px" width="150px"/>
+                        <img src="@Model.ServerInfo.ShowImage()" height="150px" width="150px"/>
                         <li>Round state: @Model.ServerInfo.RoundState</li>
                         <li>Game mode: @Model.ServerInfo.GameMode</li>
                         <li>Player count: @Model.ServerInfo.PlayerCount</li>
@@ -51,7 +51,7 @@
                                 <li>Author: @map.Map.Author</li>
                                 <li>GameMode: @map.GameMode</li>
                                 <li>Id: @map.Map.Id</li>
-                                <img height="150px" width="150px" src="@map.Map.ImageUrl">
+                                <img height="150px" width="150px" src="@map.Map.showImage()">
                             </div> 
                             <hr>
                         }
