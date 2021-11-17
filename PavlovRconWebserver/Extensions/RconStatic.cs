@@ -543,7 +543,7 @@ namespace PavlovRconWebserver.Extensions
                         
                         sftp.CreateDirectory(shackFolderPath);
                         
-                        client.RunCommand("cp -r "+pavlovServer.SshServer.ShackMapsPath+serverSelectedMap.Map.Name+" "+ shackFolderPath);
+                        client.RunCommand("cp -r "+pavlovServer.SshServer.ShackMapsPath+serverSelectedMap.Map.Name+"/* "+ shackFolderPath);
                     }
                 }
             }
