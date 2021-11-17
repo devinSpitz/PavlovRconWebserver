@@ -101,10 +101,14 @@ namespace PavlovRconWebserver.Controllers
                 return Forbid();
             var serverSelectedMap = new List<ServerSelectedMap>();
             var server = await _pavlovServerService.FindOne(serverId);
+            
             serverSelectedMap = (await _serverSelectedMapService.FindAllFrom(server)).ToList();
 
             var tmp = await _mapsService.FindAll();
 
+            if (server.Shack)
+                tmp = tmp.Where(x => x.Shack && x.ShackSshServerId == server.SshServer.Id).ToArray();
+            
             var viewModel = new SelectedServerMapsViewModel
             {
                 AllMaps = tmp.ToList(),
@@ -481,11 +485,15 @@ namespace PavlovRconWebserver.Controllers
                 await _userservice.getUserFromCp(HttpContext.User), serverId, _service, _pavlovServerService))
                 return Forbid();
             var server = await _pavlovServerService.FindOne(serverId);
+                
             var steamIds = (await _steamIdentityService.FindAll()).ToArray();
             var selectedSteamIds = (await _whitelistService.FindAllFrom(server)).ToArray();
+            if (server.Shack)
+                steamIds = steamIds.Where(x => !string.IsNullOrEmpty(x.OculusId)).ToArray();
             //service
             var model = new PavlovServerWhitelistViewModel
             {
+                Shack = server.Shack,
                 steamIds = selectedSteamIds.Select(x => x.SteamIdentityId).ToList(),
                 pavlovServerId = server.Id
             };

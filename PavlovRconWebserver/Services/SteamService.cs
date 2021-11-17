@@ -19,9 +19,11 @@ namespace PavlovRconWebserver.Services
         private readonly ServerSelectedMapService _serverSelectedMapService;
         private readonly SshServerSerivce _sshServerSerivce;
         private readonly SteamIdentityStatsServerService _steamIdentityStatsServerService;
+        private readonly PavlovServerService _pavlovServerService;
 
         public SteamService(SshServerSerivce sshServerSerivce,
             MapsService mapsService,
+            PavlovServerService pavlovServerService,
             ServerSelectedMapService serverSelectedMapService,
             IToastifyService notyfService,
             SteamIdentityStatsServerService steamIdentityStatsServerService)
@@ -29,6 +31,7 @@ namespace PavlovRconWebserver.Services
             _notifyService = notyfService;
             _mapsService = mapsService;
             _sshServerSerivce = sshServerSerivce;
+            _pavlovServerService = pavlovServerService;
             _serverSelectedMapService = serverSelectedMapService;
             _steamIdentityStatsServerService = steamIdentityStatsServerService;
         }
@@ -197,6 +200,33 @@ namespace PavlovRconWebserver.Services
             return true;
         }
 
+        
+        public async Task<bool> CrawlOculusMaps()
+        {
+            var sshServers = (await _sshServerSerivce.FindAll()).Where(x=>!string.IsNullOrEmpty(x.ShackMapsPath));
+            foreach (var sshServer in sshServers)
+            {
+                var folders = RconStatic.GetAFolderList(sshServer, sshServer.ShackMapsPath);
+                await _mapsService.DeleteAllShackMapsFromSshServer(sshServer.Id);
+                var foldersArray = folders.answer.Split(";");
+                foreach (var s in foldersArray)
+                {
+                    await _mapsService.Upsert(new Map()
+                    {
+                        Author = "Shack",
+                        Id = s+sshServer.Id,
+                        ImageUrl = "",
+                        Name = s,
+                        Shack = true,
+                        ShackSshServerId = sshServer.Id
+                    });
+                }
+
+            }
+            return true;
+        }
+
+        
         
         public async Task<bool> CrawlSteamProfile()
         {

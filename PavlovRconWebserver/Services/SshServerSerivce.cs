@@ -108,6 +108,8 @@ namespace PavlovRconWebserver.Services
         public async Task<KeyValuePair<PavlovServerViewModel, string>> RemovePavlovServerFromDisk(
             PavlovServerViewModel server)
         {
+            
+            //Todo AuthError??
             DataBaseLogger.LogToDatabaseAndResultPlusNotify("Start remove server!", LogEventLevel.Verbose,
                 _notifyService);
             string result = null;

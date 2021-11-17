@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using AspNetCoreHero.ToastNotification.Abstractions;
 using PavlovRconWebserver.Extensions;
+using PavlovRconWebserver.Services;
 using Serilog.Events;
 
 namespace PavlovRconWebserver.Models
@@ -45,7 +46,7 @@ namespace PavlovRconWebserver.Models
 
         public bool ReadFromFile(PavlovServer pavlovServer, IToastifyService notyfService)
         {
-            var gameIniContent = RconStatic.GetFile(pavlovServer,
+            var gameIniContent = RconStatic.GetFile(pavlovServer.SshServer,
                 pavlovServer.ServerFolderPath + FilePaths.GameIni, notyfService);
             var lines = gameIniContent.Split("\n");
             var first = true; // cause the first line is to ignore
@@ -212,17 +213,35 @@ namespace PavlovRconWebserver.Models
             else
                 lines.Add("ApiKey=");
 
-            
+
+            if (pavlovServer.Shack)
+            {
+                RconStatic.CopyNeededMapsToShackServer(pavlovServer, serverSelectedMaps);
+            }
             foreach (var serverSelectedMap in serverSelectedMaps)
-                if (Regex.IsMatch(serverSelectedMap.Map.Id, @"^\d+$"))
-                    lines.Add("MapRotation=(MapId=\"UGC" + serverSelectedMap.Map.Id + "\", GameMode=\"" +
-                              serverSelectedMap.GameMode + "\")");
-                else
+            {
+                //cause we added the serverId to the Map it to distinguish between. not nice
+                if (pavlovServer.Shack)
+                {
+                    //if shack copy maps to the right place in the server folder
+                    serverSelectedMap.Map.Id = serverSelectedMap.Map.Id.Substring(0, serverSelectedMap.Map.Id.Length-pavlovServer.SshServer.Id.ToString().Length);
                     lines.Add("MapRotation=(MapId=\"" + serverSelectedMap.Map.Id + "\", GameMode=\"" +
                               serverSelectedMap.GameMode + "\")");
+                }
+                else
+                {
+                    if (Regex.IsMatch(serverSelectedMap.Map.Id, @"^\d+$"))
+                        lines.Add("MapRotation=(MapId=\"UGC" + serverSelectedMap.Map.Id + "\", GameMode=\"" +
+                                  serverSelectedMap.GameMode + "\")");
+                    else
+                        lines.Add("MapRotation=(MapId=\"" + serverSelectedMap.Map.Id + "\", GameMode=\"" +
+                                  serverSelectedMap.GameMode + "\")");
+                }
+                        
+            }
 
             DataBaseLogger.LogToDatabaseAndResultPlusNotify("prepared game ini", LogEventLevel.Verbose, notyfService);
-            var result = RconStatic.WriteFile(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.GameIni,
+            var result = RconStatic.WriteFile(pavlovServer.SshServer, pavlovServer.ServerFolderPath + FilePaths.GameIni,
                 lines.ToArray(), notyfService);
 
             DataBaseLogger.LogToDatabaseAndResultPlusNotify("saved game ini", LogEventLevel.Verbose, notyfService);

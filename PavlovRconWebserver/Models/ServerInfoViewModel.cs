@@ -3,6 +3,7 @@ namespace PavlovRconWebserver.Models
     public class ServerInfoViewModel
     {
         public ServerInfo ServerInfo { get; set; }
+        public int ServerId { get; set; }
         public string Name { get; set; }
         public string AdditionalHtml { get; set; } = "";
     }

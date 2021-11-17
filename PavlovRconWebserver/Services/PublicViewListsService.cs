@@ -60,7 +60,10 @@ namespace PavlovRconWebserver.Services
                 if (server.ServerServiceState != ServerServiceState.active &&
                     server.ServerType == ServerType.Community) continue;
                 if (server.ServerType == ServerType.Event) continue;
-                result.Add(await GetPavlovServerPlayerListPublicViewModel(server.Id,true));
+
+                var tmp = await GetPavlovServerPlayerListPublicViewModel(server.Id, true);
+                tmp.serverId = server.Id;
+                result.Add(tmp);
             }
 
 

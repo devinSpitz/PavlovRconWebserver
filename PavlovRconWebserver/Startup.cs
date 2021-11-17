@@ -4,6 +4,7 @@ using Hangfire.MemoryStorage;
 using LiteDB.Identity.Async.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -101,6 +102,13 @@ namespace PavlovRconWebserver
                 app.UseExceptionHandler("/Home/Error");
 
             app.UseSerilogRequestLogging();
+            //Todo handle when you wnat something else than subodmains xD and aslo if add add this javascript will still be broken so adjust there as well
+            // app.UsePathBase("/panel/");
+            // app.Use((context, next) =>
+            // {
+            //     context.Request.PathBase = new PathString("/foo");
+            //     return next();
+            // });
             if (env.EnvironmentName != "Test")
                 if (env.EnvironmentName == "Development")
                 {
@@ -160,6 +168,10 @@ namespace PavlovRconWebserver
                     RecurringJob.AddOrUpdate(
                         () => steamService.CrawlSteamMaps(),
                         Cron.Daily(3)); // Check server states
+                    
+                    RecurringJob.AddOrUpdate(
+                        () => steamService.CrawlOculusMaps(),
+                        "*/5 * * * *"); // Check server states
 
                     RecurringJob.AddOrUpdate(
                         () => steamService.CrawlSteamProfile(),

@@ -8,6 +8,8 @@ namespace PavlovRconWebserver.Models
         public string Name { get; set; } = "";
         public string Author { get; set; } = "";
         public string ImageUrl { get; set; } = "";
+        public bool Shack { get; set; } = false;
+        public int ShackSshServerId { get; set; } = 0;
 
         public string showImage()
         {

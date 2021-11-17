@@ -1,6 +1,11 @@
-﻿@model IEnumerable<SteamIdentityStatsServerViewModel>
+﻿@model LeaderBoardViewModel
 
 <div class="container-fluid col-12 ">
+
+    <form asp-controller="LeaderBoard" asp-action="Server" method="get">
+    @Html.LabelFor(x => x.server)
+    @Html.DropDownListFor(m => m.server, new SelectList(Model.AllServers, "Id", "Name", Model.server), new {@class = "form-control form-control-sm form-select ", onchange="submit()"})
+    </form>
 
     <table id="leaderBoard" class="table table-responsive-sm  col-12 ">
         <thead>
@@ -19,7 +24,7 @@
         <tbody>
         @if (Model != null)
         {
-            foreach (var steamIdentity in Model)
+            foreach (var steamIdentity in Model.list)
             {
                 <tr>
                     <td>@steamIdentity.serverName</td>

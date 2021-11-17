@@ -108,7 +108,7 @@ namespace PavlovRconWebserver.Services
         public bool SaveBlackListEntry(PavlovServer server, List<ServerBans> NewBlackListContent)
         {
             var blacklistArray = NewBlackListContent.Select(x => x.SteamId).ToArray();
-            RconStatic.WriteFile(server, server.ServerFolderPath + FilePaths.BanList, blacklistArray, _notifyService);
+            RconStatic.WriteFile(server.SshServer, server.ServerFolderPath + FilePaths.BanList, blacklistArray, _notifyService);
             return true;
         }
 
@@ -194,7 +194,12 @@ namespace PavlovRconWebserver.Services
                                                     x.Id == player.PlayerInfo.UniqueId);
                                             if (identity != null && (identity.Costume != "None" ||
                                                                      !string.IsNullOrEmpty(identity.Costume)))
-                                                costumesToSet.Add(identity.Id, identity.Costume);
+                                            {
+                                                if (server.Shack)
+                                                    costumesToSet.Add(identity.Id, identity.Costume);
+                                                else
+                                                    costumesToSet.Add(identity.OculusId, identity.Costume);
+                                            }
                                         }
 
                                         finsihedPlayerList = tmpPlayers.Select(x => x.PlayerInfo).ToList();
@@ -238,6 +243,8 @@ namespace PavlovRconWebserver.Services
                                             "Got the server info for the server: " + server.Name + "\n " +
                                             singleCommandResultTwo, LogEventLevel.Verbose, _notifyService);
                                    
+                                    
+                                    tmp.ServerId = server.Id;
                                     var map = await _mapsService.FindOne(tmp.ServerInfo.MapLabel.Replace("UGC", ""));
                                     if (map != null)
                                         tmp.ServerInfo.MapPictureLink = map.ImageUrl;
@@ -507,7 +514,7 @@ namespace PavlovRconWebserver.Services
 
             try
             {
-                answer = RconStatic.GetFile(server, server.ServerFolderPath + FilePaths.BanList, _notifyService);
+                answer = RconStatic.GetFile(server.SshServer, server.ServerFolderPath + FilePaths.BanList, _notifyService);
             }
             catch (Exception e)
             {

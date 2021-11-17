@@ -183,7 +183,7 @@ namespace PavlovRconWebserver.Services
             PavlovServer server,
             Match match)
         {
-            var connectionInfo = RconStatic.ConnectionInfoInternal(server, authType, out var result);
+            var connectionInfo = RconStatic.ConnectionInfoInternal(server.SshServer, authType, out var result);
             using var clientSsh = new SshClient(connectionInfo);
             using var clientSftp = new SftpClient(connectionInfo);
             try
@@ -216,7 +216,7 @@ namespace PavlovRconWebserver.Services
 
                 try
                 {
-                    RconStatic.WriteFile(server,
+                    RconStatic.WriteFile(server.SshServer,
                         server.ServerFolderPath + FilePaths.WhiteList,
                         list.ToArray(), _notifyService);
                 }
@@ -229,7 +229,7 @@ namespace PavlovRconWebserver.Services
                 
                 try
                 {
-                    RconStatic.WriteFile(server,
+                    RconStatic.WriteFile(server.SshServer,
                         server.ServerFolderPath + FilePaths.ModList,
                         mods.ToArray(), _notifyService);
                 }
@@ -239,7 +239,7 @@ namespace PavlovRconWebserver.Services
                                                                     e.Message, LogEventLevel.Fatal, _notifyService,
                         result);
                 }
-                RconStatic.WriteFile(server,
+                RconStatic.WriteFile(server.SshServer,
                     server.ServerFolderPath + FilePaths.BanList,
                     Array.Empty<string>(), _notifyService);
 

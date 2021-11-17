@@ -129,6 +129,7 @@ namespace PavlovRconWebserver.Controllers
             
             var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(server.Replace("\"\"", "\"ServerInfo\""));
             if (tmp == null) return BadRequest("Could not Desirialize Object!");
+            tmp.ServerId = serverId;
             var pavlovServer = await _pavlovServerService.FindOne(serverId);
             if (pavlovServer == null) return BadRequest("Could not get pavlovserver!");
             tmp.Name = pavlovServer.Name;
@@ -149,7 +150,6 @@ namespace PavlovRconWebserver.Controllers
         public async Task<IActionResult> PavlovChooseMapPartialView(int? serverId)
         {
             List<Map> listOfMaps;
-
             listOfMaps = (await _mapsService.FindAll()).ToList();
             if (serverId != null)
             {
@@ -160,6 +160,9 @@ namespace PavlovRconWebserver.Controllers
                     return Forbid();
                 }
                 var server = await _pavlovServerService.FindOne((int) serverId);
+                if (server.Shack)
+                    listOfMaps = listOfMaps.Where(x => x.Shack && x.ShackSshServerId == server.SshServer.Id).ToList();
+                
                 var mapsSelected = await _serverSelectedMapService.FindAllFrom(server);
                 if (mapsSelected != null)
                 {
@@ -419,6 +422,8 @@ namespace PavlovRconWebserver.Controllers
             }
 
             var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(serverInfo.Replace("\"\"", "\"ServerInfo\""));
+            if(tmp!=null)
+                tmp.ServerId = serverId;
             var model = new PavlovServerPlayerListViewModel
             {
                 PlayerList = players.Select(x => new PlayerModelExtended

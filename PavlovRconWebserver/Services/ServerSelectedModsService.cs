@@ -45,8 +45,12 @@ namespace PavlovRconWebserver.Services
                 additionalUsers.AddRange(await _userService.FindAllInRole("Mod")); // mods
             }
 
-            steamIdentitiesToReturn.AddRange(await SteamIdentitiesToReturn(
+            if(server.Shack)
+                steamIdentitiesToReturn.AddRange(await SteamIdentitiesToReturn(
                 additionalUsers.Select(x => x.Id.ToString()).ToList(), server, steamIdentities, false));
+            else
+                steamIdentitiesToReturn.AddRange(await SteamIdentitiesToReturn(
+                    additionalUsers.Select(x => x.Id.ToString()).ToList(), server, steamIdentities, false));
 
             await SaveToFile(server, steamIdentitiesToReturn);
             return true;
@@ -66,7 +70,10 @@ namespace PavlovRconWebserver.Services
                         PavlovServer = server,
                         LiteDbUser = steamIdentity.LiteDbUser
                     };
-                    steamIdentitiesToReturn.Add(steamIdentity.Id);
+                    if(server.Shack)
+                        steamIdentitiesToReturn.Add(steamIdentity.OculusId);
+                    else
+                        steamIdentitiesToReturn.Add(steamIdentity.Id);
                     if (withInsert)
                         await Insert(entry);
                 }
@@ -79,7 +86,7 @@ namespace PavlovRconWebserver.Services
         private async Task<bool> SaveToFile(PavlovServer pavlovServer, List<string> steamIds)
         {
             var lines = steamIds.Select(steamIdentity => steamIdentity).ToList();
-            RconStatic.WriteFile(pavlovServer, pavlovServer.ServerFolderPath + FilePaths.ModList, lines.ToArray(),
+            RconStatic.WriteFile(pavlovServer.SshServer, pavlovServer.ServerFolderPath + FilePaths.ModList, lines.ToArray(),
                 _notifyService);
             return true;
         }
