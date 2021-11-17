@@ -534,10 +534,14 @@ namespace PavlovRconWebserver.Extensions
                 sftp.Connect();
                 foreach (var serverSelectedMap in serverSelectedMaps)
                 {
+                    var mapsPath = pavlovServer.ServerFolderPath + "Pavlov/Saved/maps/";
+                    if(sftp.Exists(mapsPath))
+                        sftp.CreateDirectory(mapsPath);
+                    
                     if (sftp.Exists(pavlovServer.SshServer.ShackMapsPath+serverSelectedMap.Map.Name))
                     {
-                        var shackFolderPath = pavlovServer.ServerFolderPath + "Pavlov/Saved/maps/" +
-                                              serverSelectedMap.Map.Name;
+                        var shackFolderPath =  mapsPath +
+                                               serverSelectedMap.Map.Name;
                         if(sftp.Exists(shackFolderPath))
                             client.RunCommand("rm -rf "+shackFolderPath);
                         

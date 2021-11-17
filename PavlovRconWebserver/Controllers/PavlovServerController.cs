@@ -114,7 +114,8 @@ namespace PavlovRconWebserver.Controllers
 
             if (server.Shack)
                 tmp = tmp.Where(x => x.Shack && x.ShackSshServerId == server.SshServer.Id).ToArray();
-            
+            else
+                tmp = tmp.Where(x => !x.Shack).ToArray();
             var viewModel = new SelectedServerMapsViewModel
             {
                 AllMaps = tmp.ToList(),
