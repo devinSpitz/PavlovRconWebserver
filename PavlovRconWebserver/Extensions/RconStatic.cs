@@ -493,7 +493,7 @@ namespace PavlovRconWebserver.Extensions
                         {
                             try
                             {
-                                DeleteDirectory(sftp, map.FullName);
+                                client.RunCommand("rm -rf " + map.FullName);
                             }
                             catch (SftpPermissionDeniedException)
                             {
