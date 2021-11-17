@@ -536,7 +536,7 @@ namespace PavlovRconWebserver.Extensions
                 {
                     var mapsPath = pavlovServer.ServerFolderPath + "Pavlov/Saved/maps/";
                     if(sftp.Exists(mapsPath))
-                        sftp.CreateDirectory(mapsPath);
+                        sftp.CreateDirectory(mapsPath.Substring(0,mapsPath.Length-1));
                     
                     if (sftp.Exists(pavlovServer.SshServer.ShackMapsPath+serverSelectedMap.Map.Name))
                     {
