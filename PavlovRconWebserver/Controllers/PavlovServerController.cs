@@ -24,6 +24,7 @@ namespace PavlovRconWebserver.Controllers
         private readonly PavlovServerService _pavlovServerService;
         private readonly ServerSelectedMapService _serverSelectedMapService;
         private readonly ServerSelectedModsService _serverSelectedModsService;
+        private readonly SshServerSerivce _sshServerSerivce;
         private readonly SshServerSerivce _service;
         private readonly SteamIdentityService _steamIdentityService;
         private readonly UserService _userservice;
@@ -37,6 +38,7 @@ namespace PavlovRconWebserver.Controllers
             PavlovServerService pavlovServerService,
             ServerSelectedMapService serverSelectedMapService,
             MapsService mapsService,
+            SshServerSerivce sshServerSerivce,
             ServerSelectedWhitelistService whitelistService,
             SteamIdentityStatsServerService steamIdentityStatsServerService,
             ServerSelectedModsService serverSelectedModsService,
@@ -53,6 +55,7 @@ namespace PavlovRconWebserver.Controllers
             _mapsService = mapsService;
             _whitelistService = whitelistService;
             _steamIdentityService = steamIdentityService;
+            _sshServerSerivce = sshServerSerivce;
             _serverSelectedModsService = serverSelectedModsService;
             UserManager = userManager;
         }
@@ -69,6 +72,9 @@ namespace PavlovRconWebserver.Controllers
             var server = new PavlovServer();
             if (serverId != 0) server = await _pavlovServerService.FindOne(serverId);
 
+            if (server.SshServer == null)
+                server.SshServer = await _sshServerSerivce.FindOne(sshServerId);
+            
             var viewModel = new PavlovServerViewModel();
             viewModel = viewModel.fromPavlovServer(server, sshServerId);
 
