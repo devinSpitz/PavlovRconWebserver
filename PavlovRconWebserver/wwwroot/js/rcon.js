@@ -93,7 +93,6 @@ function search(searchInput,attr)
             $(this).parent().show();
         }
         else{
-
             $(this).parent().hide();
         }
 
@@ -174,9 +173,11 @@ function UpdatePlayerList(){
 
 function PlayerAction()
 {
+    debugger;
     let command = "";
 
     let playersSelected = "";
+    let multiple = $("#CheckAll").is(":checked");
     $("#Players :selected").each(function(){
         playersSelected = $(this).val();
     });
@@ -184,17 +185,28 @@ function PlayerAction()
     $("#playerCommands :selected").each(function(){
         playerCommand = $(this).val();
     });
+    //TODO fix this shit xD
+    if((playersSelected===""||playersSelected==="-")&&!multiple)
+    {
+        if(playerCommand !== "SetLimitedAmmoType" && playerCommand !== "ItemList" && playerCommand !== "SetPin")
+        {
+            alert("You have to choose a player!");
+            return;
+        }
+    }
     
-    if(playerCommand === "SetLimitedAmmoType" || playerCommand === "ItemList")
+    if(playerCommand === "SetLimitedAmmoType" || playerCommand === "ItemList" ||playerCommand === "SetPin")
     {
         command += playerCommand+" ";
-    }else{
+    }else if (!multiple){
 
         command += playerCommand+" %Player% ";
     }
-    
-    
-
+    if(playerCommand === "Ban" && playersSelected === "-")
+    {
+        alert("You have to choose a player!");
+        return false;
+    }
     
     let playerValue = "";
     playerValue = $("#PlayerAction").find("#PlayerValue").val();
@@ -206,18 +218,16 @@ function PlayerAction()
             withInput = this.InputValue;
         }
     });
-
+    if(multiple)
+    {
+        sendMultiCommand(playerCommand);
+        return;
+    }
     if(withInput)
     {
         command += playerValue;
     }
-
-    if(playerCommand === "Ban" && playersSelected === "-")
-    {
-        alert("You have to choose a player!");
-        return false;
-    }
-    else if(playerCommand === "Ban" && playersSelected !== "-")
+    if(playerCommand === "Ban" && playersSelected !== "-")
     {
         AddBanPlayer(playersSelected,playerValue); // also makes the command
         return; 
@@ -245,9 +255,20 @@ function sendSingleCommand(command)
         data: data,
         success:  function(result)
         {
+            debugger;
             if(result.toString()==="")
             {
                 alert("Did nothing!");
+            }
+            else if(result.toString().indexOf("alreadyNotified!") !== -1)
+            {
+                Toastify({
+
+                    text: result.substring(16,result.length),
+                    duration: 3000
+
+                }).showToast();
+                $(".overlay").hide();
             }
             else{
                 if(command==="ServerInfo")
@@ -259,6 +280,49 @@ function sendSingleCommand(command)
                 }
                 $(".overlay").hide();
             }
+        },
+        error: function(XMLHttpRequest)
+        {
+            jsonTOHtmlPartialView(JSON.stringify(XMLHttpRequest))
+            $(".overlay").hide();
+        }
+    });
+   
+
+}
+function sendMultiCommand(command)
+{
+    debugger;
+    $(".overlay").show();
+    let data = {};
+    let servers = [];
+    
+    $("#SingleServer :selected").each(function(){
+        servers.push($(this).val())
+    });
+    let playersSelected = Array()
+    $("#Players").each(function(){
+        playersSelected.push($(this).val());
+    }); 
+    let value = $("#PlayerAction").find("#PlayerValueParent :input").val();
+    if(typeof value === "undefined") value = "";
+    debugger; 
+    if(playersSelected.length<=0)
+    {
+        alert("You have to have at least one player on the server!!");
+        $(".overlay").hide();
+        return;
+    }
+    data =  { server: servers[0], command: command, players: playersSelected, value: value };
+    debugger;
+    $.ajax({
+        type: 'POST',
+        url: "/Rcon/SendCommandMulti",
+        data: data,
+        success:  function(result)
+        {
+            jsonTOHtmlPartialView(result.toString());
+            $(".overlay").hide();
         },
         error: function(XMLHttpRequest)
         {

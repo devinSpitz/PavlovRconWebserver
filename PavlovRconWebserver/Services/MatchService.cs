@@ -149,15 +149,20 @@ namespace PavlovRconWebserver.Services
             }
 
 
-            //
+            //Problem if i save here the MatchID upper is not set  until its an update:(
 
             var bla = await Upsert(realmatch);
 
             if (bla)
             {
 
+                
                 if (realmatch.MatchSelectedSteamIdentities.Count > 0)
                 {
+                    foreach (var matchSelectedSteamIdentity in realmatch.MatchSelectedSteamIdentities)
+                    {
+                        matchSelectedSteamIdentity.matchId = realmatch.Id;
+                    }
                     // First remove Old TeamSelected and Match selected stuff
                     // Then write the new ones
                     await _matchSelectedSteamIdentitiesService.RemoveFromMatch(realmatch.Id);
@@ -167,6 +172,14 @@ namespace PavlovRconWebserver.Services
                 if(realmatch.MatchTeam0SelectedSteamIdentities.Count > 0||realmatch.MatchTeam1SelectedSteamIdentities.Count > 0)
                 {
                     await _matchSelectedTeamSteamIdentitiesService.RemoveFromMatch(realmatch.Id);
+                    foreach (var matchTeam0SelectedSteamIdentity in realmatch.MatchTeam0SelectedSteamIdentities)
+                    {
+                        matchTeam0SelectedSteamIdentity.matchId = realmatch.Id;
+                    }
+                    foreach (var matchTeam1SelectedSteamIdentity in realmatch.MatchTeam1SelectedSteamIdentities)
+                    {
+                        matchTeam1SelectedSteamIdentity.matchId = realmatch.Id;
+                    }
                     if(realmatch.MatchTeam0SelectedSteamIdentities.Any())
                         await _matchSelectedTeamSteamIdentitiesService.Upsert(realmatch.MatchTeam0SelectedSteamIdentities,match.Id,0);
                     if(realmatch.MatchTeam1SelectedSteamIdentities.Any())
@@ -183,6 +196,7 @@ namespace PavlovRconWebserver.Services
             PavlovServer server,
             Match match)
         {
+            //Todo shack support
             var connectionInfo = RconStatic.ConnectionInfoInternal(server.SshServer, authType, out var result);
             using var clientSsh = new SshClient(connectionInfo);
             using var clientSftp = new SftpClient(connectionInfo);

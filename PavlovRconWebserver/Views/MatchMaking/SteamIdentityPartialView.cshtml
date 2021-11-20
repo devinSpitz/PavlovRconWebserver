@@ -5,7 +5,8 @@
         @await Html.PartialAsync("SteamIdentityListPartialView", new SteamIdentityMatchListViewModel
         {
             SteamIdentities = Model.AllSteamIdentities,
-            selectListId = "AllSteamIdentities"
+            selectListId = "AllSteamIdentities",
+            IdUsed = Model.IdUsed
         })
     </div>
 
@@ -19,7 +20,8 @@
         @await Html.PartialAsync("SteamIdentityListPartialView", new SteamIdentityMatchListViewModel
         {
             SteamIdentities = Model.SelectedSteamIdentities,
-            selectListId = "MatchSelectedSteamIdentitiesStrings"
+            selectListId = "MatchSelectedSteamIdentitiesStrings",
+            IdUsed = Model.IdUsed
         })
     </div>
 

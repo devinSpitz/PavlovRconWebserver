@@ -244,6 +244,7 @@ namespace PavlovRconWebserver.Services
                         "https://steamcommunity.com/profiles/"+single);
                 var pageContents = await response.Content.ReadAsStringAsync();
 
+                if(string.IsNullOrEmpty(pageContents)) continue;
                 var pageDocument = new HtmlDocument();
                 pageDocument.LoadHtml(pageContents);
 

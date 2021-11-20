@@ -10,5 +10,7 @@ namespace PavlovRconWebserver.Models
 
         [DisplayName("Selected Steam Identities")]
         public List<SteamIdentity> SelectedSteamIdentities { get; set; }
+        
+        public string IdUsed { get; set; } = "Id";
     }
 }

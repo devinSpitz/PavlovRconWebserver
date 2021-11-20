@@ -100,15 +100,16 @@ namespace PavlovRconWebserver
                 app.UseDeveloperExceptionPage();
             else
                 app.UseExceptionHandler("/Home/Error");
-
+            
             app.UseSerilogRequestLogging();
             //Todo handle when you wnat something else than subodmains xD and aslo if add add this javascript will still be broken so adjust there as well
-            // app.UsePathBase("/panel/");
-            // app.Use((context, next) =>
-            // {
-            //     context.Request.PathBase = new PathString("/foo");
-            //     return next();
-            // });
+            var subPath = Configuration.GetSection("SubPath");
+            app.UsePathBase(subPath.Value);
+             app.Use((context, next) =>
+             {
+                 context.Request.PathBase = new PathString(subPath.Value);
+                 return next();
+             });
             if (env.EnvironmentName != "Test")
                 if (env.EnvironmentName == "Development")
                 {

@@ -5,13 +5,13 @@
     @Html.DropDownList(Model.TeamsDropDownId, new SelectList(Model.AvailableTeams, "Id", "Name", Model.selectedTeam), new {@class = "form-control form-control-sm form-select "})
 
     @Html.LabelFor(x => x.AvailableSteamIdentities)
-    @Html.ListBox(Model.SelectId, new MultiSelectList(Model.AvailableSteamIdentities, "Id", "Name"), new {@class = "form-control form-control-sm"})
+    @Html.ListBox(Model.SelectId, new MultiSelectList(Model.AvailableSteamIdentities, Model.IdUsed, "Name"), new {@class = "form-control form-control-sm"})
     <br>
     <div class="col-md-4">
         <Button alt="Select" class="btn-primary" id="@Model.SelectButtonId">Select</Button>
     </div><br><br>
     @Html.LabelFor(x => x.SelectedSteamIdentities)
-    @Html.ListBox(Model.SelectedId, new MultiSelectList(Model.SelectedSteamIdentities, "Id", "Name"), new {@class = "form-control form-control-sm"})
+    @Html.ListBox(Model.SelectedId, new MultiSelectList(Model.SelectedSteamIdentities, Model.IdUsed, "Name"), new {@class = "form-control form-control-sm"})
 
 
 

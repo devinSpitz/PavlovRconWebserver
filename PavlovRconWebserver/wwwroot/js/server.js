@@ -32,7 +32,7 @@ function ChangeMap(mapId,object,gameMode,onlyChange = false)
 function SaveApiCall(method, serverId, mapId, gameMode, object,Move,oldMode) {
     $.ajax({
         type: 'GET',
-        url: "/SshServer/" + method + "ServerSelectedMap",
+        url: subPath+"SshServer/" + method + "ServerSelectedMap",
         data: {serverId: serverId, mapId: mapId, gameMode: gameMode, move: Move,oldMode: oldMode},
         success: function (data) {
             if(data===true)

@@ -54,6 +54,10 @@ else
             {
                 @Html.DropDownListFor(m => new RconViewModel().PlayerValueTwo, new SelectList(command.valuesTwoOptions, "Name"), new {@class = "form-control form-control-sm form-select "})
             }
+            else if (!Model.firstValue)
+            {
+                <input name="PlayerValueTwo" id="PlayerValueTwo" class="form-control"/>
+            }
             else
             {
                 <input name="PlayerValue" id="PlayerValue" class="form-control"/>

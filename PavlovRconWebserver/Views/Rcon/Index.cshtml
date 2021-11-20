@@ -82,6 +82,8 @@
                 <div class="col-sm-4">
                     @Html.LabelFor(x => x.Players)
                     @Html.DropDownListFor(m => m.Players, new SelectList(Model.Players, "Name", "SteamId", Model.PlayersSelected), new {@class = "form-control form-control-sm form-select ", size = 10})
+                    <label asp-for="CheckAll"></label>
+                    <input asp-for="CheckAll" class="form-control form-check-input" value="@Model.CheckAll"/>
                 </div>
                 <div class="col-sm-4">
                     <div class="tooltipHover">

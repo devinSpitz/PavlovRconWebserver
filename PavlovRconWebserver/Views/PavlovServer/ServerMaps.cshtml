@@ -1,7 +1,9 @@
 @using PavlovRconWebserver.Extensions
 @model SelectedServerMapsViewModel
-
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
 @{
+    var subPath = Configuration["subPath"];
     ViewBag.Title = "Add maps to the Server";
     Layout = "_Layout";
     var maxLength = 20;
@@ -23,7 +25,7 @@
     </ul>
 </div>
 <br>
-<a class="btn btn-success" href="/PavlovServer/EditServerSettings/@Model.ServerId">Goto server settings <span class="fas fa-cogs"></span></a>
+<a class="btn btn-success" href="@Html.Raw(subPath)PavlovServer/EditServerSettings/@Model.ServerId">Goto server settings <span class="fas fa-cogs"></span></a>
 <br>
 <div class="row">
     <div class="col-sm-6" id="Save">

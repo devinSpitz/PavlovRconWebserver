@@ -21,5 +21,6 @@ namespace PavlovRconWebserver.Models
         [BsonIgnore] [NotMapped] public List<string> MatchTeam0SelectedSteamIdentitiesStrings { get; set; } = new();
 
         [BsonIgnore] [NotMapped] public List<string> MatchTeam1SelectedSteamIdentitiesStrings { get; set; } = new();
+        [BsonIgnore] [NotMapped] public bool Shack { get; set; } = false;
     }
 }

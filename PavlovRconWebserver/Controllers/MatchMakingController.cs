@@ -50,7 +50,9 @@ namespace PavlovRconWebserver.Controllers
         [HttpGet("[controller]/{showFinished?}")]
         public async Task<IActionResult> Index(bool showFinished = false)
         {
-            
+            //Todo Remove in version 0.0.4 bugfix cause there ids with matchID0
+            await _matchSelectedTeamSteamIdentitiesService.RemoveFromMatch(0);
+
             var user = await _userservice.getUserFromCp(HttpContext.User);
             var servers = await _matchService.FindAllMatchesWhereTheUserHasRights(HttpContext.User,user);
             
@@ -142,20 +144,34 @@ namespace PavlovRconWebserver.Controllers
         
         [Authorize(Roles = CustomRoles.AnyOtherThanUser)]
         [HttpGet("[controller]/CreateMatch/")]
-        public async Task<IActionResult> CreateMatch()
+        public async Task<IActionResult> CreateMatch(bool shack = false)
         {
             var user = await _userservice.getUserFromCp(HttpContext.User);
+
+            var servers = (await _pavlovServerService.FindAllServerWhereTheUserHasRights(HttpContext.User, user))
+                .Where(x => x.ServerType == ServerType.Event)
+                .ToList(); // and where no match is already running
+
+            if (shack)
+            {
+                servers = servers.Where(x => x.Shack).ToList();
+            }
+            
             var match = new MatchViewModel
             {
                 AllTeams = (await _teamService.FindAll()).ToList(),
-                AllPavlovServers = (await _pavlovServerService.FindAllServerWhereTheUserHasRights(HttpContext.User,user)).Where(x => x.ServerType == ServerType.Event)
-                    .ToList() // and where no match is already running
+                AllPavlovServers = servers.Prepend(new PavlovServer()
+                {
+                    Id = 0,
+                    Name = "-- please select --"
+                }).ToList(),
+                Shack = shack
             };
             return View("Match", match);
         }
 
         [HttpPost("[controller]/GetAvailableSteamIdentities")]
-        public async Task<IActionResult> GetAvailableSteamIdentities(int teamId, int? matchId)
+        public async Task<IActionResult> GetAvailableSteamIdentities(int teamId,bool shack, int? matchId)
         {
             var steamIdentities = await _teamSelectedSteamIdentityService.FindAllFrom(teamId);
 
@@ -169,7 +185,13 @@ namespace PavlovRconWebserver.Controllers
 
 
             var list = steamIdentities
-                .Where(x => !usedSteamIdentities.Select(y => y.SteamIdentityId).Contains(x.SteamIdentity.Id)).ToList();
+                .Where(x => !usedSteamIdentities.Select(y => y.SteamIdentityId).Contains(x.SteamIdentity.Id))
+                .ToArray();
+            if (shack)
+            {
+                list = list.Where(x => !string.IsNullOrEmpty(x.SteamIdentity.OculusId)).ToArray();
+            }
+
             var result = new JsonResult(list);
             return result;
         }
@@ -255,11 +277,11 @@ namespace PavlovRconWebserver.Controllers
         }
 
         [HttpPost("[controller]/PartialViewPerGameModeWithId")]
-        public async Task<IActionResult> PartialViewPerGameModeWithId(string gameMode, int? matchId)
+        public async Task<IActionResult> PartialViewPerGameModeWithId(string gameMode, int? matchId,bool shack = false)
         {
             var match = new Match();
             if (matchId != null && matchId != 0) match = await _matchService.FindOne((int) matchId);
-            return await PartialViewPerGameMode(gameMode, match);
+            return await PartialViewPerGameMode(gameMode, match,shack);
         }
 
         [HttpGet("[controller]/Delete")]
@@ -283,7 +305,7 @@ namespace PavlovRconWebserver.Controllers
 
         //Todo: Most of it to the service?
         [HttpPost("[controller]/PartialViewPerGameMode")]
-        public async Task<IActionResult> PartialViewPerGameMode(string gameMode, Match match)
+        public async Task<IActionResult> PartialViewPerGameMode(string gameMode, Match match,bool shack)
         {
             var user = await _userservice.getUserFromCp(HttpContext.User);
             var servers = await _matchService.FindAllMatchesWhereTheUserHasRights(HttpContext.User,user);
@@ -302,7 +324,15 @@ namespace PavlovRconWebserver.Controllers
             var Teams = (await _teamService.FindAll()).ToList();
 
 
-            var steamIdentities = (await _steamIdentityService.FindAll()).ToList();
+            var steamIdentities = new List<SteamIdentity>();
+            if (shack)
+            {
+                steamIdentities = (await _steamIdentityService.FindAll()).Where(x=>!string.IsNullOrEmpty(x.OculusId)).ToList();
+            }
+            else
+            {
+                steamIdentities = (await _steamIdentityService.FindAll()).ToList();
+            }
             var selectedSteamIdentities =
                 (await _steamIdentityService.FindAList(selectedSteamIdentitiesRaw.Select(x => x.SteamIdentityId)
                     .ToList())).ToList();
@@ -315,6 +345,11 @@ namespace PavlovRconWebserver.Controllers
             foreach (var selectedSteamIdentity in selectedSteamIdentities)
                 steamIdentities.Remove(steamIdentities.FirstOrDefault(x => x.Id == selectedSteamIdentity.Id));
             var gotAnswer = GameModes.HasTeams.TryGetValue(gameMode, out var hasTeams);
+            var idUsed = "Id";
+            if (shack)
+            {
+                idUsed = "OculusId";
+            }
             if (gotAnswer)
             {
                 if (hasTeams)
@@ -326,7 +361,8 @@ namespace PavlovRconWebserver.Controllers
                             return PartialView("SteamIdentityPartialView", new SteamIdentityMatchViewModel
                             {
                                 SelectedSteamIdentities = selectedSteamIdentities,
-                                AllSteamIdentities = steamIdentities
+                                AllSteamIdentities = steamIdentities,
+                                IdUsed = idUsed
                             });
                         return PartialView("TeamPartailView", new SteamIdentityMatchTeamViewModel
                         {
@@ -334,7 +370,8 @@ namespace PavlovRconWebserver.Controllers
                             selectedTeam1 = match.Team1?.Id,
                             AvailableTeams = Teams,
                             SelectedSteamIdentitiesTeam0 = selectedTeam0SteamIdentities,
-                            SelectedSteamIdentitiesTeam1 = selectedTeam1SteamIdentities
+                            SelectedSteamIdentitiesTeam1 = selectedTeam1SteamIdentities,
+                            IdUsed = idUsed
                         });
                     }
 

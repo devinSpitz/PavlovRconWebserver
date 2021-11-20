@@ -166,6 +166,9 @@ namespace PavlovRconWebserver.Services
                     return new KeyValuePair<PavlovServerViewModel, string>(server,
                         result + "Could not remove the server line from sudoers file!");
                 }
+                
+                //Handle the presets an newer systemd
+                RconStatic.AddLineToNewerSystemDsIfNeeded(server,_notifyService,true);
 
 
 

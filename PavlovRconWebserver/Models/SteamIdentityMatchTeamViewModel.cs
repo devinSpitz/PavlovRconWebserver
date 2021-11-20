@@ -10,6 +10,7 @@ namespace PavlovRconWebserver.Models
         public int? selectedTeam1 { get; set; }
         public List<SteamIdentity> SelectedSteamIdentitiesTeam0 { get; set; } = new();
         public List<SteamIdentity> SelectedSteamIdentitiesTeam1 { get; set; } = new();
+        public string IdUsed { get; set; } = "Id";
     }
 
     public class SteamIdentityMatchTeamSingleViewModel
@@ -29,5 +30,6 @@ namespace PavlovRconWebserver.Models
         public string SelectedId { get; set; } = "";
         public string TeamsDropDownId { get; set; } = "";
         public string SelectButtonId { get; set; } = "";
+        public string IdUsed { get; set; } = "Id";
     }
 }

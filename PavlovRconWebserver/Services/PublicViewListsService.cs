@@ -67,7 +67,7 @@ namespace PavlovRconWebserver.Services
             }
 
 
-            return result;
+            return result.OrderByDescending(x=>x.PlayerList.Count).ToList();
         }
         
         public async Task<PavlovServerPublicMapListViewModel> GetMapCycleFromPavlovServer()

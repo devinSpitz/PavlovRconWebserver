@@ -19,7 +19,7 @@ namespace PavlovRconWebserver.Controllers
     public class RconController : Controller
     {
         private readonly MapsService _mapsService;
-        private readonly IToastifyService _notifyService;
+        private readonly IToastifyService _toastifyService;
         private readonly PavlovServerPlayerService _pavlovServerPlayerService;
         private readonly PavlovServerService _pavlovServerService;
         private readonly ServerBansService _serverBansService;
@@ -36,9 +36,9 @@ namespace PavlovRconWebserver.Controllers
             ServerBansService serverBansService,
             ServerSelectedModsService serverSelectedModsService,
             PavlovServerPlayerService pavlovServerPlayerService,
-            IToastifyService notyfService)
+            IToastifyService itToastifyService)
         {
-            _notifyService = notyfService;
+            _toastifyService = itToastifyService;
             _service = service;
             _userservice = userService;
             _serverSelectedMapService = serverSelectedMapService;
@@ -75,6 +75,107 @@ namespace PavlovRconWebserver.Controllers
             return servers;
         }
 
+        [HttpPost("[controller]/SendCommandMulti")]
+        public async Task<IActionResult> SendCommandMulti(int server, string command, string[] players, string value = "")
+        {
+            var singleServer = await _pavlovServerService.FindOne(server);
+            var servers = await GiveServerWhichTheUserHasRightsTo();
+            LiteDbUser user;
+            user = await _userservice.getUserFromCp(HttpContext.User);
+            if (!servers.Select(x => x.Id).Contains(singleServer.Id))
+            {
+                return Forbid();
+            }
+            var isMod = await RightsHandler.IsModOnTheServer(_serverSelectedModsService, singleServer, user.Id);
+            var commands = await RightsHandler.GetAllowCommands(new RconViewModel(), HttpContext.User, _userservice, isMod,singleServer,user);
+
+ 
+            
+            var contains = false;
+            foreach (var singleCommand in commands)
+            {
+                if (command.Contains(singleCommand))
+                {
+                    contains = true;
+                }
+            }
+            if (contains != true)
+            {
+                return Forbid();
+            }
+            
+            if (command.StartsWith("GodMode"))
+            {
+                command = "Slap";
+                value = "-2147000000";
+            }
+            if (command.StartsWith("CustomPlayer") || command.StartsWith("Custom"))
+            {
+                if (command.StartsWith("CustomPlayer"))
+                {
+                    var count = value.Count(x => x == ' ');
+                    if (count == 1)
+                    {
+                        var pieces = value.Split(new[] { ' ' }, 2);
+                        command = pieces[0];
+                        value = pieces[1];
+                    }
+                }
+                else
+                {
+                    command = command.Substring(7);
+                }
+            }
+            
+            
+            
+            var response = "";
+            try
+            {
+                var commandsList = new List<string>();
+                foreach (var player in players)
+                {
+                    if (value == null)
+                    {
+                        commandsList.Add(command+" "+player);
+                        
+                    }
+                    else
+                    {
+                        commandsList.Add(command+" "+player+" "+value);
+                        
+                    }
+                }
+                var responses = await RconStatic.SShTunnelMultipleCommands(singleServer, commandsList.ToArray(), _toastifyService); 
+                responses.errors.AddRange(responses.MultiAnswer);
+                response = string.Join(",", responses.errors);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+            if (string.IsNullOrEmpty(response)) return BadRequest("The response was empty!");
+            try
+            {
+                var tmp = JsonConvert.DeserializeObject<MinimumRconResultObject>(response, new JsonSerializerSettings {CheckAdditionalContent = false});
+                var o = (Newtonsoft.Json.Linq.JObject)JsonConvert.DeserializeObject(response);
+                var value3 = o.Property("")?.Value;
+                var value2 = o.Property(tmp.Command)?.Value;
+                if (tmp != null  && (value3 is {HasValues: false}|| value2 is {HasValues: false}))
+                {
+                    if (tmp.Successful)
+                    {
+                        return Ok("alreadyNotified! Command "+tmp.Command+ " was successful.");
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                //Ingore only wants to know if its success
+            }
+            
+            return new ObjectResult(response);
+        }
 
         [HttpPost("[controller]/SendCommand")]
         public async Task<IActionResult> SendCommand(int server, string command)
@@ -89,6 +190,9 @@ namespace PavlovRconWebserver.Controllers
             }
             var isMod = await RightsHandler.IsModOnTheServer(_serverSelectedModsService, singleServer, user.Id);
             var commands = await RightsHandler.GetAllowCommands(new RconViewModel(), HttpContext.User, _userservice, isMod,singleServer,user);
+
+ 
+            
             var contains = false;
             foreach (var singleCommand in commands)
             {
@@ -102,17 +206,64 @@ namespace PavlovRconWebserver.Controllers
                 return Forbid();
             }
             
+            if (command.StartsWith("GodMode"))
+            {
+                command = "Slap "+(command.Substring(8, command.Length-8)) + " -2147000000";
+            }
+            
+            if (command.StartsWith("CustomPlayer") || command.StartsWith("Custom"))
+            {
+                if (command.StartsWith("CustomPlayer"))
+                {
+                    command = command.Substring(13);
+                    var count = command.Count(x => x == ' ');
+                    if (count == 2)
+                    {
+                        var pieces = command.Split(new[] { ' ' }, 3);
+                        command = pieces[1] + " " + pieces[0]+ " " + pieces[2]; 
+                    }
+                    else if(count ==1)
+                    {
+                        var pieces = command.Split(new[] { ' ' }, 2);
+                        command = pieces[1] +" " + pieces[0];
+                    }
+
+                }
+                else
+                {
+                    command = command.Substring(7);
+                }
+            }
+            
             var response = "";
             try
             {
-                response = await RconStatic.SendCommandSShTunnel(singleServer, command, _notifyService);
+                response = await RconStatic.SendCommandSShTunnel(singleServer, command, _toastifyService);
             }
             catch (Exception e)
             {
                 return BadRequest(e.Message);
             }
-
             if (string.IsNullOrEmpty(response)) return BadRequest("The response was empty!");
+            try
+            {
+                var tmp = JsonConvert.DeserializeObject<MinimumRconResultObject>(response, new JsonSerializerSettings {CheckAdditionalContent = false});
+                var o = (Newtonsoft.Json.Linq.JObject)JsonConvert.DeserializeObject(response);
+                var value = o.Property("")?.Value;
+                var value2 = o.Property(tmp.Command)?.Value;
+                if (tmp != null  && (value is {HasValues: false}|| value2 is {HasValues: false}))
+                {
+                    if (tmp.Successful)
+                    {
+                        return Ok("alreadyNotified! Command "+tmp.Command+ " was successful.");
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                //Ingore only wants to know if its success
+            }
+            
             return new ObjectResult(response);
         }
 
@@ -224,7 +375,7 @@ namespace PavlovRconWebserver.Controllers
                 var result1 = "";
                 try
                 {
-                    result1 = await RconStatic.SendCommandSShTunnel(ban.PavlovServer, "RefreshList", _notifyService);
+                    result1 = await RconStatic.SendCommandSShTunnel(ban.PavlovServer, "RefreshList", _toastifyService);
                 }
                 catch (Exception e)
                 {
@@ -244,7 +395,7 @@ namespace PavlovRconWebserver.Controllers
             var result = "";
             try
             {
-                result = await RconStatic.SendCommandSShTunnel(ban.PavlovServer, "Ban " + steamId, _notifyService);
+                result = await RconStatic.SendCommandSShTunnel(ban.PavlovServer, "Ban " + steamId, _toastifyService);
             }
             catch (Exception e)
             {
@@ -331,7 +482,7 @@ namespace PavlovRconWebserver.Controllers
             //unban command
             try
             {
-                await RconStatic.SendCommandSShTunnel(pavlovServer, "Unban " + steamId, _notifyService);
+                await RconStatic.SendCommandSShTunnel(pavlovServer, "Unban " + steamId, _toastifyService);
             }
             catch (CommandException)
             {
@@ -403,7 +554,7 @@ namespace PavlovRconWebserver.Controllers
                 var result = "";
                 try
                 {
-                    result = await RconStatic.SendCommandSShTunnel(server, "ServerInfo", _notifyService);
+                    result = await RconStatic.SendCommandSShTunnel(server, "ServerInfo", _toastifyService);
                 }
                 catch (Exception e)
                 {
@@ -413,12 +564,12 @@ namespace PavlovRconWebserver.Controllers
                 serverInfo = result;
 
                 DataBaseLogger.LogToDatabaseAndResultPlusNotify("controlled got serverInfo back: " + serverInfo,
-                    LogEventLevel.Verbose, _notifyService);
+                    LogEventLevel.Verbose, _toastifyService);
             }
             catch (CommandException e)
             {
                 DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not get Serverinfo!" + e.Message,
-                    LogEventLevel.Fatal, _notifyService);
+                    LogEventLevel.Fatal, _toastifyService);
             }
 
             var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(serverInfo.Replace("\"\"", "\"ServerInfo\""));

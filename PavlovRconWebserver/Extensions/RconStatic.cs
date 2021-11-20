@@ -707,15 +707,19 @@ WantedBy = multi-user.target";
 
                 // add line
                 var success =
-                    AddServerLineToSudoersFile(server, notyfService, pavlovServerService, sudoersPath, result);
+                    AddServerLineToSudoersFile(server, notyfService, sudoersPath, result);
 
                 if (!success) return EndConnection(result);
-
-
+                
                 var justToMakeSureSudoKnowsTheChanges = await SendCommandForShell("sudo su", stream, null);
                 DataBaseLogger.LogToDatabaseAndResultPlusNotify(
                     "sudo su answer after changes from the sudoersfile: " + justToMakeSureSudoKnowsTheChanges,
                     LogEventLevel.Verbose, notyfService);
+                
+                //handle presets for new systemd
+                
+                
+                AddLineToNewerSystemDsIfNeeded(server,notyfService);
             }
             catch (Exception e)
             {
@@ -800,8 +804,94 @@ WantedBy = multi-user.target";
             return success;
         }
 
+        /// <summary>
+        /// In Arch linux the Preset state is shown cause it has a newer release of systemd.
+        /// The workaround is to add the pavlovServer to the preset file so the state should get dedected right again.
+        /// </summary>
+        /// <param name="server"></param>
+        /// <param name="notyfService"></param>
+        /// <param name="remove"></param>
+        /// <returns></returns>
+        public static bool AddLineToNewerSystemDsIfNeeded(PavlovServer server, IToastifyService notyfService, bool remove = false)
+        {
+            var type = GetAuthType(server.SshServer);
+            var connectionInfo = ConnectionInfoInternal(server.SshServer, type, out var result);
+
+            using var clientSftp = new SftpClient(connectionInfo);
+            using var clientSsh = new SshClient(connectionInfo);
+            string[] presetsPaths = {
+                "/usr/lib/systemd/system-preset/90-systemd.preset",
+                "/usr/lib/systemd/system-preset/99-default.preset",
+            };
+
+            var success = false;
+            try
+            {
+                clientSftp.Connect();
+                clientSsh.Connect();
+                
+                var presetString = systemPresetForNeweSystemds(server);
+                
+                
+                foreach (var presetPath in presetsPaths)
+                {
+                    
+                    if(!clientSftp.Exists(presetPath)) continue;
+                    
+                    
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Check system service presets that exist otherwise the system will detect the server state wrong.",
+                        LogEventLevel.Verbose, notyfService);
+                    if (remove)
+                    {
+                        var presetLines = clientSftp.ReadAllLines(presetPath);
+                        if (presetLines.Contains(presetString))
+                        {
+                            clientSftp.WriteAllLines(presetPath,presetLines.Where(x=>x.Trim()!=presetString.Trim()));
+                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Did remove the system preset that for the pavlovServer.",
+                                LogEventLevel.Verbose, notyfService);
+                        }
+                    }
+                    else
+                    {
+                        var presetLines = clientSftp.ReadAllLines(presetPath);
+                        if (!presetLines.Contains(presetString.Trim()))
+                        {
+                            clientSftp.WriteAllLines(presetPath,presetLines.Append(presetString));
+                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Did add the system preset that for the pavlovServer.",
+                                LogEventLevel.Verbose, notyfService);
+                        }
+                    }
+
+                    success = true;
+
+                    
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Presets should be fine",
+                        LogEventLevel.Verbose, notyfService);
+                }
+
+
+            }
+            catch (Exception e)
+            {
+                ExcpetionHandlingSshSftp(server, notyfService, e, result, clientSsh, clientSftp);
+            }
+            finally
+            {
+                clientSftp.Disconnect();
+                clientSsh.Disconnect();
+            }
+
+            return success;
+        }
+
+        private static string systemPresetForNeweSystemds(PavlovServer server)
+        {
+            var systemPresetString = "enable "+ server.ServerSystemdServiceName;
+            return systemPresetString;
+        }
+
+        
         public static bool AddServerLineToSudoersFile(PavlovServer server, IToastifyService notyfService,
-            PavlovServerService pavlovServerService,
             string sudoersPath, ConnectionResult connectionResult)
         {
             var type = GetAuthType(server.SshServer);

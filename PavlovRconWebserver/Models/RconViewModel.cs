@@ -129,6 +129,19 @@ namespace PavlovRconWebserver.Models
                 },
                 new()
                 {
+                    Name = "GodMode",
+                    MinRole = "Admin",
+                    Group = "Player commands"
+                },
+                new()
+                {
+                    Name = "CustomPlayer",
+                    InputValue = true,
+                    MinRole = "Admin",
+                    Group = "Player commands"
+                },
+                new()
+                {
                     Name = "GiveVehicle",
                     InputValue = true,
                     PartialViewName = "ItemView",
@@ -206,6 +219,13 @@ namespace PavlovRconWebserver.Models
                     PartialViewName =
                         "https://steamcommunity.com/workshop/browse/?appid=555160&browsesort=trend&section=readytouseitems&actualsort=trend&p=1&numperpage=30",
                     MinRole = "Captain"
+                },
+                new()
+                {
+                    Name = "Custom",
+                    InputValue = true,
+                    InputValueTwo = true,
+                    MinRole = "Admin"
                 }
             };
         }
@@ -226,6 +246,7 @@ namespace PavlovRconWebserver.Models
         [DisplayName("Value")] public string PlayerValue { get; set; }
 
         [DisplayName("SecondValue")] public string PlayerValueTwo { get; set; }
+        [DisplayName("All")] public bool CheckAll { get; set; } = false;
     }
 
     public class EndStatsFromLogs
@@ -304,8 +325,7 @@ namespace PavlovRconWebserver.Models
         public string Name { get; set; }
 
         [DisplayName("Amoint/ItemId/etc.")] public bool InputValue { get; set; }
-
-        //Todo: value options to roles / captain only 1 hour ban
+        
         public List<string> valuesOptions { get; set; } = new();
         public string PartialViewName { get; set; }
 

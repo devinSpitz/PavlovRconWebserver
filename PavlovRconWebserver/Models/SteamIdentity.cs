@@ -10,7 +10,7 @@ namespace PavlovRconWebserver.Models
     public class SteamIdentity
     {
         [Required] [DisplayName("SteamID64")] public string Id { get; set; }
-        [Required] [DisplayName("Oculus name")] public string OculusId { get; set; }
+        [DisplayName("Oculus name")] public string OculusId { get; set; }
 
         [Required] [DisplayName("SteamName")] public string Name { get; set; }
 
