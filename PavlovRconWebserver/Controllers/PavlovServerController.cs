@@ -310,6 +310,7 @@ namespace PavlovRconWebserver.Controllers
                 return Forbid();
             try
             {
+                viewModel.SshServer = await _sshServerSerivce.FindOne(viewModel.sshServerId);
                 var result = await _service.RemovePavlovServerFromDisk(viewModel);
                 if (result.Value != null) return BadRequest(result.Value);
 

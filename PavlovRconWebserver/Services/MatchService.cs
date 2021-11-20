@@ -196,7 +196,6 @@ namespace PavlovRconWebserver.Services
             PavlovServer server,
             Match match)
         {
-            //Todo shack support
             var connectionInfo = RconStatic.ConnectionInfoInternal(server.SshServer, authType, out var result);
             using var clientSsh = new SshClient(connectionInfo);
             using var clientSftp = new SftpClient(connectionInfo);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -143,6 +144,14 @@ namespace PavlovRconWebserver.Services
                 server.SshServer.SshPassphrase = server.SshPassphraseRoot;
                 server.SshServer.SshUsername = server.SshUsernameRoot;
                 server.SshServer.SshPassword = server.SshPasswordRoot;
+                if (server.SshKeyFileNameForm != null)
+                {
+                    await using var ms = new MemoryStream();
+                    await server.SshKeyFileNameForm.CopyToAsync(ms);
+                    var fileBytes = ms.ToArray();
+                    server.SshKeyFileNameRoot = fileBytes;
+                    // act on the Base64 data
+                }
                 server.SshServer.SshKeyFileName = server.SshKeyFileNameRoot;
                 server.SshServer.NotRootSshUsername = oldSSHcrid.SshUsername;
 
