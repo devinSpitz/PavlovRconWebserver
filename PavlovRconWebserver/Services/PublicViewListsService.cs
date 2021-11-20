@@ -35,6 +35,7 @@ namespace PavlovRconWebserver.Services
             var players = await _pavlovServerPlayerService.FindAllFromServer(serverId);
             var serverInfo = await _pavlovServerInfoService.FindServer(serverId);
             var model = PavlovServerPlayerListPublicViewModel(serverInfo, players);
+            if (model == null) return null;
             model.serverId = serverId;
             model.withMaps = withMaps;
             return model;
@@ -59,11 +60,14 @@ namespace PavlovRconWebserver.Services
                 if (server.ServerServiceState != ServerServiceState.active &&
                     server.ServerType == ServerType.Community) continue;
                 if (server.ServerType == ServerType.Event) continue;
-                result.Add(await GetPavlovServerPlayerListPublicViewModel(server.Id,true));
+
+                var tmp = await GetPavlovServerPlayerListPublicViewModel(server.Id, true);
+                tmp.serverId = server.Id;
+                result.Add(tmp);
             }
 
 
-            return result;
+            return result.OrderByDescending(x=>x.PlayerList.Count).ToList();
         }
         
         public async Task<PavlovServerPublicMapListViewModel> GetMapCycleFromPavlovServer()
@@ -86,17 +90,23 @@ namespace PavlovRconWebserver.Services
         public PavlovServerPlayerListPublicViewModel PavlovServerPlayerListPublicViewModel(PavlovServerInfo serverInfo,
             IEnumerable<PavlovServerPlayer> players)
         {
+            if (serverInfo == null) return null;
             var model = new PavlovServerPlayerListPublicViewModel
             {
                 ServerInfo = serverInfo,
-                PlayerList = players.Select(x => new PlayerModelExtended
+                PlayerList = players.Select(x => new PavlovServerPlayer
                 {
                     Cash = x.Cash,
                     KDA = x.KDA,
                     Score = x.Score,
                     TeamId = x.TeamId,
                     UniqueId = x.UniqueId,
-                    Username = x.Username
+                    Username = x.Username,
+                    Headshot = x.Headshot,
+                    Kills = x.Kills,
+                    Deaths = x.Deaths,
+                    Assists = x.Assists
+                    
                 }).ToList(),
                 team0Score = serverInfo.Team0Score,
                 team1Score = serverInfo.Team1Score

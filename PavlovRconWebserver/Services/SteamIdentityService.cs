@@ -54,6 +54,12 @@ namespace PavlovRconWebserver.Services
             return await _liteDb.LiteDatabaseAsync.GetCollection<SteamIdentity>("SteamIdentity")
                 .UpsertAsync(steamIdentity);
         }
+        
+        public async Task<string> Insert(SteamIdentity steamIdentity)
+        {
+            return await _liteDb.LiteDatabaseAsync.GetCollection<SteamIdentity>("SteamIdentity")
+                .InsertAsync(steamIdentity);
+        }
 
         public async Task<bool> Delete(string id)
         {

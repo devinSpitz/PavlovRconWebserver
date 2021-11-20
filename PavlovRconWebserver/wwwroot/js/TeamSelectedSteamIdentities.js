@@ -16,7 +16,7 @@ function callApi(method,teamId,steamIdentitiyId)
 {
     $.ajax({
         type: 'GET',
-        url: "/Team/"+method+"TeamSelectedSteamIdentity",
+        url: subPath+"Team/"+method+"TeamSelectedSteamIdentity",
         data: { teamId: teamId, steamIdentityId: steamIdentitiyId  },
         success:  function(data)
         {

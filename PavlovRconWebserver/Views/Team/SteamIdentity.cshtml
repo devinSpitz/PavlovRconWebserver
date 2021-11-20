@@ -13,7 +13,7 @@
     ViewBag.Title = "Add/Update SteamIdentity";
     Layout = "_Layout";
     var users = new List<LiteDbUser>();
-    @if (ViewBag.IsOwnSteamIdentity == null || !ViewBag.IsOwnSteamIdentity)
+    @if ((ViewBag.IsOwnSteamIdentity == null || !ViewBag.IsOwnSteamIdentity)&&(ViewBag.IsAddSteamIdentity==null||!ViewBag.IsAddSteamIdentity))
     {
         users = Model.LiteDbUsers;
         users = users.Prepend(new LiteDbUser
@@ -29,8 +29,62 @@
 }
 
 <h2>@ViewBag.Title</h2>
+@if (ViewBag.IsAddSteamIdentity==null || !ViewBag.IsAddSteamIdentity)
+{
+    <form asp-controller="Team" asp-action="SaveSteamIdentity" method="post">
+        <div asp-validation-summary="All" class="text-danger"></div>
 
-<form asp-controller="Team" asp-action="SaveSteamIdentity" method="post">
+        <div class="form-group col-md-12">
+            <label asp-for="Id"></label>
+            <input asp-for="Id" class="form-control" value="@Model.Id"/>
+            <span asp-validation-for="Id" class="text-danger"></span>
+        </div>
+        <div class="form-group col-md-12">
+            <label asp-for="OculusId"></label>
+            <input asp-for="OculusId" class="form-control" value="@Model.OculusId"/>
+            <span asp-validation-for="OculusId" class="text-danger"></span>
+        </div>
+        <div class="form-group col-md-12">
+
+            <label asp-for="Name"></label>
+            <input asp-for="Name" class="form-control" value="@Model.Name"/>
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+
+        <div class="form-group col-md-12">
+            <label asp-for="Costume"></label>
+            @if (isAdmin || isMod || isCaptain || isPremium || isOnPremise || isServerRent || isModSomeWhere)
+            {
+                @Html.DropDownListFor(m => m.Costume, new SelectList(Statics.Models, Model.Costume), new {@class = "form-control form-control-sm form-select "})
+            }
+            else
+            {
+                @Html.DropDownListFor(m => m.Costume, new SelectList(Statics.Models.Where(x => x != "clown"), Model.Costume), new {@class = "form-control form-control-sm form-select "})
+            }
+        </div>
+        @if (ViewBag.IsOwnSteamIdentity == null || !ViewBag.IsOwnSteamIdentity)
+        {
+            <div class="form-group col-md-12">
+                <label asp-for="LiteDbUserId"></label>
+                @Html.DropDownListFor(m => m.LiteDbUserId, new SelectList(users, "Id", "NormalizedUserName", Model.LiteDbUser?.Id), new {@class = "form-control form-control-sm form-select "})
+            </div>
+        }
+        else
+        {
+            <input asp-for="LiteDbUserId" type="hidden" value="@Model.LiteDbUser?.Id.ToString()"/>
+        }
+
+        <div class="saveButton col-md-1 mt-3">
+            <button type="submit" class="btn btn-success col-md-12">Save</button>
+        </div>
+
+
+    </form>
+    
+}
+else
+{
+    <form asp-controller="Team" asp-action="AddSteamIdentity" method="post">
     <div asp-validation-summary="All" class="text-danger"></div>
 
     <div class="form-group col-md-12">
@@ -44,33 +98,12 @@
         <input asp-for="Name" class="form-control" value="@Model.Name"/>
         <span asp-validation-for="Name" class="text-danger"></span>
     </div>
-    <div class="form-group col-md-12">
-        <label asp-for="Costume"></label>
-        @if (isAdmin || isMod || isCaptain || isPremium || isOnPremise || isServerRent || isModSomeWhere)
-        {
-            @Html.DropDownListFor(m => m.Costume, new SelectList(Statics.Models, Model.Costume), new {@class = "form-control form-control-sm form-select "})
-        }
-        else
-        {
-            @Html.DropDownListFor(m => m.Costume, new SelectList(Statics.Models.Where(x => x != "clown"), Model.Costume), new {@class = "form-control form-control-sm form-select "})
-        }
-    </div>
 
-    @if (ViewBag.IsOwnSteamIdentity == null || !ViewBag.IsOwnSteamIdentity)
-    {
-        <div class="form-group col-md-12">
-            <label asp-for="LiteDbUserId"></label>
-            @Html.DropDownListFor(m => m.LiteDbUserId, new SelectList(users, "Id", "NormalizedUserName", Model.LiteDbUser?.Id), new {@class = "form-control form-control-sm form-select "})
+    <input asp-for="Costume" type="hidden" value="none"/>
+    <input asp-for="LiteDbUserId" type="hidden" value="@Model.LiteDbUser?.Id.ToString()"/>
+
+        <div class="saveButton col-md-1 mt-3">
+            <button type="submit" class="btn btn-success col-md-12">Save</button>
         </div>
-    }
-    else
-    {
-        <input asp-for="LiteDbUserId" type="hidden" value="@Model.LiteDbUser.Id.ToString()"/>
-    }
-
-    <div class="saveButton col-md-1 mt-3">
-        <button type="submit" class="btn btn-success col-md-12">Save</button>
-    </div>
-
-
-</form>
+    </form>
+}

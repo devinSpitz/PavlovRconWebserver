@@ -10,8 +10,10 @@
 @inject ServerSelectedModsService _serverSelectedModsService;
 @inject UserService _userService;
 @inject TeamSelectedSteamIdentityService _teamSelectedSteamIdentityService;
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
 @{
-    
+    var subPath = Configuration["subPath"];
     Uri url = new Uri(String.Format("{0}://{1}", Context.Request.Scheme, Context.Request.Host));
     var user = await UserManager.GetUserAsync(User);
     _userService.UserInRole(user, _serverSelectedModsService, _pavlovServerService, out var isAdmin, out var isCaptain, out var isMod, out var isOnPremise, out var isServerRent, out var isModSomeWhere, out _);
@@ -23,7 +25,7 @@
     <meta property="og:type" content="website" />
     <meta property="og:url" content="@url" />
     <meta property="og:image" content="favicon.ico" />
-    <meta property="og:description" content="Take a look at online players, maps and manage Pavlvov servers" />
+    <meta property="og:description" content="Take a look at online players, maprotations, leaderboards and manage Pavlov servers" />
     <meta name="theme-color" content="#050000">
     <!-- Include this to make the og:image larger -->
 
@@ -194,7 +196,7 @@
   width:100%;
   height:100%;
   background-color:#666;
-  background-image:url("/images/Loadingsome.gif");
+  background-image:url("@Html.Raw(subPath)images/Loadingsome.gif");
   background-repeat:no-repeat;
   background-position:center;
   z-index:10000000;
@@ -209,3 +211,5 @@
 @await RenderSectionAsync("Scripts", false)
 </body>
 </html>
+
+<script> const subPath = "@subPath"</script>

@@ -230,8 +230,8 @@ namespace PavlovRconWebserver.Services
                 DataBaseLogger.LogToDatabaseAndResultPlusNotify("write rcon file", LogEventLevel.Verbose,
                     _notifyService);
                 var rconSettingsTempalte = "Password=" + server.TelnetPassword + "\nPort=" + server.TelnetPort;
-                result += RconStatic.WriteFile(server, server.ServerFolderPath + FilePaths.RconSettings,
-                    rconSettingsTempalte, _notifyService);
+                result += RconStatic.WriteFile(server.SshServer, server.ServerFolderPath + FilePaths.RconSettings,
+                    new string[]{ rconSettingsTempalte }, _notifyService);
 
 
                 result += "\n *******************************create rconSettings Done*******************************";
@@ -385,6 +385,21 @@ namespace PavlovRconWebserver.Services
             {
                 await HasToStop(pavlovServer, hasToStop, root);
                 throw new SaveServerException("", e.Message);
+            }
+
+            if (!string.IsNullOrEmpty(pavlovServer.SshServer.ShackMapsPath))
+            {
+                try
+                {
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("check if ShackMapsPath exist!", LogEventLevel.Verbose,
+                        _notifyService);
+                    RconStatic.DoesPathExist(pavlovServer, pavlovServer.SshServer.ShackMapsPath, _notifyService);
+                }
+                catch (CommandException e)
+                {
+                    await HasToStop(pavlovServer, hasToStop, root);
+                    throw new SaveServerException("Shack", "ShackMapsPath does not exist: "+pavlovServer.SshServer.ShackMapsPath);
+                }
             }
 
             await HasToStop(pavlovServer, hasToStop, root);

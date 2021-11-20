@@ -1,5 +1,9 @@
 @model List<PavlovServerPlayerListPublicViewModel>
-
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+@{
+    var subPath = Configuration["subPath"];
+}
 <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" asp-append-version="true"/>
 <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap-theme.css" asp-append-version="true"/>
 <style>
@@ -43,6 +47,7 @@
 {
     <div class="stylePavlovServers">
         @{
+            if (viewModel == null) continue;
             var additionalHtml = "";
             if (viewModel.serverId != null && viewModel.serverId != 0 && viewModel.withMaps)
             {
@@ -50,13 +55,14 @@
             }
 
             var hasTwoTeams = viewModel.PlayerList.GroupBy(x => x.TeamId).Count() == 2;
-            var tableHeaer = "<thead><tr><th>Name</th><th>Score</th><th>Kills</th><th>Deaths</th><th>Assits</th><th>Cash</th></tr></thead>";
+            var tableHeaer = "<thead><tr><th>Name</th><th>Score</th><th>Kills</th><th>Deaths</th><th>Assits</th><th>Headshots</th><th>Cash</th></tr></thead>";
         }
         @await Html.PartialAsync("/Views/Rcon/PavlovServerInfoSinglePartialView.cshtml", new ServerInfoViewModel
         {
             Name = viewModel.ServerInfo.ServerName,
             ServerInfo = viewModel.ServerInfo,
             AdditionalHtml = additionalHtml,
+            ServerId = viewModel.serverId
         })
         @if (hasTwoTeams)
         {
@@ -64,7 +70,7 @@
                 <table class="table pavlovTable table-responsive table-bordered bg-primary Team0">
                     @Html.Raw(tableHeaer)
                     <tr>
-                        <th colspan="7">Team score: @viewModel.team0Score</th>
+                        <th colspan="8">Team score: @viewModel.team0Score</th>
                     </tr>
                     @foreach (var player in viewModel.PlayerList.Where(x => x.TeamId == 0).OrderByDescending(x => x.Score))
                     {
@@ -77,7 +83,7 @@
                 <table class="table pavlovTable table-responsive table-bordered Team1  ">
                     @Html.Raw(tableHeaer)
                     <tr>
-                        <th colspan="7">Team score: @viewModel.team1Score</th>
+                        <th colspan="8">Team score: @viewModel.team1Score</th>
                     </tr>
                     @foreach (var player in viewModel.PlayerList.Where(x => x.TeamId == 1).OrderByDescending(x => x.Score))
                     {
@@ -107,7 +113,7 @@ function GetMapsForServer(serverId)
     $(".overlay").show();
     $.ajax({
         type: 'GET',
-        url: "/PublicViewLists/MapFromSerer/"+serverId,
+        url: "@Html.Raw(subPath)PublicViewLists/MapFromSerer/"+serverId,
         success:  function(data)
         {
             $('#modal-placeholder').html(data);

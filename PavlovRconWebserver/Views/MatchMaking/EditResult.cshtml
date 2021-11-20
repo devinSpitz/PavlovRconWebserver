@@ -13,7 +13,7 @@
     })
     @{
         var hasTwoTeams = Model.PlayerList.GroupBy(x => x.TeamId).Count() == 2;
-        var tableHeaer = "<thead><tr><th>Name</th><th>Score</th><th>Kills</th><th>Deaths</th><th>Assits</th><th>Cash</th></tr></thead>";
+        var tableHeaer = "<thead><tr><th>Name</th><th>UniqueId</th><th>Score</th><th>Kills</th><th>Deaths</th><th>Assits</th><th>Cash</th></tr></thead>";
     }
     @if (hasTwoTeams)
     {
@@ -21,11 +21,11 @@
             <table class="table pavlovTable table-responsive table-bordered bg-primary Team0">
                 @Html.Raw(tableHeaer)
                 <tr>
-                    <th colspan="7">Team score: @Model.team0Score</th>
+                    <th colspan="8">Team score: @Model.team0Score</th>
                 </tr>
                 @foreach (var player in Model.PlayerList.Where(x => x.TeamId == 0).OrderByDescending(x => x.Score))
                 {
-                    @await Html.PartialAsync("/Views/Matchmaking/EditPlayerSingle.cshtml", player)
+                    @await Html.PartialAsync("/Views/PublicViewLists/PlayerSingle.cshtml", player)
                 }
 
             </table>
@@ -34,11 +34,11 @@
             <table class="table pavlovTable table-responsive table-bordered Team1  ">
                 @Html.Raw(tableHeaer)
                 <tr>
-                    <th colspan="7">Team score: @Model.team1Score</th>
+                    <th colspan="8">Team score: @Model.team1Score</th>
                 </tr>
                 @foreach (var player in Model.PlayerList.Where(x => x.TeamId == 1).OrderByDescending(x => x.Score))
                 {
-                    @await Html.PartialAsync("/Views/Matchmaking/EditPlayerSingle.cshtml", player)
+                    @await Html.PartialAsync("/Views/PublicViewLists/PlayerSingle.cshtml", player)
                 }
             </table>
         </div>
@@ -49,7 +49,7 @@
             @Html.Raw(tableHeaer)
             @foreach (var player in Model.PlayerList.OrderByDescending(x => x.Score))
             {
-                @await Html.PartialAsync("/Views/Matchmaking/EditPlayerSingle.cshtml", player)
+                @await Html.PartialAsync("/Views/PublicViewLists/PlayerSingle.cshtml", player)
             }
 
         </table>

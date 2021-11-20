@@ -1,8 +1,12 @@
-@model PlayerModelExtended
-
+@model PavlovServerPlayer
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+@{
+    var subPath = Configuration["subPath"];
+}
 <tr>
     <td>
-        <a href="/LeaderBoard/Index/@Model?.Username">@Model?.Username</a>
+        <a href="@Html.Raw(subPath)LeaderBoard/Index/User/@Model.UniqueId">@Model?.Username</a>
     </td>
     <td>
         @Model?.Score
@@ -15,6 +19,9 @@
     </td>
     <td>
         @Model?.getAssists()
+    </td>
+    <td>
+        @Model?.Headshot
     </td>
     <td>
         @Model?.Cash

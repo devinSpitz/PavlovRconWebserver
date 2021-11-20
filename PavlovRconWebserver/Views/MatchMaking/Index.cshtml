@@ -12,7 +12,10 @@
     @ViewBag.Title <a class="btn btn-sm btn-primary" href="@Url.Action("Index", new {showFinished = true})">Show Finished</a>
     <a class="btn btn-sm btn-primary" href="@Url.Action("Index", new {showFinished = false})">Filter Finished</a>
     <a class="btn btn-sm btn-primary" href="@Url.Action("CreateMatch")">
-        <span class="fas fa-plus"></span>
+        <span class="fas fa-plus"></span> PC VR
+    </a>    
+    <a class="btn btn-sm btn-primary" href="@Url.Action("CreateMatch", new {shack = true})">
+        <span class="fas fa-plus"></span> Shack
     </a>
 </h2>
 @*<a asp-area="" asp-controller="MatchMaking" asp-action="EditServer">&#10133; Add Server</a>*@
@@ -77,6 +80,7 @@
                 @if (match.isFinished())
                 {
                     <a class="btn btn-sm btn-primary" href="@Url.Action("EditMatchResult", new {match.Id})"><span class="fas fa-edit"></span> Stats</a>
+                    <a class="btn btn-sm btn-warning" href="@Url.Action("SaveStatsFromLogs", new {match.Id})" onclick="return confirm('Are you sure you want to overrite the saved stats with the last from the log?')"><span class="fas fa-save"></span> Crawl the last stats from the server log</a>
                 }
             </td>
         </tr>

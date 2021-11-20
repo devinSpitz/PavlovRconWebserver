@@ -4,6 +4,7 @@ using Hangfire.MemoryStorage;
 using LiteDB.Identity.Async.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -99,8 +100,16 @@ namespace PavlovRconWebserver
                 app.UseDeveloperExceptionPage();
             else
                 app.UseExceptionHandler("/Home/Error");
-
+            
             app.UseSerilogRequestLogging();
+            //Todo handle when you wnat something else than subodmains xD and aslo if add add this javascript will still be broken so adjust there as well
+            var subPath = Configuration.GetSection("SubPath");
+            app.UsePathBase(subPath.Value);
+             app.Use((context, next) =>
+             {
+                 context.Request.PathBase = new PathString(subPath.Value);
+                 return next();
+             });
             if (env.EnvironmentName != "Test")
                 if (env.EnvironmentName == "Development")
                 {
@@ -140,7 +149,7 @@ namespace PavlovRconWebserver
                     var rconService = serviceScope.ServiceProvider.GetService<RconService>();
                     var pavlovServerService = serviceScope.ServiceProvider.GetService<PavlovServerService>();
                     var userService = serviceScope.ServiceProvider.GetService<UserService>();
-                    //Todo if match is still ongoing and PavlovRconWebserver has restarted restart the matchInspector for it.
+                    var matchService = serviceScope.ServiceProvider.GetService<MatchService>();
                     userService?.CreateDefaultRoles().GetAwaiter().GetResult();
                     if (env.EnvironmentName != "Development")
                     {
@@ -160,14 +169,19 @@ namespace PavlovRconWebserver
                     RecurringJob.AddOrUpdate(
                         () => steamService.CrawlSteamMaps(),
                         Cron.Daily(3)); // Check server states
+                    
+                    RecurringJob.AddOrUpdate(
+                        () => steamService.CrawlOculusMaps(),
+                        "*/5 * * * *"); // Check server states
 
                     RecurringJob.AddOrUpdate(
                         () => steamService.CrawlSteamProfile(),
                         Cron.Daily(4)); // Check server states
 
+                    BackgroundJob.Enqueue(() => matchService.RestartAllTheInspectorsForTheMatchesThatAreOnGoing());
                     
                     RecurringJob.AddOrUpdate(
-                        () => rconService.ReloadPlayerListFromServerAndTheServerInfo(true),
+                        () => rconService.ReloadPlayerListFromServerAndTheServerInfo(),
                         Cron.Minutely()); // Check server states
                 }
         }

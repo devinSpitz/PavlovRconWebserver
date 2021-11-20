@@ -1,4 +1,9 @@
 @model ServerInfoViewModel
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+@{
+    var subPath = Configuration["subPath"];
+}
 <style>
     .pavlovServerInfoStyle{
         margin-left: auto;
@@ -8,11 +13,11 @@
 </style>
 <div class="card m-1  pavlovServerInfoStyle">
     <div class="card-header">
-        <b><a href="/LeaderBoard/Index/@Model.ServerInfo.ServerName">@Model.ServerInfo.ServerName</a></b>
+        <b><a href="@Html.Raw(subPath)LeaderBoard/Index/Server?server=@Model.ServerId">@Model.ServerInfo.ServerName</a></b>
         @Html.Raw(Model.AdditionalHtml)
     </div>
     <div class="card-body">
-        <img src="@Model.ServerInfo.MapPictureLink" height="150px" width="150px"/>
+        <img src="@Model.ServerInfo.ShowImage()" height="150px" width="150px"/>
         <li>Round state: @Model.ServerInfo.RoundState</li>
         <li>Game mode: @Model.ServerInfo.GameMode</li>
         <li>Player count: @Model.ServerInfo.PlayerCount</li>

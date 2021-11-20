@@ -65,8 +65,8 @@ function PopulateTeamsSteamIdentities(chosenTeam,toId,toremove,first=false)
     //foreach Player
     $.ajax({
         type: 'POST',
-        url: "/MatchMaking/GetAvailableSteamIdentities",
-        data: { teamId: chosenTeam,matchId:matchId },
+        url: subPath+"MatchMaking/GetAvailableSteamIdentities",
+        data: { teamId: chosenTeam,matchId:matchId,shack: shack },
         success:  function(data)
         {
 
@@ -100,7 +100,7 @@ function RconChooseMapPartialView()
     $(".overlay").show();
     $.ajax({
         type: 'POST',
-        url: "/Rcon/PavlovChooseMapPartialView",
+        url: subPath+"Rcon/PavlovChooseMapPartialView",
         success:  function(data)
         {
             $('#modal-placeholder').html(data);
@@ -154,8 +154,8 @@ function GetPlayerTeamSelectPartialView(gameMode,callbackPositive)
     let matchId = $("#Id").val();
     $.ajax({
         type: 'POST',
-        url: "/MatchMaking/PartialViewPerGameModeWithId/",
-        data: {gameMode: gameMode,matchId: matchId},
+        url: subPath+"MatchMaking/PartialViewPerGameModeWithId/",
+        data: {gameMode: gameMode,matchId: matchId, shack: shack},
         success:  function(data)
         {
             callbackPositive(data);
@@ -209,12 +209,12 @@ function SaveMatch()
 
     $.ajax({
         type: 'POST',
-        url: "/MatchMaking/SaveMatch/",
+        url: subPath+"MatchMaking/SaveMatch/",
         data: {match: match},
         success:  function(data)
         {
           
-            window.location = "/MatchMaking/";
+            window.location = subPath+"MatchMaking/";
         },
         error: function(XMLHttpRequest, textStatus, errorThrown)
         {

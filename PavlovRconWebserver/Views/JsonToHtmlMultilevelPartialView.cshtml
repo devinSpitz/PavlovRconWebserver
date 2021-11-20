@@ -37,22 +37,29 @@
                             @foreach (var propertyData in data as JArray)
                             {
                                 <tr>
-                                    @foreach (JProperty jProperty in propertyData)
+                                    @if (propertyData.Type == JTokenType.String)
                                     {
-                                        if (jProperty.HasValues)
+                                            @propertyData.ToString() <br>
+                                    }
+                                    else
+                                    {
+                                        @foreach (JProperty jProperty in propertyData)
                                         {
-                                            if (jProperty.Value.Type == JTokenType.Object)
+                                            if (jProperty.HasValues)
                                             {
-                                                var inlineClass = ((JObject) jProperty.Value).Properties();
-                                                var result = inlineClass.Select(x => string.Format("<div><b>{0}:</b><span> {1}</span></div>", x.Name, x.Value)).ToList();
-                                                var joinedResult = string.Join("", result);
-                                                <td>
-                                                    <div>@Html.Raw(joinedResult)</div>
-                                                </td>
-                                            }
-                                            else
-                                            {
-                                                <td>@jProperty.Value</td>
+                                                if (jProperty.Value.Type == JTokenType.Object)
+                                                {
+                                                    var inlineClass = ((JObject) jProperty.Value).Properties();
+                                                    var result = inlineClass.Select(x => string.Format("<div><b>{0}:</b><span> {1}</span></div>", x.Name, x.Value)).ToList();
+                                                    var joinedResult = string.Join("", result);
+                                                    <td>
+                                                        <div>@Html.Raw(joinedResult)</div>
+                                                    </td>
+                                                }
+                                                else
+                                                {
+                                                    <td>@jProperty.Value</td>
+                                                }
                                             }
                                         }
                                     }

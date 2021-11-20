@@ -41,6 +41,9 @@ namespace PavlovRconWebserver.Models
         [DisplayName("Active Steam")]
         [Required]
         public bool SteamIsAvailable { get; set; } = false;
+        [DisplayName("Shack downloaded mapsPath (They will get copied from here to the server folder and will get used as Map Pool that you can choose from.)")]
+        [CanBeNull]
+        public string ShackMapsPath { get; set; }
 
         [DisplayName("SteamCMD folder path")] public string SteamPath { get; set; }
 

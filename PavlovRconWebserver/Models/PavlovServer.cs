@@ -72,6 +72,9 @@ namespace PavlovRconWebserver.Models
         [DisplayName("Save Stats(WIP)**")]
         [CanBeNull]
         public bool SaveStats { get; set; } = false;
+        [DisplayName("Shack (WIP)")]
+        [CanBeNull]
+        public bool Shack { get; set; } = false;
         
         
         

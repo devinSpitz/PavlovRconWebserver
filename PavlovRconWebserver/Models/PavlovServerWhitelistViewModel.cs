@@ -9,7 +9,9 @@ namespace PavlovRconWebserver.Models
 
     public class PavlovServerWhitelistViewModel
     {
+        
         public int pavlovServerId { get; set; } = 0;
+        public bool Shack { get; set; }
         public List<string> steamIds { get; set; } = new();
     }
 }

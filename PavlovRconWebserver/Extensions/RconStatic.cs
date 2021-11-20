@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -18,6 +20,7 @@ using Renci.SshNet;
 using Renci.SshNet.Common;
 using Renci.SshNet.Sftp;
 using Serilog.Events;
+using TcpClient = System.Net.Sockets.TcpClient;
 
 namespace PavlovRconWebserver.Extensions
 {
@@ -61,7 +64,7 @@ namespace PavlovRconWebserver.Extensions
         }
 
 
-        public static RconService.AuthType GetAuthType(PavlovServer server)
+        public static RconService.AuthType GetAuthType(SshServer server)
         {
             var auths = new List<RconService.AuthType>
             {
@@ -88,8 +91,8 @@ namespace PavlovRconWebserver.Extensions
 
         public static async Task<string> SystemDCheckState(PavlovServer server, IToastifyService notyfService)
         {
-            var type = GetAuthType(server);
-            var connectionInfo = ConnectionInfoInternal(server, type, out var result);
+            var type = GetAuthType(server.SshServer);
+            var connectionInfo = ConnectionInfoInternal(server.SshServer, type, out var result);
             using var client = new SshClient(connectionInfo);
             try
             {
@@ -148,8 +151,8 @@ namespace PavlovRconWebserver.Extensions
         public static async Task<string> UpdateInstallPavlovServer(PavlovServer server,
             PavlovServerService pavlovServerService)
         {
-            var type = GetAuthType(server);
-            var connectionInfo = ConnectionInfoInternal(server, type, out var result);
+            var type = GetAuthType(server.SshServer);
+            var connectionInfo = ConnectionInfoInternal(server.SshServer, type, out var result);
             if (!server.SshServer.SteamIsAvailable)
             {
                 result.Success = false;
@@ -171,9 +174,13 @@ namespace PavlovRconWebserver.Extensions
                 client.Connect();
                 var stream =
                     client.CreateShellStream("pavlovRconWebserverSShTunnelSystemdCheck", 80, 24, 800, 600, 1024);
+
+                var version = "622970";
+                if (server.Shack)
+                    version += " -beta shack";
                 var update = await SendCommandForShell(
                     "cd " + server.SshServer.SteamPath + " && ./steamcmd.sh +login anonymous +force_install_dir " +
-                    server.ServerFolderPath + " +app_update 622970 +exit", stream,
+                    server.ServerFolderPath + " +app_update "+version+" +exit", stream,
                     @".*(Success! App '622970' already up to date|Success! App '622970' fully installed).*", 60000);
                 if (update == null)
                     DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not update the pavlovserver " + server.Name,
@@ -200,21 +207,19 @@ namespace PavlovRconWebserver.Extensions
         public static async Task<ConnectionResult> GetServerLog(PavlovServer server,
             PavlovServerService pavlovServerService)
         {
-            var type = GetAuthType(server);
-            var connectionInfo = ConnectionInfoInternal(server, type, out var result);
+            var type = GetAuthType(server.SshServer);
+            var connectionInfo = ConnectionInfoInternal(server.SshServer, type, out var result);
             using var client = new SshClient(connectionInfo);
             try
             {
                 //Todo make verbose logs
                 client.Connect();
                 var command = "journalctl -eu " + server.ServerSystemdServiceName + " -n 4000 -o cat --no-hostname --no-full -q";
-                var stream =
-                    client.CreateShellStream("pavlovRconWebserverSShTunnelSystemdCheck", 5000, 4000, 1920, 1080, 5000);
-                var content = await SendCommandForShell(command, stream, null);
-                if (content != null)
+                var content2 = client.RunCommand(command);
+                if (content2 != null)
                 {
 
-                    result.answer = content;
+                    result.answer = content2.Result;
                     result.Success = true;
                     return result;
                 }
@@ -236,8 +241,8 @@ namespace PavlovRconWebserver.Extensions
         public static async Task<ConnectionResult> SystemDStart(PavlovServer server,
             PavlovServerService pavlovServerService)
         {
-            var type = GetAuthType(server);
-            var connectionInfo = ConnectionInfoInternal(server, type, out var result);
+            var type = GetAuthType(server.SshServer);
+            var connectionInfo = ConnectionInfoInternal(server.SshServer, type, out var result);
             using var client = new SshClient(connectionInfo);
             try
             {
@@ -341,8 +346,8 @@ namespace PavlovRconWebserver.Extensions
         public static async Task<ConnectionResult> SystemDStop(PavlovServer server,
             PavlovServerService pavlovServerService)
         {
-            var type = GetAuthType(server);
-            var connectionInfo = ConnectionInfoInternal(server, type, out var result);
+            var type = GetAuthType(server.SshServer);
+            var connectionInfo = ConnectionInfoInternal(server.SshServer, type, out var result);
             using var client = new SshClient(connectionInfo);
             try
             {
@@ -434,18 +439,9 @@ namespace PavlovRconWebserver.Extensions
         public static ConnectionResult DeleteUnusedMaps(PavlovServer server,
             List<ServerSelectedMap> serverSelectedMaps)
         {
-            // Ned to check
-            //1. Running Maps
-            //2. May not used for 48h?
-            // //Cause all server shares the same save space for maps.
-            // return new ConnectionResult()
-            // {
-            //     Seccuess = true,
-            //     answer = "Did nothing"
-            // };
             var connectionResult = new ConnectionResult();
-            var type = GetAuthType(server);
-            var connectionInfo = ConnectionInfoInternal(server, type, out var result);
+            var type = GetAuthType(server.SshServer);
+            var connectionInfo = ConnectionInfoInternal(server.SshServer, type, out var result);
             using var client = new SshClient(connectionInfo);
             client.Connect();
             //check if first scripts exist
@@ -456,9 +452,14 @@ namespace PavlovRconWebserver.Extensions
                 sftp.Connect();
                 //Delete old maps in tmp folder
                 //
-                if (sftp.Exists("/tmp/workshop/" + server.ServerPort + "/content/555160"))
+                var folderPatch = "/tmp/workshop/" + server.ServerPort + "/content/555160";
+                if (server.Shack)
                 {
-                    var maps = sftp.ListDirectory("/tmp/workshop/" + server.ServerPort + "/content/555160");
+                    folderPatch = server.ServerFolderPath + "Pavlov/Saved/maps";
+                }
+                if (sftp.Exists(folderPatch))
+                {
+                    var maps = sftp.ListDirectory(folderPatch);
                     foreach (var map in maps)
                     {
                         if (!map.IsDirectory) continue;
@@ -492,7 +493,7 @@ namespace PavlovRconWebserver.Extensions
                         {
                             try
                             {
-                                DeleteDirectory(sftp, map.FullName);
+                                client.RunCommand("rm -rf " + map.FullName);
                             }
                             catch (SftpPermissionDeniedException)
                             {
@@ -518,12 +519,83 @@ namespace PavlovRconWebserver.Extensions
             connectionResult.Success = true;
             return connectionResult;
         }
+        
+        public static ConnectionResult CopyNeededMapsToShackServer(PavlovServer pavlovServer,ServerSelectedMap[] serverSelectedMaps)
+        {
+            var connectionResult = new ConnectionResult();
+            var type = GetAuthType(pavlovServer.SshServer);
+            var connectionInfo = ConnectionInfoInternal(pavlovServer.SshServer, type, out var result);
+            using var client = new SshClient(connectionInfo);
+            client.Connect();
+            //check if first scripts exist
+            using var sftp = new SftpClient(connectionInfo);
+            try
+            {
+                sftp.Connect();
+                foreach (var serverSelectedMap in serverSelectedMaps)
+                {
+                    var mapsPath = pavlovServer.ServerFolderPath + "Pavlov/Saved/maps/";
+                    if(!sftp.Exists(mapsPath))
+                        sftp.CreateDirectory(mapsPath.Substring(0,mapsPath.Length-1));
+                    
+                    if (sftp.Exists(pavlovServer.SshServer.ShackMapsPath+serverSelectedMap.Map.Name))
+                    {
+                        var shackFolderPath =  mapsPath +
+                                               serverSelectedMap.Map.Name;
+                        if(sftp.Exists(shackFolderPath))
+                            client.RunCommand("rm -rf "+shackFolderPath);
+                        
+                        sftp.CreateDirectory(shackFolderPath);
+                        
+                        client.RunCommand("cp -r "+pavlovServer.SshServer.ShackMapsPath+serverSelectedMap.Map.Name+"/* "+ shackFolderPath);
+                    }
+                }
+            }
+            finally
+            {
+                sftp.Disconnect();
+            }
+
+            client.Disconnect();
+            connectionResult.Success = true;
+            return connectionResult;
+        }
+
+        
+        public static ConnectionResult GetAFolderList(SshServer server,string path)
+        {
+            var connectionResult = new ConnectionResult();
+            var type = GetAuthType(server);
+            var connectionInfo = ConnectionInfoInternal(server, type, out var result);
+            using var client = new SshClient(connectionInfo);
+            client.Connect();
+            //check if first scripts exist
+            using var sftp = new SftpClient(connectionInfo);
+            try
+            {
+                sftp.Connect();
+                //Delete old maps in tmp folder
+                //
+                if (sftp.Exists(path))
+                {
+                    connectionResult.answer=string.Join(";",sftp.ListDirectory(path).Where(x=>x.IsDirectory).Select(x=>x.Name));
+                }
+            }
+            finally
+            {
+                sftp.Disconnect();
+            }
+
+            client.Disconnect();
+            connectionResult.Success = true;
+            return connectionResult;
+        }
 
         public static async Task<string> InstallPavlovServerService(PavlovServer server, IToastifyService notyfService,
             PavlovServerService pavlovServerService)
         {
-            var type = GetAuthType(server);
-            var connectionInfo = ConnectionInfoInternal(server, type, out var result);
+            var type = GetAuthType(server.SshServer);
+            var connectionInfo = ConnectionInfoInternal(server.SshServer, type, out var result);
             if (!server.SshServer.SteamIsAvailable)
             {
                 result.Success = false;
@@ -635,15 +707,19 @@ WantedBy = multi-user.target";
 
                 // add line
                 var success =
-                    AddServerLineToSudoersFile(server, notyfService, pavlovServerService, sudoersPath, result);
+                    AddServerLineToSudoersFile(server, notyfService, sudoersPath, result);
 
                 if (!success) return EndConnection(result);
-
-
+                
                 var justToMakeSureSudoKnowsTheChanges = await SendCommandForShell("sudo su", stream, null);
                 DataBaseLogger.LogToDatabaseAndResultPlusNotify(
                     "sudo su answer after changes from the sudoersfile: " + justToMakeSureSudoKnowsTheChanges,
                     LogEventLevel.Verbose, notyfService);
+                
+                //handle presets for new systemd
+                
+                
+                AddLineToNewerSystemDsIfNeeded(server,notyfService);
             }
             catch (Exception e)
             {
@@ -664,8 +740,8 @@ WantedBy = multi-user.target";
         public static bool RemoveServerLineToSudoersFile(PavlovServer server, IToastifyService notyfService,
             string sudoersPath, PavlovServerService pavlovServerService)
         {
-            var type = GetAuthType(server);
-            var connectionInfo = ConnectionInfoInternal(server, type, out var result);
+            var type = GetAuthType(server.SshServer);
+            var connectionInfo = ConnectionInfoInternal(server.SshServer, type, out var result);
 
             using var clientSftp = new SftpClient(connectionInfo);
 
@@ -706,7 +782,7 @@ WantedBy = multi-user.target";
 
                     DataBaseLogger.LogToDatabaseAndResultPlusNotify("refill the sudoers file", LogEventLevel.Verbose,
                         notyfService);
-                    clientSftp.WriteAllText(sudoersPath, string.Join("\n",sudoersFileContent.Where(x => x != "")),Encoding.UTF8);
+                    clientSftp.WriteAllLines(sudoersPath, sudoersFileContent.Where(x => x != ""));
                     var sudoersFileContentAfterRemove = clientSftp.ReadAllLines(sudoersPath);
                     if (sudoersFileContentAfterRemove.Contains(sudoersLine))
                         DataBaseLogger.LogToDatabaseAndResultPlusNotify(
@@ -728,12 +804,98 @@ WantedBy = multi-user.target";
             return success;
         }
 
+        /// <summary>
+        /// In Arch linux the Preset state is shown cause it has a newer release of systemd.
+        /// The workaround is to add the pavlovServer to the preset file so the state should get dedected right again.
+        /// </summary>
+        /// <param name="server"></param>
+        /// <param name="notyfService"></param>
+        /// <param name="remove"></param>
+        /// <returns></returns>
+        public static bool AddLineToNewerSystemDsIfNeeded(PavlovServer server, IToastifyService notyfService, bool remove = false)
+        {
+            var type = GetAuthType(server.SshServer);
+            var connectionInfo = ConnectionInfoInternal(server.SshServer, type, out var result);
+
+            using var clientSftp = new SftpClient(connectionInfo);
+            using var clientSsh = new SshClient(connectionInfo);
+            string[] presetsPaths = {
+                "/usr/lib/systemd/system-preset/90-systemd.preset",
+                "/usr/lib/systemd/system-preset/99-default.preset",
+            };
+
+            var success = false;
+            try
+            {
+                clientSftp.Connect();
+                clientSsh.Connect();
+                
+                var presetString = systemPresetForNeweSystemds(server);
+                
+                
+                foreach (var presetPath in presetsPaths)
+                {
+                    
+                    if(!clientSftp.Exists(presetPath)) continue;
+                    
+                    
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Check system service presets that exist otherwise the system will detect the server state wrong.",
+                        LogEventLevel.Verbose, notyfService);
+                    if (remove)
+                    {
+                        var presetLines = clientSftp.ReadAllLines(presetPath);
+                        if (presetLines.Contains(presetString))
+                        {
+                            clientSftp.WriteAllLines(presetPath,presetLines.Where(x=>x.Trim()!=presetString.Trim()));
+                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Did remove the system preset that for the pavlovServer.",
+                                LogEventLevel.Verbose, notyfService);
+                        }
+                    }
+                    else
+                    {
+                        var presetLines = clientSftp.ReadAllLines(presetPath);
+                        if (!presetLines.Contains(presetString.Trim()))
+                        {
+                            clientSftp.WriteAllLines(presetPath,presetLines.Append(presetString));
+                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Did add the system preset that for the pavlovServer.",
+                                LogEventLevel.Verbose, notyfService);
+                        }
+                    }
+
+                    success = true;
+
+                    
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Presets should be fine",
+                        LogEventLevel.Verbose, notyfService);
+                }
+
+
+            }
+            catch (Exception e)
+            {
+                ExcpetionHandlingSshSftp(server, notyfService, e, result, clientSsh, clientSftp);
+            }
+            finally
+            {
+                clientSftp.Disconnect();
+                clientSsh.Disconnect();
+            }
+
+            return success;
+        }
+
+        private static string systemPresetForNeweSystemds(PavlovServer server)
+        {
+            var systemPresetString = "enable "+ server.ServerSystemdServiceName;
+            return systemPresetString;
+        }
+
+        
         public static bool AddServerLineToSudoersFile(PavlovServer server, IToastifyService notyfService,
-            PavlovServerService pavlovServerService,
             string sudoersPath, ConnectionResult connectionResult)
         {
-            var type = GetAuthType(server);
-            var connectionInfo = ConnectionInfoInternal(server, type, out var result);
+            var type = GetAuthType(server.SshServer);
+            var connectionInfo = ConnectionInfoInternal(server.SshServer, type, out var result);
 
             using var clientSftp = new SftpClient(connectionInfo);
             using var clientSsh = new SshClient(connectionInfo);
@@ -752,7 +914,7 @@ WantedBy = multi-user.target";
                 {
                     var tmpList = sudoers.ToList();
                     tmpList.Add(sudoersLine);
-                    clientSftp.WriteAllText(sudoersPath, string.Join("\n",tmpList),Encoding.UTF8);
+                    clientSftp.WriteAllLines(sudoersPath, tmpList);
                     var afterAdding = clientSftp.ReadAllText(sudoersPath);
                     DataBaseLogger.LogToDatabaseAndResultPlusNotify("sudoers content after adding line: " + afterAdding,
                         LogEventLevel.Verbose, notyfService);
@@ -798,8 +960,8 @@ WantedBy = multi-user.target";
         public static async Task<string> RemovePath(PavlovServer server, string path,
             PavlovServerService pavlovServerService)
         {
-            var type = GetAuthType(server);
-            var connectionInfo = ConnectionInfoInternal(server, type, out var result);
+            var type = GetAuthType(server.SshServer);
+            var connectionInfo = ConnectionInfoInternal(server.SshServer, type, out var result);
             var restart = false;
             if (server.ServerServiceState == ServerServiceState.active)
             {
@@ -885,8 +1047,8 @@ WantedBy = multi-user.target";
 
         public static string DoesPathExist(PavlovServer server, string path, IToastifyService notyfService)
         {
-            var type = GetAuthType(server);
-            var connectionInfo = ConnectionInfoInternal(server, type, out var result);
+            var type = GetAuthType(server.SshServer);
+            var connectionInfo = ConnectionInfoInternal(server.SshServer, type, out var result);
             using var clientSftp = new SftpClient(connectionInfo);
             try
             {
@@ -914,6 +1076,14 @@ WantedBy = multi-user.target";
 
             return EndConnection(result);
         }
+        public static int GetAvailablePort()
+        {
+            TcpListener l = new TcpListener(IPAddress.Loopback, 0);
+            l.Start();
+            int port = ((IPEndPoint)l.LocalEndpoint).Port;
+            l.Stop();
+            return port;
+        }
 
         public static async Task<ConnectionResult> SShTunnelMultipleCommands(PavlovServer server,
             string[] commands, IToastifyService notyfService)
@@ -925,7 +1095,8 @@ WantedBy = multi-user.target";
 
                 if (client.IsConnected)
                 {
-                    var portToForward = server.TelnetPort + 50;
+                    var nextFreePort = GetAvailablePort();
+                    var portToForward = nextFreePort;
                     var portForwarded = new ForwardedPortLocal("127.0.0.1", (uint) portToForward, "127.0.0.1",
                         (uint) server.TelnetPort);
                     client.AddForwardedPort(portForwarded);
@@ -1027,8 +1198,8 @@ WantedBy = multi-user.target";
         {
             if (server.ServerServiceState != ServerServiceState.active)
                 throw new CommandException("will not do command while server service is inactive!");
-            var type = GetAuthType(server);
-            var connectionInfo = ConnectionInfoInternal(server, type, out var result);
+            var type = GetAuthType(server.SshServer);
+            var connectionInfo = ConnectionInfoInternal(server.SshServer, type, out var result);
             client = new SshClient(connectionInfo);
             return result;
         }
@@ -1061,7 +1232,7 @@ WantedBy = multi-user.target";
             return EndConnection(result);
         }
 
-        public static ConnectionInfo ConnectionInfoInternal(PavlovServer server, RconService.AuthType type,
+        public static ConnectionInfo ConnectionInfoInternal(SshServer server, RconService.AuthType type,
             out ConnectionResult result)
         {
             ConnectionInfo connectionInfo = null;
@@ -1070,31 +1241,31 @@ WantedBy = multi-user.target";
             //auth
             if (type == RconService.AuthType.PrivateKey)
             {
-                var keyFiles = new[] {new PrivateKeyFile(new MemoryStream(server.SshServer.SshKeyFileName))};
-                connectionInfo = new ConnectionInfo(server.SshServer.Adress, server.SshServer.SshPort,
-                    server.SshServer.SshUsername,
-                    new PrivateKeyAuthenticationMethod(server.SshServer.SshUsername, keyFiles));
+                var keyFiles = new[] {new PrivateKeyFile(new MemoryStream(server.SshKeyFileName))};
+                connectionInfo = new ConnectionInfo(server.Adress, server.SshPort,
+                    server.SshUsername,
+                    new PrivateKeyAuthenticationMethod(server.SshUsername, keyFiles));
             }
             else if (type == RconService.AuthType.UserPass)
             {
-                connectionInfo = new ConnectionInfo(server.SshServer.Adress, server.SshServer.SshPort,
-                    server.SshServer.SshUsername,
-                    new PasswordAuthenticationMethod(server.SshServer.SshUsername, server.SshServer.SshPassword));
+                connectionInfo = new ConnectionInfo(server.Adress, server.SshPort,
+                    server.SshUsername,
+                    new PasswordAuthenticationMethod(server.SshUsername, server.SshPassword));
             }
             else if (type == RconService.AuthType.PrivateKeyPassphrase)
             {
                 var keyFiles = new[]
-                    {new PrivateKeyFile(new MemoryStream(server.SshServer.SshKeyFileName), server.SshServer.SshPassphrase)};
-                connectionInfo = new ConnectionInfo(server.SshServer.Adress, server.SshServer.SshPort,
-                    server.SshServer.SshUsername,
-                    new PasswordAuthenticationMethod(server.SshServer.SshUsername, server.SshServer.SshPassphrase),
-                    new PrivateKeyAuthenticationMethod(server.SshServer.SshUsername, keyFiles));
+                    {new PrivateKeyFile(new MemoryStream(server.SshKeyFileName), server.SshPassphrase)};
+                connectionInfo = new ConnectionInfo(server.Adress, server.SshPort,
+                    server.SshUsername,
+                    new PasswordAuthenticationMethod(server.SshUsername, server.SshPassphrase),
+                    new PrivateKeyAuthenticationMethod(server.SshUsername, keyFiles));
             }
 
             return connectionInfo;
         }
 
-        public static string GetFile(PavlovServer server, string path, IToastifyService notyfService)
+        public static string GetFile(SshServer server, string path, IToastifyService notyfService)
         {
             var connectionResult = new ConnectionResult();
             var type = GetAuthType(server);
@@ -1182,7 +1353,7 @@ WantedBy = multi-user.target";
             return connectionResult.answer;
         }
 
-        public static string WriteFile(PavlovServer server, string path, string content, IToastifyService notyfService)
+        public static string WriteFile(SshServer server, string path, string[] content, IToastifyService notyfService)
         {
             var connectionResult = new ConnectionResult();
             var type = GetAuthType(server);
@@ -1226,10 +1397,8 @@ WantedBy = multi-user.target";
 
                     DataBaseLogger.LogToDatabaseAndResultPlusNotify("fill the file", LogEventLevel.Verbose,
                         notyfService);
-                    using (var fileStream = new MemoryStream(Encoding.ASCII.GetBytes(content)))
-                    {
-                        sftp.UploadFile(fileStream, path);
-                    }
+                    
+                    sftp.WriteAllLines(path, content);
 
 
                     DataBaseLogger.LogToDatabaseAndResultPlusNotify("Uploaded finish now download file",
@@ -1282,7 +1451,7 @@ WantedBy = multi-user.target";
                 var fileContentArray = outPutStream.ToArray();
                 var fileContent = Encoding.Default.GetString(fileContentArray);
 
-                if (fileContent.Replace("\n", "") == content.Replace("\n", ""))
+                if (fileContent.Replace("\n", "").Replace("\r", "").Trim() == string.Join("",content).Replace("\n", "").Replace("\r", "").Trim())
                 {
                     DataBaseLogger.LogToDatabaseAndResultPlusNotify(
                         "Upload complet finished. also checked and its the same", LogEventLevel.Verbose, notyfService);

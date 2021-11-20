@@ -135,7 +135,29 @@ namespace PavlovRconWebserver.Controllers
 
             return View("SteamIdentity", bla);
         }
+        
+        [HttpGet("[controller]/AddSteamIdentityView")]
+        public async Task<IActionResult> AddSteamIdentityView()
+        {
+            ViewBag.IsAddSteamIdentity = true;
 
+            return View("SteamIdentity", new SteamIdentity());
+        }
+
+        [HttpPost("[controller]/AddSteamIdentity")]
+        public async Task<IActionResult> AddSteamIdentity(SteamIdentity steamIdentity)
+        {
+            
+            var exist = await _steamIdentityService.FindOne(steamIdentity.Id);
+            if (exist != null) return BadRequest("This steamId already exist and your only allow to add not to edit!");
+
+            //security so that the LiteDbUser not can be set here
+            steamIdentity.LiteDbUser = null;
+            await _steamIdentityService.Insert(steamIdentity);
+            //Handle more stuff can be seen in model
+            return await Index();
+        }
+        
 
         [HttpPost("[controller]/SaveSteamIdentity")]
         public async Task<IActionResult> SaveSteamIdentity(SteamIdentity steamIdentity)

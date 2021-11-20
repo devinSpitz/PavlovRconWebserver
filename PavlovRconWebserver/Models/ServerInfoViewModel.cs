@@ -3,6 +3,7 @@ namespace PavlovRconWebserver.Models
     public class ServerInfoViewModel
     {
         public ServerInfo ServerInfo { get; set; }
+        public int ServerId { get; set; }
         public string Name { get; set; }
         public string AdditionalHtml { get; set; } = "";
     }
@@ -11,6 +12,17 @@ namespace PavlovRconWebserver.Models
     {
         public string MapLabel { get; set; }
         public string MapPictureLink { get; set; }
+        public string ShowImage()
+        {
+            if (string.IsNullOrEmpty(MapPictureLink))
+            {
+                return "/images/noImg.png";
+            }
+            else
+            {
+                return MapPictureLink;
+            }
+        }
         public string GameMode { get; set; }
         public string ServerName { get; set; }
 

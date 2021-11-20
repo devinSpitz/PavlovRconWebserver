@@ -42,7 +42,7 @@
                                 }
                                 <br>
                                 <button data-bs-dismiss="modal" onclick="setMap('@map.Id')">
-                                    <img style="width: 200px;height: 200px" src="@map.ImageUrl">
+                                    <img style="width: 200px;height: 200px" src="@map.showImage()">
                                 </button>
                                 @if (map.Author?.Length > maxLength)
                                 {

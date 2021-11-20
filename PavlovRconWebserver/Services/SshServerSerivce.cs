@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -108,6 +109,8 @@ namespace PavlovRconWebserver.Services
         public async Task<KeyValuePair<PavlovServerViewModel, string>> RemovePavlovServerFromDisk(
             PavlovServerViewModel server)
         {
+            
+            //Todo AuthError??
             DataBaseLogger.LogToDatabaseAndResultPlusNotify("Start remove server!", LogEventLevel.Verbose,
                 _notifyService);
             string result = null;
@@ -141,6 +144,14 @@ namespace PavlovRconWebserver.Services
                 server.SshServer.SshPassphrase = server.SshPassphraseRoot;
                 server.SshServer.SshUsername = server.SshUsernameRoot;
                 server.SshServer.SshPassword = server.SshPasswordRoot;
+                if (server.SshKeyFileNameForm != null)
+                {
+                    await using var ms = new MemoryStream();
+                    await server.SshKeyFileNameForm.CopyToAsync(ms);
+                    var fileBytes = ms.ToArray();
+                    server.SshKeyFileNameRoot = fileBytes;
+                    // act on the Base64 data
+                }
                 server.SshServer.SshKeyFileName = server.SshKeyFileNameRoot;
                 server.SshServer.NotRootSshUsername = oldSSHcrid.SshUsername;
 
@@ -164,6 +175,9 @@ namespace PavlovRconWebserver.Services
                     return new KeyValuePair<PavlovServerViewModel, string>(server,
                         result + "Could not remove the server line from sudoers file!");
                 }
+                
+                //Handle the presets an newer systemd
+                RconStatic.AddLineToNewerSystemDsIfNeeded(server,_notifyService,true);
 
 
 

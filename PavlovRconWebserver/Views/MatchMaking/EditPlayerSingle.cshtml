@@ -5,6 +5,10 @@
         @Model?.Username
     </td>
     <td>
+
+            <input asp-for="UniqueId" class="form-control" value="@Model.UniqueId"/>
+    </td>
+    <td>
         <div class="form-group col-md-3">
             <label asp-for="Score"></label>
             <input asp-for="Score" class="form-control" value="@Model.Score"/>

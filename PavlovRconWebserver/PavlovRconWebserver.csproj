@@ -6,7 +6,7 @@
     <PackageVersion>0.0.3</PackageVersion>
     <Title>PavlovRconWebserver</Title>
     <Authors>Devin Spitz</Authors>
-    <AssemblyVersion>0.0.3.8</AssemblyVersion>
+    <AssemblyVersion>0.0.3.9</AssemblyVersion>
     <LangVersion>9</LangVersion>
   </PropertyGroup>
   <ItemGroup>
@@ -76,6 +76,9 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
     <Content Remove="Views\Account\ForgotPassword.cshtml" />
+    <Content Update="wwwroot\images\noImg.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Update="Temp\CopyOnPublish.txt">
@@ -240,6 +243,47 @@
     <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\Responsive-2.2.9\js\responsive.jqueryui.min.js" />
     <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\Responsive-2.2.9\js\responsive.semanticui.js" />
     <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\Responsive-2.2.9\js\responsive.semanticui.min.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\css\dataTables.bootstrap.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\css\dataTables.bootstrap.min.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\css\dataTables.bootstrap4.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\css\dataTables.bootstrap4.min.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\css\dataTables.bootstrap5.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\css\dataTables.bootstrap5.min.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\css\dataTables.bulma.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\css\dataTables.bulma.min.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\css\dataTables.dataTables.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\css\dataTables.dataTables.min.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\css\dataTables.foundation.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\css\dataTables.foundation.min.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\css\dataTables.jqueryui.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\css\dataTables.jqueryui.min.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\css\dataTables.semanticui.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\css\dataTables.semanticui.min.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\css\jquery.dataTables.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\css\jquery.dataTables.min.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\images\sort_asc.png" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\images\sort_asc_disabled.png" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\images\sort_both.png" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\images\sort_desc.png" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\images\sort_desc_disabled.png" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\js\dataTables.bootstrap.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\js\dataTables.bootstrap.min.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\js\dataTables.bootstrap4.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\js\dataTables.bootstrap4.min.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\js\dataTables.bootstrap5.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\js\dataTables.bootstrap5.min.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\js\dataTables.bulma.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\js\dataTables.bulma.min.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\js\dataTables.dataTables.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\js\dataTables.dataTables.min.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\js\dataTables.foundation.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\js\dataTables.foundation.min.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\js\dataTables.jqueryui.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\js\dataTables.jqueryui.min.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\js\dataTables.semanticui.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\js\dataTables.semanticui.min.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\js\jquery.dataTables.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\lib\dataTables\DataTables-1.11.3\js\jquery.dataTables.min.js" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Extensions\UrlHelperExtensions.cs" />
