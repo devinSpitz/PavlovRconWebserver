@@ -196,9 +196,9 @@ namespace PavlovRconWebserver.Services
                                                                      !string.IsNullOrEmpty(identity.Costume)))
                                             {
                                                 if (server.Shack)
-                                                    costumesToSet.Add(identity.Id, identity.Costume);
-                                                else
                                                     costumesToSet.Add(identity.OculusId, identity.Costume);
+                                                else
+                                                    costumesToSet.Add(identity.Id, identity.Costume);
                                             }
                                         }
 

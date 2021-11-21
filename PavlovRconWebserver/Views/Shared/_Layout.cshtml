@@ -13,17 +13,8 @@
 @using Microsoft.Extensions.Configuration
 @inject IConfiguration Configuration
 @{
-    Uri url = new Uri("/start/");
     var subPath = Configuration["subPath"];
-    try
-    {
-        url = new Uri(String.Format("{0}://{1}", Context.Request.Scheme, Context.Request.Host));
-    }
-    catch (Exception e)
-    {
-        Console.WriteLine(e);
-        throw;
-    }
+    var url = new Uri(String.Format("{0}://{1}", Context.Request.Scheme, Context.Request.Host));
     var user = await UserManager.GetUserAsync(User);
     _userService.UserInRole(user, _serverSelectedModsService, _pavlovServerService, out var isAdmin, out var isCaptain, out var isMod, out var isOnPremise, out var isServerRent, out var isModSomeWhere, out _);
 }
