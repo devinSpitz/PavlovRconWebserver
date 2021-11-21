@@ -253,9 +253,14 @@ namespace PavlovRconWebserver.Services
                                     bool nextRound = oldServerInfo != null && oldServerInfo.MapLabel != tmp.ServerInfo.MapLabel;
                                     if (!nextRound && oldServerInfo != null&&match is {Status: Status.OnGoing}) // more checks cause in a match the map is only one and will not trigger the first try
                                     {
-                                        if (
-                                            int.Parse(oldServerInfo.Team0Score) > int.Parse(tmp.ServerInfo.Team0Score)||
-                                            int.Parse(oldServerInfo.Team1Score) > int.Parse(tmp.ServerInfo.Team1Score)
+                                        var gotResult1 = int.TryParse(oldServerInfo.Team0Score, out var oldTeam0Score);
+                                        var gotResult2 = int.TryParse(oldServerInfo.Team1Score, out var oldTeam1Score);
+                                        var gotResult3 = int.TryParse(tmp.ServerInfo.Team0Score, out var newTeam0Score);
+                                        var gotResult4 = int.TryParse(tmp.ServerInfo.Team1Score, out var newTeam1Score);
+                                        
+                                        if (gotResult1&&gotResult2&&gotResult3&&gotResult4&&(
+                                            oldTeam0Score > newTeam0Score||
+                                            oldTeam1Score > newTeam1Score)
                                         )
                                         {
                                             nextRound = true;

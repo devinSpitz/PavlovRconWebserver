@@ -104,6 +104,7 @@ namespace PavlovRconWebserver
             app.UseSerilogRequestLogging();
             //Todo handle when you wnat something else than subodmains xD and aslo if add add this javascript will still be broken so adjust there as well
             var subPath = Configuration.GetSection("SubPath");
+            //Todo for next release figure out why arch ich failing
             //app.UsePathBase(subPath.Value);
             // app.Use((context, next) =>
             // {
