@@ -61,6 +61,11 @@
                 <input asp-for="PlayerSlots" class="form-control" value="@Model.PlayerSlots"/>
                 <span asp-validation-for="PlayerSlots" class="text-danger"></span>
             </div>
+            <div class="form-group col-md-6">
+                <label asp-for="ScoreToEnd"></label>
+                <input asp-for="ScoreToEnd" class="form-control" value="@Model.ScoreToEnd"/>
+                <span asp-validation-for="ScoreToEnd" class="text-danger"></span>
+            </div>
         </div>
     </div>
 </div>

@@ -33,7 +33,7 @@ namespace PavlovRconWebserver.Models
 
         public string PlayerCount { get; set; }
         public string Teams { get; set; }
-        public string Team0Score { get; set; }
-        public string Team1Score { get; set; }
+        public string Team0Score { get; set; } = "0";
+        public string Team1Score { get; set; } = "0";
     }
 }

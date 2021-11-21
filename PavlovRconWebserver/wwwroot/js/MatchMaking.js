@@ -189,6 +189,7 @@ function SaveMatch()
     match.PlayerSlots = $("#PlayerSlots").val();
     match.Team0Id = $("#Team0Id").val();
     match.Team1Id = $("#Team1Id").val();
+    match.ScoreToEnd = $("#ScoreToEnd").val();
     if($("#MatchTeam0SelectedSteamIdentitiesStrings").length) // Teams
     {
         $("#MatchTeam0SelectedSteamIdentitiesStrings option").each(function ()

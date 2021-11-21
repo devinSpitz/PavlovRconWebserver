@@ -119,7 +119,7 @@ namespace PavlovRconWebserver.Services
         /// <param name="match"></param>
         /// <param name="matchId"></param>
         /// <returns></returns>
-        public async Task<string> SShTunnelGetAllInfoFromPavlovServer(PavlovServer server,bool match = false)
+        public async Task<string> SShTunnelGetAllInfoFromPavlovServer(PavlovServer server,Match match = null)
         {
             var result = RconStatic.StartClient(server, out var client);
             var costumesToSet = new Dictionary<string, string>();
@@ -251,6 +251,16 @@ namespace PavlovRconWebserver.Services
                                     
                                     //Check of next round
                                     bool nextRound = oldServerInfo != null && oldServerInfo.MapLabel != tmp.ServerInfo.MapLabel;
+                                    if (!nextRound && oldServerInfo != null&&match is {Status: Status.OnGoing}) // more checks cause in a match the map is only one and will not trigger the first try
+                                    {
+                                        if (
+                                            int.Parse(oldServerInfo.Team0Score) > int.Parse(tmp.ServerInfo.Team0Score)||
+                                            int.Parse(oldServerInfo.Team1Score) > int.Parse(tmp.ServerInfo.Team1Score)
+                                        )
+                                        {
+                                            nextRound = true;
+                                        }
+                                    }
                                     var round = oldServerInfo?.Round ?? 0;
                                     if (nextRound)
                                     {
@@ -262,7 +272,7 @@ namespace PavlovRconWebserver.Services
                                         round++;
                                     }
 
-                                    if (match && nextRound)
+                                    if (match is {Status: Status.OnGoing} && nextRound )
                                     {
                                         result.Success = true;
                                         return "ForceStopNowUrgent"; // very bad practice i have to change that to a nice thing
@@ -296,7 +306,7 @@ namespace PavlovRconWebserver.Services
                                             }
                                         }
 
-                                        if (!match)
+                                        if (match==null)
                                         {
                                             //Todo read logs to add killfeed
                                             if (server.SaveStats)
