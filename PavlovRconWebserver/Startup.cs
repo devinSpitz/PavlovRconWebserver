@@ -2,6 +2,7 @@
 using Hangfire;
 using Hangfire.MemoryStorage;
 using LiteDB.Identity.Async.Extensions;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -40,12 +41,6 @@ namespace PavlovRconWebserver
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            
-            services.Configure<CookiePolicyOptions>(options =>
-            {
-                options.MinimumSameSitePolicy = SameSiteMode.None;
-                options.Secure = CookieSecurePolicy.Always;
-            });
             services.AddHangfire(x => x.UseMemoryStorage());
             services.AddHangfireServer(x => { x.WorkerCount = 10; });
 
@@ -84,6 +79,14 @@ namespace PavlovRconWebserver
             .AddSteam(options =>
             {
                 options.ApplicationKey = steamKey;
+            }).AddCookie(options =>
+            {
+                // add an instance of the patched manager to the options:
+                options.CookieManager = new ChunkingCookieManager();
+
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SameSite = SameSiteMode.None;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             });
 
             services.AddSwaggerGen(c =>
@@ -136,7 +139,7 @@ namespace PavlovRconWebserver
                 }
 
             app.UseStaticFiles();
-
+            app.UseCookiePolicy();
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
