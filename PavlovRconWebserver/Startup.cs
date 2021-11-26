@@ -112,7 +112,8 @@ namespace PavlovRconWebserver
                 app.UseDeveloperExceptionPage();
             else
                 app.UseExceptionHandler("/Home/Error");
-            
+
+            app.UseHsts();
             app.UseSerilogRequestLogging();
             //Todo handle when you wnat something else than subodmains xD and aslo if add add this javascript will still be broken so adjust there as well
             var subPath = Configuration.GetSection("SubPath");
