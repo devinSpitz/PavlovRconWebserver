@@ -83,9 +83,8 @@ namespace PavlovRconWebserver
             {
                 // add an instance of the patched manager to the options:
                 options.CookieManager = new ChunkingCookieManager();
-
                 options.Cookie.HttpOnly = true;
-                options.Cookie.SameSite = SameSiteMode.None;
+                options.Cookie.SameSite = SameSiteMode.Unspecified;
                 options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             });
 
