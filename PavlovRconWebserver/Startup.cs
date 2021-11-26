@@ -156,6 +156,7 @@ namespace PavlovRconWebserver
                 if (DisallowsSameSiteNone(userAgent))
                 {
                     options.SameSite = SameSiteMode.Unspecified;
+                    options.Secure = true;
                 }
             }
         }
