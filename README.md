@@ -33,6 +33,7 @@ https://github.com/devinSpitz/PavlovRconWebserver/discussions
 Features:
 =======
 newly added:  
+* steam login added (*be aware that you need to change the service and nginx redirect for this to work in chrome)
 * Added leaderboard per server
 * ApiKey support
 * Auto Balance (default disabled)
@@ -154,7 +155,7 @@ Description=PavlovWebServer
  
 [Service]
 WorkingDirectory="Full build path"
-ExecStart="Full build path"/PavlovRconWebserver --urls=http://*:5001/
+ExecStart="Full build path"/PavlovRconWebserver --urls=https://*:5001/
 Restart=always
 RestartSec=10 # Restart service after 10 seconds if dotnet service crashes
 SyslogIdentifier=dotnet-core-app
@@ -174,7 +175,7 @@ server {
         listen 80 default_server;
         server_name "Domain/subdomain";
     location / {
-        proxy_pass         http://localhost:5001;
+        proxy_pass         https://localhost:5001;
         proxy_http_version 1.1;
         proxy_set_header   Upgrade $http_upgrade;
         proxy_set_header   Connection keep-alive;

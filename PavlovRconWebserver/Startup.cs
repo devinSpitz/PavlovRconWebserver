@@ -43,7 +43,6 @@ namespace PavlovRconWebserver
         {
             services.AddHangfire(x => x.UseMemoryStorage());
             services.AddHangfireServer(x => { x.WorkerCount = 10; });
-            services.AddCors();
             GlobalConfiguration.Configuration.UseMemoryStorage();
             // JobStorage.Current = new MemoryStorage();
             var connectionString = Configuration.GetConnectionString("DefaultConnection");
@@ -79,13 +78,6 @@ namespace PavlovRconWebserver
             .AddSteam(options =>
             {
                 options.ApplicationKey = steamKey;
-            }).AddCookie(options =>
-            {
-                // add an instance of the patched manager to the options:
-                options.CookieManager = new ChunkingCookieManager();
-                options.Cookie.HttpOnly = true;
-                options.Cookie.SameSite = SameSiteMode.Unspecified;
-                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             });
 
             services.AddSwaggerGen(c =>
@@ -139,8 +131,6 @@ namespace PavlovRconWebserver
                 }
 
             app.UseStaticFiles();
-            app.UseCookiePolicy();
-            app.UseCors(opt => opt.AllowAnyHeader().AllowAnyMethod().SetIsOriginAllowed(_=>true).AllowCredentials());
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();

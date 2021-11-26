@@ -56,6 +56,8 @@ namespace PavlovRconWebserver.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
         {
+            
+            model.ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
             {
@@ -280,6 +282,8 @@ namespace PavlovRconWebserver.Controllers
             ViewData["ReturnUrl"] = returnUrl;
             ViewData["LoginProvider"] = info.LoginProvider;
             var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+            
+            //GetSteamID
             return View("ExternalLogin", new ExternalLoginViewModel {Email = email});
         }
 
@@ -297,11 +301,13 @@ namespace PavlovRconWebserver.Controllers
                     throw new ApplicationException("Error loading external login information during confirmation.");
                 var user = new LiteDbUser {UserName = model.Email, Email = model.Email};
                 var result = await _userManager.CreateAsync(user);
+                
                 if (result.Succeeded)
                 {
                     result = await _userManager.AddLoginAsync(user, info);
                     if (result.Succeeded)
                     {
+                        //GetSteamID
                         await _signInManager.SignInAsync(user, false);
                         _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
                         return RedirectToLocal(returnUrl);
