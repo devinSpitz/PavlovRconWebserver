@@ -271,6 +271,8 @@ namespace PavlovRconWebserver.Controllers
             // Sign in the user with this external login provider if the user already has a login.
             var result =
                 await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, false, true);
+            
+            //Todo why is this always false and not recognizing people?
             if (result.Succeeded)
             {
                 var emailSuc = GetEmailFromExternalProvider(info);
