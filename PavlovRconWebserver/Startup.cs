@@ -43,7 +43,7 @@ namespace PavlovRconWebserver
         {
             services.AddHangfire(x => x.UseMemoryStorage());
             services.AddHangfireServer(x => { x.WorkerCount = 10; });
-
+            services.AddCors();
             GlobalConfiguration.Configuration.UseMemoryStorage();
             // JobStorage.Current = new MemoryStorage();
             var connectionString = Configuration.GetConnectionString("DefaultConnection");
@@ -139,6 +139,7 @@ namespace PavlovRconWebserver
 
             app.UseStaticFiles();
             app.UseCookiePolicy();
+            app.UseCors(opt => opt.AllowAnyHeader().AllowAnyMethod().SetIsOriginAllowed(_=>true).AllowCredentials());
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
