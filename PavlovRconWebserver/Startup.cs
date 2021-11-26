@@ -43,17 +43,8 @@ namespace PavlovRconWebserver
             
             services.Configure<CookiePolicyOptions>(options =>
             {
-                options.MinimumSameSitePolicy = SameSiteMode.Unspecified;
-                options.OnAppendCookie = cookieContext =>
-                {
-                    cookieContext.CookieOptions.SameSite = SameSiteMode.None;
-                    cookieContext.CookieOptions.Secure = true;
-                };
-                options.OnDeleteCookie = cookieContext =>
-                {
-                    cookieContext.CookieOptions.SameSite = SameSiteMode.None;
-                    cookieContext.CookieOptions.Secure = true;
-                };
+                options.MinimumSameSitePolicy = SameSiteMode.None;
+                options.Secure = CookieSecurePolicy.Always;
             });
             services.AddHangfire(x => x.UseMemoryStorage());
             services.AddHangfireServer(x => { x.WorkerCount = 10; });
