@@ -15,6 +15,7 @@
     <Folder Include="wwwroot\lib\dataTables" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="AspNet.Security.OpenId.Steam" Version="5.0.0" />
     <PackageReference Include="AspNetCoreHero.ToastNotification" Version="1.1.0" />
     <PackageReference Include="Hangfire.AspNetCore" Version="1.7.25" />
     <PackageReference Include="Hangfire.MemoryStorage" Version="1.7.0" />
