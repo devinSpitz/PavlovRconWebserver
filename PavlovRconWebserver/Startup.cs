@@ -1,7 +1,10 @@
-﻿using AspNetCoreHero.ToastNotification;
+﻿using System;
+using System.Security.Claims;
+using AspNetCoreHero.ToastNotification;
 using Hangfire;
 using Hangfire.MemoryStorage;
 using LiteDB.Identity.Async.Extensions;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -41,12 +44,18 @@ namespace PavlovRconWebserver
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
             services.AddHangfire(x => x.UseMemoryStorage());
             services.AddHangfireServer(x => { x.WorkerCount = 10; });
             GlobalConfiguration.Configuration.UseMemoryStorage();
             // JobStorage.Current = new MemoryStorage();
             var connectionString = Configuration.GetConnectionString("DefaultConnection");
-            var steamKey = Configuration.GetConnectionString("SteamApiKey");
+            var steamKey = Configuration?.GetSection("ThirdParty")?["SteamApiKey"];
+            var paypalClientId =Configuration?.GetSection("ThirdParty")?["PaypalClientId"];
+            var paypalSecret = Configuration?.GetSection("ThirdParty")?["PaypalSecret"];
+            var paypalSecretSandBox = Configuration?.GetSection("ThirdParty")?["PaypalSecretSandBox"];
+            var paypalClientIdSandBox = Configuration?.GetSection("ThirdParty")?["PaypalClientIdSandBox"];
             services.AddLiteDbIdentityAsync(connectionString).AddDefaultTokenProviders();
             // Add LiteDB Dependency. Thare are three ways to set database:
             // 1. By default it uses the first connection string on appsettings.json, ConnectionStrings section.
@@ -74,12 +83,57 @@ namespace PavlovRconWebserver
             services.AddScoped<SteamIdentityStatsServerService>();
             services.AddSingleton(Configuration);
             services.AddScoped<IEmailSender, EmailSender>();
-            services.AddAuthentication(options => { /* Authentication options */ })
-            .AddSteam(options =>
+            if (!string.IsNullOrEmpty(steamKey)&&steamKey != "XXXXXXX")
             {
-                options.ApplicationKey = steamKey;
-            });
+                services.AddAuthentication().AddSteam(options =>
+                {
+                    options.ApplicationKey = steamKey;
+                }); 
+            }
 
+            if (!string.IsNullOrEmpty(paypalClientIdSandBox) && paypalClientIdSandBox != "XXXXXXX" &&
+                !string.IsNullOrEmpty(paypalSecretSandBox) && paypalSecretSandBox != "XXXXXXX"&&environment!="Production")
+            {
+                services.AddAuthentication(options => { /* Authentication options */ })
+                    .AddPaypal(options =>
+                    {
+                        options.AuthorizationEndpoint = "https://www.sandbox.paypal.com/webapps/auth/protocol/openidconnect/v1/authorize";
+                        options.TokenEndpoint = "https://api.sandbox.paypal.com/v1/identity/openidconnect/tokenservice";
+                        options.UserInformationEndpoint = "https://api.sandbox.paypal.com/v1/identity/openidconnect/userinfo?schema=openid";
+                        options.ClientId = paypalClientIdSandBox;
+                        options.ClientSecret = paypalSecretSandBox;    
+                        options.ClaimActions.MapCustomJson(
+                            ClaimTypes.Email,
+                            user =>
+                            {
+                                if (user.TryGetProperty("email", out var emails))
+                                {
+                                    return emails.GetString();
+                                }
+                                return null;
+                            });
+                    });
+                
+            }else if (!string.IsNullOrEmpty(paypalClientId) && paypalClientId != "XXXXXXX" &&
+                      !string.IsNullOrEmpty(paypalSecret) && paypalSecret != "XXXXXXX"&&environment=="Production")
+            {
+                services.AddAuthentication(options => { /* Authentication options */ })
+                    .AddPaypal(options =>
+                    {
+                        options.ClientId = paypalClientId;
+                        options.ClientSecret = paypalSecret;    
+                        options.ClaimActions.MapCustomJson(
+                            ClaimTypes.Email,
+                            user =>
+                            {
+                                if (user.TryGetProperty("email", out var emails))
+                                {
+                                    return emails.GetString();
+                                }
+                                return null;
+                            });
+                    });
+            }
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v0.0.1", new OpenApiInfo
@@ -109,13 +163,15 @@ namespace PavlovRconWebserver
             app.UseSerilogRequestLogging();
             //Todo handle when you wnat something else than subodmains xD and aslo if add add this javascript will still be broken so adjust there as well
             var subPath = Configuration.GetSection("SubPath");
-            //Todo for next release figure out why arch ich failing
-            //app.UsePathBase(subPath.Value);
-            // app.Use((context, next) =>
-            // {
-            //     context.Request.PathBase = new PathString(subPath.Value);
-            //     return next();
-            // });
+            if (subPath!=null && subPath.Value != "/")
+            {
+                app.UsePathBase(subPath.Value);
+                app.Use((context, next) =>
+                {
+                    context.Request.PathBase = new PathString(subPath.Value);
+                    return next();
+                });
+            }
             if (env.EnvironmentName != "Test")
                 if (env.EnvironmentName == "Development")
                 {

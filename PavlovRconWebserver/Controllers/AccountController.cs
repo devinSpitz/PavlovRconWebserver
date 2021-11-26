@@ -267,11 +267,18 @@ namespace PavlovRconWebserver.Controllers
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info == null) return RedirectToAction(nameof(Login));
 
+            
             // Sign in the user with this external login provider if the user already has a login.
             var result =
                 await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, false, true);
             if (result.Succeeded)
             {
+                var emailSuc = GetEmailFromExternalProvider(info);
+                var user = await _signInManager.UserManager.GetUserAsync(info.Principal);
+                if (info.LoginProvider.ToLower()=="paypal" && user?.Email != null && emailSuc != user.Email)
+                {
+                    await _userManager.SetEmailAsync(user,emailSuc);
+                }
                 _logger.LogInformation("User logged in with {Name} provider.", info.LoginProvider);
                 return RedirectToLocal(returnUrl);
             }
@@ -281,12 +288,19 @@ namespace PavlovRconWebserver.Controllers
             // If the user does not have an account, then ask the user to create an account.
             ViewData["ReturnUrl"] = returnUrl;
             ViewData["LoginProvider"] = info.LoginProvider;
-            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
-            
             //GetSteamID
-            return View("ExternalLogin", new ExternalLoginViewModel {Email = email});
+            return View("ExternalLogin", new ExternalLoginViewModel {UserName = "", Email = ""});
         }
+        private static string GetEmailFromExternalProvider(ExternalLoginInfo info)
+        {
+            var email = "";
+            if (info.Principal.HasClaim(c => c.Type == ClaimTypes.Email))
+            {
+                email = info.Principal.FindFirstValue(ClaimTypes.Email);
+            }
 
+            return email;
+        }
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
@@ -299,7 +313,17 @@ namespace PavlovRconWebserver.Controllers
                 var info = await _signInManager.GetExternalLoginInfoAsync();
                 if (info == null)
                     throw new ApplicationException("Error loading external login information during confirmation.");
-                var user = new LiteDbUser {UserName = model.Email, Email = model.Email};
+                
+                var email = GetEmailFromExternalProvider(info);
+                LiteDbUser user = null;
+                if (info.LoginProvider.ToLower()=="paypal")
+                {
+                    user = new LiteDbUser {UserName = model.UserName, Email = email};  
+                }
+                else
+                {
+                    user = new LiteDbUser {UserName = model.UserName, Email = model.Email};
+                }
                 var result = await _userManager.CreateAsync(user);
                 
                 if (result.Succeeded)
@@ -309,6 +333,7 @@ namespace PavlovRconWebserver.Controllers
                     {
                         //GetSteamID
                         await _signInManager.SignInAsync(user, false);
+                        await _userManager.AddToRoleAsync(user, "User");
                         _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
                         return RedirectToLocal(returnUrl);
                     }

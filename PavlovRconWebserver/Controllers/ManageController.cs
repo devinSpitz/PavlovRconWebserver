@@ -72,16 +72,7 @@ namespace PavlovRconWebserver.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-
-            var email = user.Email;
-            if (model.Email != email)
-            {
-                var setEmailResult = await _userManager.SetEmailAsync(user, model.Email);
-                if (!setEmailResult.Succeeded)
-                    throw new ApplicationException(
-                        $"Unexpected error occurred setting email for user with ID '{user.Id}'.");
-            }
-
+            
             var phoneNumber = user.PhoneNumber;
             if (model.PhoneNumber != phoneNumber)
             {
