@@ -65,10 +65,26 @@ namespace PavlovRconWebserver.Services
                 .FindAllAsync()).ToArray();
         }
 
-        public async Task<bool> Delete(string id)
+        public async Task<IdentityResult> Delete(string id)
+        {
+            var user = await GetUserById(id);
+            var logins = await _userManager.GetLoginsAsync(user);
+            foreach (var login in logins)
+            {
+                await _userManager.RemoveLoginAsync(user, login.LoginProvider, login.ProviderKey);
+            }
+            var result = await _userManager.DeleteAsync(user);
+            return result;
+        }        
+        public async Task<LiteDbUser> GetUserById(string id)
         {
             return await _liteDb.LiteDatabaseAsync.GetCollection<LiteDbUser>("LiteDbUser")
-                .DeleteAsync(new ObjectId(id));
+                .FindOneAsync(x=>x.Id == new ObjectId(id));
+        }       
+        public async Task<LiteDbUser> GetUserByEmail(string email)
+        {
+            return await _liteDb.LiteDatabaseAsync.GetCollection<LiteDbUser>("LiteDbUser")
+                .FindOneAsync(x=>x.Email == email);
         }
 
         public async Task<bool> IsUserInRole(string role, ClaimsPrincipal principal)

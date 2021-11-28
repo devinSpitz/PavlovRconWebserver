@@ -24,6 +24,8 @@ namespace PavlovRconWebserver.Controllers
         public async Task<IActionResult> DeleteUser(string id)
         {
             await _service.Delete(id);
+            
+            
             return await Index();
         }
     }

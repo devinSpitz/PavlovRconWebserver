@@ -27,11 +27,13 @@ namespace PavlovRconWebserver.Controllers
         private readonly SignInManager<LiteDbUser> _signInManager;
         private readonly UrlEncoder _urlEncoder;
         private readonly UserManager<LiteDbUser> _userManager;
+        private readonly UserService _userService;
 
         public ManageController(
             UserManager<LiteDbUser> userManager,
             SignInManager<LiteDbUser> signInManager,
             IEmailSender emailSender,
+            UserService userService,
             ILogger<ManageController> logger,
             UrlEncoder urlEncoder)
         {
@@ -40,6 +42,7 @@ namespace PavlovRconWebserver.Controllers
             _emailSender = emailSender;
             _logger = logger;
             _urlEncoder = urlEncoder;
+            _userService = userService;
         }
 
         [TempData] public string StatusMessage { get; set; }
@@ -254,7 +257,7 @@ namespace PavlovRconWebserver.Controllers
             //    }
             //}
 
-            var result = await _userManager.DeleteAsync(user);
+            var result = await _userService.Delete(user.Id.ToString());
             var userId = await _userManager.GetUserIdAsync(user);
             if (!result.Succeeded)
             {
