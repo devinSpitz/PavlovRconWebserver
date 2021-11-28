@@ -94,6 +94,7 @@ namespace PavlovRconWebserver.Controllers
             model = result.Key;
             if (result.Value != null)
             {
+                await _sshServerSerivce.RemovePavlovServerFromDisk(model);
                 DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not create rented server! " + model.Name, LogEventLevel.Fatal, _notifyService);
                 return BadRequest();
             }
