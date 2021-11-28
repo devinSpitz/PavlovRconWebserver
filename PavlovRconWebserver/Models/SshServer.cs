@@ -62,5 +62,36 @@ namespace PavlovRconWebserver.Models
         
         [NotMapped] [BsonIgnore] public List<LiteDbUser> LiteDbUsers { get; set; }
         [NotMapped] [BsonIgnore] public string LiteDbUserId { get; set; }
+        
+        //HostingProviderSettings
+        [NotMapped] [BsonIgnore] public bool HostingAvailable { get; set; } = false;
+        
+        [DisplayName("Hosting Api")]
+        public bool IsForHosting { get; set; }
+        
+        [DisplayName("SSH username")] public string SshUsernameRootForHosting { get; set; }
+
+        [DisplayName("SSH password")]
+        [Display(Description = "CAUTION: WILL BE SAVED BLANK")]
+        public string SshPasswordRootForHosting { get; set; }
+
+        [DisplayName("SSH key filename")]
+        [Display(Description = "Select a filename")]
+        public byte[] SshKeyFileNameRootForHosting { get; set; }
+
+
+        [DisplayName("SSH passphrase")]
+        [Display(Description = "CAUTION: WILL BE SAVED BLANK")]
+        public string SshPassphraseRootForHosting { get; set; }
+        
+        [BsonIgnore]
+        [NotMapped]
+        [CanBeNull]
+        [DisplayName("SSH key file")]
+        [Display(Description = "Select a file (only if you want to overwrite the possible existing one)")]
+        public IFormFile SshKeyFileNameRootForHostingForm { get; set; }
+        
+        
+
     }
 }

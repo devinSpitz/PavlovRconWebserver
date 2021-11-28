@@ -800,6 +800,27 @@ namespace PavlovRconWebserver.Services
             var match = await FindOne(id);
             if (match == null) return false;
             return match.Status != Status.OnGoing;
+        }        
+        
+        public async Task<bool> AnonymizeTheStats(string id)
+        {
+            var matches = (await FindAll()).Where(x=>x.PlayerResults.FirstOrDefault(y=>y.UniqueId==id)!=null);
+            foreach (var match in matches)
+            {
+                foreach (var pavlovServerPlayer in match.PlayerResults.Where(x=>x.UniqueId==id))
+                {
+                    pavlovServerPlayer.UniqueId = "";
+                }
+
+                await Upsert(match);
+            }
+            return true;
+        }        
+        
+        public async Task<Match[]> PersonalStats(string id)
+        {
+            var matches = (await FindAll()).Where(x=>x.PlayerResults.FirstOrDefault(y=>y.UniqueId==id)!=null);
+            return matches.ToArray();
         }
     }
 }

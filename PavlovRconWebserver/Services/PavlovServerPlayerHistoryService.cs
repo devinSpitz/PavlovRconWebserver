@@ -35,7 +35,15 @@ namespace PavlovRconWebserver.Services
             return (await _liteDb.LiteDatabaseAsync
                 .GetCollection<PavlovServerPlayerHistory>("PavlovServerPlayerHistory")
                 .FindAllAsync()).Where(x => x.UniqueId == uniqueId).ToArray();
+        }        
+        
+        public async Task<int> DeleteMany(string uniqueId)
+        {
+            return (await _liteDb.LiteDatabaseAsync
+                .GetCollection<PavlovServerPlayerHistory>("PavlovServerPlayerHistory")
+                .DeleteManyAsync(x=>x.UniqueId==uniqueId));
         }
+        
 
         public async Task Upsert(List<PavlovServerPlayerHistory> pavlovServerPlayerHistories, int serverId,
             int deleteAfterDays)

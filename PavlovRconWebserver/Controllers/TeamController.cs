@@ -184,11 +184,19 @@ namespace PavlovRconWebserver.Controllers
                 if (!await RightsHandler.IsUserAtLeastInRole("Mod", HttpContext.User, _userService))
                     return Unauthorized();
 
+            
+            var alreadyOculus = await _steamIdentityService.FindOculus(steamIdentity.OculusId); 
+            
+            if(steamIdentity.Id!=alreadyOculus.Id)
+                return BadRequest("The oculusId already exists!");
+                
             if (currentOwner == null || steamIdentity.LiteDbUserId == currentOwner.LiteDbUser?.Id.ToString()||currentOwner.LiteDbUser==null)
                 await _steamIdentityService.Upsert(steamIdentity);
             else
                 return BadRequest("That would be a duplicate entry!");
 
+
+            
 
             if (ModelState.ErrorCount > 0) return await EditSteamIdentity(steamIdentity);
 

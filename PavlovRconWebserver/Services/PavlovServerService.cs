@@ -117,7 +117,7 @@ namespace PavlovRconWebserver.Services
         }
 
 
-        public async Task<KeyValuePair<PavlovServerViewModel, string>> CreatePavlovServer(PavlovServerViewModel server)
+        public async Task<KeyValuePair<PavlovServerViewModel, string>> CreatePavlovServer(PavlovServerViewModel server,string reservedFor = "")
         {
             //Todo: The hole chain of this function is just bad. To less error handling etc. Have to make this better in the future.
             string result = null;

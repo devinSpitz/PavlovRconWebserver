@@ -1,19 +1,22 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Encodings.Web;
-using System.Text.Json;
 using System.Threading.Tasks;
+using AspNetCoreHero.ToastNotification.Helpers;
 using LiteDB.Identity.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using PavlovRconWebserver.Models;
 using PavlovRconWebserver.Models.ManageViewModels;
 using PavlovRconWebserver.Services;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace PavlovRconWebserver.Controllers
 {
@@ -28,12 +31,20 @@ namespace PavlovRconWebserver.Controllers
         private readonly UrlEncoder _urlEncoder;
         private readonly UserManager<LiteDbUser> _userManager;
         private readonly UserService _userService;
+        private readonly SteamIdentityService _steamIdentityService;
+        private readonly PavlovServerPlayerHistoryService _pavlovServerPlayerHistoryService;
+        private readonly MatchService _matchService;
+        private readonly SteamIdentityStatsServerService _steamIdentityStatsServerService;
 
         public ManageController(
             UserManager<LiteDbUser> userManager,
             SignInManager<LiteDbUser> signInManager,
             IEmailSender emailSender,
             UserService userService,
+            SteamIdentityService steamIdentityService,
+            PavlovServerPlayerHistoryService pavlovServerPlayerHistoryService,
+            MatchService matchService,
+            SteamIdentityStatsServerService steamIdentityStatsServerService,
             ILogger<ManageController> logger,
             UrlEncoder urlEncoder)
         {
@@ -43,6 +54,11 @@ namespace PavlovRconWebserver.Controllers
             _logger = logger;
             _urlEncoder = urlEncoder;
             _userService = userService;
+            _steamIdentityService = steamIdentityService;
+            _pavlovServerPlayerHistoryService = pavlovServerPlayerHistoryService;
+            _matchService = matchService;
+            _steamIdentityStatsServerService = steamIdentityStatsServerService;
+            
         }
 
         [TempData] public string StatusMessage { get; set; }
@@ -210,7 +226,15 @@ namespace PavlovRconWebserver.Controllers
                 prop => Attribute.IsDefined(prop, typeof(PersonalDataAttribute)));
             foreach (var p in personalDataProps)
             {
-                personalData.Add(p.Name, p.GetValue(user)?.ToString() ?? "null");
+                try
+                {
+                    var getValue = p.GetValue(user)?.ToString() ?? "null";
+                    personalData.Add(p.Name, getValue);
+                }
+                catch (Exception)
+                {
+                    //ignore
+                }
             }
 
             var logins = await _userManager.GetLoginsAsync(user);
@@ -218,11 +242,32 @@ namespace PavlovRconWebserver.Controllers
             {
                 personalData.Add($"{l.LoginProvider} external login provider key", l.ProviderKey);
             }
+            
+            var id = await _steamIdentityService.FindOne(user.Id);
+            var AdditionalData = new Dictionary<string, IEnumerable>();
+            if (id != null)
+            {
+                AdditionalData.Add("HistorySteam",(await _pavlovServerPlayerHistoryService.FindAllFromPlayer(id.Id)));
+                AdditionalData.Add("MatchesSteam",(await _matchService.PersonalStats(id.Id)));
+                AdditionalData.Add("LeaderBoardSteam",(await _steamIdentityStatsServerService.GetForSteamId(id.Id)));
+            }
 
+            if (id!=null && id.OculusId != "" && await _steamIdentityService.FindOne(id.OculusId) == null)
+            {
+                AdditionalData.Add("HistoryOculus",(await _pavlovServerPlayerHistoryService.FindAllFromPlayer(id.OculusId)));
+                AdditionalData.Add("MatchesOculus",(await _matchService.PersonalStats(id.OculusId)));
+                AdditionalData.Add("LeaderBoardOculus",(await _steamIdentityStatsServerService.GetForSteamId(id.OculusId)));
+            }
+            
             personalData.Add($"Authenticator Key", await _userManager.GetAuthenticatorKeyAsync(user));
 
             Response.Headers.Add("Content-Disposition", "attachment; filename=PersonalData.json");
-            return new FileContentResult(JsonSerializer.SerializeToUtf8Bytes(personalData), "application/json");
+            return new FileContentResult(JsonSerializer.SerializeToUtf8Bytes(new
+            {
+                internalData = personalData,
+                additionalData = AdditionalData
+                
+            }), "application/json");
         }
 
         public async Task<IActionResult> DeletePersonalData()
@@ -239,7 +284,6 @@ namespace PavlovRconWebserver.Controllers
         }
         public async Task<IActionResult> DeletePersonalDataNow()
         {
-            //todo do add all personal data
             
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
@@ -247,18 +291,25 @@ namespace PavlovRconWebserver.Controllers
                 return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
-            //var RequirePassword = await _userManager.HasPasswordAsync(user);
-            //if (RequirePassword)
-            //{
-            //    if (!await _userManager.CheckPasswordAsync(user, Input.Password))
-            //    {
-            //        ModelState.AddModelError(string.Empty, "Incorrect password.");
-            //        return Page();
-            //    }
-            //}
 
             var result = await _userService.Delete(user.Id.ToString());
             var userId = await _userManager.GetUserIdAsync(user);
+            
+            var id = await _steamIdentityService.FindOne(user.Id);
+            if (id != null)
+            {
+                await _pavlovServerPlayerHistoryService.DeleteMany(id.Id);
+                await _matchService.AnonymizeTheStats(id.Id);
+                await _steamIdentityStatsServerService.DeleteForSteamId(id.Id);
+            }
+
+            if (id!=null && id.OculusId != "" && await _steamIdentityService.FindOne(id.OculusId) == null)
+            {
+                await _pavlovServerPlayerHistoryService.DeleteMany(id.OculusId);
+                await _matchService.AnonymizeTheStats(id.OculusId);
+                await _steamIdentityStatsServerService.DeleteForSteamId(id.OculusId);
+            }
+
             if (!result.Succeeded)
             {
                 throw new InvalidOperationException($"Unexpected error occurred deleting user.");

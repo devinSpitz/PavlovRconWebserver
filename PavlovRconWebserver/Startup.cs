@@ -14,7 +14,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using PavlovRconWebserver.Controllers;
 using PavlovRconWebserver.Extensions;
+using PavlovRconWebserver.Models;
 using PavlovRconWebserver.Services;
 using Serilog;
 
@@ -56,6 +58,9 @@ namespace PavlovRconWebserver
             var paypalSecret = Configuration?.GetSection("ThirdParty")?["PaypalSecret"];
             var paypalSecretSandBox = Configuration?.GetSection("ThirdParty")?["PaypalSecretSandBox"];
             var paypalClientIdSandBox = Configuration?.GetSection("ThirdParty")?["PaypalClientIdSandBox"];
+            
+               
+            //var apiKey = Configuration?.GetSection("AppSettings")?["ApiKey"];
             services.AddLiteDbIdentityAsync(connectionString).AddDefaultTokenProviders();
             // Add LiteDB Dependency. Thare are three ways to set database:
             // 1. By default it uses the first connection string on appsettings.json, ConnectionStrings section.
@@ -71,6 +76,7 @@ namespace PavlovRconWebserver
             services.AddScoped<PavlovServerService>();
             services.AddScoped<ServerBansService>();
             services.AddScoped<PavlovServerPlayerService>();
+            services.AddScoped<ReservedServersService>();
             services.AddScoped<PavlovServerInfoService>();
             services.AddScoped<PavlovServerPlayerHistoryService>();
             services.AddScoped<MatchSelectedSteamIdentitiesService>();

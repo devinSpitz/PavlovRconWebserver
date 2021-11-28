@@ -6,6 +6,7 @@ using Hangfire.Annotations;
 using LiteDB;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using PavlovRconWebserver.Exceptions;
 using PavlovRconWebserver.Extensions;
 using PavlovRconWebserver.Models;
@@ -21,16 +22,18 @@ namespace PavlovRconWebserver.Controllers
         private readonly ServerSelectedMapService _serverSelectedMapService;
         private readonly SshServerSerivce _service;
         private readonly UserService _userservice;
+        private readonly IConfiguration _configuration;
 
         public SshServerController(SshServerSerivce service, UserService userService,
             ServerSelectedMapService serverSelectedMapService, MapsService mapsService,
-            PavlovServerService pavlovServerService)
+            PavlovServerService pavlovServerService,IConfiguration configuration)
         {
             _service = service;
             _userservice = userService;
             _serverSelectedMapService = serverSelectedMapService;
             _mapsService = mapsService;
             _pavlovServerService = pavlovServerService;
+            _configuration = configuration;
         }
 
         [HttpGet("[controller]/")]
@@ -50,7 +53,8 @@ namespace PavlovRconWebserver.Controllers
             if(server.Id==0)
                 if (!HttpContext.User.IsInRole("Admin"))
                     return Forbid();
-            ViewBag.Remove = false;;
+            ViewBag.Remove = false;
+            server.HostingAvailable = ApiWithKeyController.ApiKeySet(_configuration);
             server.LiteDbUsers = (await _userservice.FindAll()).ToList();
             return View("Server", server);
         }
@@ -62,7 +66,7 @@ namespace PavlovRconWebserver.Controllers
             if (!await CheckIfUserHasrights(server.Id)) return Forbid();
 
             ViewBag.Remove = remove;
-            
+            server.HostingAvailable = ApiWithKeyController.ApiKeySet(_configuration);
             server.LiteDbUsers = (await _userservice.FindAll()).ToList();
             return View("Server", server);
         }
@@ -83,6 +87,15 @@ namespace PavlovRconWebserver.Controllers
                 await server.SshKeyFileNameForm.CopyToAsync(ms);
                 var fileBytes = ms.ToArray();
                 server.SshKeyFileName = fileBytes;
+                // act on the Base64 data
+            }
+            
+            if (server.SshKeyFileNameRootForHostingForm != null)
+            {
+                await using var ms = new MemoryStream();
+                await server.SshKeyFileNameRootForHostingForm.CopyToAsync(ms);
+                var fileBytes = ms.ToArray();
+                server.SshKeyFileNameRootForHosting = fileBytes;
                 // act on the Base64 data
             }
             

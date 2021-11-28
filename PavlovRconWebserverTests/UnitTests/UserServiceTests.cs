@@ -109,7 +109,7 @@ namespace PavlovRconWebserverTests.UnitTests
             var userResultAfter = _userManager.FindByIdAsync(user.Id.ToString()).GetAwaiter().GetResult();
 
             // assert
-            userResult.Should().BeTrue();
+            userResult.Succeeded.Should().BeTrue();
             userResultAfter.Should().BeNull();
         }
     }

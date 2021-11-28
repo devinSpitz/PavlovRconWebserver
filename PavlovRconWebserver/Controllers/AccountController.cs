@@ -25,12 +25,16 @@ namespace PavlovRconWebserver.Controllers
         private readonly UserManager<LiteDbUser> _userManager;
         private readonly UserService _userService;
         private readonly SteamIdentityService _steamIdentityService;
+        private readonly ReservedServersService _reservedServersService;
+        private readonly PavlovServerService _pavlovServerService;
 
         public AccountController(
             UserManager<LiteDbUser> userManager,
             SignInManager<LiteDbUser> signInManager,
             IEmailSender emailSender,
+            ReservedServersService reservedServersService,
             SteamIdentityService steamIdentityService,
+            PavlovServerService pavlovServerService,
             ILogger<AccountController> logger,
             UserService userService)
         {
@@ -40,6 +44,8 @@ namespace PavlovRconWebserver.Controllers
             _logger = logger;
             _userService = userService;
             _steamIdentityService = steamIdentityService;
+            _reservedServersService = reservedServersService;
+            _pavlovServerService = pavlovServerService;
         }
 
         [TempData] public string ErrorMessage { get; set; }
@@ -284,6 +290,24 @@ namespace PavlovRconWebserver.Controllers
                 if (info.LoginProvider.ToLower()=="paypal" && user?.Email != null && emailSuc != user.Email)
                 {
                     await _userManager.SetEmailAsync(user,emailSuc);
+                }
+
+                if (user != null)
+                {
+                    var reserved = await _reservedServersService.FindByEmail(user.Email);
+                    if (reserved.Any())
+                    {
+                        foreach (var reservedServer in reserved)
+                        {
+                            var server = await _pavlovServerService.FindOne(reservedServer.ServerId);
+                            if (server == null) continue;
+                            server.Owner = user;
+                            server.LiteDbUserId = user.Id.ToString();
+                            await _pavlovServerService.Upsert(server);
+                            await _reservedServersService.Remove(reservedServer.Id);
+                        }
+
+                    }
                 }
                 _logger.LogInformation("User logged in with {Name} provider.", info.LoginProvider);
                 return RedirectToLocal(returnUrl);
