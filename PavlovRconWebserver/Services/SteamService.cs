@@ -246,7 +246,15 @@ namespace PavlovRconWebserver.Services
 
                 if(string.IsNullOrEmpty(pageContents)) continue;
                 var pageDocument = new HtmlDocument();
-                pageDocument.LoadHtml(pageContents);
+                try
+                {
+                    pageDocument.LoadHtml(pageContents);
+                }
+                catch (Exception e)
+                {
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message, LogEventLevel.Verbose, _notifyService);
+                    continue;
+                }
 
                 // get highest site number
                 var pageDiv = pageDocument.DocumentNode.SelectSingleNode("//div[@class='playerAvatarAutoSizeInner']")
