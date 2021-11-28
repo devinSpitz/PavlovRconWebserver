@@ -37,7 +37,7 @@ namespace PavlovRconWebserver.Controllers
             GeneratedServerPath = configuration.GetSection("GeneratedServerPath").Value;
         }
         
-        [HttpGet("Api/GetListOfAvailable")]
+        [HttpPost("Api/GetListOfAvailable")]
         public async Task<IActionResult> GetListOfAvailable(string apiKey)
         {
             if (!HasAccess(apiKey)) return BadRequest("No Authkey set or wrong auth key!");
@@ -50,7 +50,7 @@ namespace PavlovRconWebserver.Controllers
         }
 
 
-        [HttpGet("Api/CreateServer")]
+        [HttpPost("Api/CreateServer")]
         public async Task<IActionResult> CreateServer(string apiKey,int sshServerId,bool shack,string email)
         {
             if (!HasAccess(apiKey)) return BadRequest("No AuthKey set or wrong auth key!");
