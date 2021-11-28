@@ -18,6 +18,7 @@ namespace PavlovRconWebserver.Controllers
         private readonly SshServerSerivce _sshServerSerivce;
         private readonly UserService _userService;
         private readonly ReservedServersService _reservedServersService;
+        private readonly IConfiguration _configuration;
         private readonly string ApiKey;
         private readonly string GeneratedServerPath;
         
@@ -33,6 +34,7 @@ namespace PavlovRconWebserver.Controllers
             _sshServerSerivce = sshServerSerivce;
             _userService = userService;
             _reservedServersService = reservedServersService;
+            _configuration = configuration;
             ApiKey = configuration.GetSection("ApiKey").Value;
             GeneratedServerPath = configuration.GetSection("GeneratedServerPath").Value;
         }
@@ -102,13 +104,25 @@ namespace PavlovRconWebserver.Controllers
             {
                 await _reservedServersService.Add(new ReservedServer() { Email = email, ServerId = resultServer.Id});
             }
+            return Ok(resultServer.Id);
+        }
+        [HttpPost("Api/StopAndTakeAway")]
+        public async Task<IActionResult> StopAndTakeAway(string apiKey,int sshServerId,int pavlovServerId)
+        {
+            if (!HasAccess(apiKey)) return BadRequest("No AuthKey set or wrong auth key!");
+            var sshServer = await _sshServerSerivce.FindOne(sshServerId);
+            var pavlovServer = await _pavlovServerService.FindOne(pavlovServerId);
+            if (sshServer == null) return BadRequest("The ssh server does not exist!");
+            if (!sshServer.HostingAvailable) return BadRequest("The ssh server ist not for hosting!");
+            await RconStatic.SystemDStop(pavlovServer,_pavlovServerService);
+            pavlovServer.Owner = null;
+            await _pavlovServerService.Upsert(pavlovServer);
             return Ok();
         }
 
         private bool HasAccess(string apiKey)
         {
-            if (apiKey != ApiKey || ApiKey == "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" &&
-                ApiKey.Length != 64)
+            if (apiKey != ApiKey || !ApiKeySet(_configuration))
             {
                 return false;
             }
@@ -120,7 +134,7 @@ namespace PavlovRconWebserver.Controllers
         {
             
             var apiKey = configurationTmp.GetSection("ApiKey").Value;
-            if (apiKey == "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" ||
+            if (apiKey == "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" || apiKey.Contains("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX") ||
                 apiKey.Length < 64)
             {
                 return false;

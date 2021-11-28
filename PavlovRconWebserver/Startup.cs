@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Security.Claims;
 using AspNetCoreHero.ToastNotification;
+using AspNetCoreRateLimit;
 using Hangfire;
 using Hangfire.MemoryStorage;
 using LiteDB.Identity.Async.Extensions;
@@ -59,11 +60,26 @@ namespace PavlovRconWebserver
             var paypalSecretSandBox = Configuration?.GetSection("ThirdParty")?["PaypalSecretSandBox"];
             var paypalClientIdSandBox = Configuration?.GetSection("ThirdParty")?["PaypalClientIdSandBox"];
             
-               
+            // needed to load configuration from appsettings.json
+            services.AddOptions();
+
+            // needed to store rate limit counters and ip rules
+            services.AddMemoryCache();
+
+            //load general configuration from appsettings.json
+            services.Configure<IpRateLimitOptions>(Configuration.GetSection("IpRateLimiting"));
+
+            //load ip rules from appsettings.json
+            services.Configure<IpRateLimitPolicies>(Configuration.GetSection("IpRateLimitPolicies"));
+
+            // inject counter and rules stores
+            services.AddInMemoryRateLimiting();
             //var apiKey = Configuration?.GetSection("AppSettings")?["ApiKey"];
             services.AddLiteDbIdentityAsync(connectionString).AddDefaultTokenProviders();
             // Add LiteDB Dependency. Thare are three ways to set database:
             // 1. By default it uses the first connection string on appsettings.json, ConnectionStrings section.
+            
+            services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
             services.AddScoped<SshServerSerivce>();
             services.AddScoped<UserService>();
             services.AddScoped<RconService>();
@@ -160,6 +176,8 @@ namespace PavlovRconWebserver
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            
+            app.UseIpRateLimiting();
             if (env.IsDevelopment() || env.EnvironmentName == "Test")
                 app.UseDeveloperExceptionPage();
             else
@@ -167,7 +185,7 @@ namespace PavlovRconWebserver
 
             app.UseHsts();
             app.UseSerilogRequestLogging();
-            //Todo handle when you wnat something else than subodmains xD and aslo if add add this javascript will still be broken so adjust there as well
+            //Arch and subfolder together is not supported.
             var subPath = Configuration.GetSection("SubPath");
             if (subPath!=null && subPath.Value != "/")
             {
