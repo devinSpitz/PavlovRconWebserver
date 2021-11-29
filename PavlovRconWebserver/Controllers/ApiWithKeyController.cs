@@ -43,12 +43,12 @@ namespace PavlovRconWebserver.Controllers
         public async Task<IActionResult> GetListOfAvailable(string apiKey)
         {
             if (!HasAccess(apiKey)) return BadRequest("No Authkey set or wrong auth key!");
-            var list = (await _sshServerSerivce.FindAll()).Where(x => x.HostingAvailable).Select(x => new
+            var list = (await _sshServerSerivce.FindAll()).Where(x => x.IsForHosting).ToList();
+            return new ObjectResult(list.Select(x => new
             {
                 x.Id,
                 x.Name
-            });
-            return new ObjectResult(list);
+            }).ToList());
         }
 
 
@@ -58,7 +58,7 @@ namespace PavlovRconWebserver.Controllers
             if (!HasAccess(apiKey)) return BadRequest("No AuthKey set or wrong auth key!");
             var sshServer = await _sshServerSerivce.FindOne(sshServerId);
             if (sshServer == null) return BadRequest("The ssh server does not exist!");
-            if (!sshServer.HostingAvailable) return BadRequest("The ssh server ist not for hosting!");
+            if (!sshServer.IsForHosting) return BadRequest("The ssh server ist not for hosting!");
 
             var guid = Guid.NewGuid().ToString();
             var model = new PavlovServerViewModel
