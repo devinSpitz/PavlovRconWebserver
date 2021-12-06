@@ -120,7 +120,7 @@ namespace PavlovRconWebserver.Controllers
             if (!HasAccess(apiKey)) return BadRequest("No AuthKey set or wrong auth key!");
            var model = new SshServer
             {
-                Name = null,
+                Name = "Please Change",
                 SshUsername = "Please Enter",
                 SshPassword =  "DoChange"
             };
@@ -148,7 +148,7 @@ namespace PavlovRconWebserver.Controllers
             var sshServer = await _sshServerSerivce.FindOne(sshServerId);
             var pavlovServer = await _pavlovServerService.FindOne(pavlovServerId);
             if (sshServer == null) return BadRequest("The ssh server does not exist!");
-            if (!sshServer.HostingAvailable) return BadRequest("The ssh server ist not for hosting!");
+            if (!sshServer.IsForHosting) return BadRequest("The ssh server ist not for hosting!");
             await RconStatic.SystemDStop(pavlovServer,_pavlovServerService);
             pavlovServer.OldOwner = pavlovServer.Owner;
             pavlovServer.Owner = null;
@@ -162,7 +162,6 @@ namespace PavlovRconWebserver.Controllers
             if (!HasAccess(apiKey)) return BadRequest("No AuthKey set or wrong auth key!");
             var sshServer = await _sshServerSerivce.FindOne(sshServerId);
             if (sshServer == null) return BadRequest("The ssh server does not exist!");
-            if (!sshServer.HostingAvailable) return BadRequest("The ssh server ist not for hosting!");
             sshServer.OldOwner = sshServer.Owner;
             sshServer.Owner = null;
             await _sshServerSerivce.Update(sshServer);
@@ -175,7 +174,6 @@ namespace PavlovRconWebserver.Controllers
             if (!HasAccess(apiKey)) return BadRequest("No AuthKey set or wrong auth key!");
             var sshServer = await _sshServerSerivce.FindOne(sshServerId);
             if (sshServer == null) return BadRequest("The ssh server does not exist!");
-            if (!sshServer.HostingAvailable) return BadRequest("The ssh server ist not for hosting!");
             await _sshServerSerivce.Delete(sshServer.Id);
             return Ok();
         }   
@@ -187,7 +185,7 @@ namespace PavlovRconWebserver.Controllers
             var sshServer = await _sshServerSerivce.FindOne(sshServerId);
             var pavlovServer = await _pavlovServerService.FindOne(pavlovServerId);
             if (sshServer == null) return BadRequest("The ssh server does not exist!");
-            if (!sshServer.HostingAvailable) return BadRequest("The ssh server ist not for hosting!");
+            if (!sshServer.IsForHosting) return BadRequest("The ssh server ist not for hosting!");
             var viewmodel = new PavlovServerViewModel();
             viewmodel.fromPavlovServer(pavlovServer,sshServerId);
             //todo add admin
@@ -208,7 +206,7 @@ namespace PavlovRconWebserver.Controllers
             var sshServer = await _sshServerSerivce.FindOne(sshServerId);
             var pavlovServer = await _pavlovServerService.FindOne(pavlovServerId);
             if (sshServer == null) return BadRequest("The ssh server does not exist!");
-            if (!sshServer.HostingAvailable) return BadRequest("The ssh server ist not for hosting!");
+            if (!sshServer.IsForHosting) return BadRequest("The ssh server ist not for hosting!");
             pavlovServer.Owner = pavlovServer.OldOwner;
             pavlovServer.OldOwner = null;
             await _pavlovServerService.Upsert(pavlovServer);
@@ -221,7 +219,6 @@ namespace PavlovRconWebserver.Controllers
             if (!HasAccess(apiKey)) return BadRequest("No AuthKey set or wrong auth key!");
             var sshServer = await _sshServerSerivce.FindOne(sshServerId);
             if (sshServer == null) return BadRequest("The ssh server does not exist!");
-            if (!sshServer.HostingAvailable) return BadRequest("The ssh server ist not for hosting!");
             sshServer.Owner = sshServer.OldOwner;
             sshServer.OldOwner = null;
             await _sshServerSerivce.Update(sshServer);
