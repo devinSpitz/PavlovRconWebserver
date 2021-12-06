@@ -36,7 +36,7 @@ namespace PavlovRconWebserver.Models
         [DisplayName("SSH key file")]
         [Display(Description = "Select a file (only if you want to overwrite the possible existing one)")]
         public IFormFile SshKeyFileNameForm { get; set; }
-        public PavlovServerViewModel fromPavlovServer(PavlovServer pavlovServer, int sshServerId)
+        public PavlovServerViewModel fromPavlovServer(PavlovServer pavlovServer, int sshServerIdf)
         {
             return new()
             {
@@ -49,7 +49,7 @@ namespace PavlovRconWebserver.Models
                 TelnetPassword = pavlovServer.TelnetPassword,
                 TelnetPort = pavlovServer.TelnetPort,
                 DeletAfter = pavlovServer.DeletAfter,
-                sshServerId = sshServerId,
+                sshServerId = sshServerIdf,
                 SshServer = pavlovServer.SshServer,
                 Shack = pavlovServer.Shack,
                 Owner = pavlovServer.Owner,
