@@ -120,7 +120,9 @@ namespace PavlovRconWebserver.Controllers
             if (!HasAccess(apiKey)) return BadRequest("No AuthKey set or wrong auth key!");
            var model = new SshServer
             {
-                Name = null
+                Name = null,
+                SshUsername = "Please Enter",
+                SshPassword =  "DoChange"
             };
            var user = await _userService.GetUserByEmail(email);
             if (user != null)
