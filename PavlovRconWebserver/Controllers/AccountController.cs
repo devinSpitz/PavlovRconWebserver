@@ -27,6 +27,7 @@ namespace PavlovRconWebserver.Controllers
         private readonly SteamIdentityService _steamIdentityService;
         private readonly ReservedServersService _reservedServersService;
         private readonly PavlovServerService _pavlovServerService;
+        private readonly SshServerSerivce _sshServerSerivce;
 
         public AccountController(
             UserManager<LiteDbUser> userManager,
@@ -35,6 +36,7 @@ namespace PavlovRconWebserver.Controllers
             ReservedServersService reservedServersService,
             SteamIdentityService steamIdentityService,
             PavlovServerService pavlovServerService,
+            SshServerSerivce sshServerSerivce,
             ILogger<AccountController> logger,
             UserService userService)
         {
@@ -43,6 +45,7 @@ namespace PavlovRconWebserver.Controllers
             _emailSender = emailSender;
             _logger = logger;
             _userService = userService;
+            _sshServerSerivce = sshServerSerivce;
             _steamIdentityService = steamIdentityService;
             _reservedServersService = reservedServersService;
             _pavlovServerService = pavlovServerService;
@@ -286,29 +289,15 @@ namespace PavlovRconWebserver.Controllers
             if (result.Succeeded)
             {
                 var emailSuc = GetEmailFromExternalProvider(info);
-                var user = await _signInManager.UserManager.GetUserAsync(info.Principal);
+                
+                //var user = await _userManager.GetUserAsync(HttpContext.User);
+                var user = await _userService.GetUserByEmail(emailSuc);
+                
                 if (info.LoginProvider.ToLower()=="paypal" && user?.Email != null && emailSuc != user.Email)
                 {
                     await _userManager.SetEmailAsync(user,emailSuc);
                 }
 
-                if (user != null)
-                {
-                    var reserved = await _reservedServersService.FindByEmail(user.Email);
-                    if (reserved.Any())
-                    {
-                        foreach (var reservedServer in reserved)
-                        {
-                            var server = await _pavlovServerService.FindOne(reservedServer.ServerId);
-                            if (server == null) continue;
-                            server.Owner = user;
-                            server.LiteDbUserId = user.Id.ToString();
-                            await _pavlovServerService.Upsert(server);
-                            await _reservedServersService.Remove(reservedServer.Id);
-                        }
-
-                    }
-                }
                 _logger.LogInformation("User logged in with {Name} provider.", info.LoginProvider);
                 return RedirectToLocal(returnUrl);
             }

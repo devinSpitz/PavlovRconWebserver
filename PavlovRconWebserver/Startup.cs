@@ -236,6 +236,7 @@ namespace PavlovRconWebserver
                     var pavlovServerService = serviceScope.ServiceProvider.GetService<PavlovServerService>();
                     var userService = serviceScope.ServiceProvider.GetService<UserService>();
                     var matchService = serviceScope.ServiceProvider.GetService<MatchService>();
+                    var reservedServersService = serviceScope.ServiceProvider.GetService<ReservedServersService>();
                     userService?.CreateDefaultRoles().GetAwaiter().GetResult();
                     if (env.EnvironmentName != "Development")
                     {
@@ -246,6 +247,7 @@ namespace PavlovRconWebserver
                         RecurringJob.AddOrUpdate(
                             () => rconService.CheckBansForAllServers(),
                             "*/5 * * * *"); // Check for bans and remove them is necessary
+                        
 
                         RecurringJob.AddOrUpdate(
                             () => pavlovServerService.CheckStateForAllServers(),
@@ -265,6 +267,9 @@ namespace PavlovRconWebserver
                         Cron.Daily(4)); // Check server states
 
                     BackgroundJob.Enqueue(() => matchService.RestartAllTheInspectorsForTheMatchesThatAreOnGoing());
+                    
+                    BackgroundJob.Enqueue(
+                        () => reservedServersService.CheckReservedServedToGiveToAUser()); 
                     
                     RecurringJob.AddOrUpdate(
                         () => rconService.ReloadPlayerListFromServerAndTheServerInfo(),

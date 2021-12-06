@@ -211,7 +211,6 @@ namespace PavlovRconWebserver.Controllers
         }
         public async Task<IActionResult> DownloadPersonalData()
         {
-            //todo do add all personal data
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {

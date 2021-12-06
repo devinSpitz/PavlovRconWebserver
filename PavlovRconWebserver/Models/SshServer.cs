@@ -50,7 +50,9 @@ namespace PavlovRconWebserver.Models
 
         [DisplayName("Owner (OnPremise)")]
         [CanBeNull]
-        public LiteDbUser Owner { get; set; }
+        public LiteDbUser Owner { get; set; }       
+        [CanBeNull]
+        public LiteDbUser OldOwner { get; set; }
         
         [BsonIgnore]
         [NotMapped]
