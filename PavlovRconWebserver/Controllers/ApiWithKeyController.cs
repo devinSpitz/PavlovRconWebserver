@@ -187,15 +187,23 @@ namespace PavlovRconWebserver.Controllers
             if (sshServer == null) return BadRequest("The ssh server does not exist!");
             if (!sshServer.IsForHosting) return BadRequest("The ssh server ist not for hosting!");
             var viewmodel = new PavlovServerViewModel();
-            viewmodel.fromPavlovServer(pavlovServer,sshServerId);
+            viewmodel = viewmodel.fromPavlovServer(pavlovServer,sshServerId);
             //todo add admin
+            viewmodel.remove = true;
             viewmodel.SshPassphraseRoot = sshServer.SshPassphraseRootForHosting;
             viewmodel.SshPasswordRoot = sshServer.SshPasswordRootForHosting;
             viewmodel.SshUsernameRoot = sshServer.SshUsernameRootForHosting;
             viewmodel.SshKeyFileNameRoot = sshServer.SshKeyFileNameRootForHosting;
-            await _sshServerSerivce.RemovePavlovServerFromDisk(viewmodel);
-            await _pavlovServerService.Delete(pavlovServer.Id);
-            return Ok();
+            var result = await _sshServerSerivce.RemovePavlovServerFromDisk(viewmodel);
+            if (result.Value != null)
+            {
+                await _pavlovServerService.Delete(pavlovServer.Id);
+                return Ok();
+            }
+            else
+            {
+                return BadRequest("Could not delete files!");
+            }
         }        
 
         
