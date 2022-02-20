@@ -33,7 +33,16 @@ https://github.com/devinSpitz/PavlovRconWebserver/discussions
 Features:
 =======
 newly added:  
-* steam login added (*be aware that you need to change the service and nginx redirect for this to work in chrome)
+* GDPR stuff added so you can download and remove your data from the system.
+* Added request limiter
+* steam login added (*be aware that you need to change the service and nginx redirect for this to work in chrome and other browsers in the future (check the nginx section))
+* Added limited Shack Support
+* Show pavlov server logs in the gui
+* Added TTT Commands
+* fixed some stuff in the matchmaking but its still WIP
+* You need to create a appsettings.Production.json now. Copy past from appsettings.Development.json.
+* Arch and subfolder together is not supported. Just leave this option in the appsettings empty or a /
+* Autobalance is broken right now will check that in the next version
 * Added leaderboard per server
 * ApiKey support
 * Auto Balance (default disabled)
