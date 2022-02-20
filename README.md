@@ -146,6 +146,7 @@ Steps :
 2. cd PavlovRconWebserver/PavlovRconWebserver
 3. (without brackets) dotnet publish -c release -o "Full build path" --runtime linux-x64 --self-contained true --framework net5.0
 4. copy the default database to your "Full build path"/Database/Database.db.
+4.5 copy the appsettings.Development.json to "Full build path"/appsettings.Production.json if its not already exist.
 5. create a service: sudo nano /etc/systemd/system/pavlovRconWebserver.service
 6. Content (without brackets) and replace your variables:   
 ```
@@ -228,6 +229,7 @@ Steps:
 3. goto to created directory and then to this folder: PavlovRconWebserver/PavlovRconWebserver
 4. open a Powershell and enter the command: dotnet publish -c release -o "Full build path" --runtime win-x64 --self-contained true --framework net5.0
 5. copy the default database to your "Full build path"\Database\Database.db.
+5.5 copy the appsettings.Development.json to "Full build path"/appsettings.Production.json if its not already exist.
 6. run the PavlovRconWebserver.exe in the "Full build path"
 7. Please don't use it public like this. You need at least a SSL Certificate. Use something like that: https://certbot.eff.org/lets-encrypt/windows-other.html
 8. After you have your ssl done go to your Domain/subdomain  
