@@ -62,6 +62,7 @@ namespace PavlovRconWebserver.Services
                 if (server.ServerType == ServerType.Event) continue;
 
                 var tmp = await GetPavlovServerPlayerListPublicViewModel(server.Id, true);
+                if (tmp == null) continue;
                 tmp.serverId = server.Id;
                 result.Add(tmp);
             }

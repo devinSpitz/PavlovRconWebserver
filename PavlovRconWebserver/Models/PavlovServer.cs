@@ -60,6 +60,9 @@ namespace PavlovRconWebserver.Models
         [DisplayName("Owner (ServerRent)")]
         [CanBeNull]
         public LiteDbUser Owner { get; set; }
+        
+        [CanBeNull]
+        public LiteDbUser OldOwner { get; set; }
 
 
         [DisplayName("Autobalance(WIP)*")]

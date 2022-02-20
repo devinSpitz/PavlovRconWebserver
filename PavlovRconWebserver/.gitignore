@@ -8,3 +8,4 @@
 /node_modules/
 /gulpfile.js
 /Folder.DotSettings.user
+/appsettings.Production.json

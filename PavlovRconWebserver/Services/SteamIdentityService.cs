@@ -35,6 +35,12 @@ namespace PavlovRconWebserver.Services
                 .Include(x => x.LiteDbUser)
                 .FindOneAsync(x => x.Id == id);
         }
+        public async Task<SteamIdentity> FindOculus(string id)
+        {
+            return await _liteDb.LiteDatabaseAsync.GetCollection<SteamIdentity>("SteamIdentity")
+                .Include(x => x.LiteDbUser)
+                .FindOneAsync(x => x.OculusId == id);
+        }
 
         public async Task<SteamIdentity> FindOne(ObjectId liteDbUserId)
         {

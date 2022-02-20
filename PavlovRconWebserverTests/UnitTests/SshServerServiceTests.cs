@@ -32,7 +32,7 @@ namespace PavlovRconWebserverTests.UnitTests
         {
             // arrange
             // act
-            var result = _sshServerSerivce.Insert(SshServer()).GetAwaiter().GetResult();
+            var result = _sshServerSerivce.Insert(SshServer(),false).GetAwaiter().GetResult();
             // assert
             var SshServers = _sshServerSerivce.FindAll().GetAwaiter().GetResult();
             SshServers.Should().HaveCount(1);
@@ -52,7 +52,7 @@ namespace PavlovRconWebserverTests.UnitTests
 
         public static SshServer SshServerInsert(SshServerSerivce sshServerSerivce)
         {
-            sshServerSerivce.Insert(SshServer()).GetAwaiter().GetResult();
+            sshServerSerivce.Insert(SshServer(),false).GetAwaiter().GetResult();
             var sshServer = sshServerSerivce.FindAll().GetAwaiter().GetResult().FirstOrDefault();
             return sshServer;
         }
@@ -96,7 +96,7 @@ namespace PavlovRconWebserverTests.UnitTests
             sshServer.Name = "UpdateTest";
             sshServer.SshPassword = "";
             sshServer.SshPassphrase = "";
-            var sshServerResult = _sshServerSerivce.Update(sshServer).GetAwaiter().GetResult();
+            var sshServerResult = _sshServerSerivce.Update(sshServer,false).GetAwaiter().GetResult();
             // assert
 
             var sshServersAfterUpdate = _sshServerSerivce.FindAll().GetAwaiter().GetResult();
@@ -117,7 +117,7 @@ namespace PavlovRconWebserverTests.UnitTests
             {
                 _sshServerSerivce.Insert(tmp).GetAwaiter().GetResult();
             }
-            catch (SaveServerException e)
+            catch (ValidateException e)
             {
                 Assert.Equal("You need at least a password or a key file!", e.Message);
             }
@@ -134,7 +134,7 @@ namespace PavlovRconWebserverTests.UnitTests
             {
                 _sshServerSerivce.Insert(tmp).GetAwaiter().GetResult();
             }
-            catch (SaveServerException e)
+            catch (ValidateException e)
             {
                 Assert.Equal("You need a username!", e.Message);
             }
@@ -151,7 +151,7 @@ namespace PavlovRconWebserverTests.UnitTests
             {
                 _sshServerSerivce.Insert(tmp).GetAwaiter().GetResult();
             }
-            catch (SaveServerException e)
+            catch (ValidateException e)
             {
                 Assert.Equal("You need a SSH port!", e.Message);
             }

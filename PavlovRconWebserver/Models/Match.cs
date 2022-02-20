@@ -26,6 +26,7 @@ namespace PavlovRconWebserver.Models
         public int TimeLimit { get; set; }
 
         public int PlayerSlots { get; set; }
+        [DisplayName("Score to end the game for teams in SND")] public int ScoreToEnd { get; set; } = 10;
 
         public Team Team0 { get; set; }
         public Team Team1 { get; set; }

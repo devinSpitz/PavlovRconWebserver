@@ -1,7 +1,12 @@
-﻿using AspNetCoreHero.ToastNotification;
+﻿using System;
+using System.Security.Claims;
+using AspNetCoreHero.ToastNotification;
+using AspNetCoreRateLimit;
 using Hangfire;
 using Hangfire.MemoryStorage;
 using LiteDB.Identity.Async.Extensions;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -10,7 +15,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using PavlovRconWebserver.Controllers;
 using PavlovRconWebserver.Extensions;
+using PavlovRconWebserver.Models;
 using PavlovRconWebserver.Services;
 using Serilog;
 
@@ -40,15 +47,39 @@ namespace PavlovRconWebserver
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
             services.AddHangfire(x => x.UseMemoryStorage());
             services.AddHangfireServer(x => { x.WorkerCount = 10; });
-
             GlobalConfiguration.Configuration.UseMemoryStorage();
             // JobStorage.Current = new MemoryStorage();
             var connectionString = Configuration.GetConnectionString("DefaultConnection");
+            var steamKey = Configuration?.GetSection("ThirdParty")?["SteamApiKey"];
+            var paypalClientId =Configuration?.GetSection("ThirdParty")?["PaypalClientId"];
+            var paypalSecret = Configuration?.GetSection("ThirdParty")?["PaypalSecret"];
+            var paypalSecretSandBox = Configuration?.GetSection("ThirdParty")?["PaypalSecretSandBox"];
+            var paypalClientIdSandBox = Configuration?.GetSection("ThirdParty")?["PaypalClientIdSandBox"];
+            
+            // needed to load configuration from appsettings.json
+            services.AddOptions();
+
+            // needed to store rate limit counters and ip rules
+            services.AddMemoryCache();
+
+            //load general configuration from appsettings.json
+            services.Configure<IpRateLimitOptions>(Configuration.GetSection("IpRateLimiting"));
+
+            //load ip rules from appsettings.json
+            services.Configure<IpRateLimitPolicies>(Configuration.GetSection("IpRateLimitPolicies"));
+
+            // inject counter and rules stores
+            services.AddInMemoryRateLimiting();
+            //var apiKey = Configuration?.GetSection("AppSettings")?["ApiKey"];
             services.AddLiteDbIdentityAsync(connectionString).AddDefaultTokenProviders();
             // Add LiteDB Dependency. Thare are three ways to set database:
             // 1. By default it uses the first connection string on appsettings.json, ConnectionStrings section.
+            
+            services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
             services.AddScoped<SshServerSerivce>();
             services.AddScoped<UserService>();
             services.AddScoped<RconService>();
@@ -61,6 +92,7 @@ namespace PavlovRconWebserver
             services.AddScoped<PavlovServerService>();
             services.AddScoped<ServerBansService>();
             services.AddScoped<PavlovServerPlayerService>();
+            services.AddScoped<ReservedServersService>();
             services.AddScoped<PavlovServerInfoService>();
             services.AddScoped<PavlovServerPlayerHistoryService>();
             services.AddScoped<MatchSelectedSteamIdentitiesService>();
@@ -73,8 +105,57 @@ namespace PavlovRconWebserver
             services.AddScoped<SteamIdentityStatsServerService>();
             services.AddSingleton(Configuration);
             services.AddScoped<IEmailSender, EmailSender>();
+            if (!string.IsNullOrEmpty(steamKey)&&steamKey != "XXXXXXX")
+            {
+                services.AddAuthentication().AddSteam(options =>
+                {
+                    options.ApplicationKey = steamKey;
+                }); 
+            }
 
-
+            if (!string.IsNullOrEmpty(paypalClientIdSandBox) && paypalClientIdSandBox != "XXXXXXX" &&
+                !string.IsNullOrEmpty(paypalSecretSandBox) && paypalSecretSandBox != "XXXXXXX"&&environment!="Production")
+            {
+                services.AddAuthentication(options => { /* Authentication options */ })
+                    .AddPaypal(options =>
+                    {
+                        options.AuthorizationEndpoint = "https://www.sandbox.paypal.com/webapps/auth/protocol/openidconnect/v1/authorize";
+                        options.TokenEndpoint = "https://api.sandbox.paypal.com/v1/identity/openidconnect/tokenservice";
+                        options.UserInformationEndpoint = "https://api.sandbox.paypal.com/v1/identity/openidconnect/userinfo?schema=openid";
+                        options.ClientId = paypalClientIdSandBox;
+                        options.ClientSecret = paypalSecretSandBox;    
+                        options.ClaimActions.MapCustomJson(
+                            ClaimTypes.Email,
+                            user =>
+                            {
+                                if (user.TryGetProperty("email", out var emails))
+                                {
+                                    return emails.GetString();
+                                }
+                                return null;
+                            });
+                    });
+                
+            }else if (!string.IsNullOrEmpty(paypalClientId) && paypalClientId != "XXXXXXX" &&
+                      !string.IsNullOrEmpty(paypalSecret) && paypalSecret != "XXXXXXX"&&environment=="Production")
+            {
+                services.AddAuthentication(options => { /* Authentication options */ })
+                    .AddPaypal(options =>
+                    {
+                        options.ClientId = paypalClientId;
+                        options.ClientSecret = paypalSecret;    
+                        options.ClaimActions.MapCustomJson(
+                            ClaimTypes.Email,
+                            user =>
+                            {
+                                if (user.TryGetProperty("email", out var emails))
+                                {
+                                    return emails.GetString();
+                                }
+                                return null;
+                            });
+                    });
+            }
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v0.0.1", new OpenApiInfo
@@ -92,24 +173,29 @@ namespace PavlovRconWebserver
                 config.Gravity = Gravity.Top;
             });
         }
-
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            
+            app.UseIpRateLimiting();
             if (env.IsDevelopment() || env.EnvironmentName == "Test")
                 app.UseDeveloperExceptionPage();
             else
                 app.UseExceptionHandler("/Home/Error");
-            
+
+            app.UseHsts();
             app.UseSerilogRequestLogging();
-            //Todo handle when you wnat something else than subodmains xD and aslo if add add this javascript will still be broken so adjust there as well
+            //Arch and subfolder together is not supported.
             var subPath = Configuration.GetSection("SubPath");
-            app.UsePathBase(subPath.Value);
-             app.Use((context, next) =>
-             {
-                 context.Request.PathBase = new PathString(subPath.Value);
-                 return next();
-             });
+            if (subPath!=null && subPath.Value != "/")
+            {
+                app.UsePathBase(subPath.Value);
+                app.Use((context, next) =>
+                {
+                    context.Request.PathBase = new PathString(subPath.Value);
+                    return next();
+                });
+            }
             if (env.EnvironmentName != "Test")
                 if (env.EnvironmentName == "Development")
                 {
@@ -125,7 +211,6 @@ namespace PavlovRconWebserver
                 }
 
             app.UseStaticFiles();
-
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
@@ -139,6 +224,7 @@ namespace PavlovRconWebserver
                 }
             );
 
+            
 
             app.UseEndpoints(endpoints => { endpoints.MapDefaultControllerRoute(); });
             if (env.EnvironmentName != "Test")
@@ -150,6 +236,7 @@ namespace PavlovRconWebserver
                     var pavlovServerService = serviceScope.ServiceProvider.GetService<PavlovServerService>();
                     var userService = serviceScope.ServiceProvider.GetService<UserService>();
                     var matchService = serviceScope.ServiceProvider.GetService<MatchService>();
+                    var reservedServersService = serviceScope.ServiceProvider.GetService<ReservedServersService>();
                     userService?.CreateDefaultRoles().GetAwaiter().GetResult();
                     if (env.EnvironmentName != "Development")
                     {
@@ -160,6 +247,7 @@ namespace PavlovRconWebserver
                         RecurringJob.AddOrUpdate(
                             () => rconService.CheckBansForAllServers(),
                             "*/5 * * * *"); // Check for bans and remove them is necessary
+                        
 
                         RecurringJob.AddOrUpdate(
                             () => pavlovServerService.CheckStateForAllServers(),
@@ -179,6 +267,9 @@ namespace PavlovRconWebserver
                         Cron.Daily(4)); // Check server states
 
                     BackgroundJob.Enqueue(() => matchService.RestartAllTheInspectorsForTheMatchesThatAreOnGoing());
+                    
+                    BackgroundJob.Enqueue(
+                        () => reservedServersService.CheckReservedServedToGiveToAUser()); 
                     
                     RecurringJob.AddOrUpdate(
                         () => rconService.ReloadPlayerListFromServerAndTheServerInfo(),

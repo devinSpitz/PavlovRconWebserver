@@ -140,91 +140,73 @@ namespace PavlovRconWebserver.Controllers
             server.Owner = (await _userservice.FindAll())
                 .FirstOrDefault(x => x.Id == new ObjectId(server.LiteDbUserId));
             var resultServer = new PavlovServer();
-            try
+            server.SshServer = await _service.FindOne(server.sshServerId);
+
+            if (server.create)
             {
-                server.SshServer = await _service.FindOne(server.sshServerId);
+                // Duplicate Database entries check
+                try
+                {
+                    await _pavlovServerService.IsValidOnly(server, false);
 
-                if (server.create)
-                    try
-                    {
-                        try
-                        {
-                            await _pavlovServerService.IsValidOnly(server, false);
+                    if (string.IsNullOrEmpty(server.SshServer.SshPassword))
+                        throw new ValidateException("Id",
+                            "Please add a sshPassword to the ssh user (Not root user). Sometimes the systems asks for the password even if the keyfile and passphrase is used.");
+                    if (string.IsNullOrEmpty(server.ServerFolderPath))
+                        throw new ValidateException("ServerFolderPath",
+                            "The server ServerFolderPath is needed!");
+                    if (!server.ServerFolderPath.EndsWith("/"))
+                        throw new ValidateException("ServerFolderPath",
+                            "The server ServerFolderPath needs a / at the end!");
+                    if (!server.ServerFolderPath.StartsWith("/"))
+                        throw new ValidateException("ServerFolderPath",
+                            "The server ServerFolderPath needs a / at the start!");
+                    if (server.ServerPort <= 0)
+                        throw new ValidateException("ServerPort", "The server port is needed!");
+                    if (server.TelnetPort <= 0)
+                        throw new ValidateException("TelnetPort", "The rcon port is needed!");
+                    if (string.IsNullOrEmpty(server.ServerSystemdServiceName))
+                        throw new ValidateException("ServerSystemdServiceName",
+                            "The server service name is needed!");
+                    if (string.IsNullOrEmpty(server.Name))
+                        throw new ValidateException("Name", "The Gui name is needed!");
+                }
+                catch (ValidateException e)
+                {
+                    ModelState.AddModelError(e.FieldName, e.Message);
+                    return await GoBackEditServer(server,
+                        "Field is not set: " + e.Message);
+                }
 
-                            if (string.IsNullOrEmpty(server.SshServer.SshPassword))
-                                throw new SaveServerException("Id",
-                                    "Please add a sshPassword to the ssh user (Not root user). Sometimes the systems asks for the password even if the keyfile and passphrase is used.");
-                            if (string.IsNullOrEmpty(server.ServerFolderPath))
-                                throw new SaveServerException("ServerFolderPath",
-                                    "The server ServerFolderPath is needed!");
-                            if (!server.ServerFolderPath.EndsWith("/"))
-                                throw new SaveServerException("ServerFolderPath",
-                                    "The server ServerFolderPath needs a / at the end!");
-                            if (!server.ServerFolderPath.StartsWith("/"))
-                                throw new SaveServerException("ServerFolderPath",
-                                    "The server ServerFolderPath needs a / at the start!");
-                            if (server.ServerPort <= 0)
-                                throw new SaveServerException("ServerPort", "The server port is needed!");
-                            if (server.TelnetPort <= 0)
-                                throw new SaveServerException("TelnetPort", "The rcon port is needed!");
-                            if (string.IsNullOrEmpty(server.ServerSystemdServiceName))
-                                throw new SaveServerException("ServerSystemdServiceName",
-                                    "The server service name is needed!");
-                            if (string.IsNullOrEmpty(server.Name))
-                                throw new SaveServerException("Name", "The Gui name is needed!");
-                        }
-                        catch (SaveServerException e)
-                        {
-                            return await GoBackEditServer(server,
-                                "Field is not set: " + e.Message);
-                        }
-
-                        if(server.SshKeyFileNameForm!=null)
-                        {
-                            await using var ms = new MemoryStream();
-                            await server.SshKeyFileNameForm.CopyToAsync(ms);
-                            var fileBytes = ms.ToArray();
-                            server.SshKeyFileNameRoot = fileBytes;
-                            // act on the Base64 data
-                        }
-                            
-                            
-                        var result = await _pavlovServerService.CreatePavlovServer(server);
-                        server = result.Key;
-                        if (result.Value != null)
-                            return await GoBackEditServer(server,
-                                "Could not install service or server!: \n*******************************************Start*************\n" +
-                                result, true);
-                    }
-                    catch (CommandExceptionCreateServerDuplicate e)
-                    {
-                        return await GoBackEditServer(server, "Duplicate server entry exception: " + e.Message);
-                    }
+                if(server.SshKeyFileNameForm!=null)
+                {
+                    await using var ms = new MemoryStream();
+                    await server.SshKeyFileNameForm.CopyToAsync(ms);
+                    var fileBytes = ms.ToArray();
+                    server.SshKeyFileNameRoot = fileBytes;
+                    // act on the Base64 data
+                }
 
                 try
                 {
-                    //save and validate server a last time
-                    resultServer = await _pavlovServerService.Upsert(server.toPavlovServer(server));
+                    await _pavlovServerService.CreatePavlovServer(server);
                 }
-                catch (SaveServerException e)
+                catch (Exception e)
                 {
-                    return await GoBackEditServer(server,
-                        "Could not validate server after fully setting it up: " + e.Message, server.create);
-                }
-                catch (CommandException e)
-                {
-                    return await GoBackEditServer(server,
-                        "Could not validate server after fully setting it up: " + e.Message, server.create);
+                    return await GoBackEditServer(server, e.Message, true);
                 }
             }
-            catch (SaveServerException e)
+
+            try
             {
-                if (e.FieldName == "" && e.Message.ToLower().Contains("telnet"))
-                    ModelState.AddModelError("TelnetPassword", e.Message);
-                else if (e.FieldName == "")
-                    ModelState.AddModelError("Id", e.Message);
-                else
-                    ModelState.AddModelError(e.FieldName, e.Message);
+                //save and validate server a last time
+                resultServer = await _pavlovServerService.Upsert(server.toPavlovServer(server));
+            }
+            catch (ValidateException e)
+            {
+                ModelState.AddModelError(e.FieldName, e.Message);
+                return await GoBackEditServer(server,
+                    "Could not validate server -> " + e.Message, server.create);
             }
 
             if (ModelState.ErrorCount > 0) return await EditServer(server);
@@ -244,10 +226,9 @@ namespace PavlovRconWebserver.Controllers
             {
                 var isDevelopment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
                 if(!isDevelopment)
-                    await _service.RemovePavlovServerFromDisk(server);
+                    await _service.RemovePavlovServerFromDisk(server,true);
             }
-            ModelState.AddModelError("Id", error
-            );
+            ModelState.AddModelError("Id", error);
             return await EditServer(server);
         }
 
@@ -311,9 +292,7 @@ namespace PavlovRconWebserver.Controllers
             try
             {
                 viewModel.SshServer = await _sshServerSerivce.FindOne(viewModel.sshServerId);
-                var result = await _service.RemovePavlovServerFromDisk(viewModel);
-                if (result.Value != null) return BadRequest(result.Value);
-
+                await _service.RemovePavlovServerFromDisk(viewModel,false);
                 await _pavlovServerService.Delete(viewModel.Id);
             }
             catch (CommandException e)
@@ -333,7 +312,7 @@ namespace PavlovRconWebserver.Controllers
                 return Forbid();
             try
             {
-                await _service.RemovePavlovServerFromDisk(viewModel);
+                await _service.RemovePavlovServerFromDisk(viewModel,false);
             }
             catch (CommandException e)
             {

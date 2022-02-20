@@ -18,11 +18,13 @@ namespace PavlovRconWebserver
                 Console.WriteLine(Assembly.GetEntryAssembly().GetName().Version);
                 Environment.Exit(0);
             }
+            
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
             var configSettings = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json")
+                
+                .AddJsonFile($"appsettings.{environment}.json", optional: false)
                 .Build();
 
-            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 
             var logLevel = LogEventLevel.Warning;
             var logTime = new TimeSpan(1, 0, 0, 0);

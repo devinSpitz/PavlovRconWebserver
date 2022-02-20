@@ -42,6 +42,36 @@
             </form>
         </section>
     </div>
+    
+    <div class="col-md-6 col-md-offset-2">
+        <section>
+            <h3>Use another service to log in.</h3>
+            <hr/>
+            @{
+                if ((Model.ExternalLogins?.Count ?? 0) == 0)
+                {
+                    <div>
+                        <p>
+                            No thirdparty logins available.
+                        </p>
+                    </div>
+                }
+                else
+                {
+                        <div>
+                            <p>
+                                @foreach (var provider in Model.ExternalLogins)
+                                {
+                                        <form asp-action="ExternalLogin" method="post" asp-route-provider="@provider.Name" asp-route-returnUrl="@ViewData["ReturnUrl"]" class="form-group">
+                                            <button class="btn btn-primary" type="submit">@provider.DisplayName</button>
+                                        </form>
+                                }
+                            </p>
+                        </div>
+                }
+            }
+        </section>
+    </div>
 </div>
 
 @section Scripts {

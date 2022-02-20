@@ -49,7 +49,9 @@ jobs:
             dotnet publish -c Release -o build/Windows/ --runtime win-x64 --self-contained true --framework net5.0
             dotnet publish -c Release -o build/Linux/ --runtime linux-x64 --self-contained true --framework net5.0
             cp build/Windows/DefaultDB/Database.db build/Windows/Database/Database.db
+            cp build/Windows/appsettings.Development.json build/Windows/appsettings.Production.json
             cp build/Linux/DefaultDB/Database.db build/Linux/Database/Database.db
+            cp build/Linux/appsettings.Development.json build/Linux/appsettings.Production.json
             VERSION=$(build/Linux/PavlovRconWebserver --version)
             echo "$VERSION" > "build/Linux/version"
             echo "$VERSION" > "build/Windows/version"

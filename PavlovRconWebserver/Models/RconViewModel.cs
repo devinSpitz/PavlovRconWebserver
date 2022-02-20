@@ -99,6 +99,13 @@ namespace PavlovRconWebserver.Models
                 },
                 new()
                 {
+                    Name = "tttflushkarma",
+                    InputValue = false,
+                    MinRole = "Mod",
+                    Group = "Player commands"
+                },
+                new()
+                {
                     Name = "SwitchTeam",
                     InputValue = true,
                     valuesOptions = new List<string>
@@ -117,6 +124,13 @@ namespace PavlovRconWebserver.Models
                         "0", "20","40","60","80","100"
                     },
                     MinRole = "Captain",
+                    Group = "Player commands"
+                },
+                new()
+                {
+                    Name = "tttsetkarma",
+                    InputValue = true,
+                    MinRole = "Mod",
                     Group = "Player commands"
                 },
                 new()
@@ -188,6 +202,34 @@ namespace PavlovRconWebserver.Models
                 new()
                 {
                     Name = "ItemList",
+                    InputValue = false,
+                    MinRole = "Mod",
+                    Group = "Server commands"
+                },
+                new()
+                {
+                    Name = "Shownametags",
+                    InputValue = false,
+                    MinRole = "Mod",
+                    Group = "Server commands"
+                },
+                new()
+                {
+                    Name = "tttendround",
+                    InputValue = false,
+                    MinRole = "Mod",
+                    Group = "Server commands"
+                },
+                new()
+                {
+                    Name = "tttpausetimer",
+                    InputValue = false,
+                    MinRole = "Mod",
+                    Group = "Server commands"
+                },
+                new()
+                {
+                    Name = "TTTAlwaysEnableSkinMenu",
                     InputValue = false,
                     MinRole = "Mod",
                     Group = "Server commands"

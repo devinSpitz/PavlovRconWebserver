@@ -33,6 +33,7 @@ https://github.com/devinSpitz/PavlovRconWebserver/discussions
 Features:
 =======
 newly added:  
+* steam login added (*be aware that you need to change the service and nginx redirect for this to work in chrome)
 * Added leaderboard per server
 * ApiKey support
 * Auto Balance (default disabled)
@@ -145,6 +146,7 @@ Steps :
 2. cd PavlovRconWebserver/PavlovRconWebserver
 3. (without brackets) dotnet publish -c release -o "Full build path" --runtime linux-x64 --self-contained true --framework net5.0
 4. copy the default database to your "Full build path"/Database/Database.db.
+4.5 copy the appsettings.Development.json to "Full build path"/appsettings.Production.json if its not already exist.
 5. create a service: sudo nano /etc/systemd/system/pavlovRconWebserver.service
 6. Content (without brackets) and replace your variables:   
 ```
@@ -154,7 +156,7 @@ Description=PavlovWebServer
  
 [Service]
 WorkingDirectory="Full build path"
-ExecStart="Full build path"/PavlovRconWebserver --urls=http://*:5001/
+ExecStart="Full build path"/PavlovRconWebserver --urls=https://*:5001/
 Restart=always
 RestartSec=10 # Restart service after 10 seconds if dotnet service crashes
 SyslogIdentifier=dotnet-core-app
@@ -174,7 +176,7 @@ server {
         listen 80 default_server;
         server_name "Domain/subdomain";
     location / {
-        proxy_pass         http://localhost:5001;
+        proxy_pass         https://localhost:5001;
         proxy_http_version 1.1;
         proxy_set_header   Upgrade $http_upgrade;
         proxy_set_header   Connection keep-alive;
@@ -227,6 +229,7 @@ Steps:
 3. goto to created directory and then to this folder: PavlovRconWebserver/PavlovRconWebserver
 4. open a Powershell and enter the command: dotnet publish -c release -o "Full build path" --runtime win-x64 --self-contained true --framework net5.0
 5. copy the default database to your "Full build path"\Database\Database.db.
+5.5 copy the appsettings.Development.json to "Full build path"/appsettings.Production.json if its not already exist.
 6. run the PavlovRconWebserver.exe in the "Full build path"
 7. Please don't use it public like this. You need at least a SSL Certificate. Use something like that: https://certbot.eff.org/lets-encrypt/windows-other.html
 8. After you have your ssl done go to your Domain/subdomain  

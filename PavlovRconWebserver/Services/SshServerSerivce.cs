@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using AspNetCoreHero.ToastNotification.Abstractions;
@@ -88,113 +89,183 @@ namespace PavlovRconWebserver.Services
             return single;
         }
 
-        public async Task<int> Insert(SshServer sshServer)
+        public async Task<int> Insert(SshServer sshServer,bool validate = true)
         {
-            ValidateSshServer(sshServer);
+            if(validate)
+                ValidateSshServer(sshServer);
             return await _liteDb.LiteDatabaseAsync.GetCollection<SshServer>("SshServer")
                 .InsertAsync(sshServer);
         }
 
         private static void ValidateSshServer(SshServer server)
         {
-            if (server.SshPort <= 0) throw new SaveServerException("SshPort", "You need a SSH port!");
+            if (server.SshPort <= 0) throw new ValidateException("SshPort", "You need a SSH port!");
 
             if (string.IsNullOrEmpty(server.SshUsername))
-                throw new SaveServerException("SshUsername", "You need a username!");
+                throw new ValidateException("SshUsername", "You need a username!");
 
             if (string.IsNullOrEmpty(server.SshPassword) && (server.SshKeyFileName==null||!server.SshKeyFileName.Any()))
-                throw new SaveServerException("SshPassword", "You need at least a password or a key file!");
+                throw new ValidateException("SshPassword", "You need at least a password or a key file!");
+            
+            if (server.SshUsername=="root")
+                throw new ValidateException("SshUsername", "Dont use root here!");
+            
+            try
+            {
+                RconStatic.AuthenticateOnTheSshServer(server);
+            }
+            catch(CommandException e)
+            {
+                throw new ValidateException("Id", e.Message);
+            }
         }
-
-        public async Task<KeyValuePair<PavlovServerViewModel, string>> RemovePavlovServerFromDisk(
-            PavlovServerViewModel server)
+        public async Task RemovePavlovServerFromDisk(
+            PavlovServerViewModel server, bool ignoreMostExceptions)
         {
             
             //Todo AuthError??
             DataBaseLogger.LogToDatabaseAndResultPlusNotify("Start remove server!", LogEventLevel.Verbose,
                 _notifyService);
-            string result = null;
-            try
+            string result = "";
+            //start server and stop server to get Saved folder etc.
+            if (ignoreMostExceptions)
             {
-                //start server and stop server to get Saved folder etc.
                 try
                 {
                     await RconStatic.SystemDStop(server, _pavlovServerService);
                 }
-                catch (Exception)
+                catch (CommandException)
                 {
                     //ignore
-                }
-
-                
-                result += await RconStatic.RemovePath(server, server.ServerFolderPath, _pavlovServerService);
-                result += "\n *******************************delete folder Done*******************************";
-
-                
-                
-                server.SshServer = await FindOne(server.sshServerId);
-                if (server.SshServer == null) throw new CommandException("Could not get the sshServer!");
-                var oldSSHcrid = new SshServer
-                {
-                    SshPassphrase = server.SshServer.SshPassphrase,
-                    SshUsername = server.SshServer.SshUsername,
-                    SshPassword = server.SshServer.SshPassword,
-                    SshKeyFileName = server.SshServer.SshKeyFileName
-                };
-                server.SshServer.SshPassphrase = server.SshPassphraseRoot;
-                server.SshServer.SshUsername = server.SshUsernameRoot;
-                server.SshServer.SshPassword = server.SshPasswordRoot;
-                if (server.SshKeyFileNameForm != null)
-                {
-                    await using var ms = new MemoryStream();
-                    await server.SshKeyFileNameForm.CopyToAsync(ms);
-                    var fileBytes = ms.ToArray();
-                    server.SshKeyFileNameRoot = fileBytes;
-                    // act on the Base64 data
-                }
-                server.SshServer.SshKeyFileName = server.SshKeyFileNameRoot;
-                server.SshServer.NotRootSshUsername = oldSSHcrid.SshUsername;
-
-
-                result += await RconStatic.RemovePath(server,
-                    "/etc/systemd/system/" + server.ServerSystemdServiceName + ".service", _pavlovServerService);
-
-                //Remove the server from the sudoers file
-                var sudoersPathParent = "/etc/sudoers.d";
-                var sudoersPath = sudoersPathParent + "/pavlovRconWebserverManagement";
-                if (RconStatic.RemoveServerLineToSudoersFile(server, _notifyService, sudoersPath, _pavlovServerService))
-                {
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("server line removed from sudoers file!",
-                        LogEventLevel.Verbose, _notifyService);
-                }
-                else
-                {
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(
-                        "Could not remove the server line from sudoers file!", LogEventLevel.Fatal, _notifyService);
-
-                    return new KeyValuePair<PavlovServerViewModel, string>(server,
-                        result + "Could not remove the server line from sudoers file!");
-                }
-                
-                //Handle the presets an newer systemd
-                RconStatic.AddLineToNewerSystemDsIfNeeded(server,_notifyService,true);
-
-
-
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify(result, LogEventLevel.Verbose, _notifyService);
+                } 
             }
-            catch (Exception e)
+            else
             {
-                return new KeyValuePair<PavlovServerViewModel, string>(server, result + "\n " +
-                                                                               "**********************************************Exception:***********************\n" +
-                                                                               e.Message);
+                await RconStatic.SystemDStop(server, _pavlovServerService); 
             }
 
-            return new KeyValuePair<PavlovServerViewModel, string>(server, null);
+            if (ignoreMostExceptions)
+            {
+                try
+                {
+                    await RconStatic.RemovePath(server, server.ServerFolderPath, _pavlovServerService);
+                }
+                catch (CommandException)
+                {
+                    //ignore
+                } 
+            }
+            else
+            {
+                await RconStatic.RemovePath(server, server.ServerFolderPath, _pavlovServerService);
+            }
+
+            
+            server.SshServer = await FindOne(server.sshServerId);
+            if (server.SshServer == null) throw new CommandException("Could not get the sshServer!");
+            var oldSSHcrid = new SshServer
+            {
+                SshPassphrase = server.SshServer.SshPassphrase,
+                SshUsername = server.SshServer.SshUsername,
+                SshPassword = server.SshServer.SshPassword,
+                SshKeyFileName = server.SshServer.SshKeyFileName
+            };
+            server.SshServer.SshPassphrase = server.SshPassphraseRoot;
+            server.SshServer.SshUsername = server.SshUsernameRoot;
+            server.SshServer.SshPassword = server.SshPasswordRoot;
+            if (server.SshKeyFileNameForm != null)
+            {
+                await using var ms = new MemoryStream();
+                await server.SshKeyFileNameForm.CopyToAsync(ms);
+                var fileBytes = ms.ToArray();
+                server.SshKeyFileNameRoot = fileBytes;
+                // act on the Base64 data
+            }
+            server.SshServer.SshKeyFileName = server.SshKeyFileNameRoot;
+            server.SshServer.NotRootSshUsername = oldSSHcrid.SshUsername;
+
+            
+            if (ignoreMostExceptions)
+            {
+                try
+                {
+                    await RconStatic.RemovePath(server,
+                        "/etc/systemd/system/" + server.ServerSystemdServiceName + ".service", _pavlovServerService);
+                }
+                catch (CommandException)
+                {
+                    //ignore
+                } 
+            }
+            else
+            {
+                await RconStatic.RemovePath(server,
+                    "/etc/systemd/system/" + server.ServerSystemdServiceName + ".service", _pavlovServerService);
+            }
+
+            //Remove the server from the sudoers file
+            var sudoersPathParent = "/etc/sudoers.d";
+            var sudoersPath = sudoersPathParent + "/pavlovRconWebserverManagement";
+            var removed = true;
+            
+            
+            if (ignoreMostExceptions)
+            {
+                try
+                {
+                    removed = RconStatic.RemoveServerLineToSudoersFile(server, _notifyService, sudoersPath, _pavlovServerService);
+                }
+                catch (CommandException)
+                {
+                    //ignore
+                } 
+            }
+            else
+            {
+                removed = RconStatic.RemoveServerLineToSudoersFile(server, _notifyService, sudoersPath, _pavlovServerService);
+            }
+            if (removed)
+            {
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify("server line removed from sudoers file!",
+                    LogEventLevel.Verbose, _notifyService);
+            }
+            else
+            {
+                //means that the lines still is in the file!!!
+                var error =
+                    "Could not remove the server line from sudoers file!";
+                DataBaseLogger.LogToDatabaseAndResultPlusNotify(error, LogEventLevel.Fatal, _notifyService);
+                if (!ignoreMostExceptions)
+                    throw new CommandException(error);
+
+
+            }
+            
+            //Handle the presets an newer systemd
+            if (ignoreMostExceptions)
+            {
+                try
+                {
+                    RconStatic.AddLineToNewerSystemDsIfNeeded(server,_notifyService,true);
+                }
+                catch (CommandException)
+                {
+                    //ignore
+                } 
+            }
+            else
+            {
+                RconStatic.AddLineToNewerSystemDsIfNeeded(server,_notifyService,true);
+            }
+
+
+
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify(result, LogEventLevel.Verbose, _notifyService);
+            
         }
 
 
-        public async Task<bool> Update(SshServer sshServer)
+        public async Task<bool> Update(SshServer sshServer,bool validate = true)
         {
             SshServer old = null;
             if (string.IsNullOrEmpty(sshServer.SshPassphrase) || string.IsNullOrEmpty(sshServer.SshPassword))
@@ -206,8 +277,8 @@ namespace PavlovRconWebserver.Services
                     if (string.IsNullOrEmpty(sshServer.SshPassword)) sshServer.SshPassword = old.SshPassword;
                 }
             }
-
-            ValidateSshServer(sshServer);
+            if(validate)
+                ValidateSshServer(sshServer);
 
             return await _liteDb.LiteDatabaseAsync.GetCollection<SshServer>("SshServer")
                 .UpdateAsync(sshServer);

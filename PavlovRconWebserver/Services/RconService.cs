@@ -113,13 +113,13 @@ namespace PavlovRconWebserver.Services
         }
 
         /// <summary>
-        /// return back if the match should forceStop
+        /// Return back if the server should forceStop
         /// </summary>
         /// <param name="server"></param>
         /// <param name="match"></param>
-        /// <param name="matchId"></param>
         /// <returns></returns>
-        public async Task<string> SShTunnelGetAllInfoFromPavlovServer(PavlovServer server,bool match = false)
+        /// <exception cref="CommandException"></exception>
+        public async Task<bool> SShTunnelGetAllInfoFromPavlovServer(PavlovServer server,Match match = null)
         {
             var result = RconStatic.StartClient(server, out var client);
             var costumesToSet = new Dictionary<string, string>();
@@ -196,9 +196,9 @@ namespace PavlovRconWebserver.Services
                                                                      !string.IsNullOrEmpty(identity.Costume)))
                                             {
                                                 if (server.Shack)
-                                                    costumesToSet.Add(identity.Id, identity.Costume);
-                                                else
                                                     costumesToSet.Add(identity.OculusId, identity.Costume);
+                                                else
+                                                    costumesToSet.Add(identity.Id, identity.Costume);
                                             }
                                         }
 
@@ -215,8 +215,6 @@ namespace PavlovRconWebserver.Services
                                         Score = x.Score,
                                         ServerId = server.Id
                                     }).ToList();
-                                    var oldPavlovServerPlayerList =
-                                        await _pavlovServerPlayerService.FindAllFromServer(server.Id);
                                     var oldServerInfo = await _pavlovServerInfoService.FindServer(server.Id);
                                     //Todo maybe check if we lost a player its possible that we need that if allstats after the end of a match doesent give back all the player if some had a disconnect
                                     await _pavlovServerPlayerService.Upsert(pavlovServerPlayerList, server.Id);
@@ -251,6 +249,21 @@ namespace PavlovRconWebserver.Services
                                     
                                     //Check of next round
                                     bool nextRound = oldServerInfo != null && oldServerInfo.MapLabel != tmp.ServerInfo.MapLabel;
+                                    if (!nextRound && oldServerInfo != null&&match is {Status: Status.OnGoing}) // more checks cause in a match the map is only one and will not trigger the first try
+                                    {
+                                        var gotResult1 = int.TryParse(oldServerInfo.Team0Score, out var oldTeam0Score);
+                                        var gotResult2 = int.TryParse(oldServerInfo.Team1Score, out var oldTeam1Score);
+                                        var gotResult3 = int.TryParse(tmp.ServerInfo.Team0Score, out var newTeam0Score);
+                                        var gotResult4 = int.TryParse(tmp.ServerInfo.Team1Score, out var newTeam1Score);
+                                        
+                                        if (gotResult1&&gotResult2&&gotResult3&&gotResult4&&(
+                                            oldTeam0Score > newTeam0Score||
+                                            oldTeam1Score > newTeam1Score)
+                                        )
+                                        {
+                                            nextRound = true;
+                                        }
+                                    }
                                     var round = oldServerInfo?.Round ?? 0;
                                     if (nextRound)
                                     {
@@ -262,10 +275,10 @@ namespace PavlovRconWebserver.Services
                                         round++;
                                     }
 
-                                    if (match && nextRound)
+                                    if (match is {Status: Status.OnGoing} && nextRound )
                                     {
-                                        result.Success = true;
-                                        return "ForceStopNowUrgent"; // very bad practice i have to change that to a nice thing
+                                        //server should force stop
+                                        return true;
                                     }
                                     else
                                     {
@@ -296,7 +309,7 @@ namespace PavlovRconWebserver.Services
                                             }
                                         }
 
-                                        if (!match)
+                                        if (match==null)
                                         {
                                             //Todo read logs to add killfeed
                                             if (server.SaveStats)
@@ -365,6 +378,7 @@ namespace PavlovRconWebserver.Services
                                             }
 
                                             // Autobalanced only when teams are there and there is no match
+                                            //Todo: Make unit tests for this
                                             if (server.AutoBalance &&
                                                 (server.AutoBalanceLast == null ||
                                                  (server.AutoBalanceLast +
@@ -385,9 +399,18 @@ namespace PavlovRconWebserver.Services
                                                 server.Name, LogEventLevel.Verbose, _notifyService);
 
                                             foreach (var customToSet in costumesToSet)
-                                                await RconStatic.SendCommandSShTunnel(server,
-                                                    "SetPlayerSkin " + customToSet.Key + " " + customToSet.Value,
-                                                    _notifyService);
+                                            {
+                                                try
+                                                {
+                                                    await RconStatic.SendCommandSShTunnel(server,
+                                                        "SetPlayerSkin " + customToSet.Key + " " + customToSet.Value,
+                                                        _notifyService);
+                                                }
+                                                catch (Exception)
+                                                {
+                                                    //Ignore if the skins can not be set
+                                                }
+                                            }
                                         }
 
                                         result.Success = true;
@@ -396,26 +419,29 @@ namespace PavlovRconWebserver.Services
                                 }
                                 else
                                 {
-                                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(
-                                        "Send password but did not get Authenticated=1 answer: " + auth,
-                                        LogEventLevel.Verbose, _notifyService);
-                                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(
-                                        "Telnet Client could not authenticate ..." + server.Name, LogEventLevel.Fatal,
-                                        _notifyService, result);
+                                    var error =
+                                        "Telnet Client could not authenticate ..." + server.Name;
+                                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(error,
+                                        LogEventLevel.Fatal, _notifyService, result);
+                                    throw new CommandException(error);
                                 }
                             }
                             else
                             {
-                                DataBaseLogger.LogToDatabaseAndResultPlusNotify(
-                                    "Telnet Client did not ask for Password ..." + server.Name, LogEventLevel.Fatal,
-                                    _notifyService, result);
+
+                                var error =
+                                    "Telnet Client did not ask for Password ..." + server.Name;
+                                DataBaseLogger.LogToDatabaseAndResultPlusNotify(error,
+                                    LogEventLevel.Fatal, _notifyService, result);
+                                throw new CommandException(error);
                             }
                         }
                         else
                         {
-                            DataBaseLogger.LogToDatabaseAndResultPlusNotify(
-                                "Telnet Client could not connect ..." + server.Name, LogEventLevel.Fatal,
-                                _notifyService, result);
+                            var error ="Telnet Client could not connect ..." + server.Name;
+                            DataBaseLogger.LogToDatabaseAndResultPlusNotify(error,
+                                LogEventLevel.Fatal, _notifyService, result);
+                            throw new CommandException(error);
                         }
 
                         client2.Dispose();
@@ -425,22 +451,27 @@ namespace PavlovRconWebserver.Services
                 }
                 else
                 {
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Telnet Client cannot be reached..." + server.Name,
+                    
+                    var error ="Telnet Client cannot be reached..." + server.Name;
+                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(error,
                         LogEventLevel.Fatal, _notifyService, result);
+                    throw new CommandException(error);
                 }
             }
             catch (Exception e)
             {
-                RconStatic.ExcpetionHandlingSshSftp(server, _notifyService, e, result, client);
+                RconStatic.ExceptionHandlingSshSftp(server.Name, _notifyService, e, result, "SShTunnelGetAllInfoFromPavlovServer -> ",client);
             }
             finally
             {
                 client.Disconnect();
             }
 
-            return RconStatic.EndConnection(result);
+            return false;
         }
 
+        
+        //Todo: Make unit tests for this
         private async Task<bool> switchLogic(
             Client client2,List<PavlovServerPlayer> pavlovServerPlayerList )
         {
@@ -512,14 +543,9 @@ namespace PavlovRconWebserver.Services
         {
             var answer = "";
 
-            try
-            {
-                answer = RconStatic.GetFile(server.SshServer, server.ServerFolderPath + FilePaths.BanList, _notifyService);
-            }
-            catch (Exception e)
-            {
-                throw new CommandException(e.Message);
-            }
+            
+            answer = RconStatic.GetFile(server.SshServer, server.ServerFolderPath + FilePaths.BanList, _notifyService);
+
 
             var lines = answer.Split(
                 new[] {"\r\n", "\r", "\n"},

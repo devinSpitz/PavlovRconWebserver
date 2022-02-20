@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using LiteDB.Identity.Models;
@@ -7,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using PavlovRconWebserver.Models;
 using PavlovRconWebserver.Models.AccountViewModels;
 using PavlovRconWebserver.Services;
 
@@ -21,11 +24,19 @@ namespace PavlovRconWebserver.Controllers
         private readonly SignInManager<LiteDbUser> _signInManager;
         private readonly UserManager<LiteDbUser> _userManager;
         private readonly UserService _userService;
+        private readonly SteamIdentityService _steamIdentityService;
+        private readonly ReservedServersService _reservedServersService;
+        private readonly PavlovServerService _pavlovServerService;
+        private readonly SshServerSerivce _sshServerSerivce;
 
         public AccountController(
             UserManager<LiteDbUser> userManager,
             SignInManager<LiteDbUser> signInManager,
             IEmailSender emailSender,
+            ReservedServersService reservedServersService,
+            SteamIdentityService steamIdentityService,
+            PavlovServerService pavlovServerService,
+            SshServerSerivce sshServerSerivce,
             ILogger<AccountController> logger,
             UserService userService)
         {
@@ -34,6 +45,10 @@ namespace PavlovRconWebserver.Controllers
             _emailSender = emailSender;
             _logger = logger;
             _userService = userService;
+            _sshServerSerivce = sshServerSerivce;
+            _steamIdentityService = steamIdentityService;
+            _reservedServersService = reservedServersService;
+            _pavlovServerService = pavlovServerService;
         }
 
         [TempData] public string ErrorMessage { get; set; }
@@ -44,9 +59,10 @@ namespace PavlovRconWebserver.Controllers
         {
             // Clear the existing external cookie to ensure a clean login process
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
-
+            var model = new LoginViewModel();
+            model.ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             ViewData["ReturnUrl"] = returnUrl;
-            return View();
+            return View(model);
         }
 
         [HttpPost]
@@ -54,6 +70,8 @@ namespace PavlovRconWebserver.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
         {
+            
+            model.ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
             {
@@ -263,11 +281,23 @@ namespace PavlovRconWebserver.Controllers
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info == null) return RedirectToAction(nameof(Login));
 
+            
             // Sign in the user with this external login provider if the user already has a login.
             var result =
                 await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, false, true);
+
             if (result.Succeeded)
             {
+                var emailSuc = GetEmailFromExternalProvider(info);
+                
+                //var user = await _userManager.GetUserAsync(HttpContext.User);
+                var user = await _userService.GetUserByEmail(emailSuc);
+                
+                if (info.LoginProvider.ToLower()=="paypal" && user?.Email != null && emailSuc != user.Email)
+                {
+                    await _userManager.SetEmailAsync(user,emailSuc);
+                }
+
                 _logger.LogInformation("User logged in with {Name} provider.", info.LoginProvider);
                 return RedirectToLocal(returnUrl);
             }
@@ -277,10 +307,33 @@ namespace PavlovRconWebserver.Controllers
             // If the user does not have an account, then ask the user to create an account.
             ViewData["ReturnUrl"] = returnUrl;
             ViewData["LoginProvider"] = info.LoginProvider;
-            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
-            return View("ExternalLogin", new ExternalLoginViewModel {Email = email});
+            //GetSteamID
+            return View("ExternalLogin", new ExternalLoginViewModel {UserName = ""});
         }
+        private static string GetEmailFromExternalProvider(ExternalLoginInfo info)
+        {
+            var email = "";
+            if (info.Principal.HasClaim(c => c.Type == ClaimTypes.Email))
+            {
+                email = info.Principal.FindFirstValue(ClaimTypes.Email);
+            }
 
+            return email;
+        }
+        private static SteamIdentity CrawlSteamIdentity(ExternalLoginInfo info)
+        {
+            var steamIdentity = new SteamIdentity();
+            if (info.Principal.HasClaim(c => c.Type == ClaimTypes.NameIdentifier))
+            {
+                steamIdentity.Id = info.Principal.FindFirstValue(ClaimTypes.NameIdentifier).Split("/").Last();
+            }
+            if (info.Principal.HasClaim(c => c.Type == ClaimTypes.Name))
+            {
+                steamIdentity.Name = info.Principal.FindFirstValue(ClaimTypes.Name);
+            }
+
+            return steamIdentity;
+        }
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
@@ -293,24 +346,69 @@ namespace PavlovRconWebserver.Controllers
                 var info = await _signInManager.GetExternalLoginInfoAsync();
                 if (info == null)
                     throw new ApplicationException("Error loading external login information during confirmation.");
-                var user = new LiteDbUser {UserName = model.Email, Email = model.Email};
-                var result = await _userManager.CreateAsync(user);
-                if (result.Succeeded)
+                
+                var email = GetEmailFromExternalProvider(info);
+                var emailAlreadyExist = await _userService.GetUserByEmail(email);
+                if (emailAlreadyExist!=null)
                 {
-                    result = await _userManager.AddLoginAsync(user, info);
+                    ModelState.AddModelError("UserName","Your email already exist. If you already have an account please remove it first or contact the Administrator for help.");
+                }
+                else
+                {
+                    LiteDbUser user = null;
+                    if (info.LoginProvider.ToLower()=="paypal")
+                    {
+                        user = new LiteDbUser {UserName = model.UserName, Email = email};  
+                    }
+                    else
+                    {
+                        user = new LiteDbUser {UserName = model.UserName};
+                    }
+                    var result = await _userManager.CreateAsync(user);
+                    
                     if (result.Succeeded)
                     {
-                        await _signInManager.SignInAsync(user, false);
-                        _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
-                        return RedirectToLocal(returnUrl);
+                        result = await _userManager.AddLoginAsync(user, info);
+                        if (result.Succeeded)
+                        {
+                            //GetSteamID
+                            if (info.LoginProvider.ToLower() == "steam")
+                            {
+                                await OverWriteExistingSteamIdOrSaveNewOne(info, user);
+                            }
+                            
+                            await _signInManager.SignInAsync(user, false);
+                            await _userManager.AddToRoleAsync(user, "User");
+                            
+                            //todo add Steam identity
+                            _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
+                            return RedirectToLocal(returnUrl);
+                        }
                     }
+                    AddErrors(result);
                 }
-
-                AddErrors(result);
+                
             }
 
             ViewData["ReturnUrl"] = returnUrl;
             return View(nameof(ExternalLogin), model);
+        }
+
+        private async Task OverWriteExistingSteamIdOrSaveNewOne(ExternalLoginInfo info, LiteDbUser user)
+        {
+            var steam = CrawlSteamIdentity(info);
+            //Todo get existing one and give it to the player or save it as a new one
+            var realSteamIdentity = await _steamIdentityService.FindOne(steam.Id);
+            if (realSteamIdentity != null)
+            {
+                realSteamIdentity.LiteDbUser = user;
+                await _steamIdentityService.Upsert(realSteamIdentity);
+            }
+            else
+            {
+                steam.LiteDbUser = user;
+                await _steamIdentityService.Upsert(steam);
+            }
         }
 
         [HttpGet]

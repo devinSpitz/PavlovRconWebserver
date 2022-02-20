@@ -45,5 +45,13 @@ namespace PavlovRconWebserver.Services
         {
             return await _liteDb.LiteDatabaseAsync.GetCollection<SteamIdentityStatsServer>("SteamIdentityStatsServer").DeleteManyAsync(x=>x.ServerId == serverId);
         }
+        public async Task<int> DeleteForSteamId(string steamId)
+        {
+            return await _liteDb.LiteDatabaseAsync.GetCollection<SteamIdentityStatsServer>("SteamIdentityStatsServer").DeleteManyAsync(x=>x.SteamId == steamId);
+        }        
+        public async Task<SteamIdentityStatsServer[]> GetForSteamId(string steamId)
+        {
+            return (await _liteDb.LiteDatabaseAsync.GetCollection<SteamIdentityStatsServer>("SteamIdentityStatsServer").FindAsync(x=>x.SteamId == steamId)).ToArray();
+        }
     }
 }

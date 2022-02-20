@@ -26,8 +26,7 @@
 <div class="card m-1 bg-info">
     <ul>
         <li>Tipp: Use the steam user ass SSH user.</li>
-        <li>The SSH user needs the rights to enable and disable a service, as well as start and stop.</li>
-        <li>He also needs the right to delete maps: /tmp/workshop/{port}/content/555160/*</li>
+        <li>The ssh user needs the right to delete maps: /tmp/workshop/{port}/content/555160/*</li>
         <li>As well as the rights to write and delete for the pavlov server folder and all subfolders including files.</li>
         <li>I can not recommend to take the root user.</li>
     </ul>
@@ -148,6 +147,49 @@
             </div>
         </div>
 
+        @if (Model.HostingAvailable)
+        {
+            <div class="col-md-11">
+                <div class="card m-1 ">
+                    <div class="card-header">Root user for the hosting api</div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="form-group col-md-2">
+                                <label asp-for="IsForHosting"></label>
+                                <input asp-for="IsForHosting" class="form-control form-check-input" value="@Model.IsForHosting"/>
+                                <span asp-validation-for="IsForHosting" class="text-danger"></span>
+                            </div>
+                            <div class="form-group col-sm-3">
+                                <label asp-for="SshUsernameRootForHosting"></label>
+                                <input asp-for="SshUsernameRootForHosting" class="form-control" value="@Model.SshUsernameRootForHosting"/>
+                                <span asp-validation-for="SshUsernameRootForHosting" class="text-danger"></span>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label asp-for="SshPasswordRootForHosting"></label>
+                                <input asp-for="SshPasswordRootForHosting" type="password" autocomplete="off" class="form-control" value="@Model.SshPasswordRootForHosting"/>
+                                <span asp-validation-for="SshPasswordRootForHosting" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-group col-md-6">
+                                <label asp-for="SshKeyFileNameRootForHostingForm"></label>
+                                  <p class="form-text">
+                                    @ViewData.ModelMetadata.Properties.Where(m => m.PropertyName == "SshKeyFileNameRootForHostingForm").FirstOrDefault().Description
+                                </p>
+                                <input asp-for="SshKeyFileNameRootForHostingForm" class="form-control-file" />
+                                <span asp-validation-for="SshKeyFileNameRootForHostingForm" class="text-danger"></span>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label asp-for="SshPassphraseRootForHosting"></label>
+                                <input asp-for="SshPassphraseRootForHosting" type="password" autocomplete="off" class="form-control" value="@Model.SshPassphraseRootForHosting"/>
+                                <span asp-validation-for="SshPassphraseRootForHosting" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    
 
         <div class="saveButton col-md-1 mt-3">
             <button type="submit" class="btn btn-success col-md-12">Save</button>

@@ -74,6 +74,7 @@ namespace PavlovRconWebserver.Services
             realmatch.GameMode = match.GameMode;
             realmatch.TimeLimit = match.TimeLimit;
             realmatch.PlayerSlots = match.PlayerSlots;
+            realmatch.ScoreToEnd = match.ScoreToEnd;
 
             var gotAnswer = GameModes.HasTeams.TryGetValue(realmatch.GameMode, out var hasTeams);
             if (gotAnswer)
@@ -227,31 +228,13 @@ namespace PavlovRconWebserver.Services
                 
                 //Write whitelist and set server settings
 
-                try
-                {
-                    RconStatic.WriteFile(server.SshServer,
-                        server.ServerFolderPath + FilePaths.WhiteList,
-                        list.ToArray(), _notifyService);
-                }
-                catch (Exception e)
-                {
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not write whitelist for the match! " +
-                                                                    e.Message, LogEventLevel.Fatal, _notifyService,
-                        result);
-                }                
-                
-                try
-                {
-                    RconStatic.WriteFile(server.SshServer,
+
+                RconStatic.WriteFile(server.SshServer,
+                    server.ServerFolderPath + FilePaths.WhiteList,
+                    list.ToArray(), _notifyService);
+                RconStatic.WriteFile(server.SshServer,
                         server.ServerFolderPath + FilePaths.ModList,
                         mods.ToArray(), _notifyService);
-                }
-                catch (Exception e)
-                {
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not write modlist for the match! " +
-                                                                    e.Message, LogEventLevel.Fatal, _notifyService,
-                        result);
-                }
                 RconStatic.WriteFile(server.SshServer,
                     server.ServerFolderPath + FilePaths.BanList,
                     Array.Empty<string>(), _notifyService);
@@ -308,7 +291,7 @@ namespace PavlovRconWebserver.Services
             }
             catch (Exception e)
             {
-                RconStatic.ExcpetionHandlingSshSftp(server, _notifyService, e, result, clientSsh, clientSftp);
+                RconStatic.ExceptionHandlingSshSftp(server.Name, _notifyService, e, result, "StartMatchWithAuth -> ", clientSsh, clientSftp);
             }
             finally
             {
@@ -327,15 +310,7 @@ namespace PavlovRconWebserver.Services
 
             try
             {
-                var forceStopMaybe = "";
-                try
-                {
-                    forceStopMaybe = await _rconService.SShTunnelGetAllInfoFromPavlovServer(match.PavlovServer,true);
-                }
-                catch (Exception)
-                {
-                }
-                if (match.ForceSop||forceStopMaybe=="ForceStopNowUrgent") // ForceStopNowUrgent very bad practice
+                if (match.ForceSop||await _rconService.SShTunnelGetAllInfoFromPavlovServer(match.PavlovServer,match))
                 {
                     DataBaseLogger.LogToDatabaseAndResultPlusNotify("Endmatch!", LogEventLevel.Verbose, _notifyService);
                     await EndMatch(match.PavlovServer, match);
@@ -360,16 +335,21 @@ namespace PavlovRconWebserver.Services
                             (await _pavlovServerPlayerService.FindAllFromServer(match.PavlovServer.Id)).ToList();
                         match.EndInfo = serverInfo;
                         await Upsert(match);
-
-                        if (serverInfo.Team0Score == "10"||serverInfo.Team1Score == "10")
+                        if (
+                            (match.MatchSelectedSteamIdentities==null || !match.MatchSelectedSteamIdentities.Any()) && 
+                            (int.Parse(serverInfo.Team0Score) >= match.ScoreToEnd || int.Parse(serverInfo.Team1Score) >= match.ScoreToEnd)
+                            )
                         {
-                            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Round ended!", LogEventLevel.Verbose,
-                                _notifyService);
-                            match.PlayerResults =
-                                (await _pavlovServerPlayerService.FindAllFromServer(match.PavlovServer.Id)).ToList();
-                            match.EndInfo = serverInfo;
-                            await EndMatch(match.PavlovServer, match);
+                            await endMatchSub(match, serverInfo);
                             return;
+                        }
+                        if (
+                            (match.MatchTeam0SelectedSteamIdentities==null || !match.MatchTeam0SelectedSteamIdentities.Any())
+                            && (match.MatchTeam1SelectedSteamIdentities==null || !match.MatchTeam1SelectedSteamIdentities.Any())  
+                            && match.PlayerResults.Max(x=>x.Score) >= match.ScoreToEnd
+                        )
+                        {
+                            await endMatchSub(match, serverInfo);
                         }
 
                         break;
@@ -386,7 +366,17 @@ namespace PavlovRconWebserver.Services
                     new TimeSpan(0, 0, 1)); // ChecjServerState
         }
 
-        
+        private async Task endMatchSub(Match match, PavlovServerInfo serverInfo)
+        {
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Round ended!", LogEventLevel.Verbose,
+                _notifyService);
+            match.PlayerResults =
+                (await _pavlovServerPlayerService.FindAllFromServer(match.PavlovServer.Id)).ToList();
+            match.EndInfo = serverInfo;
+            await EndMatch(match.PavlovServer, match);
+        }
+
+
         public async Task<bool> SaveStatsFromLogs(int matchId)
         {
             var match = await FindOne(matchId);
@@ -450,13 +440,16 @@ namespace PavlovRconWebserver.Services
         }
         private async Task EndMatch(PavlovServer server, Match match)
         {
-            try
+            if (match.ScoreToEnd == 10 && match.GameMode == "SND")
             {
-                await SaveStatsFromLogs(match.Id);
-            }
-            catch (Exception)
-            {
-                //can be done later manualy but should not be breaking otherwise the server runs more and we may lose tha stats in the logs
+                try
+                {
+                    await SaveStatsFromLogs(match.Id);
+                }
+                catch (Exception)
+                {
+                    //can be done later manualy but should not be breaking otherwise the server runs more and we may lose tha stats in the logs
+                }  
             }
 
             match.Status = Status.Finshed;
@@ -553,16 +546,21 @@ namespace PavlovRconWebserver.Services
         private string SendCommandTillDone(PavlovServer server,
             string command, int timeoutInSeconds = 60)
         {
-            var task = Task.Run(() => SendCommandTillDoneChild(server, command));
+            
+            var cancelSource = new CancellationTokenSource();
+            var task = Task.Run(() => SendCommandTillDoneChild(server, command,cancelSource.Token),cancelSource.Token);
             if (task.Wait(TimeSpan.FromSeconds(timeoutInSeconds)))
+            {
+                cancelSource.Cancel();
                 return task.Result;
-            throw new Exception("Timed out");
+            }
+            throw new CommandException("Timed out");
         }
 
         private async Task<string> SendCommandTillDoneChild(PavlovServer server,
-            string command)
+            string command, CancellationToken cancellationToken)
         {
-            while (true)
+            while (!cancellationToken.IsCancellationRequested)
                 try
                 {
                     var result = await RconStatic.SendCommandSShTunnel(server, command, _notifyService);
@@ -570,9 +568,11 @@ namespace PavlovRconWebserver.Services
                 }
                 catch (CommandException e)
                 {
+                    //ignore here is fine cause it has a timeout after which its should not get called anymore
                     DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message, LogEventLevel.Verbose, _notifyService);
-                    throw;
                 }
+
+            return "";
         }
 
         public async Task StartMatch(int matchId)
@@ -675,6 +675,8 @@ namespace PavlovRconWebserver.Services
         public async Task<Match> FindOne(int id)
         {
             var selected = await _matchSelectedSteamIdentitiesService.FindAllSelectedForMatch(id);
+            var selectedTeam0 = await _matchSelectedTeamSteamIdentitiesService.FindAllSelectedForMatchAndTeam(id,0);
+            var selectedTeam1 = await _matchSelectedTeamSteamIdentitiesService.FindAllSelectedForMatchAndTeam(id, 1);
             var match = await _liteDb.LiteDatabaseAsync.GetCollection<Match>("Match")
                 .Include(x => x.Team0)
                 .Include(x => x.Team1)
@@ -682,6 +684,8 @@ namespace PavlovRconWebserver.Services
             if (match == null) return null;
             match.PavlovServer = await _pavlovServerService.FindOne(match.PavlovServer.Id);
             match.MatchSelectedSteamIdentities = selected.ToList();
+            match.MatchTeam0SelectedSteamIdentities = selectedTeam0.ToList();
+            match.MatchTeam1SelectedSteamIdentities = selectedTeam1.ToList();
             return match;
         }
 
@@ -702,7 +706,8 @@ namespace PavlovRconWebserver.Services
                 PavlovServer = oldMatch.PavlovServer,
                 Status = oldMatch.Status,
                 Team0Id = oldMatch.Team0?.Id,
-                Team1Id = oldMatch.Team1?.Id
+                Team1Id = oldMatch.Team1?.Id,
+                ScoreToEnd = oldMatch.ScoreToEnd
             };
             if (oldMatch.PavlovServer != null)
                 match.PavlovServerId = oldMatch.PavlovServer.Id;
@@ -775,6 +780,27 @@ namespace PavlovRconWebserver.Services
             var match = await FindOne(id);
             if (match == null) return false;
             return match.Status != Status.OnGoing;
+        }        
+        
+        public async Task<bool> AnonymizeTheStats(string id)
+        {
+            var matches = (await FindAll()).Where(x=>x.PlayerResults.FirstOrDefault(y=>y.UniqueId==id)!=null);
+            foreach (var match in matches)
+            {
+                foreach (var pavlovServerPlayer in match.PlayerResults.Where(x=>x.UniqueId==id))
+                {
+                    pavlovServerPlayer.UniqueId = "";
+                }
+
+                await Upsert(match);
+            }
+            return true;
+        }        
+        
+        public async Task<Match[]> PersonalStats(string id)
+        {
+            var matches = (await FindAll()).Where(x=>x.PlayerResults.FirstOrDefault(y=>y.UniqueId==id)!=null);
+            return matches.ToArray();
         }
     }
 }

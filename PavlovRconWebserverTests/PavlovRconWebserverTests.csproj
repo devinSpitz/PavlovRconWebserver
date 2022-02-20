@@ -7,6 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="AspNet.Security.OpenId.Steam" Version="5.0.0" />
         <PackageReference Include="FluentAssertions" Version="6.1.0" />
         <PackageReference Include="LiteDB.Identity.Async" Version="1.0.2.3" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.10" />
