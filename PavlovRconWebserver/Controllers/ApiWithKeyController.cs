@@ -97,13 +97,16 @@ namespace PavlovRconWebserver.Controllers
                 if(!await _userManager.IsInRoleAsync(user,"ServerRent"))
                     await _userManager.AddToRoleAsync(user, "ServerRent");
             }
-            var result = await _pavlovServerService.CreatePavlovServer(model);
-            model = result.Key;
-            if (result.Value != null)
+
+            try
             {
-                await _sshServerSerivce.RemovePavlovServerFromDisk(model);
+                await _pavlovServerService.CreatePavlovServer(model);
+            }
+            catch (Exception e)
+            {
+                await _sshServerSerivce.RemovePavlovServerFromDisk(model,true);
                 DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not create rented server! " + model.Name, LogEventLevel.Fatal, _notifyService);
-                return BadRequest();
+                return BadRequest(e.Message);
             }
             
             
@@ -194,16 +197,16 @@ namespace PavlovRconWebserver.Controllers
             viewmodel.SshPasswordRoot = sshServer.SshPasswordRootForHosting;
             viewmodel.SshUsernameRoot = sshServer.SshUsernameRootForHosting;
             viewmodel.SshKeyFileNameRoot = sshServer.SshKeyFileNameRootForHosting;
-            var result = await _sshServerSerivce.RemovePavlovServerFromDisk(viewmodel);
-            if (result.Value != null)
+            try
             {
-                await _pavlovServerService.Delete(pavlovServer.Id);
-                return Ok();
+                await _sshServerSerivce.RemovePavlovServerFromDisk(viewmodel, false);
             }
-            else
+            catch(Exception e)
             {
-                return BadRequest("Could not delete files!");
+                return BadRequest(e.Message);
             }
+            await _pavlovServerService.Delete(pavlovServer.Id);
+            return Ok();
         }        
 
         

@@ -116,140 +116,121 @@ namespace PavlovRconWebserver.Services
             return pavlovServer;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="server"></param>
+        /// <param name="reservedFor"></param>
+        /// <exception cref="CommandExceptionCreateServerDuplicate"></exception>
 
-        public async Task<KeyValuePair<PavlovServerViewModel, string>> CreatePavlovServer(PavlovServerViewModel server,string reservedFor = "")
+        public async Task CreatePavlovServer(PavlovServerViewModel server,string reservedFor = "")
         {
-            //Todo: The hole chain of this function is just bad. To less error handling etc. Have to make this better in the future.
-            string result = null;
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Start creting server", LogEventLevel.Verbose,
+                _notifyService);
+            //Check stuff
+            var exist = RconStatic.DoesPathExist(server, server.ServerFolderPath, _notifyService);
+            if (exist) throw new CommandExceptionCreateServerDuplicate("ServerFolderPath already exist!");
+
+            exist = RconStatic.DoesPathExist(server,
+                "/etc/systemd/system/" + server.ServerSystemdServiceName + ".service", _notifyService);
+            if (exist) throw new CommandExceptionCreateServerDuplicate("Systemd Service already exist!");
+
+            var portsUsed = (await FindAll()).Where(x => x.SshServer.Id == server.SshServer.Id)
+                .FirstOrDefault(x => x.ServerPort == server.ServerPort || x.TelnetPort == server.TelnetPort);
+            if (portsUsed != null)
+            {
+                if (portsUsed.ServerPort == server.ServerPort)
+                    throw new CommandExceptionCreateServerDuplicate("The server port is already used!");
+
+                if (portsUsed.TelnetPort == server.TelnetPort)
+                    throw new CommandExceptionCreateServerDuplicate("The telnet port is already used!");
+            }
+
+
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Start Install pavlovserver", LogEventLevel.Verbose,
+                _notifyService);
+
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                "Username used befor changed to root: " + server.SshServer.SshUsername, LogEventLevel.Verbose,
+                _notifyService);
+
+            await RconStatic.UpdateInstallPavlovServer(server, this);
+            
+
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Start Install pavlovserver service",
+                LogEventLevel.Verbose, _notifyService);
+
+            var oldSSHcrid = new SshServer
+            {
+                SshPassphrase = server.SshServer.SshPassphrase,
+                SshUsername = server.SshServer.SshUsername,
+                SshPassword = server.SshServer.SshPassword,
+                SshKeyFileName = server.SshServer.SshKeyFileName
+            };
+            server.SshServer.SshPassphrase = server.SshPassphraseRoot;
+            server.SshServer.SshUsername = server.SshUsernameRoot;
+            server.SshServer.SshPassword = server.SshPasswordRoot;
+            server.SshServer.SshKeyFileName = server.SshKeyFileNameRoot;
+            server.SshServer.NotRootSshUsername = oldSSHcrid.SshUsername;
+
             try
             {
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Start creting server", LogEventLevel.Verbose,
-                    _notifyService);
-                //Check stuff
-                var exist = RconStatic.DoesPathExist(server, server.ServerFolderPath, _notifyService);
-                if (exist == "true") throw new CommandExceptionCreateServerDuplicate("ServerFolderPath already exist!");
-
-                exist = RconStatic.DoesPathExist(server,
-                    "/etc/systemd/system/" + server.ServerSystemdServiceName + ".service", _notifyService);
-                if (exist == "true") throw new CommandExceptionCreateServerDuplicate("Systemd Service already exist!");
-
-                var portsUsed = (await FindAll()).Where(x => x.SshServer.Id == server.SshServer.Id)
-                    .FirstOrDefault(x => x.ServerPort == server.ServerPort || x.TelnetPort == server.TelnetPort);
-                if (portsUsed != null)
-                {
-                    if (portsUsed.ServerPort == server.ServerPort)
-                        throw new CommandExceptionCreateServerDuplicate("The server port is already used!");
-
-                    if (portsUsed.TelnetPort == server.TelnetPort)
-                        throw new CommandExceptionCreateServerDuplicate("The telnet port is already used!");
-                }
-
-
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Start Install pavlovserver", LogEventLevel.Verbose,
-                    _notifyService);
-
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify(
-                    "Username used befor changed to root: " + server.SshServer.SshUsername, LogEventLevel.Verbose,
-                    _notifyService);
-                result += await RconStatic.UpdateInstallPavlovServer(server, this);
-                result += "\n *******************************Update/Install Done*******************************";
-
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Start Install pavlovserver service",
-                    LogEventLevel.Verbose, _notifyService);
-
-                var oldSSHcrid = new SshServer
-                {
-                    SshPassphrase = server.SshServer.SshPassphrase,
-                    SshUsername = server.SshServer.SshUsername,
-                    SshPassword = server.SshServer.SshPassword,
-                    SshKeyFileName = server.SshServer.SshKeyFileName
-                };
-                server.SshServer.SshPassphrase = server.SshPassphraseRoot;
-                server.SshServer.SshUsername = server.SshUsernameRoot;
-                server.SshServer.SshPassword = server.SshPasswordRoot;
-                server.SshServer.SshKeyFileName = server.SshKeyFileNameRoot;
-                server.SshServer.NotRootSshUsername = oldSSHcrid.SshUsername;
-
-                try
-                {
-                    result += await RconStatic.InstallPavlovServerService(server, _notifyService, this);
-                }
-                catch (CommandException e)
-                {
-                    //If crash inside here the user login is still root. If the root login is bad this will fail to remove the server afterwards
-                    OverwrideTheNormalSSHLoginData(server, oldSSHcrid);
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify(
-                        "catch after install override and remove afterwards: "+e.Message, LogEventLevel.Verbose, _notifyService);
-                    throw;
-                }
-
+                await RconStatic.InstallPavlovServerService(server, _notifyService);
+            }
+            catch (CommandException e)
+            {
+                //If crash inside here the user login is still root. If the root login is bad this will fail to remove the server afterwards
                 OverwrideTheNormalSSHLoginData(server, oldSSHcrid);
                 DataBaseLogger.LogToDatabaseAndResultPlusNotify(
-                    "Username used after override old infos: " + server.SshServer.SshUsername, LogEventLevel.Verbose,
-                    _notifyService);
-                //start server and stop server to get Saved folder etc.
-
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Start after install", LogEventLevel.Verbose,
-                    _notifyService);
-                try
-                {
-                    await RconStatic.SystemDStart(server, this);
-                }
-                catch (Exception)
-                {
-                    //ignore
-                }
-
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify("stop after install", LogEventLevel.Verbose,
-                    _notifyService);
-                try
-                {
-                    await RconStatic.SystemDStop(server, this);
-                }
-                catch (Exception)
-                {
-                    //ignore
-                }
-
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Try to save game ini", LogEventLevel.Verbose,
-                    _notifyService);
-                result +=
-                    "\n *******************************Update/Install PavlovServerService Done*******************************";
-
-                var pavlovServerGameIni = new PavlovServerGameIni();
-
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify("created Ini", LogEventLevel.Verbose, _notifyService);
-                var selectedMaps = await _serverSelectedMapService.FindAllFrom(server);
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify("found maps", LogEventLevel.Verbose, _notifyService);
-                pavlovServerGameIni.ServerName = server.Name;
-                result += pavlovServerGameIni.SaveToFile(server, selectedMaps, _notifyService);
-                result += "\n *******************************Save server settings Done*******************************";
-                //also create rcon settings
-
-
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify("write rcon file", LogEventLevel.Verbose,
-                    _notifyService);
-                var rconSettingsTempalte = "Password=" + server.TelnetPassword + "\nPort=" + server.TelnetPort;
-                result += RconStatic.WriteFile(server.SshServer, server.ServerFolderPath + FilePaths.RconSettings,
-                    new string[]{ rconSettingsTempalte }, _notifyService);
-
-
-                result += "\n *******************************create rconSettings Done*******************************";
-
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify(result, LogEventLevel.Verbose, _notifyService);
+                    "Could not install service while creating the pavlov server -> "+e.Message, LogEventLevel.Verbose, _notifyService);
+                throw;
             }
-            catch (CommandExceptionCreateServerDuplicate e)
+            OverwrideTheNormalSSHLoginData(server, oldSSHcrid);
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify(
+                "Username used after override old infos: " + server.SshServer.SshUsername, LogEventLevel.Verbose,
+                _notifyService);
+            //start server and stop server to get Saved folder etc.
+
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Start after install", LogEventLevel.Verbose,
+                _notifyService);
+
+            await RconStatic.SystemDStart(server, this);
+
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify("stop after install", LogEventLevel.Verbose,
+                _notifyService);
+                
+            await RconStatic.SystemDStop(server, this);
+
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify("Try to save game ini", LogEventLevel.Verbose,
+                _notifyService);
+
+            
+
+            var pavlovServerGameIni = new PavlovServerGameIni();
+
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify("created Ini", LogEventLevel.Verbose, _notifyService);
+            var selectedMaps = await _serverSelectedMapService.FindAllFrom(server);
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify("found maps", LogEventLevel.Verbose, _notifyService);
+            pavlovServerGameIni.ServerName = server.Name;
+            
+            
+            pavlovServerGameIni.SaveToFile(server, selectedMaps, _notifyService);
+            
+            //also create rcon settings
+
+
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify("write rcon file", LogEventLevel.Verbose,
+                _notifyService);
+            
+            var lines = new List<string>
             {
-                throw new CommandExceptionCreateServerDuplicate(e.Message);
-            }
-            catch (Exception e)
-            {
-                return new KeyValuePair<PavlovServerViewModel, string>(server, result + "\n " +
-                                                                               "**********************************************Exception:***********************\n" +
-                                                                               e.Message);
-            }
+                "Password=" + server.TelnetPassword,
+                "Port=" + server.TelnetPort
+            };
+            RconStatic.WriteFile(server.SshServer, server.ServerFolderPath + FilePaths.RconSettings,
+                lines.ToArray(), _notifyService);
 
-            return new KeyValuePair<PavlovServerViewModel, string>(server, null);
+            
         }
 
 
@@ -312,23 +293,23 @@ namespace PavlovRconWebserver.Services
             if (!RconHelper.IsMD5(pavlovServer.TelnetPassword))
             {
                 if (string.IsNullOrEmpty(pavlovServer.TelnetPassword))
-                    throw new SaveServerException("Password", "The telnet password is required!");
+                    throw new ValidateException("Password", "The telnet password is required!");
 
                 if (parseMd5)
                     pavlovServer.TelnetPassword = RconHelper.CreateMD5(pavlovServer.TelnetPassword);
             }
 
-            if (pavlovServer.SshServer.SshPort <= 0) throw new SaveServerException("SshPort", "You need a SSH port!");
+            if (pavlovServer.SshServer.SshPort <= 0) throw new ValidateException("SshPort", "You need a SSH port!");
 
             if (string.IsNullOrEmpty(pavlovServer.SshServer.SshUsername))
-                throw new SaveServerException("SshUsername", "You need a username!");
+                throw new ValidateException("SshUsername", "You need a username!");
 
 
             if (string.IsNullOrEmpty(pavlovServer.SshServer.SshPassword) &&
                 (pavlovServer.SshServer.SshKeyFileName==null||!pavlovServer.SshServer.SshKeyFileName.Any()))
-                throw new SaveServerException("SshPassword", "You need at least a password or a key file!");
+                throw new ValidateException("SshPassword", "You need at least a password or a key file!");
         }
-
+        
         public virtual async Task<PavlovServer> ValidatePavlovServer(PavlovServer pavlovServer, bool root)
         {
             DataBaseLogger.LogToDatabaseAndResultPlusNotify("start validate", LogEventLevel.Verbose, _notifyService);
@@ -357,7 +338,7 @@ namespace PavlovRconWebserver.Services
             }
             catch (CommandException e)
             {
-                throw new SaveServerException("", e.Message);
+                throw new ValidateException(e.Message);
             }
 
             DataBaseLogger.LogToDatabaseAndResultPlusNotify("try to send serverinfo", LogEventLevel.Verbose,
@@ -365,12 +346,12 @@ namespace PavlovRconWebserver.Services
             //try to send Command ServerInfo
             try
             {
-                var response = await RconStatic.SendCommandSShTunnel(pavlovServer, "ServerInfo", _notifyService);
+                await RconStatic.SendCommandSShTunnel(pavlovServer, "ServerInfo", _notifyService);
             }
             catch (CommandException e)
             {
                 await HasToStop(pavlovServer, hasToStop, root);
-                throw new SaveServerException("", e.Message);
+                throw new ValidateException( e.Message);
             }
 
             //try if the user have rights to delete maps cache
@@ -384,7 +365,7 @@ namespace PavlovRconWebserver.Services
             catch (CommandException e)
             {
                 await HasToStop(pavlovServer, hasToStop, root);
-                throw new SaveServerException("", e.Message);
+                throw new ValidateException(e.Message);
             }
 
             if (!string.IsNullOrEmpty(pavlovServer.SshServer.ShackMapsPath))
@@ -398,7 +379,8 @@ namespace PavlovRconWebserver.Services
                 catch (CommandException e)
                 {
                     await HasToStop(pavlovServer, hasToStop, root);
-                    throw new SaveServerException("Shack", "ShackMapsPath does not exist: "+pavlovServer.SshServer.ShackMapsPath);
+                    
+                    throw new ValidateException("ShackMapsPath does not exist: "+pavlovServer.SshServer.ShackMapsPath + "additional info:"+e.Message);
                 }
             }
 
@@ -419,7 +401,7 @@ namespace PavlovRconWebserver.Services
 
             return pavlovServer;
         }
-
+        
         public async Task<PavlovServer> Upsert(PavlovServer pavlovServer, bool withCheck = true)
         {
             if (withCheck)

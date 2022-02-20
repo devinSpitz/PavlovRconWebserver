@@ -126,10 +126,9 @@ namespace PavlovRconWebserver.Controllers
                     command = command.Substring(7);
                 }
             }
-            
-            
-            
-            var response = "";
+
+
+            var responses = Array.Empty<string>();
             try
             {
                 var commandsList = new List<string>();
@@ -146,35 +145,42 @@ namespace PavlovRconWebserver.Controllers
                         
                     }
                 }
-                var responses = await RconStatic.SShTunnelMultipleCommands(singleServer, commandsList.ToArray(), _toastifyService); 
-                responses.errors.AddRange(responses.MultiAnswer);
-                response = string.Join(",", responses.errors);
+                responses = await RconStatic.SShTunnelMultipleCommands(singleServer, commandsList.ToArray(), _toastifyService); 
             }
-            catch (Exception e)
+            catch (CommandException e)
             {
                 return BadRequest(e.Message);
             }
-            if (string.IsNullOrEmpty(response)) return BadRequest("The response was empty!");
+            if (string.IsNullOrEmpty(string.Join(";",responses))) return BadRequest("The response was empty!");
+
+            var commandsResulsts = new List<string>();
             try
             {
-                var tmp = JsonConvert.DeserializeObject<MinimumRconResultObject>(response, new JsonSerializerSettings {CheckAdditionalContent = false});
-                var o = (Newtonsoft.Json.Linq.JObject)JsonConvert.DeserializeObject(response);
-                var value3 = o.Property("")?.Value;
-                var value2 = o.Property(tmp.Command)?.Value;
-                if (tmp != null  && (value3 is {HasValues: false}|| value2 is {HasValues: false}))
+                foreach (var response in responses)
                 {
-                    if (tmp.Successful)
+                    var tmp = JsonConvert.DeserializeObject<MinimumRconResultObject>(response, new JsonSerializerSettings {CheckAdditionalContent = false});
+                    var o = (Newtonsoft.Json.Linq.JObject)JsonConvert.DeserializeObject(response);
+                    var value3 = o.Property("")?.Value;
+                    var value2 = o.Property(tmp.Command)?.Value;
+                    if (tmp != null  && (value3 is {HasValues: false}|| value2 is {HasValues: false}))
                     {
-                        return Ok("alreadyNotified! Command "+tmp.Command+ " was successful.");
-                    }
+                        commandsResulsts.Add(tmp.Command);
+                        if (!tmp.Successful)
+                        {
+                            
+                            return new ObjectResult(responses);
+                        }
+                    }  
                 }
+                
+                return Ok("alreadyNotified! Commands "+string.Join(",",commandsResulsts)+ " where successful.");
             }
             catch (Exception)
             {
-                //Ingore only wants to know if its success
+                //Ignore only wants to know if its success so we could scip the dialog
             }
             
-            return new ObjectResult(response);
+            return new ObjectResult(responses);
         }
 
         [HttpPost("[controller]/SendCommand")]
@@ -240,7 +246,7 @@ namespace PavlovRconWebserver.Controllers
             {
                 response = await RconStatic.SendCommandSShTunnel(singleServer, command, _toastifyService);
             }
-            catch (Exception e)
+            catch (CommandException e)
             {
                 return BadRequest(e.Message);
             }
@@ -261,7 +267,7 @@ namespace PavlovRconWebserver.Controllers
             }
             catch (Exception)
             {
-                //Ingore only wants to know if its success
+                //Ignore only wants to know if its success so we could scip the dialog
             }
             
             return new ObjectResult(response);
@@ -377,7 +383,7 @@ namespace PavlovRconWebserver.Controllers
                 {
                     result1 = await RconStatic.SendCommandSShTunnel(ban.PavlovServer, "RefreshList", _toastifyService);
                 }
-                catch (Exception e)
+                catch (CommandException e)
                 {
                     return BadRequest(e.Message);
                 }
@@ -387,7 +393,7 @@ namespace PavlovRconWebserver.Controllers
                 var playerName = playersList.PlayerList.FirstOrDefault(x => x.UniqueId == steamId)?.Username;
                 if (playerName != null) ban.SteamName = playerName;
             }
-            catch (CommandException)
+            catch (Exception)
             {
                 //Ignore cause the player name is not something very important
             }
@@ -397,7 +403,7 @@ namespace PavlovRconWebserver.Controllers
             {
                 result = await RconStatic.SendCommandSShTunnel(ban.PavlovServer, "Ban " + steamId, _toastifyService);
             }
-            catch (Exception e)
+            catch (CommandException e)
             {
                 return BadRequest(e.Message);
             }
@@ -549,28 +555,20 @@ namespace PavlovRconWebserver.Controllers
             var server = await _pavlovServerService.FindOne(serverId);
             var players = await _pavlovServerPlayerService.FindAllFromServer(serverId);
             var serverInfo = "";
+            var result = "";
             try
             {
-                var result = "";
-                try
-                {
-                    result = await RconStatic.SendCommandSShTunnel(server, "ServerInfo", _toastifyService);
-                }
-                catch (Exception e)
-                {
-                    return BadRequest(e.Message);
-                }
-
-                serverInfo = result;
-
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify("controlled got serverInfo back: " + serverInfo,
-                    LogEventLevel.Verbose, _toastifyService);
+                result = await RconStatic.SendCommandSShTunnel(server, "ServerInfo", _toastifyService);
             }
             catch (CommandException e)
             {
-                DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not get Serverinfo!" + e.Message,
-                    LogEventLevel.Fatal, _toastifyService);
+                return BadRequest(e.Message);
             }
+
+            serverInfo = result;
+
+            DataBaseLogger.LogToDatabaseAndResultPlusNotify("controlled got serverInfo back: " + serverInfo,
+                LogEventLevel.Verbose, _toastifyService);
 
             var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(serverInfo.Replace("\"\"", "\"ServerInfo\""));
             if(tmp!=null)

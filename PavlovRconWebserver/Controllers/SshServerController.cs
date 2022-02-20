@@ -121,7 +121,7 @@ namespace PavlovRconWebserver.Controllers
                     await _service.Update(server);
                 }
             }
-            catch (SaveServerException e)
+            catch (ValidateException e)
             {
                 if (e.FieldName == "" && e.Message.ToLower().Contains("telnet"))
                     ModelState.AddModelError("Password", e.Message);
@@ -132,6 +132,7 @@ namespace PavlovRconWebserver.Controllers
                 else
                     ModelState.AddModelError(e.FieldName, e.Message);
             }
+            
 
             if (ModelState.ErrorCount > 0)
             {

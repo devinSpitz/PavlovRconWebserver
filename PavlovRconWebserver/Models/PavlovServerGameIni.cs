@@ -181,7 +181,7 @@ namespace PavlovRconWebserver.Models
         }
 
 
-        public string SaveToFile(PavlovServer pavlovServer, ServerSelectedMap[] serverSelectedMaps,
+        public void SaveToFile(PavlovServer pavlovServer, ServerSelectedMap[] serverSelectedMaps,
             IToastifyService notyfService)
         {
             var lines = new List<string>();
@@ -241,11 +241,10 @@ namespace PavlovRconWebserver.Models
             }
 
             DataBaseLogger.LogToDatabaseAndResultPlusNotify("prepared game ini", LogEventLevel.Verbose, notyfService);
-            var result = RconStatic.WriteFile(pavlovServer.SshServer, pavlovServer.ServerFolderPath + FilePaths.GameIni,
-                lines.ToArray(), notyfService);
+            
+            RconStatic.WriteFile(pavlovServer.SshServer, pavlovServer.ServerFolderPath + FilePaths.GameIni,lines.ToArray(), notyfService);
 
             DataBaseLogger.LogToDatabaseAndResultPlusNotify("saved game ini", LogEventLevel.Verbose, notyfService);
-            return result;
         }
     }
 }

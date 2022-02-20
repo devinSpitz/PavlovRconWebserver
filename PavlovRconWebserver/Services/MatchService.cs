@@ -228,31 +228,13 @@ namespace PavlovRconWebserver.Services
                 
                 //Write whitelist and set server settings
 
-                try
-                {
-                    RconStatic.WriteFile(server.SshServer,
-                        server.ServerFolderPath + FilePaths.WhiteList,
-                        list.ToArray(), _notifyService);
-                }
-                catch (Exception e)
-                {
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not write whitelist for the match! " +
-                                                                    e.Message, LogEventLevel.Fatal, _notifyService,
-                        result);
-                }                
-                
-                try
-                {
-                    RconStatic.WriteFile(server.SshServer,
+
+                RconStatic.WriteFile(server.SshServer,
+                    server.ServerFolderPath + FilePaths.WhiteList,
+                    list.ToArray(), _notifyService);
+                RconStatic.WriteFile(server.SshServer,
                         server.ServerFolderPath + FilePaths.ModList,
                         mods.ToArray(), _notifyService);
-                }
-                catch (Exception e)
-                {
-                    DataBaseLogger.LogToDatabaseAndResultPlusNotify("Could not write modlist for the match! " +
-                                                                    e.Message, LogEventLevel.Fatal, _notifyService,
-                        result);
-                }
                 RconStatic.WriteFile(server.SshServer,
                     server.ServerFolderPath + FilePaths.BanList,
                     Array.Empty<string>(), _notifyService);
@@ -309,7 +291,7 @@ namespace PavlovRconWebserver.Services
             }
             catch (Exception e)
             {
-                RconStatic.ExcpetionHandlingSshSftp(server, _notifyService, e, result, clientSsh, clientSftp);
+                RconStatic.ExceptionHandlingSshSftp(server.Name, _notifyService, e, result, "StartMatchWithAuth -> ", clientSsh, clientSftp);
             }
             finally
             {
@@ -328,15 +310,7 @@ namespace PavlovRconWebserver.Services
 
             try
             {
-                var forceStopMaybe = "";
-                try
-                {
-                    forceStopMaybe = await _rconService.SShTunnelGetAllInfoFromPavlovServer(match.PavlovServer,match);
-                }
-                catch (Exception)
-                {
-                }
-                if (match.ForceSop||forceStopMaybe=="ForceStopNowUrgent") // ForceStopNowUrgent very bad practice
+                if (match.ForceSop||await _rconService.SShTunnelGetAllInfoFromPavlovServer(match.PavlovServer,match))
                 {
                     DataBaseLogger.LogToDatabaseAndResultPlusNotify("Endmatch!", LogEventLevel.Verbose, _notifyService);
                     await EndMatch(match.PavlovServer, match);
@@ -400,7 +374,6 @@ namespace PavlovRconWebserver.Services
                 (await _pavlovServerPlayerService.FindAllFromServer(match.PavlovServer.Id)).ToList();
             match.EndInfo = serverInfo;
             await EndMatch(match.PavlovServer, match);
-            return;
         }
 
 
@@ -573,16 +546,21 @@ namespace PavlovRconWebserver.Services
         private string SendCommandTillDone(PavlovServer server,
             string command, int timeoutInSeconds = 60)
         {
-            var task = Task.Run(() => SendCommandTillDoneChild(server, command));
+            
+            var cancelSource = new CancellationTokenSource();
+            var task = Task.Run(() => SendCommandTillDoneChild(server, command,cancelSource.Token),cancelSource.Token);
             if (task.Wait(TimeSpan.FromSeconds(timeoutInSeconds)))
+            {
+                cancelSource.Cancel();
                 return task.Result;
-            throw new Exception("Timed out");
+            }
+            throw new CommandException("Timed out");
         }
 
         private async Task<string> SendCommandTillDoneChild(PavlovServer server,
-            string command)
+            string command, CancellationToken cancellationToken)
         {
-            while (true)
+            while (!cancellationToken.IsCancellationRequested)
                 try
                 {
                     var result = await RconStatic.SendCommandSShTunnel(server, command, _notifyService);
@@ -590,9 +568,11 @@ namespace PavlovRconWebserver.Services
                 }
                 catch (CommandException e)
                 {
+                    //ignore here is fine cause it has a timeout after which its should not get called anymore
                     DataBaseLogger.LogToDatabaseAndResultPlusNotify(e.Message, LogEventLevel.Verbose, _notifyService);
-                    throw;
                 }
+
+            return "";
         }
 
         public async Task StartMatch(int matchId)
