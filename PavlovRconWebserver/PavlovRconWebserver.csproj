@@ -3,10 +3,10 @@
   <PropertyGroup>
     <UserSecretsId>aspnet-AspNetCore.Identity.LiteDB.Demo-A220779C-FF35-4548-B67B-1F33A07A49F3</UserSecretsId>
     <TargetFramework>net5.0</TargetFramework>
-    <PackageVersion>0.0.3</PackageVersion>
+    <PackageVersion>0.0.4</PackageVersion>
     <Title>PavlovRconWebserver</Title>
     <Authors>Devin Spitz</Authors>
-    <AssemblyVersion>0.0.3.9</AssemblyVersion>
+    <AssemblyVersion>0.0.4.0</AssemblyVersion>
     <LangVersion>9</LangVersion>
   </PropertyGroup>
   <ItemGroup>
