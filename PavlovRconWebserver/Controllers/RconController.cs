@@ -324,7 +324,7 @@ namespace PavlovRconWebserver.Controllers
                 if (mapsSelected != null)
                 {
                     foreach (var map in listOfMaps)
-                        if (mapsSelected.FirstOrDefault(x => x.Map.Id == map.Id) != null)
+                        if (mapsSelected.FirstOrDefault(x => x.Map?.Id == map.Id) != null)
                             map.sort = 1;
                     listOfMaps = listOfMaps.OrderByDescending(x => x.sort).ToList();
                 }

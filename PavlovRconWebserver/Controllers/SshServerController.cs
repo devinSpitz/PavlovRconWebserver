@@ -158,7 +158,7 @@ namespace PavlovRconWebserver.Controllers
             var mapsSelected = await _serverSelectedMapService.FindAllFrom(pavlovServer);
             if (mapsSelected != null)
             {
-                var toUpdate = mapsSelected.FirstOrDefault(x => x.Map.Id == realMap.Id && x.GameMode == gameMode);
+                var toUpdate = mapsSelected.FirstOrDefault(x => x.Map?.Id == realMap.Id && x.GameMode == gameMode);
                 if (toUpdate == null)
                 {
                     var newMap = new ServerSelectedMap
@@ -171,7 +171,7 @@ namespace PavlovRconWebserver.Controllers
                     if (!move) // means that it just changed GameMode
                     {
                         //i need to know to old Game Mode
-                        var oldMap = mapsSelected.FirstOrDefault(x => x.Map.Id == realMap.Id && x.GameMode == oldMode);
+                        var oldMap = mapsSelected.FirstOrDefault(x => x.Map?.Id == realMap.Id && x.GameMode == oldMode);
                         if (oldMap != null)
                         {
                             await _serverSelectedMapService.Delete(oldMap.Id);
@@ -211,7 +211,7 @@ namespace PavlovRconWebserver.Controllers
             var mapsSelected = await _serverSelectedMapService.FindAllFrom(pavlovServer);
             if (mapsSelected != null)
             {
-                var toUpdate = mapsSelected.FirstOrDefault(x => x.Map.Id == realMap.Id && x.GameMode == gameMode);
+                var toUpdate = mapsSelected.FirstOrDefault(x => x.Map?.Id == realMap.Id && x.GameMode == gameMode);
                 if (toUpdate != null) await _serverSelectedMapService.Delete(toUpdate.Id);
             }
 
