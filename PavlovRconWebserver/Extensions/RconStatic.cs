@@ -86,7 +86,7 @@ namespace PavlovRconWebserver.Extensions
                     //ignore and find the right one to use
                 }
 
-            throw new CommandException("No auth method worked!");
+            throw new CommandException("No ssh authentication method worked!");
         }
 
         public static void AuthenticateOnTheSshServer(SshServer server)

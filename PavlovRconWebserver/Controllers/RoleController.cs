@@ -132,6 +132,7 @@ namespace PavlovRconWebserver.Controllers
                     }
                 }
             }
+            //Todo always add mods/admin to the servers so they get auto synced to whatever is in the database
 
             if (ModelState.IsValid)
                 return RedirectToAction(nameof(Index));

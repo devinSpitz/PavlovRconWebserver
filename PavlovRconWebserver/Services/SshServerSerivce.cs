@@ -126,7 +126,7 @@ namespace PavlovRconWebserver.Services
             //Todo AuthError??
             DataBaseLogger.LogToDatabaseAndResultPlusNotify("Start remove server!", LogEventLevel.Verbose,
                 _notifyService);
-            string result = null;
+            string result = "";
             //start server and stop server to get Saved folder etc.
             if (ignoreMostExceptions)
             {
@@ -206,7 +206,25 @@ namespace PavlovRconWebserver.Services
             //Remove the server from the sudoers file
             var sudoersPathParent = "/etc/sudoers.d";
             var sudoersPath = sudoersPathParent + "/pavlovRconWebserverManagement";
-            if (RconStatic.RemoveServerLineToSudoersFile(server, _notifyService, sudoersPath, _pavlovServerService))
+            var removed = true;
+            
+            
+            if (ignoreMostExceptions)
+            {
+                try
+                {
+                    removed = RconStatic.RemoveServerLineToSudoersFile(server, _notifyService, sudoersPath, _pavlovServerService);
+                }
+                catch (CommandException)
+                {
+                    //ignore
+                } 
+            }
+            else
+            {
+                removed = RconStatic.RemoveServerLineToSudoersFile(server, _notifyService, sudoersPath, _pavlovServerService);
+            }
+            if (removed)
             {
                 DataBaseLogger.LogToDatabaseAndResultPlusNotify("server line removed from sudoers file!",
                     LogEventLevel.Verbose, _notifyService);
@@ -217,13 +235,28 @@ namespace PavlovRconWebserver.Services
                 var error =
                     "Could not remove the server line from sudoers file!";
                 DataBaseLogger.LogToDatabaseAndResultPlusNotify(error, LogEventLevel.Fatal, _notifyService);
-                throw new CommandException(error);
+                if (!ignoreMostExceptions)
+                    throw new CommandException(error);
 
 
             }
             
             //Handle the presets an newer systemd
-            RconStatic.AddLineToNewerSystemDsIfNeeded(server,_notifyService,true);
+            if (ignoreMostExceptions)
+            {
+                try
+                {
+                    RconStatic.AddLineToNewerSystemDsIfNeeded(server,_notifyService,true);
+                }
+                catch (CommandException)
+                {
+                    //ignore
+                } 
+            }
+            else
+            {
+                RconStatic.AddLineToNewerSystemDsIfNeeded(server,_notifyService,true);
+            }
 
 
 
