@@ -230,10 +230,10 @@ namespace PavlovRconWebserver.Models
                 }
                 else
                 {
-                    if (Regex.IsMatch(serverSelectedMap.Map.Id, @"^\d+$"))
+                    if (serverSelectedMap.Map != null && Regex.IsMatch(serverSelectedMap.Map.Id, @"^\d+$"))
                         lines.Add("MapRotation=(MapId=\"UGC" + serverSelectedMap.Map.Id + "\", GameMode=\"" +
                                   serverSelectedMap.GameMode + "\")");
-                    else
+                    else if(serverSelectedMap.Map != null )
                         lines.Add("MapRotation=(MapId=\"" + serverSelectedMap.Map.Id + "\", GameMode=\"" +
                                   serverSelectedMap.GameMode + "\")");
                 }

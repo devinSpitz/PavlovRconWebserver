@@ -31,7 +31,7 @@ namespace PavlovRconWebserver.Services
             return (await _liteDb.LiteDatabaseAsync.GetCollection<SteamIdentityStatsServer>("SteamIdentityStatsServer")
                 .FindAsync(x=>x.ServerId==id)).ToArray();
         }
-        public async Task<int> Insert(SteamIdentityStatsServer steamIdentityStatsServer)
+        public async Task<ObjectId> Insert(SteamIdentityStatsServer steamIdentityStatsServer)
         {
             return await _liteDb.LiteDatabaseAsync.GetCollection<SteamIdentityStatsServer>("SteamIdentityStatsServer")
                 .InsertAsync(steamIdentityStatsServer);

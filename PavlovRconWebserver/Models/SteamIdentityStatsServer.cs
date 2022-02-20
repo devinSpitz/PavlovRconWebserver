@@ -5,7 +5,8 @@ namespace PavlovRconWebserver.Models
 {
     public class SteamIdentityStatsServer
     {
-        public ObjectId Id { get; set; }
+        [BsonId]
+        public ObjectId _id { get; set; }
         public string SteamId { get; set; } = "";
         public string SteamName { get; set; } = "";
         public string SteamPicture { get; set; } = "";

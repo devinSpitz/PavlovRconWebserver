@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AspNetCoreHero.ToastNotification.Abstractions;
-using Hangfire;
 using Newtonsoft.Json;
 using PavlovRconWebserver.Exceptions;
 using PavlovRconWebserver.Extensions;
@@ -163,7 +162,7 @@ namespace PavlovRconWebserver.Services
 
                                     var playersList =
                                         JsonConvert.DeserializeObject<PlayerListClass>(singleCommandResult1);
-                                    var steamIds = playersList.PlayerList.Select(x => x.UniqueId);
+                                    var steamIds = playersList?.PlayerList.Select(x => x.UniqueId);
                                     //Inspect PlayerList
                                     var commands = new List<string>();
                                     if (steamIds != null)
@@ -205,37 +204,44 @@ namespace PavlovRconWebserver.Services
                                         finsihedPlayerList = tmpPlayers.Select(x => x.PlayerInfo).ToList();
                                     }
 
-                                    var pavlovServerPlayerList = finsihedPlayerList.Select(x => new PavlovServerPlayer
+                                    var pavlovServerPlayerList = finsihedPlayerList.Select(x =>
                                     {
-                                        Username = x.Username,
-                                        UniqueId = x.UniqueId,
-                                        KDA = x.KDA,
-                                        Cash = x.Cash,
-                                        TeamId = x.TeamId,
-                                        Score = x.Score,
-                                        ServerId = server.Id
+                                        var player = new PavlovServerPlayer();
+                                        player.Username = x.Username;
+                                        player.UniqueId = x.UniqueId;
+                                        player.KDA = x.KDA;
+                                        player.Cash = x.Cash;
+                                        player.TeamId = x.TeamId;
+                                        player.Score = x.Score;
+                                        player.ServerId = server.Id;
+                                        return player;
                                     }).ToList();
                                     var oldServerInfo = await _pavlovServerInfoService.FindServer(server.Id);
                                     //Todo maybe check if we lost a player its possible that we need that if allstats after the end of a match doesent give back all the player if some had a disconnect
                                     await _pavlovServerPlayerService.Upsert(pavlovServerPlayerList, server.Id);
                                     await _pavlovServerPlayerHistoryService.Upsert(pavlovServerPlayerList.Select(x =>
-                                        new PavlovServerPlayerHistory
-                                        {
-                                            Username = x.Username,
-                                            UniqueId = x.UniqueId,
-                                            PlayerName = x.PlayerName,
-                                            KDA = x.KDA,
-                                            Cash = x.Cash,
-                                            TeamId = x.TeamId,
-                                            Score = x.Score,
-                                            ServerId = x.ServerId,
-                                            date = DateTime.Now
-                                        }).ToList(), server.Id, 1);
+                                    {
+                                        var history = new PavlovServerPlayerHistory();
+                                        history.Username = x.Username;
+                                        history.UniqueId = x.UniqueId;
+                                        history.PlayerName = x.PlayerName;
+                                        history.KDA = x.KDA;
+                                        history.Cash = x.Cash;
+                                        history.TeamId = x.TeamId;
+                                        history.Score = x.Score;
+                                        history.ServerId = x.ServerId;
+                                        history.date = DateTime.Now;
+                                        return history;
+                                    }).ToList(), server.Id, 1);
 
                                     var singleCommandResultTwo =
                                         await RconStatic.SingleCommandResult(client2, "ServerInfo");
                                     var tmp = JsonConvert.DeserializeObject<ServerInfoViewModel>(
                                         singleCommandResultTwo.Replace("\"\"", "\"ServerInfo\""));
+                                    if (tmp == null || tmp.ServerInfo == null)
+                                    {
+                                        return false;
+                                    }
                                     if (!string.IsNullOrEmpty(tmp.ServerInfo.GameMode))
                                         DataBaseLogger.LogToDatabaseAndResultPlusNotify(
                                             "Got the server info for the server: " + server.Name + "\n " +
@@ -282,20 +288,18 @@ namespace PavlovRconWebserver.Services
                                     }
                                     else
                                     {
-                                        var tmpinfo = new PavlovServerInfo
-                                        {
-                                            MapLabel = tmp.ServerInfo.MapLabel,
-                                            MapPictureLink = tmp.ServerInfo.MapPictureLink,
-                                            GameMode = tmp.ServerInfo.GameMode,
-                                            ServerName = tmp.ServerInfo.ServerName,
-                                            RoundState = tmp.ServerInfo.RoundState,
-                                            PlayerCount = tmp.ServerInfo.PlayerCount,
-                                            Teams = tmp.ServerInfo.Teams,
-                                            Team0Score = tmp.ServerInfo.Team0Score,
-                                            Team1Score = tmp.ServerInfo.Team1Score,
-                                            ServerId = server.Id,
-                                            Round = round
-                                        };
+                                        var tmpinfo = new PavlovServerInfo();
+                                        tmpinfo.MapLabel = tmp.ServerInfo.MapLabel;
+                                        tmpinfo.MapPictureLink = tmp.ServerInfo.MapPictureLink;
+                                        tmpinfo.GameMode = tmp.ServerInfo.GameMode;
+                                        tmpinfo.ServerName = tmp.ServerInfo.ServerName;
+                                        tmpinfo.RoundState = tmp.ServerInfo.RoundState;
+                                        tmpinfo.PlayerCount = tmp.ServerInfo.PlayerCount;
+                                        tmpinfo.Teams = tmp.ServerInfo.Teams;
+                                        tmpinfo.Team0Score = tmp.ServerInfo.Team0Score;
+                                        tmpinfo.Team1Score = tmp.ServerInfo.Team1Score;
+                                        tmpinfo.ServerId = server.Id;
+                                        tmpinfo.Round = round;
 
                                         await _pavlovServerInfoService.Upsert(tmpinfo);
                                     
@@ -318,6 +322,19 @@ namespace PavlovRconWebserver.Services
                                                     await _steamIdentityStatsServerService.FindAllFromServer(server.Id);
                                                 foreach (var player in pavlovServerPlayerList)
                                                 {
+                                                    if(player==null) continue;
+                                                    if (string.IsNullOrEmpty(player.Username) &&
+                                                        !string.IsNullOrEmpty(player.UniqueId))
+                                                    {
+                                                        player.Username = player.UniqueId;
+                                                    }       
+                                                    if (string.IsNullOrEmpty(player.UniqueId) &&
+                                                        !string.IsNullOrEmpty(player.Username))
+                                                    {
+                                                        player.UniqueId = player.Username;
+                                                    }
+                                                    if(string.IsNullOrEmpty(player.Username)) continue;
+                                                    if(string.IsNullOrEmpty(player.UniqueId)) continue;
                                                     var tmpStats =
                                                         allStats.FirstOrDefault(x => x.SteamId == player.UniqueId);
                                                     if (tmpStats != null)
@@ -356,23 +373,31 @@ namespace PavlovRconWebserver.Services
                                                     }
                                                     else
                                                     {
-                                                        await _steamIdentityStatsServerService.Insert(
-                                                            new SteamIdentityStatsServer
-                                                            {
-                                                                SteamId = player.UniqueId,
-                                                                SteamName = player.Username,
-                                                                SteamPicture = "",
-                                                                Kills = player.Kills,
-                                                                LastAddedKills = player.Kills,
-                                                                Deaths = player.Deaths,
-                                                                LastAddedDeaths = player.Deaths,
-                                                                Assists = player.Assists,
-                                                                LastAddedAssists = player.Assists,
-                                                                Exp = player.Score,
-                                                                LastAddedScore = player.Score,
-                                                                ServerId = server.Id,
-                                                                ForRound = round
-                                                            });
+                                                        var stats =  new SteamIdentityStatsServer();
+                                                        try
+                                                        {
+                                                            stats.SteamId = player.UniqueId;
+                                                            stats.SteamName = player.Username;
+                                                            stats.SteamPicture = "";
+                                                            stats.Kills = player.Kills;
+                                                            stats.LastAddedKills = player.Kills;
+                                                            stats.Deaths = player.Deaths;
+                                                            stats.LastAddedDeaths = player.Deaths;
+                                                            stats.Assists = player.Assists;
+                                                            stats.LastAddedAssists = player.Assists;
+                                                            stats.Exp = player.Score;
+                                                            stats.LastAddedScore = player.Score;
+                                                            stats.ServerId = server.Id;
+                                                            stats.ForRound = round;
+                                                            stats.UpTime = default;
+                                                            stats.logDateTime = default;
+                                                            await _steamIdentityStatsServerService.Insert(stats);
+                                                        }
+                                                        catch (Exception e)
+                                                        {
+                                                            DataBaseLogger.LogToDatabaseAndResultPlusNotify(" had problems by adding user stats: " + server.Name + "\n " +
+                                                                e.Message, LogEventLevel.Verbose, _notifyService);
+                                                        }
                                                     }
                                                 }
                                             }
