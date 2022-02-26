@@ -16,7 +16,7 @@
 
 @if (hasTwoTeams)
 {
-    <div class="row  col-sm-6">
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
         <table class="table table-responsive table-bordered bg-primary ">
             @Html.Raw(tableHeaer)
             <tr>
@@ -29,7 +29,7 @@
 
         </table>
     </div>
-    <div class="row col-sm-6">
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
         <table class="table table-responsive table-bordered Red  ">
             @Html.Raw(tableHeaer)
             <tr>
@@ -44,7 +44,7 @@
 }
 else
 {
-    <table class="table table-bordered table-responsive col-sm-12">
+    <table class="table table-bordered table-responsive col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
         @Html.Raw(tableHeaer)
         @foreach (var player in Model.PlayerList.OrderByDescending(x => x.Score))
         {

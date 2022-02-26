@@ -5,7 +5,7 @@
 
 @if (SignInManager.IsSignedIn(User))
 {
-    <ul class="nav navbar-nav navbar-right">
+    <ul class="nav navbar-nav text-nowrap navbar-right">
         <li>
             <a class="btn  navbar-btn navbar-link" asp-area="" asp-controller="Manage" asp-action="Index" title="Manage">Hello @UserManager.GetUserName(User)!</a>
         </li>

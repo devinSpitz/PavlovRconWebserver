@@ -26,6 +26,20 @@ namespace PavlovRconWebserver.Services
                 .Include(x => x.Map)
                 .Include(x => x.PavlovServer)
                 .FindAsync(x => x.Map != null && x.PavlovServer.Id == pavlovServer.Id)).ToArray();
+        }        
+        public async Task<ServerSelectedMap[]> GetAllWithMapId(string mapId)
+        {
+            return (await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedMap>("ServerSelectedMap")
+                .Include(x => x.Map)
+                .Include(x => x.PavlovServer)
+                .FindAsync(x => x.Map != null && x.Map.Id == mapId)).ToArray();
+        }       
+        public async Task<ServerSelectedMap[]> GetAllWithNoMoreMap()
+        {
+            return (await _liteDb.LiteDatabaseAsync.GetCollection<ServerSelectedMap>("ServerSelectedMap")
+                .Include(x => x.Map)
+                .Include(x => x.PavlovServer)
+                .FindAsync(x => x.Map==null)).ToArray();
         }
 
         public async Task<int> Insert(ServerSelectedMap serverSelectedMap)
