@@ -1,67 +1,138 @@
 ﻿@model LeaderBoardViewModel
 
-<div class="container-fluid col-12 ">
+<div class="container-fluid col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12 ">
 
     <form asp-controller="LeaderBoard" asp-action="Server" method="get">
     @Html.LabelFor(x => x.server)
     @Html.DropDownListFor(m => m.server, new SelectList(Model.AllServers, "Id", "Name", Model.server), new {@class = "form-control form-control-sm form-select ", onchange="submit()"})
     </form>
 
-    <table id="leaderBoard" class="table table-responsive-sm  col-12 ">
+    <table id="leaderBoard" class="table table-responsive-sm col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12 ">
         <thead>
         <tr>
-            <th>ServerName</th>
-            <th>SteamId</th>
-            <th>SteamName</th>
-            <th>SteamPicture</th>
-            <th>Kills</th>
-            <th>Deaths</th>
-            <th>Assists</th>
-            <th>Expirence</th>
-            <th>UpTime</th>
+            <th name="serverName" class="serverName">ServerName</th>
+            <th name="steamId" class="steamId">SteamId</th>
+            <th name="steamName" class="steamName">SteamName</th>
+            <th name="steamPicture" class="steamPicture">SteamPicture</th>
+            <th name="kills" class="kills">Kills</th>
+            <th name="deaths" class="deaths">Deaths</th>
+            <th name="assists" class="assists">Assists</th>
+            <th name="expirence" class="expirence">Expirence</th>
+            <th name="upTime" class="upTime">UpTime</th>
         </tr>
         </thead>
         <tbody>
-        @if (Model != null)
-        {
-            foreach (var steamIdentity in Model.list)
-            {
-                <tr>
-                    <td>@steamIdentity.serverName</td>
-                    <td>@steamIdentity.SteamId</td>
-                    <td>@steamIdentity.SteamName</td>
-                    @if (string.IsNullOrEmpty(@steamIdentity.SteamPicture))
-                    {
-                        <td><img src="~/images/noImg.png" height="150px" width="150px"/></td>   
-                    }
-                    else
-                    {
-                        <td><img src="@steamIdentity.SteamPicture" height="150px" width="150px"/></td>   
-                    }
-                    <td>@steamIdentity.Kills</td>
-                    <td>@steamIdentity.Deaths</td>
-                    <td>@steamIdentity.Assists</td>
-                    <td>@steamIdentity.Exp</td>
-                    <td>@steamIdentity.UpTime</td>
-                </tr>
-            }
-        }
+        @* gets autofilled *@
         </tbody>
     </table>
 
 </div>
 
-<link rel="stylesheet" type="text/css" href="~/lib/dataTables/datatables.min.css"/>
-<script src="~/lib/dataTables/datatables.min.js" asp-append-version="true"></script>
 <script>
 
+
+function cleanOutput(data, defaultAnswer = "-")
+{
+    if (typeof data !== "undefined" && data && (data.length >0||$.isNumeric( data )))
+    {
+        return data.toString()
+    }
+    return defaultAnswer;
+}
 //Will be called on document ready
 function init(){
+     $.fn.dataTable.moment('DD-MMM-Y HH:mm:ss');
+   let columnDefs = [];
+   columnDefs.push({
+                       "defaultContent": "-",
+                       "targets": "_all"
+                     });
+   columnDefs.push({
+        targets: "serverName",
+        "render":
+        function( data, type, row, meta){
+            return cleanOutput(row.serverName);
+        }
+    });
+   columnDefs.push({
+        targets: "steamId",
+        "render":
+        function( data, type, row, meta){
+            return cleanOutput(row.steamId);
+        }
+    });
+   columnDefs.push({
+        targets: "steamName",
+        "render":
+        function( data, type, row, meta){
+            return cleanOutput(row.steamName);
+        }
+    });
+   columnDefs.push({
+        targets: "steamPicture",
+        "render":
+        function( data, type, row, meta){
+            return "<img src='"+cleanOutput(row.steamPicture,"/images/noImg.png")+"' height='150px' width='150px'/>";
+        }
+    });
+   columnDefs.push({
+        targets: "kills",
+        "render":
+        function( data, type, row, meta){
+            return cleanOutput(row.kills);
+        }
+    });
+   columnDefs.push({
+        targets: "deaths",
+        "render":
+        function( data, type, row, meta){
+            return cleanOutput(row.deaths);
+        }
+    });
+   columnDefs.push({
+        targets: "assists",
+        "render":
+        function( data, type, row, meta){
+            return cleanOutput(row.assists);
+        }
+    });
+   columnDefs.push({
+        targets: "expirence",
+        "render":
+        function( data, type, row, meta){
+            return cleanOutput(row.exp);
+        }
+    });
+   columnDefs.push({
+        targets: "upTime",
+        type: 'datetime-moment',
+        orderDataType: 'datetime-moment',
+        "render":
+        function( data, type, row, meta){
+            if (typeof row.upTime === "undefined" || row.upTime === null)
+                return "-";
+            let thisDate = moment(row.upTime).format("HH:mm");
+            return thisDate+"h";
+        }
+        
+    });
+    let serverId = $("#server").val()
+    if (serverId>0)
     $('#leaderBoard').DataTable({
     "lengthMenu": [[10, 25, 50,100, -1], [10, 25, 50,100, "All"]],
     "order": [[ 7, "desc" ]],
      "pageLength": 50,
-     "oSearch": {"sSearch": "@ViewBag.filter"}
+     columnDefs: columnDefs,
+     "oSearch": {"sSearch": "@ViewBag.filter"},
+    responsive: true,
+    "autoWidth": false,
+      ajax: {
+                 url: `/LeaderBoard/Index/Server/Api/`+serverId,
+                 dataSrc: function (json) {
+                     return json['model'];
+                 },
+                 cache: true
+                 },
     });
 }
 

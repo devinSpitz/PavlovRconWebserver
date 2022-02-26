@@ -173,7 +173,6 @@ function UpdatePlayerList(){
 
 function PlayerAction()
 {
-    debugger;
     let command = "";
 
     let playersSelected = "";
@@ -255,7 +254,6 @@ function sendSingleCommand(command)
         data: data,
         success:  function(result)
         {
-            debugger;
             if(result.toString()==="")
             {
                 alert("Did nothing!");
@@ -292,7 +290,6 @@ function sendSingleCommand(command)
 }
 function sendMultiCommand(command)
 {
-    debugger;
     $(".overlay").show();
     let data = {};
     let servers = [];
@@ -306,7 +303,6 @@ function sendMultiCommand(command)
     }); 
     let value = $("#PlayerAction").find("#PlayerValueParent :input").val();
     if(typeof value === "undefined") value = "";
-    debugger; 
     if(playersSelected.length<=0)
     {
         alert("You have to have at least one player on the server!!");
@@ -314,7 +310,6 @@ function sendMultiCommand(command)
         return;
     }
     data =  { server: servers[0], command: command, players: playersSelected, value: value };
-    debugger;
     $.ajax({
         type: 'POST',
         url: "/Rcon/SendCommandMulti",

@@ -3,6 +3,7 @@
 @inject IConfiguration Configuration
 @{
     var subPath = Configuration["subPath"];
+    List<string> ids = new List<string>();
 }
 <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" asp-append-version="true"/>
 <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap-theme.css" asp-append-version="true"/>
@@ -37,6 +38,7 @@
     }
     
 </style>
+
 @if (!Model.Any())
 {
     <div class="bg-info">
@@ -45,6 +47,10 @@
 }
 @foreach (var viewModel in Model)
 {
+    var id = "datatables" + viewModel.serverId;
+    var id2 = "datatables" + viewModel.serverId+"-d";
+    ids.Add(id);
+    ids.Add(id2);
     <div class="stylePavlovServers">
         @{
             if (viewModel == null) continue;
@@ -66,35 +72,35 @@
         })
         @if (hasTwoTeams)
         {
-            <div class="row  col-ms-6">
-                <table class="table pavlovTable table-responsive table-bordered bg-primary Team0">
-                    @Html.Raw(tableHeaer)
-                    <tr>
-                        <th colspan="8">Team score: @viewModel.team0Score</th>
-                    </tr>
-                    @foreach (var player in viewModel.PlayerList.Where(x => x.TeamId == 0).OrderByDescending(x => x.Score))
-                    {
-                        @await Html.PartialAsync("/Views/PublicViewLists/PlayerSingle.cshtml", player)
-                    }
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
+                    <table id="@id" class="table pavlovTable table-responsive table-bordered bg-primary Team0">
+                        @Html.Raw(tableHeaer)
+                        <tr>
+                            <th colspan="8">Team score: @viewModel.team0Score</th>
+                        </tr>
+                        @foreach (var player in viewModel.PlayerList.Where(x => x.TeamId == 0).OrderByDescending(x => x.Score))
+                        {
+                            @await Html.PartialAsync("/Views/PublicViewLists/PlayerSingle.cshtml", player)
+                        }
 
-                </table>
-            </div>
-            <div class="row col-ms-6">
-                <table class="table pavlovTable table-responsive table-bordered Team1  ">
-                    @Html.Raw(tableHeaer)
-                    <tr>
-                        <th colspan="8">Team score: @viewModel.team1Score</th>
-                    </tr>
-                    @foreach (var player in viewModel.PlayerList.Where(x => x.TeamId == 1).OrderByDescending(x => x.Score))
-                    {
-                        @await Html.PartialAsync("/Views/PublicViewLists/PlayerSingle.cshtml", player)
-                    }
-                </table>
-            </div>
+                    </table>
+                </div>
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
+                    <table id="@id2" class="table pavlovTable table-responsive table-bordered Team1  ">
+                        @Html.Raw(tableHeaer)
+                        <tr>
+                            <th colspan="8">Team score: @viewModel.team1Score</th>
+                        </tr>
+                        @foreach (var player in viewModel.PlayerList.Where(x => x.TeamId == 1).OrderByDescending(x => x.Score))
+                        {
+                            @await Html.PartialAsync("/Views/PublicViewLists/PlayerSingle.cshtml", player)
+                        }
+                    </table>
+                </div>
         }
         else
         {
-            <table class="table pavlovTable table-bordered table-responsive col-ms-12">
+            <table id="@id" class="table pavlovTable table-bordered table-responsive col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
                 @Html.Raw(tableHeaer)
                 @foreach (var player in viewModel.PlayerList.OrderByDescending(x => x.Score))
                 {
@@ -125,6 +131,27 @@ function GetMapsForServer(serverId)
             alert("Something did go wrong!");
             $(".overlay").hide();
         }
+    });
+}
+
+function init()
+{
+   let ids = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ids) + "");
+    $.each(ids,function()
+    {
+        let table = $("#"+this);
+             if(table.exists())
+                 {
+                  table.DataTable({
+                      "order": [[ 1, "desc" ]],
+                      responsive: true,
+                      "autoWidth": false,
+                      filter: false, 
+                      "paging":   false,
+                        "bInfo": false,
+                      });   
+                  }
+         
     });
 }
 

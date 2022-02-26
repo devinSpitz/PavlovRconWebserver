@@ -193,9 +193,21 @@ namespace PavlovRconWebserver.Services
                 var tmp = tmpRconMaps.FirstOrDefault(x => x.Id == map.Id);
                 var isNumeric = int.TryParse(map.Id, out _);
                 if (tmp == null && isNumeric)
+                {
+                    foreach (var selected in await _serverSelectedMapService.GetAllWithMapId(map.Id))
+                        await _serverSelectedMapService.Delete(selected.Id);
+                    
                     await _mapsService.Delete(map.Id);
+                }
                 // i should my here delete them from the serverSelectedMaps as well
+                
             }
+            
+            //Clean maps that not exist anymore:
+            foreach (var invalidSelected in await _serverSelectedMapService.GetAllWithNoMoreMap())
+                await _serverSelectedMapService.Delete(invalidSelected.Id);
+            
+            //Todo: Add a message to the server so the admin knows that he needs to save the Game.ini to get rid of the ghost maps.
 
             return true;
         }
@@ -233,9 +245,9 @@ namespace PavlovRconWebserver.Services
             
             
             var client = new HttpClient();
-            var allSteamIdentityStats = await _steamIdentityStatsServerService.FindAll();
+            var allSteamIdentityStats = (await _steamIdentityStatsServerService.FindAll()).Where(x=>!string.IsNullOrWhiteSpace(x.SteamId)).ToArray();
 
-            var steamIdentities = allSteamIdentityStats.GroupBy(x => x.SteamId).Select(x => x.Key);
+            var steamIdentities = allSteamIdentityStats.GroupBy(x =>x.SteamId).Select(x => x.Key);
             foreach (var single in steamIdentities)
             {
                 if(string.IsNullOrEmpty(single)) continue;   

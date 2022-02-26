@@ -42,9 +42,7 @@ namespace PavlovRconWebserver.Controllers
         {
             if(server==0) return RedirectToAction("Index");
             var servers = (await _pavlovServerService.FindAll()).Where(x=>x.ServerType==ServerType.Community).ToList();
-            
             if(!servers.Select(x=>x.Id).Contains(server)) return RedirectToAction("Index");
-            var steamIdentityStats = (await _steamIdentityStatsServerService.FindAll()).Where(x=>x.ServerId==server);
             var tmp = new LeaderBoardViewModel()
             {
                 server = servers.First(x=>x.Id==server).Id,
@@ -52,8 +50,22 @@ namespace PavlovRconWebserver.Controllers
                 {
                     Id = 0,
                     Name = "--Please select--"
-                }).ToList(),
-                list = steamIdentityStats.Select(x => new SteamIdentityStatsServerViewModel
+                }).ToList()
+            };
+            return View("Index", tmp);
+        } 
+        
+        [HttpGet("[controller]/Index/Server/Api/{server}")]
+        public async Task<IActionResult> ServerApi(int server)
+        {
+            if(server==0) return new ObjectResult("you need to set a serverId or no server found!");
+            var servers = (await _pavlovServerService.FindAll()).Where(x=>x.ServerType==ServerType.Community).ToList();
+            
+            if(!servers.Select(x=>x.Id).Contains(server)) return new ObjectResult("you need to set a serverId or no server found!");
+            var steamIdentityStats = (await _steamIdentityStatsServerService.FindAll()).Where(x=>x.ServerId==server);
+            var tmp = new
+            {
+                model = steamIdentityStats.Select(x => new SteamIdentityStatsServerViewModel
                 {
                     SteamId = x.SteamId,
                     SteamName = x.SteamName,
@@ -66,8 +78,10 @@ namespace PavlovRconWebserver.Controllers
                     UpTime = x.UpTime,
                 })
             };
-            return View("Index", tmp);
+            return new ObjectResult(tmp);
         }
+        
+        
         
         [HttpGet("[controller]/Index/User/{steamId}")]
         public async Task<IActionResult> User(string steamId)
