@@ -22,7 +22,30 @@
         </tr>
         </thead>
         <tbody>
-        @* gets autofilled *@
+        @if (Model != null)
+        {
+            foreach (var steamIdentity in Model.list)
+            {
+                <tr>
+                    <td>@steamIdentity.serverName</td>
+                    <td>@steamIdentity.SteamId</td>
+                    <td>@steamIdentity.SteamName</td>
+                    @if (string.IsNullOrEmpty(@steamIdentity.SteamPicture))
+                    {
+                        <td><img src="~/images/noImg.png" height="150px" width="150px"/></td>
+                    }
+                    else
+                    {
+                        <td><img src="@steamIdentity.SteamPicture" height="150px" width="150px"/></td>
+                    }
+                    <td>@steamIdentity.Kills</td>
+                    <td>@steamIdentity.Deaths</td>
+                    <td>@steamIdentity.Assists</td>
+                    <td>@steamIdentity.Exp</td>
+                    <td>@steamIdentity.UpTime</td>
+                </tr>
+            }
+        }
         </tbody>
     </table>
 
