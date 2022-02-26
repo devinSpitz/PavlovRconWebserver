@@ -22,9 +22,10 @@
         </tr>
         </thead>
         <tbody>
-        @if (Model != null)
+        @if (Model != null && Model.list != null)
         {
-            foreach (var steamIdentity in Model.list)
+            var list = Model.list.ToArray();
+            foreach (var steamIdentity in list)
             {
                 <tr>
                     <td>@steamIdentity.serverName</td>
