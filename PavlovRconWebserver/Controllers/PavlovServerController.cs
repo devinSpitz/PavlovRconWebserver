@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using AspNetCoreHero.ToastNotification.Abstractions;
 using LiteDB;
 using LiteDB.Identity.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using PavlovRconWebserver.Exceptions;
@@ -28,6 +30,7 @@ namespace PavlovRconWebserver.Controllers
         private readonly SshServerSerivce _service;
         private readonly SteamIdentityService _steamIdentityService;
         private readonly UserService _userservice;
+        private readonly ServerBansService _serverBansService;
         private readonly ServerSelectedWhitelistService _whitelistService;
         private readonly SteamIdentityStatsServerService _steamIdentityStatsServerService;
         private readonly UserManager<LiteDbUser> UserManager;
@@ -36,6 +39,7 @@ namespace PavlovRconWebserver.Controllers
         public PavlovServerController(SshServerSerivce service,
             UserService userService,
             PavlovServerService pavlovServerService,
+            ServerBansService serverBansService,
             ServerSelectedMapService serverSelectedMapService,
             MapsService mapsService,
             SshServerSerivce sshServerSerivce,
@@ -51,6 +55,7 @@ namespace PavlovRconWebserver.Controllers
             _userservice = userService;
             _pavlovServerService = pavlovServerService;
             _serverSelectedMapService = serverSelectedMapService;
+            _serverBansService = serverBansService;
             _steamIdentityStatsServerService = steamIdentityStatsServerService;
             _mapsService = mapsService;
             _whitelistService = whitelistService;
@@ -429,6 +434,78 @@ namespace PavlovRconWebserver.Controllers
 
             return RedirectToAction("Index", "SshServer");
         }
+        
+        [HttpGet("[controller]/ImportBansView/{id}")]
+        public async Task<IActionResult> ImportBansView(int id)
+        {
+            if (!await RightsHandler.HasRightsToThisPavlovServer(HttpContext.User,
+                    await _userservice.getUserFromCp(HttpContext.User), id, _service, _pavlovServerService))
+                return Forbid();
+            var server = await _pavlovServerService.FindOne(id);
+            if (server == null) return BadRequest("There is no Server with this id!");
+
+
+            return View("ImportBans",new PavlovServerImportBansListViewModel()
+            {
+                ServerId = id
+            });
+        }
+        
+        [HttpPost("[controller]/ImportBans")]
+        public async Task<IActionResult> ImportBans(PavlovServerImportBansListViewModel viewModel)
+        {
+            
+            if (viewModel.ServerId <= 0) return BadRequest("Please choose a server!");
+
+            var user = await _userservice.getUserFromCp(HttpContext.User);
+            if (!await RightsHandler.HasRightsToThisPavlovServer(HttpContext.User,user
+                    , viewModel.ServerId, _service,
+                    _pavlovServerService))
+                return Forbid();
+            var server = await _pavlovServerService.FindOne(viewModel.ServerId);
+            await using var ms = new MemoryStream();
+            await viewModel.BansFromFile.CopyToAsync(ms);
+            var fileBytes = ms.ToArray();
+            
+            var table = (Encoding.Default.GetString(
+                fileBytes, 
+                0, 
+                fileBytes.Length - 1)).Split(new string[] { "\r\n", "\r", "\n" },
+                StringSplitOptions.None);
+            var timespan = "unlimited";
+            Statics.BanList.TryGetValue(timespan, out var timespans);
+            if (string.IsNullOrEmpty(timespan)) return BadRequest("TimeSpan  must be set!");
+            var banlist = Array.Empty<ServerBans>();
+            if (server.GlobalBan)
+            {
+                
+                ViewBag.GlobalBan = true;
+                banlist = await _serverBansService.FindAllGlobal(true);
+            }
+            else
+            {
+                banlist = await _serverBansService.FindAllFromPavlovServerId(viewModel.ServerId, true);
+            }
+
+            foreach (var steamId in table)
+            {
+                var singleSteamId = steamId.Replace(";","");
+                var ban = new ServerBans
+                {
+                    SteamId = singleSteamId,
+                    BanSpan = timespans,
+                    BannedDateTime = DateTime.Now,
+                    PavlovServer = server
+                };
+                
+                if (banlist.FirstOrDefault(x => x.SteamId == ban.SteamId) == null)
+                {
+                    await _serverBansService.Upsert(ban);
+                }
+            }
+            return new ObjectResult(true);
+        }
+
 
         [HttpPost("[controller]/SaveServerSettings/")]
         public async Task<IActionResult> SaveServerSettings(PavlovServerGameIni pavlovServerGameIni)

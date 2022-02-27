@@ -95,7 +95,17 @@ namespace PavlovRconWebserver.Services
             foreach (var signleServer in server.PavlovServers)
                 try
                 {
-                    var bans = await _serverBansService.FindAllFromPavlovServerId(signleServer.Id, true);
+                
+                    ServerBans[] bans = Array.Empty<ServerBans>();
+                    if (signleServer.GlobalBan)
+                    {
+                        bans = await _serverBansService.FindAllGlobal(true);
+                    }
+                    else
+                    {
+                        bans = await _serverBansService.FindAllFromPavlovServerId(signleServer.Id, true);
+                    }
+
                     SaveBlackListEntry(signleServer, bans.ToList());
                 }
                 catch (Exception e)

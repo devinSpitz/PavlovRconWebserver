@@ -1,0 +1,42 @@
+﻿@model PavlovServerImportBansListViewModel
+
+
+@{
+    ViewBag.Title = "Upload ban list";
+    Layout = "_Layout";
+
+}
+
+<h2>@ViewBag.Title</h2>
+<div class="card m-1 bg-info">
+    <ul>
+        <li>Format of the file:</li>
+        steamid;<br>
+        oculusId;
+        <li>or</li>
+        steamid<br>
+        oculusId
+        
+    </ul>
+</div>
+<form asp-controller="PavlovServer" asp-action="ImportBans" method="post"  enctype="multipart/form-data">
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <input asp-for="ServerId" class="form-control" value="@Model.ServerId" type="hidden"/>
+    <span asp-validation-for="ServerId" class="text-danger"></span>
+
+
+    <div class="form-group  col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
+        <label asp-for="BansFromFile"></label>
+        <p class="form-text">
+        <input asp-for="BansFromFile" class="form-control-file" />
+        <span asp-validation-for="BansFromFile" class="text-danger"></span>
+    </div>
+
+    <div class="row">
+        <div class="col-md-1 mt-3">
+            <button type="submit" class="btn btn-success  col-md-12">Import</button>
+        </div>
+    </div>
+
+</form>

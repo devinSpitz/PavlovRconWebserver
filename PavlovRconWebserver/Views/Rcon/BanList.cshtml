@@ -23,6 +23,10 @@
                 </button>
             </div>
             <div class="modal-body">
+                @if (ViewBag.GlobalBan != null && ViewBag.GlobalBan)
+                {
+                    <h1 class="bg-warning">Global Bans</h1>
+                }
                 <div class="card m-1  col-cs-12">
                     <div class="card-header col-cs-12">Banned Players</div>
                     <div class="card-body col-cs-12">
@@ -39,6 +43,10 @@
                 <div class="card m-1 ">
                     <div class="card-header">Unban SteamId</div>
                     <div class="card-body">
+                        @if (ViewBag.GlobalBan != null && ViewBag.GlobalBan)
+                        {
+                            <div class="bg-warning">Unban will take longer with global bans as it is not enforced via rcon, but only removed from blacklist.txt the next time the CheckForBans task runs in Hangfire</div>
+                        }
                         <div class="row">
                             <div class="col-sm-6">
                                 <input name="UnbanSteamId" id="UnbanSteamId" class="form-control" placeholder="76561197960287930">
