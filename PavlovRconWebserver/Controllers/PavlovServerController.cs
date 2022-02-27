@@ -489,7 +489,7 @@ namespace PavlovRconWebserver.Controllers
 
             foreach (var steamId in table)
             {
-                var singleSteamId = steamId.Replace(";","");
+                var singleSteamId = steamId.Replace(";","").Trim();
                 var ban = new ServerBans
                 {
                     SteamId = singleSteamId,

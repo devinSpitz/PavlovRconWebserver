@@ -183,7 +183,7 @@ else
                     <span asp-validation-for="Shack" class="text-danger"></span>
                 </div>
         }
-                @if (Model.SshServer.LiteDbUsers==null && Model.LiteDbUsers == null)
+                @if (Model.SshServer.Owner==null && Model.Owner == null)
                 {
                     <div class="form-group col-md-2">
                         <label asp-for="GlobalBan"></label>
