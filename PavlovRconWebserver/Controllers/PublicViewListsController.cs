@@ -1,8 +1,13 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using CoreHtmlToImage;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using PavlovRconWebserver.Extensions.CC.Web.Helpers;
 using PavlovRconWebserver.Models;
 using PavlovRconWebserver.Services;
 
@@ -49,6 +54,33 @@ namespace PavlovRconWebserver.Controllers
             ViewBag.background = backgroundColorHex;
             ViewBag.textColor = fontColorHex;
             return PartialView(result);
+        }    
+        [HttpGet("[controller]/PlayersFromServersAsImage/")]
+        // GET
+        public async Task<IActionResult> PlayersFromServersAsImage([FromQuery] int[] servers,
+            [FromQuery] string backgroundColorHex, [FromQuery] string fontColorHex)
+        {
+            var result = new List<PavlovServerPlayerListPublicViewModel>();
+            foreach (var serverId in servers)
+            {
+                var server = await _pavlovServerService.FindOne(serverId);
+                if (server == null) continue;
+                if (server.ServerServiceState != ServerServiceState.active &&
+                    server.ServerType == ServerType.Community) continue;
+                if (server.ServerType == ServerType.Event) continue;
+                result.Add(await _publicViewListsService.GetPavlovServerPlayerListPublicViewModel(serverId,false));
+            }
+
+            ViewBag.background = backgroundColorHex;
+            ViewBag.textColor = fontColorHex;
+            ViewBag.bigger = true;
+            var partialViewHtml = await this.RenderViewAsync("PlayersFromServers", result, true);
+            var converter = new HtmlConverter();
+            var bytes = converter.FromHtmlString(partialViewHtml,512,ImageFormat.Png);
+           
+            return base.File(
+                bytes,
+                "image/png");
         }        
         
         

@@ -72,12 +72,14 @@ namespace PavlovRconWebserver.Models
         public DateTime? AutoBalanceLast { get; set; } = null;
         [DisplayName("AB cooldown (min)")]
         public int AutoBalanceCooldown { get; set; } = 15;
-        [DisplayName("Save Stats(WIP)**")]
+        [DisplayName("Save Stats**")]
         [CanBeNull]
         public bool SaveStats { get; set; } = false;
-        [DisplayName("Shack (WIP)")]
+        [DisplayName("Shack")]
         [CanBeNull]
         public bool Shack { get; set; } = false;
+        [DisplayName("Use Global Bans")]
+        public bool GlobalBan { get; set; } = false;
         
         
         

@@ -26,6 +26,28 @@ namespace PavlovRconWebserver.Services
                 .FindAllAsync()).OrderByDescending(x => x.Id).ToArray();
         }
 
+        
+        public async Task<ServerBans[]> FindAllGlobal(bool getActive)
+        {
+            var result = (await _liteDb.LiteDatabaseAsync.GetCollection<ServerBans>("ServerBans")
+                .Include(x => x.PavlovServer)
+                .FindAsync(x=>x.PavlovServer.GlobalBan)).OrderByDescending(x => x.Id).ToArray();
+            
+            if (getActive)
+                result = result.Where(x =>
+                {
+                    try
+                    {
+                        return DateTime.Now < x.BannedDateTime.Add(x.BanSpan);
+                    }
+                    catch (Exception)
+                    {
+                        return true;
+                    }
+                }).ToArray();
+
+            return result;
+        }
         public async Task<ServerBans> FindOne(int id)
         {
             return await _liteDb.LiteDatabaseAsync.GetCollection<ServerBans>("ServerBans")

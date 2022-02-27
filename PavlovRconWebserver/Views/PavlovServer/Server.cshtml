@@ -173,16 +173,26 @@ else
                 <span asp-validation-for="SaveStats" class="text-danger"></span>
             </div>
         </div>
+        
+            <div class="row">
         @if (!string.IsNullOrEmpty(Model.SshServer.ShackMapsPath))
         {
-            <div class="row">
                 <div class="form-group col-md-2">
                     <label asp-for="Shack"></label>
                     <input asp-for="Shack" class="form-control form-check-input" value="@Model.Shack"/>
                     <span asp-validation-for="Shack" class="text-danger"></span>
                 </div>
-            </div>
         }
+                @if (Model.SshServer.Owner==null && Model.Owner == null)
+                {
+                    <div class="form-group col-md-2">
+                        <label asp-for="GlobalBan"></label>
+                        <input asp-for="GlobalBan" class="form-control form-check-input" value="@Model.GlobalBan"/>
+                        <span asp-validation-for="GlobalBan" class="text-danger"></span>
+                    </div>
+                }
+        </div>
+        
     }
 
 

@@ -55,7 +55,8 @@ namespace PavlovRconWebserver.Models
                 Owner = pavlovServer.Owner,
                 AutoBalance = pavlovServer.AutoBalance,
                 AutoBalanceCooldown = pavlovServer.AutoBalanceCooldown,
-                SaveStats = pavlovServer.SaveStats
+                SaveStats = pavlovServer.SaveStats,
+                GlobalBan = pavlovServer.GlobalBan
             };
         }
 
@@ -77,7 +78,8 @@ namespace PavlovRconWebserver.Models
                 AutoBalance = viewModel.AutoBalance,
                 Shack = viewModel.Shack,
                 AutoBalanceCooldown = viewModel.AutoBalanceCooldown,
-                SaveStats = viewModel.SaveStats
+                SaveStats = viewModel.SaveStats,
+                GlobalBan = viewModel.GlobalBan
             };
         }
     }

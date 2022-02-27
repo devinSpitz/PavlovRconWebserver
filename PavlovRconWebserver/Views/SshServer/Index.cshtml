@@ -76,6 +76,7 @@
                     <th >Stop/Start</th>
                     <th >logs</th>
                     <th >Stats</th>
+                    <th >Import Bans</th>
                     <th >Steam</th>
                 </tr>
                 </thead>
@@ -161,8 +162,12 @@
                         
                         <td >
                             <a class="btn btn-sm btn-primary" href="@Url.Action("PlayersFromServers", "PublicViewLists", new {servers = new int[1] {pavlovServer.Id}, backgroundColorHex = "#222", fontColorHex = "#ffffff"})"><span class="fas fa-eye"></span> Stats</a>
+                            <a class="btn btn-sm btn-primary" href="@Url.Action("PlayersFromServersAsImage", "PublicViewLists", new {servers = new int[1] {pavlovServer.Id}, backgroundColorHex = "#222", fontColorHex = "#ffffff"})"><span class="fas fa-eye"></span> Stats Image</a>
                             <a class="btn btn-sm btn-primary" href="@Url.Action("GetHistoryOfServer", "PublicViewLists", new {serverId = pavlovServer.Id})"><span class="fas fa-eye"></span> History</a>
-                        </td>
+                        </td>                        
+                        <td >
+                            <a class="btn btn-sm btn-primary" href="@Url.Action("ImportBansView", "PavlovServer", new {id = pavlovServer.Id})"><span class="fas fa-file-import"></span> Import Bans</a>
+   </td>
                         <td >
                         @if (sshServer.SteamIsAvailable)
                         {
@@ -177,23 +182,26 @@
             </table>
             <div class="row">
                 
-                            <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 col-xl-1 col-xxl-1"></div>
+                            <div class="col-sm-1 col-md-1 col-lg-1 col-xl-1 col-xxl-1"></div>
                 @if (isOnPremise || isAdmin)
                 {
-                    <a class="btn btn-sm btn-primary col-xs-2 col-sm-2 col-md-2 col-lg-2 col-xl-2 col-xxl-2" href="@Url.Action("EditServer", "PavlovServer", new { serverId = 0, sshServerId = sshServer.Id })">
+                    <a class="btn btn-sm btn-primary col-sm-1 col-md-1 col-lg-1 col-xl-1 col-xxl-1" href="@Url.Action("EditServer", "PavlovServer", new { serverId = 0, sshServerId = sshServer.Id })">
                         <span class="fas fa-plus"></span>
                     </a>
                     <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 col-xl-1 col-xxl-1"></div>
                     @if (sshServer.SteamIsAvailable)
                     {
-                        <a class="btn btn-sm btn-primary col-xs-2 col-sm-2 col-md-2 col-lg-2 col-xl-2 col-xxl-2" href="@Url.Action("EditServer", "PavlovServer", new { serverId = 0, sshServerId = sshServer.Id, create = true })">
+                        <a class="btn btn-sm btn-primary col-sm-1 col-md-1 col-lg-1 col-xl-1 col-xxl-1" href="@Url.Action("EditServer", "PavlovServer", new { serverId = 0, sshServerId = sshServer.Id, create = true })">
                             Create Pavlov Server
                         </a>
 
                         <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 col-xl-1 col-xxl-1"></div>
                     }
                 }
-                <a class="btn btn-sm btn-primary col-xs-2 col-sm-2 col-md-2 col-lg-2 col-xl-2 col-xxl-2" href="@Url.Action("PlayersFromServers", "PublicViewLists", new { servers = sshServer.PavlovServers?.Select(x => x.Id).ToArray(), backgroundColorHex = "#222", fontColorHex = "#ffffff" })"><span class="fas fa-eye"></span> All Stats</a>
+                <a class="btn btn-sm btn-primary col-xs-1 col-sm-1 col-md-1 col-lg-1 col-xl-1 col-xxl-1" href="@Url.Action("PlayersFromServers", "PublicViewLists", new { servers = sshServer.PavlovServers?.Select(x => x.Id).ToArray(), backgroundColorHex = "#222", fontColorHex = "#ffffff" })"><span class="fas fa-eye"></span> All Stats</a>
+                
+                <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 col-xl-1 col-xxl-1"></div>
+                <a class="btn btn-sm btn-primary col-xs-1 col-sm-1 col-md-1 col-lg-1 col-xl-1 col-xxl-1" href="@Url.Action("PlayersFromServersAsImage", "PublicViewLists", new { servers = sshServer.PavlovServers?.Select(x => x.Id).ToArray(), backgroundColorHex = "#222", fontColorHex = "#ffffff" })"><span class="fas fa-eye"></span> All Stats Image</a>
             </div>
         }
         </div>

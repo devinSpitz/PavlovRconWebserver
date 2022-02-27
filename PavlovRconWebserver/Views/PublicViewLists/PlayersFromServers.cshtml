@@ -8,6 +8,23 @@
 <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" asp-append-version="true"/>
 <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap-theme.css" asp-append-version="true"/>
 <style>
+
+@if (ViewBag.bigger != null && ViewBag.bigger)
+{
+    <text>
+    table,th,td {
+      border: 1px solid black;
+    }
+    body{
+            font-size: 15px;
+            font-weight: bold;
+        }
+    a{
+        font-size: 17px;
+        font-weight: bold;
+            }
+                    </text>
+}
 .Team0{
     --bs-table-accent-bg: #30303000 !important;
       background-color: rgba(40,180,232,0.5) !important;
@@ -72,31 +89,21 @@
         })
         @if (hasTwoTeams)
         {
-                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
-                    <table id="@id" class="table pavlovTable table-responsive table-bordered bg-primary Team0">
-                        @Html.Raw(tableHeaer)
-                        <tr>
-                            <th colspan="8">Team score: @viewModel.team0Score</th>
-                        </tr>
-                        @foreach (var player in viewModel.PlayerList.Where(x => x.TeamId == 0).OrderByDescending(x => x.Score))
-                        {
-                            @await Html.PartialAsync("/Views/PublicViewLists/PlayerSingle.cshtml", player)
-                        }
+            <table id="@id" class="table pavlovTable table-responsive table-bordered bg-primary Team0 col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
+                @Html.Raw(tableHeaer)
+                @foreach (var player in viewModel.PlayerList.Where(x => x.TeamId == 0).OrderByDescending(x => x.Score))
+                {
+                    @await Html.PartialAsync("/Views/PublicViewLists/PlayerSingle.cshtml", player)
+                }
 
-                    </table>
-                </div>
-                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
-                    <table id="@id2" class="table pavlovTable table-responsive table-bordered Team1  ">
-                        @Html.Raw(tableHeaer)
-                        <tr>
-                            <th colspan="8">Team score: @viewModel.team1Score</th>
-                        </tr>
-                        @foreach (var player in viewModel.PlayerList.Where(x => x.TeamId == 1).OrderByDescending(x => x.Score))
-                        {
-                            @await Html.PartialAsync("/Views/PublicViewLists/PlayerSingle.cshtml", player)
-                        }
-                    </table>
-                </div>
+            </table>
+            <table id="@id2" class="table pavlovTable table-responsive table-bordered Team1 col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
+                @Html.Raw(tableHeaer)
+                @foreach (var player in viewModel.PlayerList.Where(x => x.TeamId == 1).OrderByDescending(x => x.Score))
+                {
+                    @await Html.PartialAsync("/Views/PublicViewLists/PlayerSingle.cshtml", player)
+                }
+            </table>
         }
         else
         {

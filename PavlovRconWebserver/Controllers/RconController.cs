@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using AspNetCoreHero.ToastNotification.Abstractions;
 using LiteDB.Identity.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using PavlovRconWebserver.Exceptions;
@@ -346,7 +349,17 @@ namespace PavlovRconWebserver.Controllers
 
             if (serverId <= 0) return BadRequest("Please choose a server!");
             var server = await _pavlovServerService.FindOne(serverId);
-            var banlist = await _serverBansService.FindAllFromPavlovServerId(serverId, true);
+            var banlist = Array.Empty<ServerBans>();
+            if (server.GlobalBan)
+            {
+                
+                ViewBag.GlobalBan = true;
+                banlist = await _serverBansService.FindAllGlobal(true);
+            }
+            else
+            {
+                banlist = await _serverBansService.FindAllFromPavlovServerId(serverId, true);
+            }
 
             ViewBag.ServerId = serverId;
             return PartialView("/Views/Rcon/BanList.cshtml", banlist.ToList());
@@ -438,10 +451,11 @@ namespace PavlovRconWebserver.Controllers
 
             return new ObjectResult(true);
         }
-
+        
         [HttpPost("[controller]/RemoveBanPlayer")]
         public async Task<IActionResult> RemoveBanPlayer(int serverId, string steamId)
         {
+            //Todo search for the right server if its a global ban
             var servers = await GiveServerWhichTheUserHasRightsTo();
 
             if (!servers.Select(x => x.Id).Contains(serverId))
@@ -453,47 +467,66 @@ namespace PavlovRconWebserver.Controllers
             if (string.IsNullOrEmpty(steamId) || steamId == "-") return BadRequest("SteamID must be set!");
             var pavlovServer = await _pavlovServerService.FindOne(serverId);
 
-            var banlist = new List<ServerBans>();
-            //Remove from blacklist file
-            try
+            if (!pavlovServer.GlobalBan) // remove it from this single blacklist file
             {
-                banlist = _service.GetServerBansFromBlackList(pavlovServer, new List<ServerBans>());
-            }
-            catch (CommandException e)
-            {
-                return BadRequest(e.Message);
-            }
-
-            var toRemove = banlist.FirstOrDefault(x => x.SteamId == steamId);
-            if (toRemove != null)
-            {
-                //write to BlackList.txt
-                banlist.Remove(toRemove);
+                
+                var banlist = new List<ServerBans>();
+                //Remove from blacklist file
                 try
                 {
-                    _service.SaveBlackListEntry(pavlovServer, banlist);
+                    banlist = _service.GetServerBansFromBlackList(pavlovServer, new List<ServerBans>());
                 }
                 catch (CommandException e)
                 {
                     return BadRequest(e.Message);
                 }
+
+                var toRemove = banlist.FirstOrDefault(x => x.SteamId == steamId);
+                if (toRemove != null)
+                {
+                    //write to BlackList.txt
+                    banlist.Remove(toRemove);
+                    try
+                    {
+                        _service.SaveBlackListEntry(pavlovServer, banlist);
+                    }
+                    catch (CommandException e)
+                    {
+                        return BadRequest(e.Message);
+                    }
+                }
+            }
+            
+
+
+            if (!pavlovServer.GlobalBan)
+            {
+                // remove from Database
+                var actualBans = await _serverBansService.FindAllFromPavlovServerId(serverId, true);
+                var toRemoveBan = actualBans.FirstOrDefault(x => x.SteamId == steamId);
+                if (toRemoveBan != null) await _serverBansService.Delete(toRemoveBan.Id);
+
+                Task.Delay(1000).Wait(); // If you not wait it may just don't work. Don't know why
+                //unban command
+                try
+                {
+                    await RconStatic.SendCommandSShTunnel(pavlovServer, "Unban " + steamId, _toastifyService);
+                }
+                catch (CommandException)
+                {
+                    return BadRequest("Could not unban player from in memory blacklist!");
+                }
+            }
+            else
+            {
+                var actualBans = await _serverBansService.FindAllGlobal(true);
+                var toRemoveBans = actualBans.Where(x => x.SteamId == steamId);
+                foreach (var toRemoveBan in toRemoveBans)
+                {
+                    await _serverBansService.Delete(toRemoveBan.Id);
+                }
             }
 
-            // remove from Database
-            var actualBans = await _serverBansService.FindAllFromPavlovServerId(serverId, true);
-            var toRemoveBan = actualBans.FirstOrDefault(x => x.SteamId == steamId);
-            if (toRemoveBan != null) await _serverBansService.Delete(toRemoveBan.Id);
-
-            Task.Delay(1000).Wait(); // If you not wait it may just don't work. Don't know why
-            //unban command
-            try
-            {
-                await RconStatic.SendCommandSShTunnel(pavlovServer, "Unban " + steamId, _toastifyService);
-            }
-            catch (CommandException)
-            {
-                return BadRequest("Could not unban player from in memory blacklist!");
-            }
 
             return new ObjectResult(true);
         }
