@@ -138,20 +138,20 @@ namespace PavlovRconWebserver.Models
                     Name = "GiveItem",
                     InputValue = true,
                     PartialViewName = "ItemView",
-                    MinRole = "Admin",
+                    MinRole = "Mod",
                     Group = "Player commands"
                 },
                 new()
                 {
                     Name = "GodMode",
-                    MinRole = "Admin",
+                    MinRole = "Mod",
                     Group = "Player commands"
                 },
                 new()
                 {
                     Name = "CustomPlayer",
                     InputValue = true,
-                    MinRole = "Admin",
+                    MinRole = "Mod",
                     Group = "Player commands"
                 },
                 new()
@@ -159,7 +159,7 @@ namespace PavlovRconWebserver.Models
                     Name = "GiveVehicle",
                     InputValue = true,
                     PartialViewName = "ItemView",
-                    MinRole = "Admin",
+                    MinRole = "Mod",
                     Group = "Player commands"
                 },
                 new()
@@ -167,7 +167,7 @@ namespace PavlovRconWebserver.Models
                     Name = "SetPlayerSkin",
                     InputValue = true,
                     valuesOptions = Statics.Models.ToList(),
-                    MinRole = "Admin",
+                    MinRole = "Mod",
                     Group = "Player commands"
                 },
                 new()
@@ -178,7 +178,7 @@ namespace PavlovRconWebserver.Models
                     {
                         "500", "1000", "1500", "2000", "5000", "10000", "20000"
                     },
-                    MinRole = "Admin",
+                    MinRole = "Mod",
                     Group = "Player commands"
                 },
                 new()
@@ -189,14 +189,14 @@ namespace PavlovRconWebserver.Models
                     {
                         "0", "1", "2", "3", "4", "5"
                     },
-                    MinRole = "Admin",
+                    MinRole = "Mod",
                     Group = "Server commands"
                 },
                 new()
                 {
                     Name = "SetPin",
                     InputValue = true,
-                    MinRole = "Admin",
+                    MinRole = "Mod",
                     Group = "Server commands"
                 },
                 new()
@@ -250,7 +250,7 @@ namespace PavlovRconWebserver.Models
                     {
                         "500", "1000", "1500", "2000", "5000", "10000", "20000"
                     },
-                    MinRole = "Admin"
+                    MinRole = "Mod"
                 },
                 new()
                 {
@@ -267,7 +267,7 @@ namespace PavlovRconWebserver.Models
                     Name = "Custom",
                     InputValue = true,
                     InputValueTwo = true,
-                    MinRole = "Admin"
+                    MinRole = "Mod"
                 }
             };
         }
