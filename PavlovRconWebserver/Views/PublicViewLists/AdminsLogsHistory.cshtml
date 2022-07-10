@@ -1,0 +1,38 @@
+@model List<PavlovServerAdminLogs>
+
+<style>
+    .pavlovTable{
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+</style>
+@{
+    var tableHeaer = "<thead><tr><th>Server Id</th><th>Executor</th><th>Command Executed</th><th>DateTime</th></tr></thead>";
+}
+<div class="stylePavlovServers">
+
+
+    <table class="table pavlovTable table-bordered table-responsive col-ms-12">
+        @Html.Raw(tableHeaer)
+        @foreach (var viewModel in Model)
+        {
+            <tr>
+                <td>
+                    @viewModel.ServerId
+                </td>
+                <td>
+                    @viewModel.Executor.UserName
+                </td>
+                <td>
+                    @viewModel.CommandExecuted
+                </td>
+                <td>
+                    @viewModel.Time
+                </td>
+            </tr>
+        }
+
+
+    </table>
+</div>

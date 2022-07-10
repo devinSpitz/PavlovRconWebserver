@@ -18,16 +18,18 @@ namespace PavlovRconWebserver.Controllers
         private readonly MapsService _mapsService;
         private readonly MatchService _matchService;
         private readonly PavlovServerPlayerHistoryService _pavlovServerPlayerHistoryService;
+        private readonly PavlovServerAdminLogsService _pavlovServerAdminLogsService;
         private readonly PavlovServerService _pavlovServerService;
 
         private readonly PublicViewListsService _publicViewListsService;
         private readonly UserService _userService;
 
         public PublicViewListsController(PavlovServerPlayerHistoryService pavlovServerPlayerHistoryService,
-            UserService userService, PavlovServerService pavlovServerService,
+            UserService userService, PavlovServerService pavlovServerService,PavlovServerAdminLogsService pavlovServerAdminLogsService,
             PublicViewListsService publicViewListsService, MatchService matchService, MapsService mapsService)
         {
             _pavlovServerPlayerHistoryService = pavlovServerPlayerHistoryService;
+            _pavlovServerAdminLogsService = pavlovServerAdminLogsService;
             _userService = userService;
             _pavlovServerService = pavlovServerService;
             _publicViewListsService = publicViewListsService;
@@ -157,9 +159,45 @@ namespace PavlovRconWebserver.Controllers
             {
                 return Forbid();
             }
+
             return View("PlayersHistory",
                 (await _pavlovServerPlayerHistoryService.FindAllFromServer(serverId))?.ToList());
+
+
         }
         
+        [Authorize(Roles = CustomRoles.OnPremiseOrRent)]
+        [HttpGet("[controller]/GetAdminCommandsLogsHistoryOf/{serverId}")]
+        // GET
+        public async Task<IActionResult> GetAdminCommandsLogsHistoryOf(int serverId)
+        {
+            var user = await _userService.getUserFromCp(HttpContext.User);
+            var server = await _pavlovServerService.FindAllServerWhereTheUserHasRights(HttpContext.User, user);
+            if (!server.Select(x => x.Id).Contains(serverId))
+            {
+                return Forbid();
+            }
+            return View("AdminsLogsHistory",
+                (await _pavlovServerAdminLogsService.FindAllFromServer(serverId))?.ToList().OrderByDescending(x=>x.Time).ToList());
+        }        
+        
+        [Authorize(Roles = CustomRoles.OnPremiseOrRent)]
+        [HttpGet("[controller]/RemoveAdminCommandsLogsHistoryOf/{serverId}")]
+        // GET
+        public async Task<IActionResult> RemoveAdminCommandsLogsHistoryOf(int serverId)
+        {
+            var user = await _userService.getUserFromCp(HttpContext.User);
+            var server = await _pavlovServerService.FindAllServerWhereTheUserHasRights(HttpContext.User, user);
+            if (!server.Select(x => x.Id).Contains(serverId))
+            {
+                return Forbid();
+            }
+
+            await _pavlovServerAdminLogsService.DeleteMany(serverId);
+            
+            return View("AdminsLogsHistory",
+                (await _pavlovServerAdminLogsService.FindAllFromServer(serverId))?.ToList());
+        }
+
     }
 }

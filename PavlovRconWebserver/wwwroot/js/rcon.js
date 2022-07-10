@@ -468,7 +468,7 @@ function RemoveBannedPlayer(steamId)
     });
 }
 
-function AddBanPlayer(steamId,timespan)
+function AddBanPlayer(steamId,timespan,alerting = false)
 {
     let servers = [];
     $("#SingleServer :selected").each(function(){
@@ -485,7 +485,11 @@ function AddBanPlayer(steamId,timespan)
                 alert("Did nothing!");
             }
             else{
-                jsonTOHtmlPartialView(result.toString());
+                if(alerting) {
+                   alert(result.toString()); 
+                }else{
+                    jsonTOHtmlPartialView(result.toString());
+                }
             }
         },
         error: function(XMLHttpRequest)

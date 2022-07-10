@@ -164,6 +164,8 @@
                             <a class="btn btn-sm btn-primary" href="@Url.Action("PlayersFromServers", "PublicViewLists", new {servers = new int[1] {pavlovServer.Id}, backgroundColorHex = "#222", fontColorHex = "#ffffff"})"><span class="fas fa-eye"></span> Stats</a>
                             <a class="btn btn-sm btn-primary" href="@Url.Action("PlayersFromServersAsImage", "PublicViewLists", new {servers = new int[1] {pavlovServer.Id}, backgroundColorHex = "#222", fontColorHex = "#ffffff"})"><span class="fas fa-eye"></span> Stats Image</a>
                             <a class="btn btn-sm btn-primary" href="@Url.Action("GetHistoryOfServer", "PublicViewLists", new {serverId = pavlovServer.Id})"><span class="fas fa-eye"></span> History</a>
+                            <a class="btn btn-sm btn-primary" href="@Url.Action("GetAdminCommandsLogsHistoryOf", "PublicViewLists", new {serverId = pavlovServer.Id})"><span class="fas fa-eye"></span> GetAdminCommandsHistory</a>
+                            <a class="btn btn-sm btn-primary" href="@Url.Action("RemoveAdminCommandsLogsHistoryOf", "PublicViewLists", new {serverId = pavlovServer.Id})"><span class="fas fa-eye"></span> RemoveAdminCommandsHistory</a>
                         </td>                        
                         <td >
                             <a class="btn btn-sm btn-primary" href="@Url.Action("ImportBansView", "PavlovServer", new {id = pavlovServer.Id})"><span class="fas fa-file-import"></span> Import Bans</a>

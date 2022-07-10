@@ -103,6 +103,7 @@ namespace PavlovRconWebserver
             services.AddScoped<SteamService>();
             services.AddScoped<LogService>();
             services.AddScoped<SteamIdentityStatsServerService>();
+            services.AddScoped<PavlovServerAdminLogsService>();
             services.AddSingleton(Configuration);
             services.AddScoped<IEmailSender, EmailSender>();
             if (!string.IsNullOrEmpty(steamKey)&&steamKey != "XXXXXXX")
