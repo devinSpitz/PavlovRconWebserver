@@ -31,7 +31,7 @@
     <PackageReference Include="PDFtoImage" Version="1.2.1" />
     <PackageReference Include="Serilog.AspNetCore" Version="4.1.0" />
     <PackageReference Include="Serilog.Sinks.LiteDb.Async" Version="0.0.2" />
-    <PackageReference Include="SSH.NET" Version="2020.0.1" />
+    <PackageReference Include="SSH.NET" Version="2020.0.2" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.0.7" />
     <PackageReference Include="Telnet" Version="0.8.6" />
   </ItemGroup>

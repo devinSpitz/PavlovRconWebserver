@@ -59,6 +59,37 @@
                         </div>
                     </div>
                 </div>
+                
+                <div class="card m-1 ">
+                    <div class="card-header">Ban SteamId</div>
+                    <div class="card-body">
+                        @if (ViewBag.GlobalBan != null && ViewBag.GlobalBan)
+                        {
+                            <div class="bg-warning">Unban will take longer with global bans as it is not enforced via rcon, but only removed from blacklist.txt the next time the CheckForBans task runs in Hangfire</div>
+                        }
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <input name="BanSteamId" id="BanSteamId" class="form-control" placeholder="76561197960287930">
+                            </div>
+                            <div class="col-sm-3">
+                                <select class="form-control form-control-sm form-select " id="BanTimeValue" name="BanTimeValue"><option>unlimited</option>
+                                <option>5min</option>
+                                <option>10min</option>
+                                <option>30min</option>
+                                <option>1h</option>
+                                <option>3h</option>
+                                <option>6h</option>
+                                <option>12h</option>
+                                <option>24h</option>
+                                <option>48h</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-3">
+                                <Button alt="Remove ban" class="btn-success" onclick="AddBanPlayer($('#BanSteamId').val(),$('#BanTimeValue').val(),true)">ban</Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
             </div>
         </div>

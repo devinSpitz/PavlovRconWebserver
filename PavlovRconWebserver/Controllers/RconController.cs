@@ -24,6 +24,7 @@ namespace PavlovRconWebserver.Controllers
         private readonly MapsService _mapsService;
         private readonly IToastifyService _toastifyService;
         private readonly PavlovServerPlayerService _pavlovServerPlayerService;
+        private readonly PavlovServerAdminLogsService _pavlovServerAdminLogsService;
         private readonly PavlovServerService _pavlovServerService;
         private readonly ServerBansService _serverBansService;
         private readonly ServerSelectedMapService _serverSelectedMapService;
@@ -36,6 +37,7 @@ namespace PavlovRconWebserver.Controllers
             ServerSelectedMapService serverSelectedMapService,
             MapsService mapsService,
             PavlovServerService pavlovServerService,
+            PavlovServerAdminLogsService pavlovServerAdminLogsService,
             ServerBansService serverBansService,
             ServerSelectedModsService serverSelectedModsService,
             PavlovServerPlayerService pavlovServerPlayerService,
@@ -50,6 +52,7 @@ namespace PavlovRconWebserver.Controllers
             _serverBansService = serverBansService;
             _pavlovServerPlayerService = pavlovServerPlayerService;
             _serverSelectedModsService = serverSelectedModsService;
+            _pavlovServerAdminLogsService = pavlovServerAdminLogsService;
         }
 
 
@@ -140,14 +143,13 @@ namespace PavlovRconWebserver.Controllers
                     if (value == null)
                     {
                         commandsList.Add(command+" "+player);
-                        
                     }
                     else
                     {
                         commandsList.Add(command+" "+player+" "+value);
-                        
                     }
                 }
+                
                 responses = await RconStatic.SShTunnelMultipleCommands(singleServer, commandsList.ToArray(), _toastifyService); 
             }
             catch (CommandException e)
@@ -159,23 +161,35 @@ namespace PavlovRconWebserver.Controllers
             var commandsResulsts = new List<string>();
             try
             {
+                
+                var commandsListLogs = new List<PavlovServerAdminLogs>();
                 foreach (var response in responses)
                 {
+                    var tmpLog = new PavlovServerAdminLogs
+                    {
+                        Executor = user,
+                        ServerId = server,
+                        Time = DateTime.Now
+                    };
                     var tmp = JsonConvert.DeserializeObject<MinimumRconResultObject>(response, new JsonSerializerSettings {CheckAdditionalContent = false});
                     var o = (Newtonsoft.Json.Linq.JObject)JsonConvert.DeserializeObject(response);
                     var value3 = o.Property("")?.Value;
                     var value2 = o.Property(tmp.Command)?.Value;
                     if (tmp != null  && (value3 is {HasValues: false}|| value2 is {HasValues: false}))
                     {
+                        tmpLog.CommandResult = tmp.Command;
+                        commandsListLogs.Add(tmpLog);
                         commandsResulsts.Add(tmp.Command);
                         if (!tmp.Successful)
                         {
-                            
+                            await _pavlovServerAdminLogsService.Upsert(commandsListLogs);
                             return new ObjectResult(responses);
                         }
                     }  
                 }
                 
+                
+                await _pavlovServerAdminLogsService.Upsert(commandsListLogs);
                 return Ok("alreadyNotified! Commands "+string.Join(",",commandsResulsts)+ " where successful.");
             }
             catch (Exception)
@@ -200,8 +214,6 @@ namespace PavlovRconWebserver.Controllers
             var isMod = await RightsHandler.IsModOnTheServer(_serverSelectedModsService, singleServer, user.Id);
             var commands = await RightsHandler.GetAllowCommands(new RconViewModel(), HttpContext.User, _userservice, isMod,singleServer,user);
 
- 
-            
             var contains = false;
             foreach (var singleCommand in commands)
             {
@@ -264,6 +276,16 @@ namespace PavlovRconWebserver.Controllers
                 {
                     if (tmp.Successful)
                     {
+                        var commandsListLogs = new List<PavlovServerAdminLogs>();
+                        var tmpLog = new PavlovServerAdminLogs
+                        {
+                            Executor = user,
+                            ServerId = server,
+                            CommandExecuted = command,
+                            CommandResult = tmp.Successful.ToString(),
+                        };
+                        commandsListLogs.Add(tmpLog);
+                        await _pavlovServerAdminLogsService.Upsert(commandsListLogs);
                         return Ok("alreadyNotified! Command "+tmp.Command+ " was successful.");
                     }
                 }
@@ -388,6 +410,9 @@ namespace PavlovRconWebserver.Controllers
             ban.BannedDateTime = DateTime.Now;
             ban.PavlovServer = await _pavlovServerService.FindOne(serverId);
 
+            
+            LiteDbUser user;
+            user = await _userservice.getUserFromCp(HttpContext.User);
             //Get steam name
             try
             {
@@ -448,7 +473,15 @@ namespace PavlovRconWebserver.Controllers
 
             await _serverBansService.Upsert(ban);
 
-
+            var tmpList = new List<PavlovServerAdminLogs>();
+            tmpList.Add(new PavlovServerAdminLogs
+            {
+                Executor = user,
+                ServerId = serverId,
+                CommandExecuted = "ban "+steamId,
+                CommandResult = "true"
+            });
+            await _pavlovServerAdminLogsService.Upsert(tmpList);
             return new ObjectResult(true);
         }
         
@@ -467,6 +500,10 @@ namespace PavlovRconWebserver.Controllers
             if (string.IsNullOrEmpty(steamId) || steamId == "-") return BadRequest("SteamID must be set!");
             var pavlovServer = await _pavlovServerService.FindOne(serverId);
 
+            LiteDbUser user;
+            user = await _userservice.getUserFromCp(HttpContext.User);
+            
+            
             if (!pavlovServer.GlobalBan) // remove it from this single blacklist file
             {
                 
@@ -527,7 +564,15 @@ namespace PavlovRconWebserver.Controllers
                 }
             }
 
-
+            var tmpList = new List<PavlovServerAdminLogs>();
+            tmpList.Add(new PavlovServerAdminLogs
+            {
+                Executor = user,
+                ServerId = serverId,
+                CommandExecuted = "unban "+steamId,
+                CommandResult = "true"
+            });
+            await _pavlovServerAdminLogsService.Upsert(tmpList);
             return new ObjectResult(true);
         }
 
