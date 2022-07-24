@@ -7,8 +7,9 @@ services:
     restart: always
     image: mcr.microsoft.com/dotnet/sdk:5.0
     volumes:
-      - /opt/PavlovRconWebserver/Database/:/build/Database/
-      - /opt/PavlovRconWebserver/appsettings.Production.json:/build/appsettings.Production.json
+      - /opt/PavlovRconWebserver:/build
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
     command:
       - bash
       - -c
@@ -16,8 +17,7 @@ services:
         git clone https://github.com/devinSpitz/PavlovRconWebserver.git;
         cd /PavlovRconWebserver/PavlovRconWebserver/;
         dotnet publish -c release -o /build --runtime linux-x64 --self-contained true --framework net5.0;
-        cd /build/;
-        [ ! -f build/Database/Database.db ] && cp /PavlovRconWebserver/PavlovRconWebserver/DefaultDB/Database.db /build/Database/Database.db;
-        [ ! -f build/appsettings.Production.json ] && cp /PavlovRconWebserver/PavlovRconWebserver/appsettings.Development.json /build/appsettings.Production.json;
+        [ ! -f /build/Database/Database.db ] && cp /PavlovRconWebserver/PavlovRconWebserver/DefaultDB/Database.db /build/Database/Database.db;
+        [ ! -f /build/appsettings.Production.json ] && cp "/PavlovRconWebserver/PavlovRconWebserver/appsettings.Development.json" "/build/appsettings.Production.json";
         /build/PavlovRconWebserver --urls=http://*:5001/;
         
